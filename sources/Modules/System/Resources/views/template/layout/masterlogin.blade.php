@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="icon" href="{{ asset('public/assetsku/img/logotsu.png') }}" type="image/png" />
+    <title>TSU - {{$title}}</title>
+
+    <!-- Google Font: Source Sans Pro -->
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+    <!-- Font Awesome Icons -->
+{{--    <link rel="stylesheet" href="{{ asset('public/assets/plugins/fontawesome-free/css/all.min.css') }}">--}}
+    <link rel="stylesheet" href="{{asset('public/assets/plugins/fontawesome-free-7.1.0-web/css/all.min.css')}}">
+    <!-- Theme style -->
+    <link rel="stylesheet" href="{{ asset('public/assets/dist/css/adminlte.min.css') }}">
+    <!-- icheck bootstrap -->
+    <link rel="stylesheet" href="{{ asset('public/assets/plugins/icheck-bootstrap/icheck-bootstrap.min.css') }}">
+    <!-- Select2 -->
+    <link rel="stylesheet" href="{{asset('public/assets/plugins/select2/css/select2.min.css')}}">
+    <link rel="stylesheet" href="{{asset('public/assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css')}}">
+    <!-- SweetAlert 2 -->
+    <link rel="stylesheet" href="{{ asset('public/assets/plugins/sweetalert2/sweetalert2.min.css') }}">
+    <script src="{{ asset('public/assets/plugins/sweetalert2/sweetalert2.all.min.js') }}"></script>
+    @yield('link_href')
+</head>
+
+<body class="hold-transition layout-top-nav layout-footer-fixed layout-navbar-fixed">
+    <div class="wrapper">
+        <!-- Navbar -->
+        <nav class="main-header navbar navbar-expand-md navbar-light bg-lightblue text-sm">
+            <div class="container">
+                <a href="{{ route('indexing') }}" class="navbar-brand">
+                    <img src="{{ asset('public/assetsku/img/logotsu.png') }}" alt="AdminLTE Logo" class="brand-image"
+                        style="opacity: .8">
+                    <span class="brand-text font-weight-light">Tiga Serangkai University</span>
+                </a>
+            </div>
+        </nav>
+        <!-- /.navbar -->
+
+        <!-- Main content -->
+        <div class="content login-page">
+            @yield('content')
+        </div>
+        <!-- /.content -->
+
+        <!-- Main Footer -->
+        <footer class="main-footer text-sm">
+            <!-- To the right -->
+            <div class="float-right">
+            </div>
+            <strong>Copyright &copy; {{ date('Y') }} <a href="{{ route('indexing') }}">Tiga Serangkai University</a>.</strong> All rights
+            reserved.
+        </footer>
+    </div>
+    <!-- ./wrapper -->
+
+    <!-- REQUIRED SCRIPTS -->
+
+    <!-- jQuery -->
+    <script src="{{ asset('public/assets/plugins/jquery/jquery.min.js') }}"></script>
+    <!-- Bootstrap 4 -->
+    <script src="{{ asset('public/assets/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+    <!-- AdminLTE App -->
+    <script src="{{ asset('public/assets/dist/js/main.js') }}"></script>
+    <script src="{{ asset('public/assets/dist/js/adminlte.min.js') }}"></script>
+    <script src="{{ asset('public/assets/dist/js/sweetalert.js') }}"></script>
+    <!-- Select2 -->
+    <script src="{{ asset('public/assets/plugins/select2/js/select2.full.min.js') }}"></script>
+    <script>
+        @if (Session::has('alert'))
+            Swal.fire('{{ session('alert')['title'] }}', '{{ session('alert')['message'] }}',
+                '{{ session('alert')['status'] }}')
+        @endif
+
+        const passwordInput = document.getElementById('password');
+        const togglePasswordButton = document.getElementById('toggle-password');
+        let passwordVisible = false;
+        let visibilityTimeout;
+
+        togglePasswordButton.addEventListener('click', () => {
+            passwordVisible = !passwordVisible;
+            passwordInput.type = passwordVisible ? 'text' : 'password';
+            togglePasswordButton.setAttribute('aria-pressed', passwordVisible);
+            togglePasswordButton.setAttribute('aria-label', passwordVisible ? 'Hide password' : 'Show password');
+            togglePasswordButton.setAttribute('class', passwordVisible ? 'fas fa-unlock-alt' : 'fas fa-lock');
+
+            // Security: Hide password after 5 seconds
+            if (passwordVisible) {
+                visibilityTimeout = setTimeout(() => {
+                    passwordInput.type = 'password';
+                    passwordVisible = false;
+                    togglePasswordButton.setAttribute('aria-pressed', 'false');
+                    togglePasswordButton.setAttribute('aria-label', 'Show password');
+                    togglePasswordButton.setAttribute('class', 'fas fa-lock')
+                }, 5000);
+            } else {
+                clearTimeout(visibilityTimeout);
+            }
+        });
+
+        // var $alert = $('.alert-danger');
+        //
+        // if ($alert.length) {
+        //     var text = $alert.text();
+        //     var match = text.match(/(\d+)/);
+        //
+        //     if (match) {
+        //         var seconds = parseInt(match[0]);
+        //
+        //         var timer = setInterval(function() {
+        //             seconds--;
+        //
+        //             if (seconds >= 0) {
+        //                 $alert.text('Silakan coba lagi dalam ' + seconds + ' detik.');
+        //             } else {
+        //                 clearInterval(timer);
+        //
+        //                 $alert.removeClass('alert-danger').addClass('alert-info').text('Silakan coba login kembali.');
+        //             }
+        //         }, 1000);
+        //     }
+        // }
+    </script>
+    @include('system::components.alert')
+    @yield('script')
+</body>
+
+</html>

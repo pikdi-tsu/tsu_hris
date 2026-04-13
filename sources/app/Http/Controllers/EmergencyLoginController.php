@@ -106,7 +106,12 @@ class EmergencyLoginController extends Controller
                 );
             }
 
-            return redirect()->route('admin.dashboard')
+            if ($user->isAdmin()) {
+                return redirect()->route('admin.dashboard')
+                    ->with('alert', ['title' => 'Success', 'message' => 'Login Berhasil!', 'status' => 'success']);
+            }
+
+            return redirect()->route('users.dashboard')
                 ->with('alert', ['title' => 'Success', 'message' => 'Login Berhasil!', 'status' => 'success']);
         } catch (\Exception $e) {
             return response()->view('system::errors.index', [

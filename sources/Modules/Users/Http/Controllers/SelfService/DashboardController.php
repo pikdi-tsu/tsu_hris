@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Admin\Http\Controllers;
+namespace Modules\Users\Http\Controllers\SelfService;
 
 use Crypt;
 use DB;
@@ -23,10 +23,10 @@ class DashboardController extends Controller
         }
 
         $data = array(
-            'title' => 'Welcom to HRIS',
+            'title' => 'Welcome to Self Service',
             'menu'  => 'dashboard',
         );
 //         dd(session()->all());
-        return view('admin::dashboard.dashboard', $data);
+        return view('users::selfservice.dashboard', $data);
     }
 }

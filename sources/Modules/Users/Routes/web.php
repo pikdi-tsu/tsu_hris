@@ -1,7 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Modules\Users\Http\Controllers\MahasiswaController;
+use Modules\Users\Http\Controllers\SelfService\DashboardController;
+use Modules\Users\Http\Controllers\SelfService\CutiController;
 use Modules\Users\Http\Controllers\PegawaiController;
 use Modules\Users\Http\Controllers\UserController;
 use Modules\Users\Http\Controllers\UserProfileController;
@@ -24,6 +25,11 @@ Route::prefix('users')->name('users.')->middleware(['auth'])->group(function () 
         Route::post('user/sync', [UserController::class, 'sync'])->name('user.sync'); // Route Sync
         Route::resource('user', UserController::class);
     });
+
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+    Route::get('/cuti_index', [CutiController::class, 'index'])->name('cuti_index');
+
 
 });
 

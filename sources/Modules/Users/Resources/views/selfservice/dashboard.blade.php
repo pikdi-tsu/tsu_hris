@@ -13,13 +13,17 @@
                     <h1>{{ $title ?? 'Halaman Dashboard' }}</h1>
                 </div>
                 <div class="col-sm-6">
-                     <div class="d-flex justify-content-end">
-                        <a href="{{route('users.dashboard')}}" type="button" class="btn btn-primary bg-gradient-primary rounded-circle p-3" style="font-size: 10pt">
-                            Self.S
+                    <div class="d-flex justify-content-end">
+                        <a href="{{route('admin.dashboard')}}" type="button" class="btn btn-primary bg-gradient-primary rounded-circle p-3">
+                            HRIS
                         </a>
+                        {{-- <button type="button" class="btn btn-primary bg-gradient-primary rounded-circle p-3">
+                            <i class="bi bi-plus"></i>
+                            HRIS
+                        </button> --}}
                     </div>
                     {{-- <ol class="breadcrumb float-sm-right"> --}}
-                        {{-- <li class="breadcrumb-item active"><a href="{{route('admin.dashboard')}}">Dashboard</a></li> --}}
+                        {{-- <li class="breadcrumb-item active"><a href="{{route('users.dashboard')}}">Dashboard u</a></li> --}}
                         {{-- <li class="breadcrumb-item active">Starter Page</li> --}}
                     {{-- </ol> --}}
                 </div>
@@ -43,8 +47,11 @@
                             <a href="#" class="btn btn-primary" id="testing-btn">Button</a> --}}
 
                             <div class="d-grid gap-2 d-md-block">
-                                <a href="#" type="button" class="btn bg-gradient-primary">
-                                    Absensi
+                                <a href="{{route('users.cuti_index')}}" type="button" class="btn bg-gradient-primary">
+                                    Cuti Tahunan
+                                </a>
+                                 <a href="#" type="button" class="btn bg-gradient-primary">
+                                    Ijin Meninggalkan Kerja
                                 </a>
                             </div>
                         </div>

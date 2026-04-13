@@ -132,7 +132,7 @@ class SsoController extends Controller
                     ]);
                 }
 
-                return redirect()->route('admin.dashboard')
+                return redirect()->route('users.dashboard')
                     ->with('success', 'Login Berhasil! Selamat Datang, ' . $user->name);
             } catch (\Exception $e) {
                 Auth::logout();

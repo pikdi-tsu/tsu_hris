@@ -15,7 +15,7 @@ class MenuSeeder extends Seeder
         // Dashboard (Menu Utama)
         MenuSidebar::query()->create([
             'name' => 'Dashboard',
-            'route' => 'dashboard',
+            'route' => 'admin.dashboard',
             'icon' => 'fas fa-tachometer-alt',
             'order' => -99,
             'permission_name' => '',

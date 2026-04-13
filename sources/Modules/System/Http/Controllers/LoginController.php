@@ -141,7 +141,12 @@ class LoginController extends Controller
             session()->forget('manual_block_until');
             $this->clearLoginAttempts($request);
 
-            return redirect()->route('admin.dashboard.index')
+            if ($user->isAdmin()) {
+                return redirect()->route('admin.dashboard')
+                    ->with('alert', ['title' => 'Success', 'message' => 'Login Berhasil!', 'status' => 'success']);
+            }
+
+            return redirect()->route('users.dashboard')
                 ->with('success', 'Login Berhasil!');
         }
 

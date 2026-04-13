@@ -12,8 +12,9 @@
 */
 
 use Modules\Admin\Http\Controllers\DashboardController;
+use Modules\System\Http\Middleware\CheckAdminRole;
 
-Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
+Route::prefix('admin')->name('admin.')->middleware(['auth', CheckAdminRole::class])->group(function () {
 
     // URL: tsu-app.test/admin/dashboard
     // Name: route('admin.dashboard.index')

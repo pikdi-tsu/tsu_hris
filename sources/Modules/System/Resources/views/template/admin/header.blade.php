@@ -12,7 +12,7 @@
     <!-- Google Font: Source Sans Pro -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
     <!-- Font Awesome -->
-{{--    <link rel="stylesheet" href="{{asset('public/assets/plugins/fontawesome-free/css/all.min.css')}}">--}}
+    {{-- <link rel="stylesheet" href="{{asset('public/assets/plugins/fontawesome-free/css/all.min.css')}}">--}}
     <link rel="stylesheet" href="{{asset('public/assets/plugins/fontawesome-free-7.1.0-web/css/all.min.css')}}">
     <!-- Select2 -->
     <link rel="stylesheet" href="{{asset('public/assets/plugins/select2/css/select2.min.css')}}">
@@ -42,6 +42,25 @@
     <link rel="stylesheet" href="{{ asset('public/assets/plugins/datatables-buttons/css/buttons.bootstrap4.min.css')}}">
     <!-- SweetAlert 2 -->
     <link rel="stylesheet" href="{{ asset('public/assets/plugins/sweetalert2/sweetalert2.min.css') }}">
+    {{-- Jquery UI --}}
+    <link rel="stylesheet" href="{{ asset('public/assets/plugins/jquery-ui/jquery-ui.css') }}">
+
+    <!-- jQuery -->
+    <script src="{{ asset('public/assets/plugins/jquery/jquery.min.js') }}"></script>
+    <!-- jQuery UI 1.11.4 -->
+    <script src="{{ asset('public/assets/plugins/jquery-ui/jquery-ui.min.js') }}"></script>
+    <script src="{{ asset('public/assets/plugins/popper/umd/popper.min.js') }}"></script>
+    <!-- Bootstrap 4 -->
+    <script src="{{ asset('public/assets/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
+    <!-- Select2 -->
+    <script src="{{ asset('public/assets/plugins/select2/js/select2.full.min.js') }}"></script>
+    <!-- daterangepicker -->
+    <script src="{{ asset('public/assets/plugins/moment/moment.min.js') }}"></script>
+    <script src="{{ asset('public/assets/plugins/daterangepicker/daterangepicker.js') }}"></script>
+    <!-- DataTables -->
+    <script src="{{ asset('public/assets/plugins/datatables/jquery.dataTables.js') }}"></script>
+    <script src="{{ asset('public/assets/plugins/datatables-bs4/js/dataTables.bootstrap4.js') }}"></script>
+    <!-- SweetAlert 2 -->
     <script src="{{ asset('public/assets/plugins/sweetalert2/sweetalert2.all.min.js') }}"></script>
     @yield('link_href')
 </head>

@@ -19,6 +19,9 @@ use Modules\Users\Http\Controllers\UserProfileController;
 */
 
 Route::prefix('users')->name('users.')->middleware(['auth'])->group(function () {
+    //Dashbooard
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+  
     // User
     Route::middleware(['permission:users:user:view'])->group(function () {
         Route::get('users/json', [UserController::class, 'datatable'])->name('user.json');
@@ -26,8 +29,6 @@ Route::prefix('users')->name('users.')->middleware(['auth'])->group(function () 
         Route::resource('user', UserController::class);
     });
 
-    //Dashbooard
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     //Cuti
     Route::prefix('cuti')->name('cuti.')->group(function () {
@@ -40,11 +41,16 @@ Route::prefix('users')->name('users.')->middleware(['auth'])->group(function () 
 
     // Route::get('/cuti_index', [CutiController::class, 'index'])->name('cuti_index');
     // Route::post('/cuti_simpan', [CutiController::class, 'simpan'])->name('cuti_simpan');
-});
-
-// Profile & Password
-Route::prefix('profile')->middleware(['auth'])->name('profile.')->group(function () {
-    Route::get('/', [UserProfileController::class, 'index'])->name('index');
-    Route::post('/profile/photo', [UserProfileController::class, 'updatePhoto'])->name('save.change-profile');
-    Route::put('/profile/password', [UserProfileController::class, 'updatePassword'])->name('update-password');
+  
+  // Route Hari Libur
+    Route::prefix('hari-libur')->name('hari-libur.')->group(function () {
+        Route::get('/json', [DashboardController::class, 'getHolidays'])->name('json');
+    });
+  
+  // Profile & Password
+    Route::prefix('profile')->middleware(['auth'])->name('profile.')->group(function() {
+        Route::get('/', [UserProfileController::class, 'index'])->name('index');
+        Route::post('/profile/photo', [UserProfileController::class, 'updatePhoto'])->name('save.change-profile');
+        Route::put('/profile/password', [UserProfileController::class, 'updatePassword'])->name('update-password');
+    });
 });

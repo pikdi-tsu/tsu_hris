@@ -63,6 +63,7 @@
     <!-- SweetAlert 2 -->
     <script src="{{ asset('public/assets/plugins/sweetalert2/sweetalert2.all.min.js') }}"></script>
     @yield('link_href')
+    @yield('css')
 </head>
 <body class="hold-transition sidebar-mini layout-navbar-fixed">
     <div class="wrapper">

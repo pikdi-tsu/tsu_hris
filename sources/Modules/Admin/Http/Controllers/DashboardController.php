@@ -23,10 +23,10 @@ class DashboardController extends Controller
         }
 
         $data = array(
-            'title' => 'Welcom to HRIS',
+            'title' => 'Welcome to HRIS',
             'menu'  => 'dashboard',
         );
 //         dd(session()->all());
-        return view('admin::dashboard.dashboard', $data);
+        return view('admin::dashboard.index', $data);
     }
 }

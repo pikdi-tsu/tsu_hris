@@ -1,17 +1,16 @@
-# <p align="center"> TSU Project Template <br> (Modular Monolith Edition) </p>
+# <p align="center"> TSU HRIS <br> (Human Resource Information System) </p>
 
-## 📢 Description
+## 📢 Deskripsi Sistem
 
-Template aplikasi berbasis Laravel yang dikustomisasi dengan pendekatan arsitektur *Modular Monolith*. Proyek ini dirancang untuk mengakomodasi kompleksitas sistem informasi akademik dengan memisahkan logika bisnis berdasarkan domain (Modul), bukan hanya berdasarkan lapisan teknis.
+TSU HRIS adalah sistem informasi pengelolaan sumber daya manusia strategis yang dikembangkan khusus untuk Universitas Tiga Serangkai (TSU). Sistem ini mengadaptasi pendekatan arsitektur *Modular Monolith*, yang memisahkan logika bisnis berdasarkan domain spesifik (Modul) guna memastikan skalabilitas, kemudahan pemeliharaan, serta kinerja yang optimal dalam ekosistem digital institusi.
 
-## 📋 Project Overview
+## 📋 Tinjauan Proyek (Project Overview)
 
-Proyek ini adalah *boilerplate* yang memindahkan struktur standar Laravel (`app/`) ke dalam direktori kustom `sources/` untuk mendukung skalabilitas jangka panjang.
-Saat ini, aplikasi berjalan menggunakan **koneksi database langsung (Direct DB)** dengan autentikasi lokal berbasis sesi. Namun, arsitektur kode (Service Layer) telah disiapkan untuk transisi menuju implementasi berbasis API (*API-Driven*) di masa mendatang tanpa perlu merombak struktur utama.
+Dikembangkan di atas fondasi **TSU Project Template**, aplikasi ini mempertahankan struktur direktori kustom `sources/` untuk mendukung integrasi jangka panjang. Saat ini, sistem beroperasi menggunakan koneksi basis data langsung dengan autentikasi lokal berbasis sesi yang terintegrasi dengan ekosistem SSO TSU. Arsitektur *Service Layer* telah dirancang sedemikian rupa untuk mengakomodasi transisi menuju implementasi berbasis API (*API-Driven*) di masa mendatang.
 
-## 🏗️ Struktur Direktori & Arsitektur
+## 🏗️ Struktur Direktori & Arsitektur Domain
 
-Perbedaan mendasar pada template ini adalah lokasi *core logic*. Direktori `sources/` berfungsi sebagai root namespace utama untuk menggantikan `app/` standar, dengan pembagian sebagai berikut:
+Keunggulan arsitektural pada sistem ini terletak pada pemisahan *core logic* ke dalam direktori `sources/` sebagai *root namespace* utama, dengan pembagian modul sebagai berikut:
 
 ```text
 root/
@@ -19,63 +18,78 @@ root/
 ├── sources/            # Direktori Utama Logika Aplikasi
 │   ├── app/            # Logika Global (Shared Controllers, Models, Helpers)
 │   └── Modules/        # Domain-Driven Modules
-│       ├── Admin/      # Modul khusus manajemen Administrator & Konfigurasi
-│       ├── System/     # Modul pengaturan sistem inti
-│       └── Users/      # Modul manajemen pengguna (Dosen, Tendik, Mahasiswa)
+│       ├── Admin/      # Operasional Administrator & Master Data
+│       ├── System/     # Core Engine (Auth, Spatie ACL, Dynamic Menus)
+│       ├── Users/      # Manajemen Profil (Dosen, Tendik, Mahasiswa)
+│       ├── Calendar/   # [Q1] Manajemen Kalender Kerja & Libur Nasional
+│       ├── Employee/   # [Q1] Manajemen Data Master Pegawai
+│       ├── Time/       # [Q2] Manajemen Absensi, Cuti, Izin, & Lembur
+│       └── Finance/    # [Q2] Manajemen Payroll & Slip Gaji
 ```
 
-Implementasi ini menggunakan pola nwidart/laravel-modules untuk memastikan setiap domain bisnis terisolasi dengan baik.
+*Catatan: Implementasi ini menggunakan pola `nwidart/laravel-modules` untuk memastikan isolasi fungsionalitas antar domain bisnis.*
 
 ## 🛠️ Spesifikasi Teknis (Tech Stack)
 
-- Framework Core: Laravel
-- Architecture Pattern: Modular Monolith
-- Database Interface: Eloquent ORM & yajra/laravel-datatables-oracle (Support MySQL & Oracle)
-- Authentication: Custom Local Authentication (Session-based)
-    - Pemisahan logika login untuk user internal (Dosen/Tendik) dan user eksternal (Mahasiswa).
-- Frontend Stack:
-    - Blade Templating Engine
-    - Bootstrap 4 Ecosystem
-    - AdminLTE Assets & Custom Components
-    - Libraries: Select2, Summernote, SweetAlert2, Chart.js
-
-## 🛣️ Roadmap Pengembangan
-
-Proyek ini dikembangkan dengan peta jalan (roadmap) teknis sebagai berikut:
-
-1. Phase 1 (Current): Struktur Modular Monolith, Autentikasi Lokal, Koneksi Database Langsung.
-2. Phase 2: Refactoring Service Layer untuk persiapan abstraksi data.
-3. Phase 3: Transisi ke Arsitektur berbasis API (Headless Readiness).
-
-## ⚙️ Panduan Instalasi
-
-Ikuti langkah berikut untuk mengatur lingkungan pengembangan lokal:
-1. Clone & Install Dependencies Pastikan menjalankan dump-autoload agar namespace kustom pada folder sources/ terbaca.
-```bash
-git clone <repository_url>
-composer install
-composer dump-autoload
-```
-2. Konfigurasi Environment Salin file konfigurasi dan atur kredensial database (MySQL/Oracle).
-```bash
-cp .env.example .env
-php artisan key:generate
-```
-3. Setup Database & Modules Pastikan modul diaktifkan dan migrasi dijalankan.
-```bash
-php artisan module:enable Admin Users System
-php artisan migrate --seed
-```
-4. Menjalankan Aplikasi
-```bash
- php artisan serve
-```
-
-## 📝 Catatan Pengembang
-
-- Namespace: Semua logika inti berada di bawah namespace App\ (untuk sources/app) dan Modules\ (untuk sources/Modules).
-- Assets: Aset publik dikelola secara manual di public/assets dan public/assetsku. Pastikan path aset di file Blade mengarah ke direktori yang benar.
+- **Framework Core**: Laravel
+- **Architecture Pattern**: Modular Monolith
+- **Database Interface**: Eloquent ORM & `yajra/laravel-datatables-oracle`
+- **Authentication & Authorization**:
+   - Custom Local Authentication terintegrasi dengan TSU SSO.
+   - `spatie/laravel-permission` untuk Manajemen Hak Akses dinamis.
+- **Frontend Stack**: Blade Templating, Bootstrap 4, AdminLTE, Select2, SweetAlert2, Chart.js.
 
 ---
 
-<div style="text-align: center; font-weight: bold"> Pusat Informasi, Komunikasi dan Digital (PIKDI) <br> Tiga Serangkai University </div>
+## ⚙️ Panduan Instalasi & Setup Standar
+
+Ikuti instruksi berikut untuk mengonfigurasi lingkungan pengembangan lokal (*local environment*):
+
+1. **Kloning & Instalasi Dependensi**
+   ```bash
+   git clone https://github.com/pikdi-tsu/tsu_hris.git
+   cd tsu_hris
+   composer install atau composer update
+   ```
+
+2. **Konfigurasi Environment (Krusial)**
+   Salin file `.env.example` menjadi `.env`. Pastikan Anda menyesuaikan variabel berikut agar fitur SSO dan identitas sistem tidak berbenturan:
+
+   **🔹 Core & Database**
+   - `APP_NAME`: TSU HRIS
+   - `APP_URL`: URL lokal Anda (Contoh: `http://tsu_hris.test`)
+   - `SESSION_COOKIE`: `hris_session` atau `session` (Penting untuk menghindari konflik sesi lokal)
+   - `DB_*`: Kredensial basis data lokal.
+
+   **🔹 Integrasi SSO & API (Homebase TSU)**
+   - `TSU_SSO_CLIENT_ID` & `SECRET`: Kredensial SSO dari TSU Homebase.
+   - `TSU_SSO_REDIRECT_URI`: Endpoint callback (Contoh: `http://tsu_hris.test/login/sso/callback`).
+
+   **🔹 Keamanan & Hak Akses**
+   - `PIKDI_EMERGENCY_SECRET` & `RESCUE_SECRET`: Kunci otorisasi darurat internal PIKDI.
+
+3. **Generate Key & Sinkronisasi**
+   ```bash
+   php artisan key:generate
+   php artisan config:clear
+   ```
+
+4. **Inisiasi Basis Data & Modul**
+   Aktifkan seluruh modul esensial sebelum menjalankan migrasi untuk memastikan relasi tabel terjalin dengan sempurna.
+   ```bash
+   php artisan module:enable System Admin Users (Optional)
+   php artisan migrate --seed
+   ```
+
+5. **Akses Aplikasi**
+   ```bash
+   php artisan serve
+   ```
+   *(Atau akses melalui domain lokal Laragon Anda, misal: `tsu_hris.test`)*
+
+---
+
+<div align="center">
+  <strong>Pusat Informasi, Komunikasi dan Digital (PIKDI)</strong><br>
+  Tiga Serangkai University &copy; 2026
+</div>

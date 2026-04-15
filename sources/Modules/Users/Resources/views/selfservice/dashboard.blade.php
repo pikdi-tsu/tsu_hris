@@ -56,13 +56,12 @@
                                     Ijin Meninggalkan Kerja
                                 </a>
                             </div>
-
-                            <div class="container-fluid">
-                                <div class="row">
-                                    <div class="col-12">
-                                        @include('users::master-data.hari-libur.index')
-                                    </div>
-                                </div>
+                        </div>
+                    </div>
+                    <div class="card card-primary card-outline">
+                        <div class="row">
+                            <div class="col-12">
+                                @include('users::master-data.hari-libur.index')
                             </div>
                         </div>
                     </div>

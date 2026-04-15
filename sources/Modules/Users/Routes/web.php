@@ -30,12 +30,16 @@ Route::prefix('users')->name('users.')->middleware(['auth'])->group(function () 
 
     Route::get('/cuti_index', [CutiController::class, 'index'])->name('cuti_index');
 
+    // Route Hari Libur
+    Route::prefix('hari-libur')->name('hari-libur.')->group(function () {
+        Route::get('/json', [DashboardController::class, 'getHolidays'])->name('json');
+    });
 
-});
 
-// Profile & Password
-Route::prefix('profile')->middleware(['auth'])->name('profile.')->group(function() {
-    Route::get('/', [UserProfileController::class, 'index'])->name('index');
-    Route::post('/profile/photo', [UserProfileController::class, 'updatePhoto'])->name('save.change-profile');
-    Route::put('/profile/password', [UserProfileController::class, 'updatePassword'])->name('update-password');
+    // Profile & Password
+    Route::prefix('profile')->middleware(['auth'])->name('profile.')->group(function() {
+        Route::get('/', [UserProfileController::class, 'index'])->name('index');
+        Route::post('/profile/photo', [UserProfileController::class, 'updatePhoto'])->name('save.change-profile');
+        Route::put('/profile/password', [UserProfileController::class, 'updatePassword'])->name('update-password');
+    });
 });

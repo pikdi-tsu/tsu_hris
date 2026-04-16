@@ -9,7 +9,7 @@
             <div class="card-tools">
                 {{-- FITUR SYNC USER --}}
                 @can('users:user:create')
-                    <form action="{{ route('users.user.sync') }}" method="POST" style="display:inline;">
+                    <form action="{{ route('users.sync') }}" method="POST" style="display:inline;">
                         @csrf
                         <button type="submit" class="btn btn-primary btn-sm btn-sync" title="Tarik data terbaru">
                             <i class="fas fa-sync-alt"></i> Update Users Lokal
@@ -66,7 +66,7 @@
             var table = $('#table-user-modul').DataTable({
                 processing: true,
                 serverSide: true,
-                ajax: "{{ route('users.user.json') }}",
+                ajax: "{{ route('users.json') }}",
                 columns: [
                     { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
                     { data: 'avatar', name: 'avatar', orderable: false, searchable: false },

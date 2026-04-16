@@ -19,14 +19,14 @@ use Modules\Users\Http\Controllers\UserProfileController;
 */
 
 Route::prefix('users')->name('users.')->middleware(['auth'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
     // User
     Route::middleware(['permission:users:user:view'])->group(function() {
-        Route::get('users/json', [UserController::class, 'datatable'])->name('user.json');
-        Route::post('user/sync', [UserController::class, 'sync'])->name('user.sync'); // Route Sync
+        Route::get('/json', [UserController::class, 'datatable'])->name('json');
+        Route::post('/sync', [UserController::class, 'sync'])->name('sync'); // Route Sync
         Route::resource('user', UserController::class);
     });
-
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/cuti_index', [CutiController::class, 'index'])->name('cuti_index');
 

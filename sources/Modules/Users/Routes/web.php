@@ -28,15 +28,21 @@ Route::prefix('users')->name('users.')->middleware(['auth'])->group(function () 
         Route::resource('user', UserController::class);
     });
 
-    Route::get('/cuti_index', [CutiController::class, 'index'])->name('cuti_index');
-
-    // Route Hari Libur
+    //Cuti
+    Route::prefix('cuti')->name('cuti.')->group(function () {
+        Route::get('/', [CutiController::class, 'index'])->name('index');
+        Route::post('/simpan', [CutiController::class, 'simpan'])->name('simpan');
+        Route::post('/datatables', [CutiController::class, 'datatables'])->name('datatables');
+        Route::post('/edit', [CutiController::class, 'edit'])->name('edit');
+        Route::post('/detail', [CutiController::class, 'detail'])->name('detail');
+    });
+  
+  // Route Hari Libur
     Route::prefix('hari-libur')->name('hari-libur.')->group(function () {
         Route::get('/json', [DashboardController::class, 'getHolidays'])->name('json');
     });
-
-
-    // Profile & Password
+  
+  // Profile & Password
     Route::prefix('profile')->middleware(['auth'])->name('profile.')->group(function() {
         Route::get('/', [UserProfileController::class, 'index'])->name('index');
         Route::post('/profile/photo', [UserProfileController::class, 'updatePhoto'])->name('save.change-profile');

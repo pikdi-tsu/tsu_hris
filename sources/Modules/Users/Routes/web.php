@@ -19,16 +19,14 @@ use Modules\Users\Http\Controllers\UserProfileController;
 */
 
 Route::prefix('users')->name('users.')->middleware(['auth'])->group(function () {
-    //Dashbooard
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-  
+
     // User
-    Route::middleware(['permission:users:user:view'])->group(function () {
-        Route::get('users/json', [UserController::class, 'datatable'])->name('user.json');
-        Route::post('user/sync', [UserController::class, 'sync'])->name('user.sync'); // Route Sync
+    Route::middleware(['permission:users:user:view'])->group(function() {
+        Route::get('/json', [UserController::class, 'datatable'])->name('json');
+        Route::post('/sync', [UserController::class, 'sync'])->name('sync'); // Route Sync
         Route::resource('user', UserController::class);
     });
-
 
     //Cuti
     Route::prefix('cuti')->name('cuti.')->group(function () {
@@ -38,9 +36,6 @@ Route::prefix('users')->name('users.')->middleware(['auth'])->group(function () 
         Route::post('/edit', [CutiController::class, 'edit'])->name('edit');
         Route::post('/detail', [CutiController::class, 'detail'])->name('detail');
     });
-
-    // Route::get('/cuti_index', [CutiController::class, 'index'])->name('cuti_index');
-    // Route::post('/cuti_simpan', [CutiController::class, 'simpan'])->name('cuti_simpan');
   
   // Route Hari Libur
     Route::prefix('hari-libur')->name('hari-libur.')->group(function () {

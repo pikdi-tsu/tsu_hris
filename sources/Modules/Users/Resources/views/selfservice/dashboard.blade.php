@@ -25,8 +25,8 @@
                         </button> --}}
                     </div>
                     {{-- <ol class="breadcrumb float-sm-right"> --}}
-                        {{-- <li class="breadcrumb-item active"><a href="{{route('users.dashboard')}}">Dashboard u</a></li> --}}
-                        {{-- <li class="breadcrumb-item active">Starter Page</li> --}}
+                    {{-- <li class="breadcrumb-item active"><a href="{{route('users.dashboard')}}">Dashboard u</a></li> --}}
+                    {{-- <li class="breadcrumb-item active">Starter Page</li> --}}
                     {{-- </ol> --}}
                 </div>
             </div>
@@ -49,10 +49,10 @@
                             <a href="#" class="btn btn-primary" id="testing-btn">Button</a> --}}
 
                             <div class="d-grid gap-2 d-md-block">
-                                <a href="{{route('users.cuti_index')}}" type="button" class="btn bg-gradient-primary">
+                                <a href="{{ route('users.cuti.index') }}" type="button" class="btn bg-gradient-primary">
                                     Cuti Tahunan
                                 </a>
-                                 <a href="#" type="button" class="btn bg-gradient-primary">
+                                <a href="#" type="button" class="btn bg-gradient-primary">
                                     Ijin Meninggalkan Kerja
                                 </a>
                             </div>
@@ -72,7 +72,7 @@
 @endsection
 @section('script')
     <script>
-        $(function () {
+        $(function() {
             $.ajaxSetup({
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')

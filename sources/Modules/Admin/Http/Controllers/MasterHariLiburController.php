@@ -37,7 +37,7 @@ class MasterHariLiburController extends MiddlewareController
             ->addIndexColumn() // Bikin nomor urut otomatis (DT_RowIndex)
             ->editColumn('tanggal', function($row) {
                 // Format tanggal ala Indonesia
-                return Carbon::parse($row->tanggal)->format('d-m-Y');
+                return tglIndo($row->tanggal);
             })
             ->addColumn('status_libur', function($row) {
                 // Rakit badge dari backend

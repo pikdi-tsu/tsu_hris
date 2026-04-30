@@ -64,13 +64,22 @@ class DataKaryawanController extends MiddlewareController
 
                 return $nik . $nidn;
             })
-            ->addColumn('jabatan', function($row) {
-                // Jabatan Struktural & Fungsional
-                $struktural = $row->jabatan_struktural ?? 'Tidak menjabat struktural';
-                $fungsional = $row->jabatan_fungsional ?? '-';
+            ->addColumn('jabatan', function ($row) {
+                // LOGIC JABATAN STRUKTURAL
+                if (empty($row->jabatan_struktural)) {
+                    $htmlStruktural = '<div class="text-muted font-italic small mb-1">Tidak ada jabatan struktural</div>';
+                } else {
+                    $htmlStruktural = '<div class="font-weight-bold text-dark">' . $row->jabatan_struktural . '</div>';
+                }
 
-                return '<div class="font-weight-bold text-dark">' . $struktural . '</div>' .
-                    '<div class="text-muted small">Fungsional: ' . $fungsional . '</div>';
+                // LOGIC JABATAN FUNGSIONAL
+                if (empty($row->jabatan_fungsional)) {
+                    $htmlFungsional = '<span class="text-muted small"><i class="fas fa-layer-group mr-1"></i>Fungsional: <span class="font-italic">-</span></span>';
+                } else {
+                    $htmlFungsional = '<span class="text-secondary small"><i class="fas fa-layer-group mr-1"></i>Fungsional: ' . $row->jabatan_fungsional . '</span>';
+                }
+
+                return $htmlStruktural . $htmlFungsional;
             })
             ->addColumn('status_karyawan', function($row) {
                 if ($row->status_karyawan === 'NON-AKTIF') {

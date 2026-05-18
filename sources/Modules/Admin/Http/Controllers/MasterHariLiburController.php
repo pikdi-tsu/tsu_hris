@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Modules\Admin\Entities\MasterHariLibur;
 use Yajra\DataTables\Facades\DataTables;
+use App\Services\TsuErrorHandlerService;
 
 class MasterHariLiburController extends MiddlewareController
 {
@@ -151,29 +152,13 @@ class MasterHariLiburController extends MiddlewareController
             return back()->with('success', 'Mantap! Hari libur institusi berhasil ditambahkan.');
 
         } catch (\Exception $e) {
-            // Error Handling ala PIKDI TSU
-            $rawMessage = $e->getMessage();
-            $errorCode  = "[TSU_LIBUR_STORE_FAIL]";
-            $userMsg    = "Gagal menyimpan data libur baru.";
-
-            if (preg_match('/\[TSU_.*?\]/', $rawMessage, $matches)) {
-                $errorCode = $matches[0];
-                $userMsg = trim(str_replace($errorCode, '', $rawMessage));
-            }
-
-            Log::error("$errorCode Gagal Create Libur.", [
-                'original_error' => $rawMessage,
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
-            ]);
-
-            $finalErrorMsg = "<div class='text-center'>
-                                <h4 class='text-bold text-danger mb-2'>$errorCode</h4>
-                                <p class='mb-2 text-bold' style='font-size: 1.1em;'>$userMsg</p>
-                                <p class='text-muted small mb-0'>Silakan screenshot pesan ini dan laporkan ke PIKDI jika masalah berlanjut.</p>
-                              </div>";
-
-            return back()->withInput($request->all())->with('error', $finalErrorMsg);
+            return TsuErrorHandlerService::handleHtml(
+                $e, 
+                '[TSU_LIBUR_STORE_FAIL]', 
+                'Gagal menyimpan data libur baru.', 
+                'Gagal Create Libur.', 
+                $request
+            );
         }
     }
 
@@ -214,29 +199,13 @@ class MasterHariLiburController extends MiddlewareController
             return back()->with('success', 'Data libur berhasil diperbarui!');
 
         } catch (\Exception $e) {
-            // Error Handling ala PIKDI TSU tetap jalan
-            $rawMessage = $e->getMessage();
-            $errorCode  = "[TSU_LIBUR_UPD_FAIL]";
-            $userMsg    = "Gagal menyimpan perubahan data libur.";
-
-            if (preg_match('/\[TSU_.*?\]/', $rawMessage, $matches)) {
-                $errorCode = $matches[0];
-                $userMsg = trim(str_replace($errorCode, '', $rawMessage));
-            }
-
-            Log::error("$errorCode Gagal Update Libur ID: $id.", [
-                'original_error' => $rawMessage,
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
-            ]);
-
-            $finalErrorMsg = "<div class='text-center'>
-                                <h4 class='text-bold text-danger mb-2'>$errorCode</h4>
-                                <p class='mb-2 text-bold' style='font-size: 1.1em;'>$userMsg</p>
-                                <p class='text-muted small mb-0'>Silakan screenshot pesan ini dan laporkan ke PIKDI jika masalah berlanjut.</p>
-                              </div>";
-
-            return back()->withInput($request->all())->with('error', $finalErrorMsg);
+            return TsuErrorHandlerService::handleHtml(
+                $e, 
+                '[TSU_LIBUR_UPD_FAIL]', 
+                'Gagal menyimpan perubahan data libur.', 
+                "Gagal Update Libur ID: $id.", 
+                $request
+            );
         }
     }
 

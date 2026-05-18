@@ -59,13 +59,19 @@
 <script src="{{ asset('public/assets/plugins/datatables-buttons/js/buttons.html5.min.js') }}"></script>
 <script src="{{ asset('public/assets/plugins/datatables-buttons/js/buttons.print.min.js') }}"></script>
 <script src="{{ asset('public/assets/plugins/datatables-buttons/js/buttons.colVis.min.js') }}"></script>
+<script src="{{ asset('public/assets/plugins/sweetalert2/sweetalert2.all.min.js') }}"></script>
+<script src="{{ asset('public/assets/plugins/bs-custom-file-input/bs-custom-file-input.min.js') }}"></script>
 <script>
     @if (Session::has('alert'))
         Swal.fire('{{ session('alert')['title'] }}', '{{ session('alert')['message'] }}',
             '{{ session('alert')['status'] }}')
     @endif
 
-    bsCustomFileInput.init();
+    $(document).ready(function () {
+        if (typeof bsCustomFileInput !== 'undefined') {
+            bsCustomFileInput.init();
+        }
+    });
 </script>
 @include('system::components.alert')
 @yield('script')

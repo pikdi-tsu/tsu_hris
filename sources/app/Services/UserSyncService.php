@@ -224,9 +224,18 @@ class UserSyncService
         if (!empty($data['no_hp'])) $updateData['no_hp'] = $data['no_hp'];
         if (!empty($data['alamat'])) $updateData['alamat_domisili'] = $data['alamat'];
 
+        // Logic Pencarian Data User
+        $searchKey = [];
+        if (!empty($data['nidn'])) {
+            $searchKey['nidn'] = $data['nidn'];
+        } else {
+            // Kalau nggak punya NIDN, pakai username sebagai NIK (Standar SSO kita)
+            $searchKey['nik'] = $data['nik'] ?? $data['username'];
+        }
+        
         // Cari berdasarkan NIK, lalu klaim / update
         DataDosenTendik::query()->updateOrCreate(
-            ['nik' => $nik],
+            $searchKey,
             $updateData
         );
     }

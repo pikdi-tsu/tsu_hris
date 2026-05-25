@@ -22,7 +22,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // --- ROUTE DATA KARYAWAN ---
-    Route::middleware(['permission:admin:data-karyawan:view'])->group(function() {
+    Route::middleware(['permission:admin:data-karyawan:view'])->group(function () {
         Route::prefix('data-karyawan')->name('data-karyawan.')->group(function () {
             // Route JSON
             Route::get('/json', [DataKaryawanController::class, 'datatable'])->name('json');
@@ -35,7 +35,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
 
 
     // --- ROUTE MASTER HARI LIBUR ---
-    Route::middleware(['permission:admin:hari-libur:view'])->group(function() {
+    Route::middleware(['permission:admin:hari-libur:view'])->group(function () {
         Route::prefix('hari-libur')->name('hari-libur.')->group(function () {
             // Route JSON
             Route::get('/json', [MasterHariLiburController::class, 'datatable'])->name('json');
@@ -50,10 +50,18 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     });
 
     // --- ROUTE MASTER LEMBUR ---
-    Route::middleware(['permission:admin:master-lembur:view'])->group(function() {
+    Route::middleware(['permission:admin:master-lembur:view'])->group(function () {
         Route::prefix('master-lembur')->name('master-lembur.')->group(function () {
             Route::get('/json', [\Modules\Admin\Http\Controllers\MasterLemburController::class, 'datatable'])->name('json');
             Route::resource('/', \Modules\Admin\Http\Controllers\MasterLemburController::class)->parameters(['' => 'id'])->except(['show']);
+        });
+    });
+
+    // --- ROUTE MASTER CUTI ---
+    Route::middleware(['permission:admin:master-cuti:view'])->group(function () {
+        Route::prefix('master-cuti')->name('master-cuti.')->group(function () {
+            Route::get('/json', [\Modules\Admin\Http\Controllers\MasterCutiController::class, 'datatable'])->name('json');
+            Route::resource('/', \Modules\Admin\Http\Controllers\MasterCutiController::class)->parameters(['' => 'id'])->except(['show']);
         });
     });
 });

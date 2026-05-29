@@ -48,7 +48,7 @@ Ikuti instruksi berikut untuk mengonfigurasi lingkungan pengembangan lokal (*loc
 1. **Kloning & Instalasi Dependensi**
    ```bash
    git clone https://github.com/pikdi-tsu/tsu_hris.git
-   cd tsu_hris
+   cd tsu_hris/sources
    composer install atau composer update
    ```
 

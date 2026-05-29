@@ -45,7 +45,7 @@
                                             Cuti Tahunan
                                         </div>
                                         <div class="card-body text-center">
-                                            <span style="font-size: 13pt;">12</span>
+                                            <span style="font-size: 13pt;">{{ $saldo->jatah }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -55,7 +55,7 @@
                                             Cuti Bersama
                                         </div>
                                         <div class="card-body text-center">
-                                            <span style="font-size: 13pt;">6</span>
+                                            <span style="font-size: 13pt;">0</span>
                                         </div>
                                     </div>
                                 </div>
@@ -65,7 +65,7 @@
                                             Cuti Karyawan
                                         </div>
                                         <div class="card-body text-center">
-                                            <span style="font-size: 13pt;">2</span>
+                                            <span style="font-size: 13pt;">{{ $saldo->terpakai }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -75,7 +75,7 @@
                                             Sisa Cuti
                                         </div>
                                         <div class="card-body text-center">
-                                            <span style="font-size: 13pt;">4</span>
+                                            <span style="font-size: 13pt;">{{ $saldo->sisa }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -85,7 +85,8 @@
                                             Expired
                                         </div>
                                         <div class="card-body text-center">
-                                            <span style="font-size: 13pt;">10 Maret 2027</span>
+                                            <span
+                                                style="font-size: 13pt;">{{ \Carbon\Carbon::parse($saldo->expired)->translatedFormat('d F Y') }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -97,34 +98,32 @@
                                 <div class="row" style="font-size: 10pt">
                                     <div class="col-md-6 text-center">
                                         <div class="row mb-2">
-                                            <label for="inputNik" class="col-sm-2 col-form-label">NIK</label>
+                                            <label class="col-sm-2 col-form-label">NIK</label>
                                             <div class="col-sm-8">
-                                                <input type="text" class="form-control" id="inputNik" placeholder="NIK">
+                                                <input type="text" class="form-control" placeholder="NIK"
+                                                    value="{{ $profile->nik }}" readonly>
                                             </div>
                                         </div>
                                         <div class="row mb-2">
-                                            <label for="inputNama" class="col-sm-2 col-form-label">Nama</label>
+                                            <label class="col-sm-2 col-form-label">Nama</label>
                                             <div class="col-sm-8">
-                                                <input type="text" class="form-control" id="inputNama"
-                                                    placeholder="Nama">
+                                                <input type="text" class="form-control" placeholder="Nama"
+                                                    value="{{ $profile->nama }}" readonly>
                                             </div>
                                         </div>
-                                    </div>
-
-                                    <div class="col-md-6">
                                         <div class="row mb-2">
-                                            <label for="inputNama2" class="col-sm-2 col-form-label">Jenis Absense</label>
+                                            <label for="jeniscuti" class="col-sm-2 col-form-label">Jenis Cuti</label>
                                             <div class="col-sm-8">
-                                                <select name="" id="jenisabsense" class="form-control select2">
-                                                    <option value=''>..:: select type ::..</option>
+                                                <select name="" id="jeniscuti" class="form-control select2">
+                                                    <option value=''>..:: Pilih Cuti ::..</option>
                                                     @foreach ($mcuti as $item)
-                                                        <option value={{$item->id}}>{{$item->jeniscuti}}</option>
+                                                        <option value={{ $item->id }}>{{ $item->jeniscuti }}</option>
                                                     @endforeach
                                                 </select>
                                             </div>
                                         </div>
                                         <div class="row mb-2">
-                                            <label for="inputNik2" class="col-sm-2 col-form-label">Tanggal s/d</label>
+                                            <label for="inputNik2" class="col-sm-2 col-form-label">Tanggal Cuti</label>
                                             <div class="col-sm-4">
                                                 <input type="text" class="form-control" id="tanggal1" name="tanggal1"
                                                     autocomplete="off" placeholder="Tanggal Mulai">
@@ -134,6 +133,9 @@
                                                     autocomplete="off" placeholder="Tanggal Selesai">
                                             </div>
                                         </div>
+                                    </div>
+
+                                    <div class="col-md-6">
                                         <div class="row mb-2">
                                             <label for="inputNik2" class="col-sm-2 col-form-label">Alasan</label>
                                             <div class="col-sm-8">
@@ -142,32 +144,57 @@
                                         </div>
                                         <div class="row mb-2">
                                             <label for="inputNik2" class="col-sm-2 col-form-label">NIK Atasan</label>
-                                            <div class="col-sm-3">
+                                            <div class="col-sm-8">
+                                                <select id="id_atasan" class="form-control select2">
+                                                    <option value=''>..:: Pilih Atasan ::..</option>
+                                                    @foreach ($karyawans as $kry)
+                                                        @if ($profile && $profile->id != $kry->id)
+                                                            <option value="{{ $kry->id }}">{{ $kry->nama }}
+                                                            </option>
+                                                        @endif
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            {{-- <div class="col-sm-3">
                                                 <input type="text" placeholder="" name="NikAtasan"
                                                     class="form-control capitalize numeric" maxlength="9" id="NikAtasan"
                                                     required>
                                             </div>
                                             <div class="col-sm-5">
-                                                <input type="text" placeholder="" name="NamaAtasan" class="form-control" id="NamaAtasan">
-                                            </div>
+                                                <input type="text" placeholder="" name="NamaAtasan"
+                                                    class="form-control" id="NamaAtasan">
+                                            </div> --}}
                                         </div>
                                         <div class="row mb-2">
                                             <label for="inputNik2" class="col-sm-2 col-form-label">NIK HRD</label>
-                                            <div class="col-sm-3">
+                                            <div class="col-sm-8">
+                                                <select id="id_hrd" class="form-control select2">
+                                                    <option value=''>..:: Pilih HRD ::..</option>
+                                                    @foreach ($karyawans as $kry)
+                                                        @if ($profile && $profile->id != $kry->id)
+                                                            <option value="{{ $kry->id }}">{{ $kry->nama }}
+                                                            </option>
+                                                        @endif
+                                                    @endforeach
+                                                </select>
+                                            </div>
+                                            {{-- <div class="col-sm-3">
                                                 <input type="text" placeholder="" name="NikHrd"
                                                     class="form-control capitalize numeric" maxlength="9" id="NikHrd"
                                                     required>
                                             </div>
                                             <div class="col-sm-5">
-                                                <input type="text" placeholder="" name="NamaHrd" class="form-control" id="NamaHrd">
-                                            </div>
+                                                <input type="text" placeholder="" name="NamaHrd" class="form-control"
+                                                    id="NamaHrd">
+                                            </div> --}}
                                         </div>
                                     </div>
                                 </div>
 
                                 <div class="row">
                                     <div class="ml-auto">
-                                        <button type="button" class="btn btn-warning d-none" id="btnbatal">Batal</button>
+                                        <button type="button" class="btn btn-warning d-none"
+                                            id="btnbatal">Batal</button>
                                         <button type="button" class="btn btn-info" id="btnsimpan">Simpan</button>
                                     </div>
                                 </div>
@@ -177,7 +204,8 @@
                             <div class="row" style="font-size: 10pt">
                                 <div class="col-md-12">
                                     <div class="table-responsive">
-                                        <table id="dataTables" class="table table-bordered table-striped" style="width:100%">
+                                        <table id="dataTables" class="table table-bordered table-striped"
+                                            style="width:100%">
                                             <thead>
                                                 <tr>
                                                     <th>
@@ -250,6 +278,14 @@
                 width: 'element'
             });
 
+            $('#id_atasan').select2({
+                width: 'element'
+            });
+
+            $('#id_hrd').select2({
+                width: 'element'
+            });
+
             $('#tanggal1').datepicker({
                 minDate: 0,
                 changeYear: true,
@@ -269,37 +305,25 @@
             $("#btnsimpan").click(function(e) {
                 let idedit = $("#idedit").val();
                 let ketedit = $("#ketedit").val();
-                let namasaya = $("#inputNama").val();
-                let niksaya = $("#inputNik").val();
-                let jenisabsen = $("#jenisabsense").val();
+                let jeniscuti = $("#jeniscuti").val();
                 let tanggal1 = $("#tanggal1").val();
                 let tanggal2 = $("#tanggal2").val();
                 let alasan = $("#alasan").val();
-                let nikatasan = $("#NikAtasan").val();
-                let namaatasan =  $("#NamaAtasan").val();
-                let nikhrd = $("#NikHrd").val();
-                let namahrd =  $("#NamaHrd").val();
+                let id_atasan = $("#id_atasan").val();
+                let id_hrd = $("#id_hrd").val();
 
-                if (namasaya == null || namasaya == '') {
-                    notifalert('Nama');
-                } else if (niksaya == null || niksaya == '') {
-                    notifalert('NIK');
-                } else if (jenisabsen == null || jenisabsen == '') {
+                if (jeniscuti == null || jeniscuti == '') {
                     notifalert('Jenis Absense');
                 } else if (tanggal1 == null || tanggal1 == '') {
-                    notifalert('Tanggal 1');
+                    notifalert('Tanggal Mulai');
                 } else if (tanggal2 == null || tanggal2 == '') {
-                    notifalert('Tanggal 2');
+                    notifalert('Tanggal Selesai');
                 } else if (alasan == null || alasan == '') {
                     notifalert('Alasan');
-                } else if (nikatasan == null || nikatasan == '') {
-                    notifalert('NIK Atasan');
-                } else if (namaatasan == null || namaatasan == '') {
-                    notifalert('Nama Atasan');
-                } else if (nikhrd == null || nikhrd == '') {
-                    notifalert('NIK HRD');
-                } else if (namahrd == null || namahrd == '') {
-                    notifalert('Nama HRD');
+                } else if (id_atasan == null || id_atasan == '') {
+                    notifalert('Atasan');
+                } else if (id_hrd == null || id_hrd == '') {
+                    notifalert('HRD');
                 } else {
                     $.ajax({
                         type: "POST",
@@ -308,16 +332,12 @@
                             _token: $('meta[name=csrf-token]').attr('content'),
                             'idedit': idedit,
                             'ketedit': ketedit,
-                            'namasaya': namasaya,
-                            'niksaya': niksaya,
-                            'jenisabsen': jenisabsen,
+                            'jeniscuti': jeniscuti,
                             'tanggal1': tanggal1,
                             'tanggal2': tanggal2,
                             'alasan': alasan,
-                            'nikatasan': nikatasan,
-                            'namaatasan': namaatasan,
-                            'nikhrd': nikhrd,
-                            'namahrd': namahrd
+                            'id_atasan': id_atasan,
+                            'id_hrd': id_hrd
                         },
                         dataType: "JSON",
                         beforeSend: function(param) {
@@ -372,8 +392,8 @@
                         orderable: false,
                         searchable: false
                     }, {
-                        data: 'jenisabsen',
-                        name: 'jenisabsen'
+                        data: 'jeniscuti',
+                        name: 'jeniscuti'
                     }, {
                         data: 'tanggalmulai',
                         name: 'tanggalmulai'
@@ -438,16 +458,12 @@
                         $("#btnbatal").removeClass('d-none');
                         $("#ketedit").val('yes');
                         $("#idedit").val(response.id);
-                        $("#inputNama").val(response.nama);
-                        $("#inputNik").val(response.nik);
-                        $("#jenisabsense").val(response.idmcuti).trigger('change');
+                        $("#jeniscuti").val(response.id_mcuti).trigger('change');
                         $("#tanggal1").val(response.tanggalmulai);
                         $("#tanggal2").val(response.tanggalselesai);
                         $("#alasan").val(response.keterangan);
-                        $("#NikAtasan").val(response.nikatasan);
-                        $("#NamaAtasan").val(response.namaatasan);
-                        $("#NikHrd").val(response.nikhrd);
-                        $("#NamaHrd").val(response.namahrd);
+                        $("#id_atasan").val(response.id_atasan).trigger('change');
+                        $("#id_hrd").val(response.id_hrd).trigger('change');
                         Swal.close();
                         return;
                     },
@@ -463,18 +479,16 @@
                 });
             });
 
-            $("#btnbatal").click(function (e) {
+            $("#btnbatal").click(function(e) {
                 $("#btnbatal").addClass('d-none');
                 $("#ketedit").val('no');
                 $("#idedit").val('');
-                $("#inputNama").val('');
-                $("#inputNik").val('');
-                $("#jenisabsense").val('').trigger('change');
+                $("#jeniscuti").val('').trigger('change');
                 $("#tanggal1").val('');
                 $("#tanggal2").val('');
                 $("#alasan").val('');
-                $("#NikAtasan").val('');
-                $("#NikHrd").val('');
+                $("#id_atasan").val('').trigger('change');
+                $("#id_hrd").val('').trigger('change');
             });
 
             $('body').on('click', '#btndetail', function() {

@@ -4,7 +4,7 @@
             <div class="form-group">
                 <label class="col-sm-12 control-label">NIK</label>
                 <div class="col-sm-12">
-                    <input type="text" class="form-control" value="{{ $data->nik}}" readonly>
+                    <input type="text" class="form-control" value="{{ $profile->nik }}" readonly>
                 </div>
             </div>
         </div>
@@ -12,7 +12,7 @@
             <div class="form-group">
                 <label class="col-sm-12 control-label">Nama</label>
                 <div class="col-sm-12">
-                    <input type="text" class="form-control" value="{{ $data->nama }}" readonly>
+                    <input type="text" class="form-control" value="{{ $profile->nama }}" readonly>
                 </div>
             </div>
         </div>
@@ -20,9 +20,9 @@
     <div class="row">
         <div class="col-md-6">
             <div class="form-group">
-                <label class="col-sm-12 control-label">Jenis Absen</label>
+                <label class="col-sm-12 control-label">Jenis Cuti</label>
                 <div class="col-sm-12">
-                    <input type="text" class="form-control" value="{{ $data->jeniscuti }}" readonly>
+                    <input type="text" class="form-control" value="{{ $data->masterCuti->jeniscuti }}" readonly>
                 </div>
             </div>
         </div>
@@ -48,7 +48,7 @@
             <div class="form-group">
                 <label class="col-sm-12 control-label">Keterangan</label>
                 <div class="col-sm-12">
-                    <input type="text" class="form-control" value="{{$data->keterangan}}" readonly>
+                    <input type="text" class="form-control" value="{{ $data->keterangan }}" readonly>
                 </div>
             </div>
         </div>
@@ -58,7 +58,7 @@
             <div class="form-group">
                 <label class="col-sm-12 control-label">NIK Atasan</label>
                 <div class="col-sm-12">
-                    <input type="text" class="form-control" value="{{$data->nikatasan}}" readonly>
+                    <input type="text" class="form-control" value="{{ $data->atasan->nik }}" readonly>
                 </div>
             </div>
         </div>
@@ -66,7 +66,7 @@
             <div class="form-group">
                 <label class="col-sm-12 control-label">Nama Atasan</label>
                 <div class="col-sm-12">
-                    <input type="text" class="form-control" value="{{$data->namaatasan}}" readonly>
+                    <input type="text" class="form-control" value="{{ $data->atasan->nama }}" readonly>
                 </div>
             </div>
         </div>
@@ -76,7 +76,7 @@
             <div class="form-group">
                 <label class="col-sm-12 control-label">NIK HRD</label>
                 <div class="col-sm-12">
-                    <input type="text" class="form-control" value="{{$data->nikhrd}}" readonly>
+                    <input type="text" class="form-control" value="{{ $data->hrd->nik }}" readonly>
                 </div>
             </div>
         </div>
@@ -84,7 +84,7 @@
             <div class="form-group">
                 <label class="col-sm-12 control-label">Nama HRD</label>
                 <div class="col-sm-12">
-                    <input type="text" class="form-control" value="{{$data->namahrd}}" readonly>
+                    <input type="text" class="form-control" value="{{ $data->hrd->nama }}" readonly>
                 </div>
             </div>
         </div>

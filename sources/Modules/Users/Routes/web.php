@@ -6,6 +6,7 @@ use Modules\Users\Http\Controllers\SelfService\CutiController;
 use Modules\Users\Http\Controllers\UserController;
 use Modules\Users\Http\Controllers\UserProfileController;
 use Modules\Users\Http\Controllers\SelfService\LemburController;
+use Modules\Users\Http\Controllers\ApprovalCutiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -22,7 +23,7 @@ Route::prefix('users')->name('users.')->middleware(['auth'])->group(function () 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // User
-    Route::middleware(['permission:users:user:view'])->group(function() {
+    Route::middleware(['permission:users:user:view'])->group(function () {
         Route::get('/json', [UserController::class, 'datatable'])->name('json');
         Route::post('/sync', [UserController::class, 'sync'])->name('sync'); // Route Sync
         Route::resource('user', UserController::class);
@@ -37,8 +38,8 @@ Route::prefix('users')->name('users.')->middleware(['auth'])->group(function () 
         Route::post('/detail', [CutiController::class, 'detail'])->name('detail');
     });
 
-  // Route Hari Libur
-    Route::middleware(['permission:users:hari-libur:view'])->group(function() {
+    // Route Hari Libur
+    Route::middleware(['permission:users:hari-libur:view'])->group(function () {
         Route::prefix('hari-libur')->name('hari-libur.')->group(function () {
             Route::get('/json', [DashboardController::class, 'getHolidays'])->name('json');
         });
@@ -46,25 +47,31 @@ Route::prefix('users')->name('users.')->middleware(['auth'])->group(function () 
 
     // Lembur
     // Route::middleware(['permission:users:lembur:view'])->group(function() {
-        Route::prefix('lembur')->name('lembur.')->group(function () {
-            Route::get('/json', [LemburController::class, 'datatable'])->name('json');
-            Route::get('/approval/json', [LemburController::class, 'datatableApproval'])->name('approval.json');
-            Route::post('/{id}/approve', [LemburController::class, 'approve'])->name('approve');
-            Route::post('/{id}/reject', [LemburController::class, 'reject'])->name('reject');
-            Route::get('/', [LemburController::class, 'index'])->name('index');
-            Route::post('/', [LemburController::class, 'store'])->name('store');
-            Route::post('/{id}/tarik', [LemburController::class, 'tarik'])->name('tarik');
-            Route::get('/{id}/edit', [LemburController::class, 'edit'])->name('edit');
-            Route::put('/{id}', [LemburController::class, 'update'])->name('update');
-            Route::delete('/{id}', [LemburController::class, 'destroy'])->name('destroy');
-            Route::get('/{id}', [LemburController::class, 'show'])->name('show');
-        });
+    Route::prefix('lembur')->name('lembur.')->group(function () {
+        Route::get('/json', [LemburController::class, 'datatable'])->name('json');
+        Route::get('/approval/json', [LemburController::class, 'datatableApproval'])->name('approval.json');
+        Route::post('/{id}/approve', [LemburController::class, 'approve'])->name('approve');
+        Route::post('/{id}/reject', [LemburController::class, 'reject'])->name('reject');
+        Route::get('/', [LemburController::class, 'index'])->name('index');
+        Route::post('/', [LemburController::class, 'store'])->name('store');
+        Route::post('/{id}/tarik', [LemburController::class, 'tarik'])->name('tarik');
+        Route::get('/{id}/edit', [LemburController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [LemburController::class, 'update'])->name('update');
+        Route::delete('/{id}', [LemburController::class, 'destroy'])->name('destroy');
+        Route::get('/{id}', [LemburController::class, 'show'])->name('show');
+    });
     // });
 
-  // Profile & Password
-    Route::prefix('profile')->name('profile.')->group(function() {
+    // Profile & Password
+    Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [UserProfileController::class, 'index'])->name('index');
         Route::post('/profile/photo', [UserProfileController::class, 'updatePhoto'])->name('save.change-profile');
         Route::put('/profile/password', [UserProfileController::class, 'updatePassword'])->name('update-password');
     });
+
+    //Approval Cuti
+    Route::get('/indexapprovalcuti', [ApprovalCutiController::class, 'index'])->name('indexapprovalcuti');
+    Route::post('/datatablesapproval', [ApprovalCutiController::class, 'datatables'])->name('datatablesapproval');
+    Route::post('/approvaldetail', [ApprovalCutiController::class, 'detail'])->name('approvaldetail');
+    Route::post('/simpanapproval', [ApprovalCutiController::class, 'simpan'])->name('simpanapproval');
 });

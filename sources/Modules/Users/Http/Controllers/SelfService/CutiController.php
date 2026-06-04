@@ -138,7 +138,7 @@ class CutiController extends Controller
             return response()->json([
                 'title' => 'Success!',
                 'status' => 'success',
-                'message' => 'Data berhasil disimpan'
+                'message' => 'Cuti berhasil disimpan'
             ], 200);
         } catch (\Exception $e) {
             return response()->json([

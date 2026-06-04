@@ -148,8 +148,8 @@
                                                 <select id="id_atasan" class="form-control select2">
                                                     <option value=''>..:: Pilih Atasan ::..</option>
                                                     @foreach ($karyawans as $kry)
-                                                        @if ($profile && $profile->id != $kry->id)
-                                                            <option value="{{ $kry->id }}">
+                                                        @if ($profile && $profile->id != $kry->data_dosen_tendik_id)
+                                                            <option value="{{ $kry->data_dosen_tendik_id }}">
                                                                 {{ $kry->karyawan->nama }}
                                                             </option>
                                                         @endif
@@ -163,8 +163,8 @@
                                                 <select id="id_hrd" class="form-control select2">
                                                     <option value=''>..:: Pilih HRD ::..</option>
                                                     @foreach ($karyawans as $kry)
-                                                        @if ($profile && $profile->id != $kry->id)
-                                                            <option value="{{ $kry->id }}">
+                                                        @if ($profile && $profile->id != $kry->data_dosen_tendik_id)
+                                                            <option value="{{ $kry->data_dosen_tendik_id }}">
                                                                 {{ $kry->karyawan->nama }}
                                                             </option>
                                                         @endif

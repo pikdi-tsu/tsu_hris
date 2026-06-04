@@ -33,7 +33,7 @@ class RiwayatJabatan extends Model
 
     public function getTable()
     {
-        return config('app.table.riwayat_jabatans') ?? 'riwayat_jabatans';
+        return 'riwayat_jabatans';
     }
 
     public function dataDosenTendik()

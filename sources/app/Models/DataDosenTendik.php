@@ -48,11 +48,6 @@ class DataDosenTendik extends Authenticatable
         return $this->hasMany(KaryawanJabatanFungsional::class, 'data_dosen_tendik_id', 'id');
     }
 
-    public function pangkatGolongan()
-    {
-        return $this->belongsTo(MasterPangkatGolongan::class, 'pangkat_golongan_id');
-    }
-
     public function riwayatJabatans()
     {
         return $this->hasMany(RiwayatJabatan::class, 'data_dosen_tendik_id');
@@ -111,12 +106,11 @@ class DataDosenTendik extends Authenticatable
 
             // TAB 3: KEPANGKATAN
             'tab_kepangkatan' => [
-                'label' => 'Kepangkatan',
+                'label' => 'Jabatan & Pangkat',
                 'fields' => [
                     // Note: Jabatan Struktural & Fungsional sekarang di-*manage* melalui tombol khusus (Aksi > Kelola Struktural / Kelola Fungsional)
                     
-                    // --- Kepangkatan ---
-                    ['name' => 'pangkat_golongan_id', 'label' => 'Pangkat / Golongan', 'type' => 'select', 'col_size' => 12, 'options' => \App\Models\MasterPangkatGolongan::pluck('nama_pangkat_golongan', 'id')->toArray()],
+                    // Pangkat / Golongan sekarang dikelola berbarengan dengan Jabatan Fungsional
                     
                     // Note: Jabatan Fungsional sekarang di-*manage* melalui tombol khusus (Aksi > Kelola Fungsional)
                 ]

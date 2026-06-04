@@ -45,8 +45,13 @@
         @include('admin::data-karyawan._struktural_list', ['strukturals' => $strukturals])
     </div>
 </div>
-<div class="modal-footer">
-    <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+<div class="modal-footer bg-light px-4 py-3" style="border-top: 1px solid #dee2e6;">
+    <button type="button" class="btn btn-outline-secondary font-weight-bold mr-auto shadow-sm btn-back-to-edit" data-url="{{ route('admin.data-karyawan.edit', $karyawan->id) }}">
+        <i class="fas fa-arrow-left mr-1"></i> Kembali ke Edit Profil
+    </button>
+    <button type="button" class="btn btn-secondary font-weight-bold shadow-sm" data-dismiss="modal">
+        <i class="fas fa-times mr-1"></i> Tutup
+    </button>
 </div>
 
 <script>
@@ -57,6 +62,26 @@ $(document).ready(function() {
             width: '100%'
         });
     }
+
+    // Handle Kembali ke Edit Profil
+    $('.btn-back-to-edit').on('click', function(e) {
+        e.preventDefault();
+        let url = $(this).data('url');
+        $('#modal-edit-content').html(`<div class="text-center p-5"><div class="spinner-border text-info"></div><p>Memuat Form Edit...</p></div>`);
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(res) {
+                $('#modal-edit-content').html(res);
+                setTimeout(function() {
+                    $('#dynamic-tabs a[href="#tab-tab_kepangkatan"]').tab('show');
+                }, 400);
+            },
+            error: function() {
+                $('#modal-edit-content').html(`<div class="text-center text-danger p-5">Gagal memuat form.</div>`);
+            }
+        });
+    });
 
     // Submit Add Struktural via AJAX
     $('#form-tambah-struktural').on('submit', function(e) {

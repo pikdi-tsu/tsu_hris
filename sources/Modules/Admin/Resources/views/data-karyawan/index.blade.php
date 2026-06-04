@@ -6,6 +6,7 @@
             <h3 class="card-title mr-4">Data Dosen & Tendik</h3>
 
             <div class="d-flex gap-2 ml-auto">
+
                 <button type="button" class="btn btn-success btn-modal btn-sm" data-url="{{ route('admin.data-karyawan.create') }}" title="Tambah Pegawai">
                     <i class="fas fa-plus"></i> Tambah Pegawai
                 </button>
@@ -53,7 +54,7 @@
                 {data: 'nama_lengkap', name: 'nama'},
                 {data: 'identitas', name: 'nik'}, // Bisa ditambah name: 'nidn' di backend kalau mau multi-search
                 {data: 'keilmuan_inti', name: 'keilmuan_inti', defaultContent: '-'}, // Langsung tarik dari DB
-                {data: 'jabatan', name: 'jabatan_struktural'},
+                {data: 'jabatan', name: 'jabatan'},
                 {data: 'status_karyawan', name: 'status_karyawan'},
                 {data: 'aksi', name: 'aksi', orderable: false, searchable: false, className: 'text-center'},
             ]
@@ -163,5 +164,43 @@
                 }
             });
         });
+
+        var newKaryawanId = "{{ session('new_karyawan_id') }}";
+
+        if (newKaryawanId) {
+            Swal.fire({
+                title: 'Berhasil Disimpan!',
+                text: 'Data identitas pegawai berhasil ditambahkan. Apakah Anda ingin langsung mengatur Jabatan & Pangkat untuk pegawai ini sekarang?',
+                icon: 'success',
+                showCancelButton: true,
+                confirmButtonColor: '#17a2b8', // Info color untuk tombol utama
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="fas fa-edit mr-1"></i> Ya, Atur Jabatan',
+                cancelButtonText: 'Tutup & Nanti Saja',
+                allowOutsideClick: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    var editUrl = "{{ route('admin.data-karyawan.edit', ':id') }}".replace(':id', newKaryawanId);
+                    
+                    $('#modal-edit').modal('show');
+                    $('#modal-edit-content').html(`<div class="text-center p-5"><div class="spinner-border text-info"></div><p>Mempersiapkan Form Jabatan...</p></div>`);
+
+                    $.ajax({
+                        url: editUrl,
+                        type: 'GET',
+                        success: function(res) {
+                            $('#modal-edit-content').html(res);
+                            // Pindah ke tab jabatan setelah form dimuat
+                            setTimeout(function() {
+                                $('#dynamic-tabs a[href="#tab-tab_kepangkatan"]').tab('show');
+                            }, 400);
+                        },
+                        error: function(xhr) {
+                            $('#modal-edit-content').html(`<div class="text-center text-danger p-5">Gagal memuat form.</div>`);
+                        }
+                    });
+                }
+            });
+        }
     </script>
 @endsection

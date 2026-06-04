@@ -17,7 +17,7 @@ class KaryawanJabatanFungsional extends Model
     {
         parent::__construct($attributes);
         // Set table name dynamically based on config
-        $this->setTable(Config::get('app.table.karyawan_jabatan_fungsionals'));
+        $this->setTable('karyawan_jabatan_fungsionals');
     }
 
     /**
@@ -34,5 +34,13 @@ class KaryawanJabatanFungsional extends Model
     public function masterFungsional()
     {
         return $this->belongsTo(MasterJabatanFungsional::class, 'jabatan_fungsional_id', 'id');
+    }
+
+    /**
+     * Relasi ke MasterPangkatGolongan
+     */
+    public function pangkatGolongan()
+    {
+        return $this->belongsTo(MasterPangkatGolongan::class, 'pangkat_golongan_id', 'id');
     }
 }

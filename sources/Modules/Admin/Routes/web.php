@@ -15,6 +15,8 @@ use Modules\Admin\Http\Controllers\DashboardController;
 use Modules\Admin\Http\Controllers\DataKaryawanController;
 use Modules\Admin\Http\Controllers\MasterHariLiburController;
 use Modules\System\Http\Middleware\CheckAdminRole;
+use \Modules\Admin\Http\Controllers\MasterLemburController;
+use Modules\Admin\Http\Controllers\MasterJabatanController;
 use Illuminate\Support\Facades\Route;
 
 // Aktifkan CheckAdminRole::class di middleware jika ada dashboard users sendiri
@@ -27,6 +29,20 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
             // Route JSON
             Route::get('/json', [DataKaryawanController::class, 'datatable'])->name('json');
 
+            // Route Mutasi Jabatan
+            Route::get('/{id}/mutasi', [DataKaryawanController::class, 'mutasiModal'])->name('mutasi');
+            Route::post('/{id}/mutasi', [DataKaryawanController::class, 'storeMutasi'])->name('store-mutasi');
+            
+            // Route Kelola Fungsional
+            Route::get('/{id}/fungsional', [DataKaryawanController::class, 'kelolaFungsionalModal'])->name('kelola-fungsional');
+            Route::post('/{id}/fungsional', [DataKaryawanController::class, 'storeFungsional'])->name('store-fungsional');
+            Route::delete('/fungsional/{fungsional_id}', [DataKaryawanController::class, 'destroyFungsional'])->name('destroy-fungsional');
+            
+            // Route Kelola Struktural
+            Route::get('/{id}/struktural', [DataKaryawanController::class, 'kelolaStrukturalModal'])->name('kelola-struktural');
+            Route::post('/{id}/struktural', [DataKaryawanController::class, 'storeStruktural'])->name('store-struktural');
+            Route::delete('/struktural/{struktural_id}', [DataKaryawanController::class, 'destroyStruktural'])->name('destroy-struktural');
+            
             // Route CRUD
             Route::resource('/', DataKaryawanController::class)->parameters(['' => 'id']);
             Route::post('/{id}/bio-aktif', [DataKaryawanController::class, 'bioAktif'])->name('bio-aktif');
@@ -52,8 +68,45 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     // --- ROUTE MASTER LEMBUR ---
     Route::middleware(['permission:admin:master-lembur:view'])->group(function () {
         Route::prefix('master-lembur')->name('master-lembur.')->group(function () {
-            Route::get('/json', [\Modules\Admin\Http\Controllers\MasterLemburController::class, 'datatable'])->name('json');
-            Route::resource('/', \Modules\Admin\Http\Controllers\MasterLemburController::class)->parameters(['' => 'id'])->except(['show']);
+            Route::get('/json', [MasterLemburController::class, 'datatable'])->name('json');
+            Route::resource('/', MasterLemburController::class)->parameters(['' => 'id'])->except(['show']);
+        });
+    });
+
+    // --- ROUTE MASTER JABATAN ---
+    Route::middleware(['permission:admin:master-jabatan:view'])->group(function() {
+        Route::prefix('master-jabatan')->name('master-jabatan.')->group(function () {
+            Route::get('/', [MasterJabatanController::class, 'index'])->name('index');
+            
+            // Struktural
+            Route::prefix('struktural')->name('struktural.')->group(function () {
+                Route::get('/json', [MasterJabatanController::class, 'datatableStruktural'])->name('json');
+                Route::get('/create', [MasterJabatanController::class, 'createStruktural'])->name('create');
+                Route::post('/store', [MasterJabatanController::class, 'storeStruktural'])->name('store');
+                Route::get('/{id}/edit', [MasterJabatanController::class, 'editStruktural'])->name('edit');
+                Route::put('/{id}', [MasterJabatanController::class, 'updateStruktural'])->name('update');
+                Route::delete('/{id}', [MasterJabatanController::class, 'destroyStruktural'])->name('destroy');
+            });
+
+            // Fungsional
+            Route::prefix('fungsional')->name('fungsional.')->group(function () {
+                Route::get('/json', [MasterJabatanController::class, 'datatableFungsional'])->name('json');
+                Route::get('/create', [MasterJabatanController::class, 'createFungsional'])->name('create');
+                Route::post('/store', [MasterJabatanController::class, 'storeFungsional'])->name('store');
+                Route::get('/{id}/edit', [MasterJabatanController::class, 'editFungsional'])->name('edit');
+                Route::put('/{id}', [MasterJabatanController::class, 'updateFungsional'])->name('update');
+                Route::delete('/{id}', [MasterJabatanController::class, 'destroyFungsional'])->name('destroy');
+            });
+
+            // Pangkat Golongan
+            Route::prefix('pangkat')->name('pangkat.')->group(function () {
+                Route::get('/json', [MasterJabatanController::class, 'datatablePangkat'])->name('json');
+                Route::get('/create', [MasterJabatanController::class, 'createPangkat'])->name('create');
+                Route::post('/store', [MasterJabatanController::class, 'storePangkat'])->name('store');
+                Route::get('/{id}/edit', [MasterJabatanController::class, 'editPangkat'])->name('edit');
+                Route::put('/{id}', [MasterJabatanController::class, 'updatePangkat'])->name('update');
+                Route::delete('/{id}', [MasterJabatanController::class, 'destroyPangkat'])->name('destroy');
+            });
         });
     });
 

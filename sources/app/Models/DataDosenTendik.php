@@ -32,6 +32,32 @@ class DataDosenTendik extends Authenticatable
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    /**
+     * Relasi ke Jabatan Struktural (Bisa lebih dari 1 / Many)
+     */
+    public function jabatanStrukturals()
+    {
+        return $this->hasMany(KaryawanJabatanStruktural::class, 'data_dosen_tendik_id', 'id');
+    }
+
+    /**
+     * Relasi ke Jabatan Fungsional (Bisa lebih dari 1 / Many)
+     */
+    public function jabatanFungsionals()
+    {
+        return $this->hasMany(KaryawanJabatanFungsional::class, 'data_dosen_tendik_id', 'id');
+    }
+
+    public function pangkatGolongan()
+    {
+        return $this->belongsTo(MasterPangkatGolongan::class, 'pangkat_golongan_id');
+    }
+
+    public function riwayatJabatans()
+    {
+        return $this->hasMany(RiwayatJabatan::class, 'data_dosen_tendik_id');
+    }
+
     public static function getFormConfig()
     {
         return [
@@ -87,17 +113,12 @@ class DataDosenTendik extends Authenticatable
             'tab_kepangkatan' => [
                 'label' => 'Kepangkatan',
                 'fields' => [
-                    // --- Struktural ---
-                    ['name' => 'jabatan_struktural', 'label' => 'Jabatan Struktural', 'type' => 'text', 'col_size' => 12],
-                    ['name' => 'tgl_mulai_jabatan_struktural', 'label' => 'Tgl Mulai Struktural', 'type' => 'date', 'col_size' => 6],
-                    ['name' => 'periode_jabatan_struktural', 'label' => 'Periode Struktural (Cth: 2024-2028)', 'type' => 'text', 'col_size' => 6],
-
-                    // --- Fungsional ---
-                    ['name' => 'jabatan_fungsional', 'label' => 'Jabatan Fungsional', 'type' => 'text', 'col_size' => 6],
-                    ['name' => 'pangkat_jabatan_fungsional', 'label' => 'Pangkat / Golongan', 'type' => 'text', 'col_size' => 6],
-
-                    ['name' => 'sk_jabatan_fungsional', 'label' => 'Nomor SK Fungsional', 'type' => 'text', 'col_size' => 6],
-                    ['name' => 'tmt_jabatan_fungsional', 'label' => 'TMT Fungsional', 'type' => 'date', 'col_size' => 6],
+                    // Note: Jabatan Struktural & Fungsional sekarang di-*manage* melalui tombol khusus (Aksi > Kelola Struktural / Kelola Fungsional)
+                    
+                    // --- Kepangkatan ---
+                    ['name' => 'pangkat_golongan_id', 'label' => 'Pangkat / Golongan', 'type' => 'select', 'col_size' => 12, 'options' => \App\Models\MasterPangkatGolongan::pluck('nama_pangkat_golongan', 'id')->toArray()],
+                    
+                    // Note: Jabatan Fungsional sekarang di-*manage* melalui tombol khusus (Aksi > Kelola Fungsional)
                 ]
             ],
 

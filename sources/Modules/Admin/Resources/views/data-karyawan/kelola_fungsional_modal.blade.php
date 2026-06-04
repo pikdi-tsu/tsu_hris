@@ -14,8 +14,8 @@
             <form id="form-tambah-fungsional" action="{{ route('admin.data-karyawan.store-fungsional', $karyawan->id) }}" method="POST">
                 @csrf
                 <div class="row">
-                    <div class="col-md-5 form-group">
-                        <label>Pilih Jabatan Fungsional <span class="text-danger">*</span></label>
+                    <div class="col-md-4 form-group">
+                        <label>Pilih Jabatan <span class="text-danger">*</span></label>
                         <select name="jabatan_fungsional_id" class="form-control select2" required style="width: 100%;">
                             <option value="">-- Pilih --</option>
                             @foreach($masterFungsional as $mf)
@@ -23,11 +23,20 @@
                             @endforeach
                         </select>
                     </div>
-                    <div class="col-md-4 form-group">
-                        <label>TMT / Tgl Mulai <span class="text-danger">*</span></label>
-                        <input type="date" name="tgl_mulai" class="form-control" required value="{{ date('Y-m-d') }}">
+                    <div class="col-md-3 form-group">
+                        <label>Pangkat/Golongan</label>
+                        <select name="pangkat_golongan_id" class="form-control select2" style="width: 100%;">
+                            <option value="">-- Kosongkan Jika Tidak Ada --</option>
+                            @foreach($masterPangkat as $mp)
+                                <option value="{{ $mp->id }}">{{ $mp->nama_pangkat_golongan }}</option>
+                            @endforeach
+                        </select>
                     </div>
                     <div class="col-md-3 form-group">
+                        <label>Tgl Mulai <span class="text-danger">*</span></label>
+                        <input type="date" name="tgl_mulai" class="form-control" required value="{{ date('Y-m-d') }}">
+                    </div>
+                    <div class="col-md-2 form-group">
                         <label>Nomor SK</label>
                         <input type="text" name="sk_jabatan" class="form-control" placeholder="Opsional">
                     </div>
@@ -49,8 +58,13 @@
         @include('admin::data-karyawan._fungsional_list', ['fungsionals' => $fungsionals])
     </div>
 </div>
-<div class="modal-footer">
-    <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+<div class="modal-footer bg-light px-4 py-3" style="border-top: 1px solid #dee2e6;">
+    <button type="button" class="btn btn-outline-secondary font-weight-bold mr-auto shadow-sm btn-back-to-edit" data-url="{{ route('admin.data-karyawan.edit', $karyawan->id) }}">
+        <i class="fas fa-arrow-left mr-1"></i> Kembali ke Edit Profil
+    </button>
+    <button type="button" class="btn btn-secondary font-weight-bold shadow-sm" data-dismiss="modal">
+        <i class="fas fa-times mr-1"></i> Tutup
+    </button>
 </div>
 
 <script>
@@ -61,6 +75,26 @@ $(document).ready(function() {
             width: '100%'
         });
     }
+
+    // Handle Kembali ke Edit Profil
+    $('.btn-back-to-edit').on('click', function(e) {
+        e.preventDefault();
+        let url = $(this).data('url');
+        $('#modal-edit-content').html(`<div class="text-center p-5"><div class="spinner-border text-info"></div><p>Memuat Form Edit...</p></div>`);
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function(res) {
+                $('#modal-edit-content').html(res);
+                setTimeout(function() {
+                    $('#dynamic-tabs a[href="#tab-tab_kepangkatan"]').tab('show');
+                }, 400);
+            },
+            error: function() {
+                $('#modal-edit-content').html(`<div class="text-center text-danger p-5">Gagal memuat form.</div>`);
+            }
+        });
+    });
 
     // Submit Add Fungsional via AJAX
     $('#form-tambah-fungsional').on('submit', function(e) {

@@ -132,6 +132,67 @@
                                 @endif
 
                             @endforeach
+                            
+                            @if($tabKey === 'tab_kepangkatan')
+                                <div class="col-md-12 mt-3 mb-4">
+                                    <div class="d-flex flex-column h-100 justify-content-between">
+                                        <div>
+                                            <div class="text-muted small font-weight-bold text-uppercase mb-2" style="letter-spacing: 0.5px;">
+                                                <i class="fas fa-sitemap mr-1"></i> Jabatan Struktural Aktif
+                                            </div>
+                                            <div>
+                                                @if($karyawan->jabatanStrukturals->isEmpty())
+                                                    <span class="text-black-50 font-italic" style="font-weight: 400; font-size: 0.9em;">Belum ada jabatan struktural aktif</span>
+                                                @else
+                                                    @foreach($karyawan->jabatanStrukturals as $js)
+                                                        @php
+                                                            $namaStr = $js->masterStruktural ? $js->masterStruktural->nama_jabatan : 'Unknown';
+                                                        @endphp
+                                                        <div class="mb-2">
+                                                            <span class="badge badge-dark px-3 py-2 mr-1 shadow-sm" style="font-size: 0.95rem;">
+                                                                {{ $namaStr }}
+                                                            </span>
+                                                            <br>
+                                                            <small class="text-muted"><i class="far fa-calendar-alt mr-1"></i> {{ \Carbon\Carbon::parse($js->tgl_mulai)->format('d M Y') }} s/d {{ $js->tgl_akhir ? \Carbon\Carbon::parse($js->tgl_akhir)->format('d M Y') : 'Sekarang' }}</small>
+                                                        </div>
+                                                    @endforeach
+                                                @endif
+                                            </div>
+                                        </div>
+                                        <hr class="w-100 mt-3 mb-0" style="border-top: 1px dashed #d1d3e2;">
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-12 mb-4">
+                                    <div class="d-flex flex-column h-100 justify-content-between">
+                                        <div>
+                                            <div class="text-muted small font-weight-bold text-uppercase mb-2" style="letter-spacing: 0.5px;">
+                                                <i class="fas fa-medal mr-1"></i> Jabatan Fungsional Aktif
+                                            </div>
+                                            <div>
+                                                @if($karyawan->jabatanFungsionals->isEmpty())
+                                                    <span class="text-black-50 font-italic" style="font-weight: 400; font-size: 0.9em;">Belum ada jabatan fungsional aktif</span>
+                                                @else
+                                                    @foreach($karyawan->jabatanFungsionals as $jf)
+                                                        @php
+                                                            $namaFung = $jf->masterFungsional ? $jf->masterFungsional->nama_jabatan : 'Unknown';
+                                                            $namaPangkat = $jf->pangkatGolongan ? $jf->pangkatGolongan->nama_pangkat_golongan : 'Tanpa Pangkat';
+                                                        @endphp
+                                                        <div class="mb-2">
+                                                            <span class="badge badge-info px-3 py-2 mr-1 shadow-sm" style="font-size: 0.95rem;">
+                                                                {{ $namaFung }} - {{ $namaPangkat }}
+                                                            </span>
+                                                            <br>
+                                                            <small class="text-muted"><i class="far fa-calendar-alt mr-1"></i> {{ \Carbon\Carbon::parse($jf->tgl_mulai)->format('d M Y') }} s/d {{ $jf->tgl_akhir ? \Carbon\Carbon::parse($jf->tgl_akhir)->format('d M Y') : 'Sekarang' }}</small>
+                                                        </div>
+                                                    @endforeach
+                                                @endif
+                                            </div>
+                                        </div>
+                                        <hr class="w-100 mt-3 mb-0" style="border-top: 1px dashed #d1d3e2;">
+                                    </div>
+                                </div>
+                            @endif
                         </div>
                     </div>
                 @endforeach

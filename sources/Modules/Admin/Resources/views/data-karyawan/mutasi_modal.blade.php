@@ -1,4 +1,4 @@
-<form action="{{ route('admin.data-karyawan.store-mutasi', $karyawan->id) }}" method="POST" id="form-mutasi">
+<form action="{{ route('admin.data-karyawan.store-mutasi', $karyawan->id) }}" method="POST" id="form-mutasi" class="d-flex flex-column w-100 h-100">
     @csrf
     <div class="modal-header bg-primary">
         <h5 class="modal-title text-white">Mutasi / Pindah Jabatan</h5>

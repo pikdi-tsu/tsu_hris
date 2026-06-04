@@ -13,10 +13,11 @@
     <!-- Right navbar links -->
     <ul class="navbar-nav ml-auto">
         @php
-            $atasannotif = session('atasannotif');
-            $hrdnotif = session('hrdnotif');
-            $all = $atasannotif + $hrdnotif;
-            // dd($atasannotif, $hrdnotif, $all);
+            $notifcutiatasan = session('notifcutiatasan');
+            $notifcutihrd = session('notifcutihrd');
+            $notifizinatasan = session('notifizinatasan');
+            $notifizinhrd = session('notifizinhrd');
+            $all = $notifcutiatasan + $notifizinatasan + $notifcutihrd + $notifizinhrd;
         @endphp
         <!-- Notifications Dropdown Menu -->
         @if ($all > 0)
@@ -28,20 +29,36 @@
                 </a>
                 <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
                     <span class="dropdown-item dropdown-header">{{ $all }} Notifikasi Sistem</span>
-                    @if ($atasannotif > 0)
+                    @if ($notifcutiatasan > 0)
                         <div class="dropdown-divider"></div>
                         {{-- KONDISI 1: KALAU KOSONG (Default Sekarang) --}}
                         <a href=" {{ route('users.indexapprovalcuti') }} " class="dropdown-item">
                             <i class="fas fa-check-circle mr-2 text-primary"></i>
-                            {{ $atasannotif }} Approval Cuti
+                            {{ $notifcutiatasan }} Approval Cuti
                         </a>
                     @endif
-                    @if ($hrdnotif > 0)
+                    @if ($notifcutihrd > 0)
                         <div class="dropdown-divider"></div>
                         {{-- KONDISI 1: KALAU KOSONG (Default Sekarang) --}}
                         <a href="{{ route('users.indexapprovalcuti') }} " class="dropdown-item">
                             <i class="fas fa-check-circle mr-2 text-primary"></i>
-                            {{ $hrdnotif }} Approval Cuti HRD
+                            {{ $notifcutihrd }} Approval Cuti HRD
+                        </a>
+                    @endif
+                    @if ($notifizinatasan > 0)
+                        <div class="dropdown-divider"></div>
+                        {{-- KONDISI 1: KALAU KOSONG (Default Sekarang) --}}
+                        <a href=" {{ route('users.indexapprovalizin') }} " class="dropdown-item">
+                            <i class="fas fa-check-circle mr-2 text-primary"></i>
+                            {{ $notifizinatasan }} Approval Izin
+                        </a>
+                    @endif
+                    @if ($notifizinhrd > 0)
+                        <div class="dropdown-divider"></div>
+                        {{-- KONDISI 1: KALAU KOSONG (Default Sekarang) --}}
+                        <a href="{{ route('users.indexapprovalizin') }}" class="dropdown-item">
+                            <i class="fas fa-check-circle mr-2 text-primary"></i>
+                            {{ $notifizinhrd }} Approval Izin HRD
                         </a>
                     @endif
                     {{-- KONDISI 2: CONTOH KALAU ADA ISI (Disimpan dulu sbg komentar buat contekan) --}}

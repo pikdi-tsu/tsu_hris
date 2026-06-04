@@ -8,6 +8,7 @@ use Modules\Users\Http\Controllers\UserController;
 use Modules\Users\Http\Controllers\UserProfileController;
 use Modules\Users\Http\Controllers\SelfService\LemburController;
 use Modules\Users\Http\Controllers\ApprovalCutiController;
+use Modules\Users\Http\Controllers\ApprovalIzinController;
 
 /*
 |--------------------------------------------------------------------------
@@ -84,4 +85,10 @@ Route::prefix('users')->name('users.')->middleware(['auth'])->group(function () 
     Route::post('/datatablesapproval', [ApprovalCutiController::class, 'datatables'])->name('datatablesapproval');
     Route::post('/approvaldetail', [ApprovalCutiController::class, 'detail'])->name('approvaldetail');
     Route::post('/simpanapproval', [ApprovalCutiController::class, 'simpan'])->name('simpanapproval');
+
+    //Approval Izin
+    Route::get('/indexapprovalizin', [ApprovalIzinController::class, 'index'])->name('indexapprovalizin');
+    Route::post('/datatablesapprovalizin', [ApprovalIzinController::class, 'datatables'])->name('datatablesapprovalizin');
+    Route::post('/approvalizindetail', [ApprovalIzinController::class, 'detail'])->name('approvalizindetail');
+    Route::post('/simpanapprovalizin', [ApprovalIzinController::class, 'simpan'])->name('simpanapprovalizin');
 });

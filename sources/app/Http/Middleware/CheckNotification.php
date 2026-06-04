@@ -8,6 +8,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\Auth;
 
 use App\Models\CutiKaryawan;
+use App\Models\IzinKaryawan;
 use App\Models\DataDosenTendik;
 
 class CheckNotification
@@ -22,19 +23,31 @@ class CheckNotification
         if (Auth::check()) {
             $getid = DataDosenTendik::where('user_id', Auth::id())->first('id');
 
-            $notifatasan = CutiKaryawan::where('id_atasan', $getid->id)
+            $notifcutiatasan = CutiKaryawan::where('id_atasan', $getid->id)
                 ->where('statusatasan', 'waiting')
                 ->where('is_active', '1')
                 ->count();
 
-            $notifhrd = CutiKaryawan::where('id_hrd', $getid->id)
+            $notifizinatasan = IzinKaryawan::where('id_atasan', $getid->id)
+                ->where('statusatasan', 'waiting')
+                ->where('is_active', '1')
+                ->count();
+
+            $notifcutihrd = CutiKaryawan::where('id_hrd', $getid->id)
+                ->where('statushrd', 'waiting')
+                ->where('is_active', '1')
+                ->count();
+
+            $notifizinhrd = IzinKaryawan::where('id_hrd', $getid->id)
                 ->where('statushrd', 'waiting')
                 ->where('is_active', '1')
                 ->count();
 
             session([
-                'atasannotif' => $notifatasan,
-                'hrdnotif'    => $notifhrd
+                'notifcutiatasan' => $notifcutiatasan,
+                'notifcutihrd'    => $notifcutihrd,
+                'notifizinatasan' => $notifizinatasan,
+                'notifizinhrd'    => $notifizinhrd
             ]);
         }
 

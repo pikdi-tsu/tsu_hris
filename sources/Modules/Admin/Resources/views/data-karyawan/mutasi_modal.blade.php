@@ -17,10 +17,10 @@
             <label>Tipe Jabatan yang Dimutasi <span class="text-danger">*</span></label>
             <select name="tipe_jabatan" id="tipe_jabatan" class="form-control" required>
                 <option value="">-- Pilih Tipe Jabatan --</option>
-                @if($karyawan->jabatan_struktural_id)
+                @if($karyawan->jabatanStrukturals->isNotEmpty())
                     <option value="struktural">Jabatan Struktural</option>
                 @endif
-                @if($karyawan->jabatan_fungsional_id)
+                @if($karyawan->jabatanFungsionals->isNotEmpty())
                     <option value="fungsional">Jabatan Fungsional</option>
                 @endif
             </select>
@@ -28,40 +28,48 @@
 
         {{-- Info Jabatan Struktural --}}
         <div id="info_struktural" class="info-jabatan-section d-none mb-4">
-            @if($karyawan->jabatanStruktural)
-                @php
-                    $tglMulaiStr = \Carbon\Carbon::parse($karyawan->tgl_mulai_jabatan_struktural);
-                    $lamaBulanStr = $tglMulaiStr->diffInMonths(\Carbon\Carbon::now());
-                    $masterStr = $karyawan->jabatanStruktural->periode_jabatan ?? 0;
-                    $sisaStr = max(0, $masterStr - $lamaBulanStr);
-                @endphp
-                <div class="card bg-light shadow-sm border-info">
-                    <div class="card-body py-2">
-                        <ul class="mb-0 pl-3 small">
-                            <li>Menjabat sebagai: <strong>{{ $karyawan->jabatanStruktural->nama_jabatan }}</strong></li>
-                            <li>Lama Menjabat: <strong>{{ $lamaBulanStr }} Bulan</strong> (Sisa: {{ $sisaStr }} Bulan)</li>
-                        </ul>
-                    </div>
+            @if($karyawan->jabatanStrukturals->isNotEmpty())
+                <div class="card bg-light shadow-sm border-info p-3">
+                    <label class="text-info font-weight-bold mb-2"><i class="fas fa-hand-pointer mr-1"></i> Pilih Jabatan Struktural yang Dilepas <span class="text-danger">*</span></label>
+                    <select name="karyawan_jabatan_struktural_id" id="karyawan_jabatan_struktural_id" class="form-control select2" style="width: 100%;">
+                        <option value="">-- Pilih Jabatan Struktural --</option>
+                        @foreach($karyawan->jabatanStrukturals as $js)
+                            @php
+                                $tglMulaiStr = \Carbon\Carbon::parse($js->tgl_mulai);
+                                $lamaBulanStr = $tglMulaiStr->diffInMonths(\Carbon\Carbon::now());
+                                $masterStr = $js->masterStruktural->periode_jabatan ?? 0;
+                                $sisaStr = max(0, $masterStr - $lamaBulanStr);
+                                $namaStr = $js->masterStruktural ? $js->masterStruktural->nama_jabatan : 'Unknown';
+                            @endphp
+                            <option value="{{ $js->id }}">
+                                {{ $namaStr }} (Menjabat: {{ $lamaBulanStr }} Bln | Sisa: {{ $sisaStr }} Bln)
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
             @endif
         </div>
 
         {{-- Info Jabatan Fungsional --}}
         <div id="info_fungsional" class="info-jabatan-section d-none mb-4">
-            @if($karyawan->jabatanFungsional)
-                @php
-                    $tglMulaiFung = \Carbon\Carbon::parse($karyawan->tgl_mulai_jabatan_fungsional);
-                    $lamaBulanFung = $tglMulaiFung->diffInMonths(\Carbon\Carbon::now());
-                    $masterFung = $karyawan->jabatanFungsional->periode_jabatan ?? 0;
-                    $sisaFung = max(0, $masterFung - $lamaBulanFung);
-                @endphp
-                <div class="card bg-light shadow-sm border-info">
-                    <div class="card-body py-2">
-                        <ul class="mb-0 pl-3 small">
-                            <li>Menjabat sebagai: <strong>{{ $karyawan->jabatanFungsional->nama_jabatan }}</strong></li>
-                            <li>Lama Menjabat: <strong>{{ $lamaBulanFung }} Bulan</strong> (Sisa: {{ $sisaFung }} Bulan)</li>
-                        </ul>
-                    </div>
+            @if($karyawan->jabatanFungsionals->isNotEmpty())
+                <div class="card bg-light shadow-sm border-info p-3">
+                    <label class="text-info font-weight-bold mb-2"><i class="fas fa-hand-pointer mr-1"></i> Pilih Jabatan Fungsional yang Dilepas <span class="text-danger">*</span></label>
+                    <select name="karyawan_jabatan_fungsional_id" id="karyawan_jabatan_fungsional_id" class="form-control select2" style="width: 100%;">
+                        <option value="">-- Pilih Jabatan Fungsional --</option>
+                        @foreach($karyawan->jabatanFungsionals as $jf)
+                            @php
+                                $tglMulaiFung = \Carbon\Carbon::parse($jf->tgl_mulai);
+                                $lamaBulanFung = $tglMulaiFung->diffInMonths(\Carbon\Carbon::now());
+                                $masterFung = $jf->masterFungsional->periode_jabatan ?? 0;
+                                $sisaFung = max(0, $masterFung - $lamaBulanFung);
+                                $namaFung = $jf->masterFungsional ? $jf->masterFungsional->nama_jabatan : 'Unknown';
+                            @endphp
+                            <option value="{{ $jf->id }}">
+                                {{ $namaFung }} (Menjabat: {{ $lamaBulanFung }} Bln | Sisa: {{ $sisaFung }} Bln)
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
             @endif
         </div>
@@ -231,13 +239,66 @@
                 cancelButtonText: 'Batal'
             }).then((result) => {
                 if (result.isConfirmed) {
+                    let btnSubmit = $(form).find('#btn-submit-mutasi');
+                    let originalBtnText = btnSubmit.html();
+                    btnSubmit.html('<i class="fas fa-spinner fa-spin"></i> Memproses...').prop('disabled', true);
+
                     Swal.fire({
                         title: 'Memproses Transaksi...',
                         text: 'Menyimpan data mutasi ke database.',
                         allowOutsideClick: false,
                         didOpen: () => { Swal.showLoading(); }
                     });
-                    form.submit();
+
+                    $.ajax({
+                        url: $(form).attr('action'),
+                        type: 'POST',
+                        data: $(form).serialize(),
+                        headers: {'X-Requested-With': 'XMLHttpRequest'},
+                        success: function(res) {
+                            btnSubmit.html(originalBtnText).prop('disabled', false);
+                            if (res.status === 'success') {
+                                $('#modal-edit').modal('hide');
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Berhasil!',
+                                    text: res.message,
+                                    timer: 1500,
+                                    showConfirmButton: false
+                                });
+                                // Reload table in index
+                                if($.fn.DataTable.isDataTable('#table-karyawan')){
+                                    $('#table-karyawan').DataTable().ajax.reload(null, false);
+                                } else {
+                                    // as a fallback if the table id is different, use the closest datatable
+                                    $('.dataTable').DataTable().ajax.reload(null, false);
+                                }
+                            }
+                        },
+                        error: function(xhr) {
+                            btnSubmit.html(originalBtnText).prop('disabled', false);
+                            if (xhr.status === 422) {
+                                var errors = xhr.responseJSON.errors;
+                                var errorMsg = '';
+                                for (var key in errors) {
+                                    errorMsg += errors[key][0] + '<br>';
+                                }
+                                Swal.fire({
+                                    icon: 'warning',
+                                    title: 'Validasi Gagal',
+                                    html: errorMsg
+                                });
+                            } else {
+                                var res = xhr.responseJSON;
+                                var errorMsg = res && res.message ? res.message : 'Terjadi kesalahan sistem.';
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: res && res.title ? res.title : 'Error',
+                                    text: errorMsg
+                                });
+                            }
+                        }
+                    });
                 }
             });
         });

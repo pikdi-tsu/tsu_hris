@@ -142,8 +142,8 @@
                 $($.fn.dataTable.tables(true)).DataTable().columns.adjust();
             });
 
-            // Logic Create/Edit Modal
-            $('body').on('click', '.btn-modal', function(e) {
+            // Logic Create/Edit Modal (Show)
+            $('body').on('click', '.btn-modal, .btn-edit', function(e) {
                 e.preventDefault();
                 var url = $(this).data('url');
                 if (!url) url = $(this).attr('href');
@@ -163,11 +163,72 @@
                 });
             });
 
-            // Logic Delete
+            // Logic Submit Form via AJAX
+            $('body').on('submit', '#modal-edit form', function(e) {
+                e.preventDefault();
+                var form = $(this);
+                var url = form.attr('action');
+                var method = form.attr('method');
+                var formData = form.serialize();
+                var btnSubmit = form.find('button[type="submit"]');
+                var originalBtnText = btnSubmit.html();
+
+                btnSubmit.html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...').prop('disabled', true);
+
+                $.ajax({
+                    url: url,
+                    type: method,
+                    data: formData,
+                    headers: {'X-Requested-With': 'XMLHttpRequest'},
+                    success: function(res) {
+                        btnSubmit.html(originalBtnText).prop('disabled', false);
+                        if (res.status === 'success') {
+                            $('#modal-edit').modal('hide');
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil!',
+                                text: res.message,
+                                timer: 1500,
+                                showConfirmButton: false
+                            });
+                            // Reload tables
+                            $('#table-struktural').DataTable().ajax.reload(null, false);
+                            $('#table-fungsional').DataTable().ajax.reload(null, false);
+                            $('#table-pangkat').DataTable().ajax.reload(null, false);
+                        }
+                    },
+                    error: function(xhr) {
+                        btnSubmit.html(originalBtnText).prop('disabled', false);
+                        if (xhr.status === 422) {
+                            var errors = xhr.responseJSON.errors;
+                            var errorMsg = '';
+                            for (var key in errors) {
+                                errorMsg += errors[key][0] + '<br>';
+                            }
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Validasi Gagal',
+                                html: errorMsg
+                            });
+                        } else {
+                            var res = xhr.responseJSON;
+                            var errorMsg = res && res.message ? res.message : 'Terjadi kesalahan sistem.';
+                            Swal.fire({
+                                icon: 'error',
+                                title: res && res.title ? res.title : 'Error',
+                                text: errorMsg
+                            });
+                        }
+                    }
+                });
+            });
+
+            // Logic Delete via AJAX
             $('body').on('click', '.btn-delete', function(e) {
                 e.preventDefault();
-                var form = $(this).closest('form');
-                var name = $(this).closest('tr').find('td:eq(1)').text();
+                var btn = $(this);
+                var url = btn.attr('href') || btn.data('url') || btn.closest('form').attr('action');
+                var name = btn.closest('tr').find('td:eq(1)').text();
 
                 Swal.fire({
                     title: 'Hapus Data?',
@@ -186,7 +247,40 @@
                             allowOutsideClick: false,
                             didOpen: () => { Swal.showLoading() }
                         });
-                        form.submit();
+                        
+                        $.ajax({
+                            url: url,
+                            type: 'POST',
+                            data: {
+                                _method: 'DELETE',
+                                _token: '{{ csrf_token() }}'
+                            },
+                            headers: {'X-Requested-With': 'XMLHttpRequest'},
+                            success: function(res) {
+                                if (res.status === 'success') {
+                                    Swal.fire({
+                                        icon: 'success',
+                                        title: 'Berhasil!',
+                                        text: res.message,
+                                        timer: 1500,
+                                        showConfirmButton: false
+                                    });
+                                    // Reload tables
+                                    $('#table-struktural').DataTable().ajax.reload(null, false);
+                                    $('#table-fungsional').DataTable().ajax.reload(null, false);
+                                    $('#table-pangkat').DataTable().ajax.reload(null, false);
+                                }
+                            },
+                            error: function(xhr) {
+                                var res = xhr.responseJSON;
+                                var errorMsg = res && res.message ? res.message : 'Terjadi kesalahan sistem.';
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: res && res.title ? res.title : 'Error',
+                                    text: errorMsg
+                                });
+                            }
+                        });
                     }
                 });
             });

@@ -72,15 +72,14 @@ class MasterJabatanController extends MiddlewareController
             ]);
 
             DB::commit();
-            return back()->with('success', 'Master Jabatan Struktural berhasil ditambahkan.');
+            return response()->json(['status' => 'success', 'message' => 'Master Jabatan Struktural berhasil ditambahkan.']);
         } catch (\Exception $e) {
             DB::rollBack();
-            return TsuErrorHandlerService::handleHtml(
+            return TsuErrorHandlerService::handleJson(
                 $e,
                 '[TSU_JABATAN_STRUKTURAL_STORE]',
                 'Gagal menyimpan data master jabatan struktural.',
-                'Gagal Create Master Jabatan Struktural.',
-                $request
+                'Gagal Create Master Jabatan Struktural.'
             );
         }
     }
@@ -112,15 +111,14 @@ class MasterJabatanController extends MiddlewareController
             ]);
 
             DB::commit();
-            return back()->with('success', 'Data Jabatan Struktural berhasil diperbarui!');
+            return response()->json(['status' => 'success', 'message' => 'Data Jabatan Struktural berhasil diperbarui!']);
         } catch (\Exception $e) {
             DB::rollBack();
-            return TsuErrorHandlerService::handleHtml(
+            return TsuErrorHandlerService::handleJson(
                 $e,
                 '[TSU_JABATAN_STRUKTURAL_UPDATE]',
                 'Gagal memperbarui data master jabatan struktural.',
-                "Gagal Update Master Jabatan Struktural ID: $id.",
-                $request
+                "Gagal Update Master Jabatan Struktural ID: $id."
             );
         }
     }
@@ -134,11 +132,15 @@ class MasterJabatanController extends MiddlewareController
         try {
             $struktural->delete();
             DB::commit();
-            return back()->with('success', 'Data Jabatan Struktural berhasil dihapus.');
+            return response()->json(['status' => 'success', 'message' => 'Data Jabatan Struktural berhasil dihapus.']);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("[TSU_JABATAN_STRUKTURAL_DELETE] Gagal Delete ID: $id. Error: " . $e->getMessage());
-            return back()->with('error', 'Gagal menghapus data karena kesalahan sistem atau data sedang digunakan.');
+            return TsuErrorHandlerService::handleJson(
+                $e,
+                '[TSU_JABATAN_STRUKTURAL_DELETE]',
+                'Gagal menghapus data karena kesalahan sistem atau data sedang digunakan.',
+                "Gagal Delete ID: $id."
+            );
         }
     }
 
@@ -190,15 +192,14 @@ class MasterJabatanController extends MiddlewareController
             ]);
 
             DB::commit();
-            return back()->with('success', 'Master Jabatan Fungsional berhasil ditambahkan.');
+            return response()->json(['status' => 'success', 'message' => 'Master Jabatan Fungsional berhasil ditambahkan.']);
         } catch (\Exception $e) {
             DB::rollBack();
-            return TsuErrorHandlerService::handleHtml(
+            return TsuErrorHandlerService::handleJson(
                 $e,
                 '[TSU_JABATAN_FUNGSIONAL_STORE]',
                 'Gagal menyimpan data master jabatan fungsional.',
-                'Gagal Create Master Jabatan Fungsional.',
-                $request
+                'Gagal Create Master Jabatan Fungsional.'
             );
         }
     }
@@ -230,15 +231,14 @@ class MasterJabatanController extends MiddlewareController
             ]);
 
             DB::commit();
-            return back()->with('success', 'Data Jabatan Fungsional berhasil diperbarui!');
+            return response()->json(['status' => 'success', 'message' => 'Data Jabatan Fungsional berhasil diperbarui!']);
         } catch (\Exception $e) {
             DB::rollBack();
-            return TsuErrorHandlerService::handleHtml(
+            return TsuErrorHandlerService::handleJson(
                 $e,
                 '[TSU_JABATAN_FUNGSIONAL_UPDATE]',
                 'Gagal memperbarui data master jabatan fungsional.',
-                "Gagal Update Master Jabatan Fungsional ID: $id.",
-                $request
+                "Gagal Update Master Jabatan Fungsional ID: $id."
             );
         }
     }
@@ -252,11 +252,15 @@ class MasterJabatanController extends MiddlewareController
         try {
             $fungsional->delete();
             DB::commit();
-            return back()->with('success', 'Data Jabatan Fungsional berhasil dihapus.');
+            return response()->json(['status' => 'success', 'message' => 'Data Jabatan Fungsional berhasil dihapus.']);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("[TSU_JABATAN_FUNGSIONAL_DELETE] Gagal Delete ID: $id. Error: " . $e->getMessage());
-            return back()->with('error', 'Gagal menghapus data karena kesalahan sistem atau data sedang digunakan.');
+            return TsuErrorHandlerService::handleJson(
+                $e,
+                '[TSU_JABATAN_FUNGSIONAL_DELETE]',
+                'Gagal menghapus data karena kesalahan sistem atau data sedang digunakan.',
+                "Gagal Delete ID: $id."
+            );
         }
     }
 
@@ -303,15 +307,14 @@ class MasterJabatanController extends MiddlewareController
             ]);
 
             DB::commit();
-            return back()->with('success', 'Master Pangkat Golongan berhasil ditambahkan.');
+            return response()->json(['status' => 'success', 'message' => 'Master Pangkat Golongan berhasil ditambahkan.']);
         } catch (\Exception $e) {
             DB::rollBack();
-            return TsuErrorHandlerService::handleHtml(
+            return TsuErrorHandlerService::handleJson(
                 $e,
                 '[TSU_PANGKAT_GOLONGAN_STORE]',
                 'Gagal menyimpan data master pangkat golongan.',
-                'Gagal Create Master Pangkat Golongan.',
-                $request
+                'Gagal Create Master Pangkat Golongan.'
             );
         }
     }
@@ -341,15 +344,14 @@ class MasterJabatanController extends MiddlewareController
             ]);
 
             DB::commit();
-            return back()->with('success', 'Data Pangkat Golongan berhasil diperbarui!');
+            return response()->json(['status' => 'success', 'message' => 'Data Pangkat Golongan berhasil diperbarui!']);
         } catch (\Exception $e) {
             DB::rollBack();
-            return TsuErrorHandlerService::handleHtml(
+            return TsuErrorHandlerService::handleJson(
                 $e,
                 '[TSU_PANGKAT_GOLONGAN_UPDATE]',
                 'Gagal memperbarui data master pangkat golongan.',
-                "Gagal Update Master Pangkat Golongan ID: $id.",
-                $request
+                "Gagal Update Master Pangkat Golongan ID: $id."
             );
         }
     }
@@ -363,11 +365,15 @@ class MasterJabatanController extends MiddlewareController
         try {
             $pangkat->delete();
             DB::commit();
-            return back()->with('success', 'Data Pangkat Golongan berhasil dihapus.');
+            return response()->json(['status' => 'success', 'message' => 'Data Pangkat Golongan berhasil dihapus.']);
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("[TSU_PANGKAT_GOLONGAN_DELETE] Gagal Delete ID: $id. Error: " . $e->getMessage());
-            return back()->with('error', 'Gagal menghapus data karena kesalahan sistem atau data sedang digunakan.');
+            return TsuErrorHandlerService::handleJson(
+                $e,
+                '[TSU_PANGKAT_GOLONGAN_DELETE]',
+                'Gagal menghapus data karena kesalahan sistem atau data sedang digunakan.',
+                "Gagal Delete ID: $id."
+            );
         }
     }
 }

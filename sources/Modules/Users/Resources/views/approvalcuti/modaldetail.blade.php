@@ -15,8 +15,7 @@
             <div class="form-group">
                 <label class="col-sm-12 control-label">Tanggal</label>
                 <div class="col-sm-12">
-                    <input type="text" class="form-control" value="{{ $tanggalmulai . ' - ' . $tanggalselesai }}"
-                        readonly>
+                    <input type="text" class="form-control" value="{{ $tanggal }}" readonly>
                 </div>
             </div>
         </div>

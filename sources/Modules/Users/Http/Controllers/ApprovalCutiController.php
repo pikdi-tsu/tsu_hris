@@ -86,9 +86,13 @@ class ApprovalCutiController extends Controller
             ->addColumn('keterangan', function ($data) {
                 return $data->keterangan;
             })
-            ->addColumn('action', function ($data) {
+            ->addColumn('action', function ($data) use ($profileId) {
                 $button = '';
-                $button .= '<center><a href="#" data-id="' . encrypt($data->id) . '" id="btnapproval" title="Proses Approval"><i class="fa fa-angle-double-right fa-md text-primary"></i></a>';
+                if ($data->id_hrd == $profileId && $data->statusatasan != 'waiting') {
+                    $button .= '<center><a href="#" data-id="' . encrypt($data->id) . '" id="btnapproval" title="Proses Approval"><i class="fa fa-angle-double-right fa-md text-primary"></i></a>';
+                } elseif ($data->id_atasan == $profileId) {
+                    $button .= '<center><a href="#" data-id="' . encrypt($data->id) . '" id="btnapproval" title="Proses Approval"><i class="fa fa-angle-double-right fa-md text-primary"></i></a>';
+                }
                 return $button;
             })
             ->make(true);
@@ -110,12 +114,17 @@ class ApprovalCutiController extends Controller
             $mulai = Carbon::parse($getdata->tanggalmulai);
             $selesai = Carbon::parse($getdata->tanggalselesai);
 
-            $tanggalmulai = $mulai->translatedFormat('d M Y');
-            $tanggalselesai = $selesai->translatedFormat('d M Y');
+            if ($mulai->format('Y-m') == $selesai->format('Y-m')) {
+                // bulan & tahun sama
+                $tanggal = $mulai->translatedFormat('d') . '–' . $selesai->translatedFormat('d M Y');
+            } else {
+                // bulan atau tahun beda
+                $tanggal = $mulai->translatedFormat('d M Y') . ' - ' . $selesai->translatedFormat('d M Y');
+            }
 
             $jumlahHari = $mulai->diffInDays($selesai) + 1;
 
-            $form = view('users::approvalcuti.modaldetail', ['data' => $getdata, 'profile' => $profile, 'jmlhari' => $jumlahHari, 'tanggalmulai' => $tanggalmulai, 'tanggalselesai' => $tanggalselesai]);
+            $form = view('users::approvalcuti.modaldetail', ['data' => $getdata, 'profile' => $profile, 'jmlhari' => $jumlahHari, 'tanggal' => $tanggal]);
             return $form->render();
         } catch (\Exception $e) {
             return response()->json([
@@ -207,7 +216,7 @@ class ApprovalCutiController extends Controller
             return response()->json([
                 'title' => 'Success!',
                 'status' => 'success',
-                'message' => 'Approval Berhasil Disimpan'
+                'message' => 'Approval Cuti Berhasil Disimpan'
             ], 200);
         } catch (\Exception $e) {
             DB::rollback();

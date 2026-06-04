@@ -14,8 +14,9 @@
                 </div>
                 <div class="col-sm-6">
                     <div class="d-flex justify-content-end">
-                        @if(auth()->check() && auth()->user()->isAdmin())
-                            <a href="{{route('admin.dashboard')}}" type="button" class="btn btn-primary bg-gradient-primary rounded-circle p-3">
+                        @if (auth()->check() && auth()->user()->isAdmin())
+                            <a href="{{ route('admin.dashboard') }}" type="button"
+                                class="btn btn-primary bg-gradient-primary rounded-circle p-3">
                                 HRIS
                             </a>
                         @endif
@@ -52,8 +53,8 @@
                                 <a href="{{ route('users.cuti.index') }}" type="button" class="btn bg-gradient-primary">
                                     Cuti Tahunan
                                 </a>
-                                <a href="#" type="button" class="btn bg-gradient-primary">
-                                    Ijin Meninggalkan Kerja
+                                <a href="{{ route('users.izin.index') }}" type="button" class="btn bg-gradient-primary">
+                                    Izin Kerja
                                 </a>
                             </div>
                         </div>

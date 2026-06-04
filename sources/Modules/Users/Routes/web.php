@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Modules\Users\Http\Controllers\SelfService\DashboardController;
 use Modules\Users\Http\Controllers\SelfService\CutiController;
+use Modules\Users\Http\Controllers\SelfService\IzinController;
 use Modules\Users\Http\Controllers\UserController;
 use Modules\Users\Http\Controllers\UserProfileController;
 use Modules\Users\Http\Controllers\SelfService\LemburController;
@@ -36,6 +37,15 @@ Route::prefix('users')->name('users.')->middleware(['auth'])->group(function () 
         Route::post('/datatables', [CutiController::class, 'datatables'])->name('datatables');
         Route::post('/edit', [CutiController::class, 'edit'])->name('edit');
         Route::post('/detail', [CutiController::class, 'detail'])->name('detail');
+    });
+
+    //Izin
+    Route::prefix('izin')->name('izin.')->group(function () {
+        Route::get('/', [IzinController::class, 'index'])->name('index');
+        Route::post('/simpan', [IzinController::class, 'simpan'])->name('simpan');
+        Route::post('/datatables', [IzinController::class, 'datatables'])->name('datatables');
+        Route::post('/edit', [IzinController::class, 'edit'])->name('edit');
+        Route::post('/detail', [IzinController::class, 'detail'])->name('detail');
     });
 
     // Route Hari Libur

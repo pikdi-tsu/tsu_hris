@@ -14,6 +14,7 @@ use App\Models\MasterCuti;
 use App\Models\CutiKaryawan;
 use App\Models\SaldoCutiKaryawan;
 use App\Models\DataDosenTendik;
+use App\Models\KaryawanJabatanStruktural;
 
 class CutiController extends Controller
 {
@@ -40,10 +41,7 @@ class CutiController extends Controller
 
         $profile = $this->getCurrentProfile();
 
-        $listKaryawan = DataDosenTendik::whereNotNull('nama')
-            ->whereNotNull('jabatan_struktural')
-            ->orderBy('nama', 'asc')
-            ->get(['id', 'nama', 'nik']);
+        $listKaryawan = KaryawanJabatanStruktural::with(['karyawan'])->get();
 
         $getsaldo = SaldoCutiKaryawan::where('id_user', $profile->id)->where('is_active', '1')->first();
 
@@ -132,7 +130,6 @@ class CutiController extends Controller
                     'statusatasan'    => 'waiting',
                     'id_hrd'          => $idhrd,
                     'statushrd'       => 'waiting',
-                    'statushrd'       => 'waiting',
                     'updated_at'      => date("Y-m-d H:i:s"),
                     'updated_by'      => $profile->nik ?? Auth::id()
                 ]);
@@ -186,15 +183,38 @@ class CutiController extends Controller
                 return $jumlahHari;
                 // return $data->kode_booking ?? '';
             })
+            ->addColumn('statusatasan', function ($data) {
+                if ($data->statusatasan == 'approved') {
+                    $stat = '<span class="badge badge-success">Approved</span>';
+                } elseif ($data->statusatasan == 'rejected') {
+                    $stat = '<span class="badge badge-danger">Rejected</span>';
+                } else {
+                    $stat = '<span class="badge badge-warning">Waiting</span>';
+                }
+
+                return $stat;
+            })
+            ->addColumn('statushrd', function ($data) {
+                if ($data->statushrd == 'approved') {
+                    $stat = '<span class="badge badge-success">Approved</span>';
+                } elseif ($data->statushrd == 'rejected') {
+                    $stat = '<span class="badge badge-danger">Rejected</span>';
+                } else {
+                    $stat = '<span class="badge badge-warning">Waiting</span>';
+                }
+
+                return $stat;
+            })
             ->addColumn('action', function ($data) {
                 $button = '';
-                if ($data->statusatasan == 'waiting' || $data->statushrd == 'waiting') {
-                    $button .= '<center><a href="#" data-id="' . encrypt($data->id) . '" id="btnedit" title="Proses Edit"><i class="fa fa-edit fa-md text-primary"></i></a>';
-                } else {
+                if ($data->statusatasan != 'waiting' || $data->statushrd != 'waiting') {
                     $button .= '<a href="#" data-id="' . encrypt($data->id) . '" id="btndetail" class="ml-2" title="Info Detail"><i class="fa fa-info-circle fa-md text-primary"></i></a></center>';
+                } else {
+                    $button .= '<center><a href="#" data-id="' . encrypt($data->id) . '" id="btnedit" title="Proses Edit"><i class="fa fa-edit fa-md text-primary"></i></a>';
                 }
                 return $button;
             })
+            ->rawColumns(['statusatasan', 'statushrd', 'action'])
             ->make(true);
     }
 

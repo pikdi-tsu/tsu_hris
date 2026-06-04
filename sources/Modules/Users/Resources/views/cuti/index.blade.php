@@ -96,7 +96,7 @@
                                 <input type="hidden" id="idedit">
                                 <input type="hidden" id="ketedit" value="no">
                                 <div class="row" style="font-size: 10pt">
-                                    <div class="col-md-6 text-center">
+                                    <div class="col-md-6">
                                         <div class="row mb-2">
                                             <label class="col-sm-2 col-form-label">NIK</label>
                                             <div class="col-sm-8">
@@ -114,7 +114,7 @@
                                         <div class="row mb-2">
                                             <label for="jeniscuti" class="col-sm-2 col-form-label">Jenis Cuti</label>
                                             <div class="col-sm-8">
-                                                <select name="" id="jeniscuti" class="form-control select2">
+                                                <select id="jeniscuti" class="form-control select2">
                                                     <option value=''>..:: Pilih Cuti ::..</option>
                                                     @foreach ($mcuti as $item)
                                                         <option value={{ $item->id }}>{{ $item->jeniscuti }}</option>
@@ -149,21 +149,13 @@
                                                     <option value=''>..:: Pilih Atasan ::..</option>
                                                     @foreach ($karyawans as $kry)
                                                         @if ($profile && $profile->id != $kry->id)
-                                                            <option value="{{ $kry->id }}">{{ $kry->nama }}
+                                                            <option value="{{ $kry->id }}">
+                                                                {{ $kry->karyawan->nama }}
                                                             </option>
                                                         @endif
                                                     @endforeach
                                                 </select>
                                             </div>
-                                            {{-- <div class="col-sm-3">
-                                                <input type="text" placeholder="" name="NikAtasan"
-                                                    class="form-control capitalize numeric" maxlength="9" id="NikAtasan"
-                                                    required>
-                                            </div>
-                                            <div class="col-sm-5">
-                                                <input type="text" placeholder="" name="NamaAtasan"
-                                                    class="form-control" id="NamaAtasan">
-                                            </div> --}}
                                         </div>
                                         <div class="row mb-2">
                                             <label for="inputNik2" class="col-sm-2 col-form-label">NIK HRD</label>
@@ -172,21 +164,13 @@
                                                     <option value=''>..:: Pilih HRD ::..</option>
                                                     @foreach ($karyawans as $kry)
                                                         @if ($profile && $profile->id != $kry->id)
-                                                            <option value="{{ $kry->id }}">{{ $kry->nama }}
+                                                            <option value="{{ $kry->id }}">
+                                                                {{ $kry->karyawan->nama }}
                                                             </option>
                                                         @endif
                                                     @endforeach
                                                 </select>
                                             </div>
-                                            {{-- <div class="col-sm-3">
-                                                <input type="text" placeholder="" name="NikHrd"
-                                                    class="form-control capitalize numeric" maxlength="9" id="NikHrd"
-                                                    required>
-                                            </div>
-                                            <div class="col-sm-5">
-                                                <input type="text" placeholder="" name="NamaHrd" class="form-control"
-                                                    id="NamaHrd">
-                                            </div> --}}
                                         </div>
                                     </div>
                                 </div>
@@ -274,7 +258,7 @@
                 }
             });
 
-            $('#jenisabsense').select2({
+            $('#jeniscuti').select2({
                 width: 'element'
             });
 
@@ -313,7 +297,7 @@
                 let id_hrd = $("#id_hrd").val();
 
                 if (jeniscuti == null || jeniscuti == '') {
-                    notifalert('Jenis Absense');
+                    notifalert('Jenis Cuti');
                 } else if (tanggal1 == null || tanggal1 == '') {
                     notifalert('Tanggal Mulai');
                 } else if (tanggal2 == null || tanggal2 == '') {

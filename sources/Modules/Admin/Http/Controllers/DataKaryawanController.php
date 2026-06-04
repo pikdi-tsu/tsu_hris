@@ -13,6 +13,8 @@ use App\Models\MasterJabatanFungsional;
 use App\Models\RiwayatJabatan;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use App\Models\KaryawanJabatanStruktural;
+use App\Models\KaryawanJabatanFungsional;
 
 class DataKaryawanController extends MiddlewareController
 {
@@ -34,8 +36,14 @@ class DataKaryawanController extends MiddlewareController
      */
     public function datatable()
     {
-        // Tarik data mentah
-        $data = DataDosenTendik::query()->orderBy('nama', 'asc');
+        $data = DataDosenTendik::with([
+            'jabatanFungsionals' => function($q){
+                $q->where('is_active', 'Y')->with('masterFungsional');
+            },
+            'jabatanStrukturals' => function($q){
+                $q->where('is_active', 'Y')->with('masterStruktural');
+            }
+        ])->orderBy('nama', 'asc');
 
         return DataTables::of($data)
             ->addIndexColumn()
@@ -71,18 +79,28 @@ class DataKaryawanController extends MiddlewareController
                 return $nik . $nidn;
             })
             ->addColumn('jabatan', function ($row) {
-                // LOGIC JABATAN STRUKTURAL
-                if (empty($row->jabatan_struktural)) {
+                // LOGIC JABATAN STRUKTURAL (Bisa Lebih dari 1)
+                if ($row->jabatanStrukturals->isEmpty()) {
                     $htmlStruktural = '<div class="text-muted font-italic small mb-1">Tidak ada jabatan struktural</div>';
                 } else {
-                    $htmlStruktural = '<div class="font-weight-bold text-dark">' . $row->jabatan_struktural . '</div>';
+                    $badgesStr = '';
+                    foreach($row->jabatanStrukturals as $js) {
+                        $namaStr = $js->masterStruktural ? $js->masterStruktural->nama_jabatan : 'Unknown';
+                        $badgesStr .= '<div class="font-weight-bold text-dark mb-1">'.$namaStr.'</div>';
+                    }
+                    $htmlStruktural = $badgesStr;
                 }
 
-                // LOGIC JABATAN FUNGSIONAL
-                if (empty($row->jabatan_fungsional)) {
-                    $htmlFungsional = '<span class="text-muted small"><i class="fas fa-layer-group mr-1"></i>Fungsional: <span class="font-italic">-</span></span>';
+                // LOGIC JABATAN FUNGSIONAL (Bisa Lebih dari 1)
+                if ($row->jabatanFungsionals->isEmpty()) {
+                    $htmlFungsional = '<div class="text-muted small mt-1"><i class="fas fa-medal mr-1"></i>Fungsional: <span class="font-italic">-</span></div>';
                 } else {
-                    $htmlFungsional = '<span class="text-secondary small"><i class="fas fa-layer-group mr-1"></i>Fungsional: ' . $row->jabatan_fungsional . '</span>';
+                    $badges = '';
+                    foreach($row->jabatanFungsionals as $jf) {
+                        $namaFung = $jf->masterFungsional ? $jf->masterFungsional->nama_jabatan : 'Unknown';
+                        $badges .= '<span class="badge badge-info mr-1 mb-1">'.$namaFung.'</span>';
+                    }
+                    $htmlFungsional = '<div class="mt-1"><i class="fas fa-medal text-muted mr-1"></i>' . $badges . '</div>';
                 }
 
                 return $htmlStruktural . $htmlFungsional;
@@ -96,12 +114,16 @@ class DataKaryawanController extends MiddlewareController
             ->addColumn('aksi', function ($row) {
                 $showUrl = route('admin.data-karyawan.show', $row->id);
                 $editUrl = route('admin.data-karyawan.edit', $row->id);
+                $kelolaStrukturalUrl = route('admin.data-karyawan.kelola-struktural', $row->id);
+                $kelolaFungsionalUrl = route('admin.data-karyawan.kelola-fungsional', $row->id);
                 $mutasiUrl = route('admin.data-karyawan.mutasi', $row->id);
                 $deleteUrl = route('admin.data-karyawan.destroy', $row->id);
                 $token = csrf_token();
 
                 $btnDetail = '<button type="button" class="btn btn-sm btn-info text-white mx-1 btn-modal" data-url="'.$showUrl.'" title="Detail Profil"><i class="fas fa-eye"></i></button>';
                 $btnEdit = '<button type="button" class="btn btn-sm btn-warning btn-edit text-dark mx-1" data-url="'.$editUrl.'" title="Edit Profil"><i class="fas fa-pencil-alt"></i></button>';
+                $btnStruktural = '<button type="button" class="btn btn-sm btn-dark text-white mx-1 btn-modal" data-url="'.$kelolaStrukturalUrl.'" title="Kelola Jabatan Struktural"><i class="fas fa-sitemap"></i></button>';
+                $btnFungsional = '<button type="button" class="btn btn-sm btn-secondary text-white mx-1 btn-modal" data-url="'.$kelolaFungsionalUrl.'" title="Kelola Jabatan Fungsional"><i class="fas fa-medal"></i></button>';
                 $btnMutasi = '<button type="button" class="btn btn-sm btn-primary text-white mx-1 btn-modal" data-url="'.$mutasiUrl.'" title="Pindah Jabatan (Mutasi)"><i class="fas fa-exchange-alt"></i></button>';
 
                 if ($row->status_karyawan === 'NON-AKTIF') {
@@ -128,7 +150,7 @@ class DataKaryawanController extends MiddlewareController
                     ';
                 }
 
-                return '<div class="d-flex justify-content-center align-items-center">' . $btnDetail . $btnEdit . $btnMutasi . $btnToggle . '</div>';
+                return '<div class="d-flex justify-content-center align-items-center">' . $btnDetail . $btnEdit . $btnStruktural . $btnFungsional . $btnMutasi . $btnToggle . '</div>';
             })
             ->rawColumns(['nama_lengkap', 'identitas', 'jabatan', 'status_karyawan', 'aksi'])
             ->make(true);
@@ -293,7 +315,14 @@ class DataKaryawanController extends MiddlewareController
     {
         $this->guard('edit', 'admin:data-karyawan');
         
-        $karyawan = DataDosenTendik::with(['jabatanStruktural', 'jabatanFungsional'])->findOrFail($id);
+        $karyawan = DataDosenTendik::with([
+            'jabatanStrukturals' => function($q) {
+                $q->where('is_active', 'Y')->with('masterStruktural');
+            },
+            'jabatanFungsionals' => function($q) {
+                $q->where('is_active', 'Y')->with('masterFungsional');
+            }
+        ])->findOrFail($id);
         
         $listKaryawan = DataDosenTendik::where('status_karyawan', 'AKTIF')
             ->where('id', '!=', $id)
@@ -337,41 +366,73 @@ class DataKaryawanController extends MiddlewareController
             ];
 
             if ($tipe == 'struktural') {
-                if (!$pegawaiLama->jabatan_struktural_id) {
-                    throw new \Exception("Pegawai ini tidak memiliki jabatan struktural.");
+                $strukturalLamaId = $request->karyawan_jabatan_struktural_id;
+                if (!$strukturalLamaId) {
+                    throw new \Exception("Pilih jabatan struktural yang akan dimutasi.");
                 }
                 
-                $tglMulai = Carbon::parse($pegawaiLama->tgl_mulai_jabatan_struktural);
+                $jabatanStrPivot = KaryawanJabatanStruktural::find($strukturalLamaId);
+                if (!$jabatanStrPivot || $jabatanStrPivot->data_dosen_tendik_id != $pegawaiLama->id) {
+                    throw new \Exception("Data jabatan struktural tidak valid.");
+                }
+
+                $tglMulai = Carbon::parse($jabatanStrPivot->tgl_mulai);
                 $lamaBulan = $tglMulai->diffInMonths($tglSekarang);
                 
-                $riwayatData['jabatan_struktural_id'] = $pegawaiLama->jabatan_struktural_id;
-                $riwayatData['tgl_mulai'] = $pegawaiLama->tgl_mulai_jabatan_struktural;
+                $riwayatData['jabatan_struktural_id'] = $jabatanStrPivot->jabatan_struktural_id;
+                $riwayatData['tgl_mulai'] = $jabatanStrPivot->tgl_mulai;
                 $riwayatData['lama_menjabat_bulan'] = $lamaBulan;
                 
-                $jabBaruLama = $request->jabatan_baru_pegawai_lama ?: null;
-                $pegawaiLama->update([
-                    'jabatan_struktural_id' => $jabBaruLama,
-                    'tgl_mulai_jabatan_struktural' => $jabBaruLama ? $tglSekarang->format('Y-m-d') : null,
-                    'tgl_akhir_jabatan_struktural' => null
+                // Nonaktifkan jabatan lama
+                $jabatanStrPivot->update([
+                    'is_active' => 'N',
+                    'tgl_akhir' => $tglSekarang->format('Y-m-d')
                 ]);
+                
+                $jabBaruLama = $request->jabatan_baru_pegawai_lama ?: null;
+                if ($jabBaruLama) {
+                    KaryawanJabatanStruktural::create([
+                        'data_dosen_tendik_id' => $pegawaiLama->id,
+                        'jabatan_struktural_id' => $jabBaruLama,
+                        'tgl_mulai' => $tglSekarang->format('Y-m-d'),
+                        'is_active' => 'Y'
+                    ]);
+                }
             } else {
-                if (!$pegawaiLama->jabatan_fungsional_id) {
-                    throw new \Exception("Pegawai ini tidak memiliki jabatan fungsional.");
+                $fungsionalLamaId = $request->karyawan_jabatan_fungsional_id;
+                if (!$fungsionalLamaId) {
+                    throw new \Exception("Pilih jabatan fungsional yang akan dimutasi.");
                 }
                 
-                $tglMulai = Carbon::parse($pegawaiLama->tgl_mulai_jabatan_fungsional);
+                $jabatanFungPivot = KaryawanJabatanFungsional::find($fungsionalLamaId);
+                if (!$jabatanFungPivot || $jabatanFungPivot->data_dosen_tendik_id != $pegawaiLama->id) {
+                    throw new \Exception("Data jabatan fungsional tidak valid.");
+                }
+
+                $tglMulai = Carbon::parse($jabatanFungPivot->tgl_mulai);
                 $lamaBulan = $tglMulai->diffInMonths($tglSekarang);
                 
-                $riwayatData['jabatan_fungsional_id'] = $pegawaiLama->jabatan_fungsional_id;
-                $riwayatData['tgl_mulai'] = $pegawaiLama->tgl_mulai_jabatan_fungsional;
+                $riwayatData['jabatan_fungsional_id'] = $jabatanFungPivot->jabatan_fungsional_id;
+                $riwayatData['tgl_mulai'] = $jabatanFungPivot->tgl_mulai;
                 $riwayatData['lama_menjabat_bulan'] = $lamaBulan;
                 
-                $jabBaruLama = $request->jabatan_baru_pegawai_lama ?: null;
-                $pegawaiLama->update([
-                    'jabatan_fungsional_id' => $jabBaruLama,
-                    'tgl_mulai_jabatan_fungsional' => $jabBaruLama ? $tglSekarang->format('Y-m-d') : null,
-                    'tgl_akhir_jabatan_fungsional' => null
+                // Nonaktifkan jabatan lama
+                $jabatanFungPivot->update([
+                    'is_active' => 'N',
+                    'tgl_akhir' => $tglSekarang->format('Y-m-d')
                 ]);
+                
+                // Jika diberi jabatan baru
+                $jabBaruLamaId = $request->jabatan_baru_pegawai_lama ?: null;
+                if ($jabBaruLamaId) {
+                    KaryawanJabatanFungsional::create([
+                        'data_dosen_tendik_id' => $pegawaiLama->id,
+                        'jabatan_fungsional_id' => $jabBaruLamaId,
+                        'tgl_mulai' => $tglSekarang->format('Y-m-d'),
+                        'sk_jabatan' => null,
+                        'is_active' => 'Y'
+                    ]);
+                }
             }
 
             RiwayatJabatan::create($riwayatData);
@@ -390,10 +451,11 @@ class DataKaryawanController extends MiddlewareController
                         $tglAkhir = $tglSekarang->copy()->addMonths($lamaMasterBulan);
                     }
                     
-                    $pegawaiBaru->update([
+                    KaryawanJabatanStruktural::create([
+                        'data_dosen_tendik_id' => $pegawaiBaru->id,
                         'jabatan_struktural_id' => $riwayatData['jabatan_struktural_id'],
-                        'tgl_mulai_jabatan_struktural' => $tglSekarang->format('Y-m-d'),
-                        'tgl_akhir_jabatan_struktural' => $tglAkhir->format('Y-m-d')
+                        'tgl_mulai' => $tglSekarang->format('Y-m-d'),
+                        'is_active' => 'Y'
                     ]);
                 } else {
                     $master = MasterJabatanFungsional::find($riwayatData['jabatan_fungsional_id']);
@@ -406,25 +468,172 @@ class DataKaryawanController extends MiddlewareController
                         $tglAkhir = $tglSekarang->copy()->addMonths($lamaMasterBulan);
                     }
                     
-                    $pegawaiBaru->update([
+                    KaryawanJabatanFungsional::create([
+                        'data_dosen_tendik_id' => $pegawaiBaru->id,
                         'jabatan_fungsional_id' => $riwayatData['jabatan_fungsional_id'],
-                        'tgl_mulai_jabatan_fungsional' => $tglSekarang->format('Y-m-d'),
-                        'tgl_akhir_jabatan_fungsional' => $tglAkhir->format('Y-m-d')
+                        'tgl_mulai' => $tglSekarang->format('Y-m-d'),
+                        'sk_jabatan' => 'Mutasi dari ' . $pegawaiLama->nama,
+                        'is_active' => 'Y'
                     ]);
                 }
             }
 
             DB::commit();
-            return back()->with('success', 'Berhasil memproses mutasi jabatan.');
+            return response()->json(['status' => 'success', 'message' => 'Berhasil memproses mutasi jabatan.']);
         } catch (\Exception $e) {
             DB::rollBack();
-            return TsuErrorHandlerService::handleHtml(
+            return TsuErrorHandlerService::handleJson(
                 $e, 
                 '[TSU_MUTASI_FAIL]', 
                 'Gagal memproses mutasi jabatan: ' . $e->getMessage(), 
-                "Gagal Mutasi ID: $id.", 
-                $request
+                "Gagal Mutasi ID: $id."
             );
+        }
+    }
+
+    /**
+     * KELOLA JABATAN FUNGSIONAL
+     */
+    public function kelolaFungsionalModal($id)
+    {
+        $this->guard('edit', 'admin:data-karyawan');
+        $karyawan = DataDosenTendik::findOrFail($id);
+        
+        $fungsionals = KaryawanJabatanFungsional::where('data_dosen_tendik_id', $id)
+            ->where('is_active', 'Y')
+            ->with('masterFungsional')
+            ->orderBy('tgl_mulai', 'desc')
+            ->get();
+            
+        $masterFungsional = MasterJabatanFungsional::orderBy('nama_jabatan', 'asc')->get();
+
+        return view('admin::data-karyawan.kelola_fungsional_modal', compact('karyawan', 'fungsionals', 'masterFungsional'));
+    }
+
+    public function storeFungsional(Request $request, $id)
+    {
+        $this->guard('edit', 'admin:data-karyawan');
+        $request->validate([
+            'jabatan_fungsional_id' => 'required',
+            'tgl_mulai' => 'required|date',
+            'sk_jabatan' => 'nullable|string|max:255',
+        ]);
+
+        try {
+            KaryawanJabatanFungsional::create([
+                'data_dosen_tendik_id' => $id,
+                'jabatan_fungsional_id' => $request->jabatan_fungsional_id,
+                'tgl_mulai' => $request->tgl_mulai,
+                'sk_jabatan' => $request->sk_jabatan,
+                'is_active' => 'Y'
+            ]);
+            
+            // Return JSON for AJAX modal refresh
+            return response()->json([
+                'status' => 'success', 
+                'message' => 'Jabatan fungsional berhasil ditambahkan.',
+                'html' => view('admin::data-karyawan._fungsional_list', [
+                    'fungsionals' => KaryawanJabatanFungsional::where('data_dosen_tendik_id', $id)->where('is_active', 'Y')->with('masterFungsional')->orderBy('tgl_mulai', 'desc')->get()
+                ])->render()
+            ]);
+        } catch (\Exception $e) {
+            return TsuErrorHandlerService::handleJson($e, '[TSU_FUNG_STORE]', 'Gagal menambah fungsional.', 'Gagal Store Fungsional');
+        }
+    }
+
+    public function destroyFungsional($fungsional_id)
+    {
+        $this->guard('edit', 'admin:data-karyawan');
+        try {
+            $fung = KaryawanJabatanFungsional::findOrFail($fungsional_id);
+            $karyawanId = $fung->data_dosen_tendik_id;
+            
+            // Soft delete/deactivate instead of hard delete
+            $fung->update([
+                'is_active' => 'N',
+                'tgl_akhir' => Carbon::now()->format('Y-m-d')
+            ]);
+            
+            return response()->json([
+                'status' => 'success', 
+                'message' => 'Jabatan fungsional berhasil dihapus/dinonaktifkan.',
+                'html' => view('admin::data-karyawan._fungsional_list', [
+                    'fungsionals' => KaryawanJabatanFungsional::where('data_dosen_tendik_id', $karyawanId)->where('is_active', 'Y')->with('masterFungsional')->orderBy('tgl_mulai', 'desc')->get()
+                ])->render()
+            ]);
+        } catch (\Exception $e) {
+            return TsuErrorHandlerService::handleJson($e, '[TSU_FUNG_DEL]', 'Gagal menghapus fungsional.', 'Gagal Delete Fungsional');
+        }
+    }
+
+    /**
+     * KELOLA JABATAN STRUKTURAL
+     */
+    public function kelolaStrukturalModal($id)
+    {
+        $this->guard('edit', 'admin:data-karyawan');
+        $karyawan = DataDosenTendik::findOrFail($id);
+        
+        $strukturals = KaryawanJabatanStruktural::where('data_dosen_tendik_id', $id)
+            ->where('is_active', 'Y')
+            ->with('masterStruktural')
+            ->orderBy('tgl_mulai', 'desc')
+            ->get();
+            
+        $masterStruktural = MasterJabatanStruktural::orderBy('nama_jabatan', 'asc')->get();
+
+        return view('admin::data-karyawan.kelola_struktural_modal', compact('karyawan', 'strukturals', 'masterStruktural'));
+    }
+
+    public function storeStruktural(Request $request, $id)
+    {
+        $this->guard('edit', 'admin:data-karyawan');
+        $request->validate([
+            'jabatan_struktural_id' => 'required',
+            'tgl_mulai' => 'required|date',
+        ]);
+
+        try {
+            KaryawanJabatanStruktural::create([
+                'data_dosen_tendik_id' => $id,
+                'jabatan_struktural_id' => $request->jabatan_struktural_id,
+                'tgl_mulai' => $request->tgl_mulai,
+                'is_active' => 'Y'
+            ]);
+            
+            return response()->json([
+                'status' => 'success', 
+                'message' => 'Jabatan struktural berhasil ditambahkan.',
+                'html' => view('admin::data-karyawan._struktural_list', [
+                    'strukturals' => KaryawanJabatanStruktural::where('data_dosen_tendik_id', $id)->where('is_active', 'Y')->with('masterStruktural')->orderBy('tgl_mulai', 'desc')->get()
+                ])->render()
+            ]);
+        } catch (\Exception $e) {
+            return TsuErrorHandlerService::handleJson($e, '[TSU_STR_STORE]', 'Gagal menambah struktural.', 'Gagal Store Struktural');
+        }
+    }
+
+    public function destroyStruktural($struktural_id)
+    {
+        $this->guard('edit', 'admin:data-karyawan');
+        try {
+            $str = KaryawanJabatanStruktural::findOrFail($struktural_id);
+            $karyawanId = $str->data_dosen_tendik_id;
+            
+            $str->update([
+                'is_active' => 'N',
+                'tgl_akhir' => Carbon::now()->format('Y-m-d')
+            ]);
+            
+            return response()->json([
+                'status' => 'success', 
+                'message' => 'Jabatan struktural berhasil dilepas.',
+                'html' => view('admin::data-karyawan._struktural_list', [
+                    'strukturals' => KaryawanJabatanStruktural::where('data_dosen_tendik_id', $karyawanId)->where('is_active', 'Y')->with('masterStruktural')->orderBy('tgl_mulai', 'desc')->get()
+                ])->render()
+            ]);
+        } catch (\Exception $e) {
+            return TsuErrorHandlerService::handleJson($e, '[TSU_STR_DEL]', 'Gagal melepas struktural.', 'Gagal Delete Struktural');
         }
     }
 }

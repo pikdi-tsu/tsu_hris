@@ -94,7 +94,7 @@
                                                     <option value=''>..:: Pilih Atasan ::..</option>
                                                     @foreach ($karyawans as $kry)
                                                         @if ($profile && $profile->id != $kry->id)
-                                                            <option value="{{ $kry->id }}">
+                                                            <option value="{{ $kry->data_dosen_tendik_id }}">
                                                                 {{ $kry->karyawan->nama }}
                                                             </option>
                                                         @endif
@@ -109,7 +109,7 @@
                                                     <option value=''>..:: Pilih HRD ::..</option>
                                                     @foreach ($karyawans as $kry)
                                                         @if ($profile && $profile->id != $kry->id)
-                                                            <option value="{{ $kry->id }}">
+                                                            <option value="{{ $kry->data_dosen_tendik_id }}">
                                                                 {{ $kry->karyawan->nama }}
                                                             </option>
                                                         @endif
@@ -285,6 +285,7 @@
                                 text: response.message,
                                 icon: (response.status != 'error') ? 'success' : 'error'
                             }).then((result) => {
+                                $('#modaldetail').modal('hide');
                                 location.reload();
                                 Swal.close();
                             });

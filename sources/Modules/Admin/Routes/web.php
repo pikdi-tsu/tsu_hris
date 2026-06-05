@@ -17,6 +17,7 @@ use Modules\Admin\Http\Controllers\MasterHariLiburController;
 use Modules\System\Http\Middleware\CheckAdminRole;
 use \Modules\Admin\Http\Controllers\MasterLemburController;
 use Modules\Admin\Http\Controllers\MasterJabatanController;
+use Modules\Admin\Http\Controllers\RiwayatJabatanController;
 use Illuminate\Support\Facades\Route;
 
 // Aktifkan CheckAdminRole::class di middleware jika ada dashboard users sendiri
@@ -43,12 +44,28 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
             Route::post('/{id}/struktural', [DataKaryawanController::class, 'storeStruktural'])->name('store-struktural');
             Route::delete('/struktural/{struktural_id}', [DataKaryawanController::class, 'destroyStruktural'])->name('destroy-struktural');
 
+            // Route Riwayat Jabatan (Read Only)
+            Route::get('/{id}/riwayat', [DataKaryawanController::class, 'riwayatModal'])->name('riwayat');
+            Route::get('/{id}/export-riwayat', [DataKaryawanController::class, 'exportRiwayatExcel'])->name('export-riwayat');
+
             // Route CRUD
             Route::resource('/', DataKaryawanController::class)->parameters(['' => 'id']);
             Route::post('/{id}/bio-aktif', [DataKaryawanController::class, 'bioAktif'])->name('bio-aktif');
         });
     });
 
+    // --- ROUTE RIWAYAT JABATAN MENU ---
+    Route::middleware(['permission:admin:riwayat-jabatan:view'])->group(function () {
+        Route::prefix('riwayat-jabatan')->name('riwayat-jabatan.')->group(function () {
+            Route::get('/', [RiwayatJabatanController::class, 'index'])->name('index');
+            Route::get('/json', [RiwayatJabatanController::class, 'datatable'])->name('json');
+            Route::get('/export', [RiwayatJabatanController::class, 'exportGlobal'])->name('export');
+
+            Route::get('/{id}/edit', [RiwayatJabatanController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [RiwayatJabatanController::class, 'update'])->name('update');
+            Route::delete('/{id}', [RiwayatJabatanController::class, 'destroy'])->name('destroy');
+        });
+    });
 
     // --- ROUTE MASTER HARI LIBUR ---
     Route::middleware(['permission:admin:hari-libur:view'])->group(function () {

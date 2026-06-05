@@ -32,7 +32,7 @@
         Lanjut <i class="fas fa-arrow-right ml-1"></i>
     </button>
 
-    <button type="button" onclick="$('#form-create-karyawan').submit();" class="btn btn-success font-weight-bold d-none shadow-sm" id="btn-save-karyawan">
+    <button type="button" onclick="$('#form-edit-karyawan').submit();" class="btn btn-success font-weight-bold d-none shadow-sm" id="btn-save-karyawan">
         <i class="fas fa-save mr-1"></i> Simpan Pegawai
     </button>
 </div>

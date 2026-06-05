@@ -120,6 +120,39 @@
                         @endforeach
 
                     </div>
+
+                    {{-- TOMBOL SHORTCUT KHUSUS UNTUK TAB JABATAN & PANGKAT --}}
+                    @if($tabKey === 'tab_kepangkatan' && $isEdit)
+                        <div class="row mt-4">
+                            <div class="col-md-6 mb-3">
+                                <div class="card bg-white border-0 shadow-sm h-100">
+                                    <div class="card-body text-center">
+                                        <h6 class="font-weight-bold text-dark mb-3"><i class="fas fa-sitemap text-primary mr-1"></i> Jabatan Struktural</h6>
+                                        <p class="small text-muted mb-3">Kelola riwayat, penugasan, dan pelepasan Jabatan Struktural.</p>
+                                        <button type="button" 
+                                                class="btn btn-outline-primary btn-sm btn-block btn-modal font-weight-bold" 
+                                                data-url="{{ route('admin.data-karyawan.kelola-struktural', $karyawan->id) }}">
+                                            <i class="fas fa-edit mr-1"></i> Kelola Struktural
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="card bg-white border-0 shadow-sm h-100">
+                                    <div class="card-body text-center">
+                                        <h6 class="font-weight-bold text-dark mb-3"><i class="fas fa-medal text-info mr-1"></i> Jabatan Fungsional & Pangkat</h6>
+                                        <p class="small text-muted mb-3">Kelola riwayat, penugasan fungsional beserta kepangkatannya.</p>
+                                        <button type="button" 
+                                                class="btn btn-outline-info btn-sm btn-block btn-modal font-weight-bold" 
+                                                data-url="{{ route('admin.data-karyawan.kelola-fungsional', $karyawan->id) }}">
+                                            <i class="fas fa-edit mr-1"></i> Kelola Fungsional
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+
                 </div>
             @endforeach
         </div>

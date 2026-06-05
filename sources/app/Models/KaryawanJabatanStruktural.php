@@ -16,7 +16,7 @@ class KaryawanJabatanStruktural extends Model
     public function __construct(array $attributes = [])
     {
         parent::__construct($attributes);
-        $this->setTable(Config::get('app.table.karyawan_jabatan_strukturals'));
+        $this->setTable('karyawan_jabatan_strukturals');
     }
 
     public function karyawan()

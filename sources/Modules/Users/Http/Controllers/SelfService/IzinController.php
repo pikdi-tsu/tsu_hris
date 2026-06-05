@@ -10,13 +10,13 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Yajra\Datatables\Datatables;
 
-use App\Models\MasterCuti;
-use App\Models\CutiKaryawan;
+use App\Models\IzinKaryawan;
+use App\Models\MasterIzin;
 use App\Models\SaldoCutiKaryawan;
 use App\Models\DataDosenTendik;
 use App\Models\KaryawanJabatanStruktural;
 
-class CutiController extends Controller
+class IzinController extends Controller
 {
     public function __construct()
     {
@@ -37,7 +37,7 @@ class CutiController extends Controller
             Session::forget('tmp');
         }
 
-        $getmcuti = MasterCuti::where('is_active', '1')->get();
+        $getmizin = MasterIzin::where('is_active', '1')->get();
 
         $profile = $this->getCurrentProfile();
 
@@ -46,22 +46,22 @@ class CutiController extends Controller
         $getsaldo = SaldoCutiKaryawan::where('id_user', $profile->id)->where('is_active', '1')->first();
 
         $data = array(
-            'title'     => 'Cuti Karyawan',
+            'title'     => 'Izin Karyawan',
             'menu'      => 'dashboard',
-            'mcuti'     => $getmcuti,
+            'mizin'     => $getmizin,
             'karyawans' => $listKaryawan,
             'profile'   => $profile,
             'saldo'     => $getsaldo
         );
 
-        return view('users::cuti.index', $data);
+        return view('users::izin.index', $data);
     }
 
     public function simpan(Request $req)
     {
         try {
             $validator = Validator::make($req->all(), [
-                'jeniscuti' => 'required',
+                'jenisizin' => 'required',
                 'tanggal1'  => 'required|date',
                 'tanggal2'  => 'required|date|after_or_equal:tanggal1',
                 'alasan'    => 'required',
@@ -69,7 +69,7 @@ class CutiController extends Controller
                 'id_hrd'    => 'required',
             ], [
                 // custom message
-                'jeniscuti.required' => 'Jenis Cuti Tidak Boleh Kosong',
+                'jenisizin.required' => 'Jenis Izin Tidak Boleh Kosong',
                 'tanggal1.required' => 'Tanggal Mulai Tidak Boleh Kosong',
                 'tanggal2.required' => 'Tanggal Selesai Tidak Boleh Kosong',
                 'tanggal2.after_or_equal' => 'Waktu Selesai harus setelah Waktu Mulai',
@@ -96,7 +96,7 @@ class CutiController extends Controller
             }
 
             $iduser = $profile->id;
-            $jeniscuti = $req->jeniscuti;
+            $jenisizin = $req->jenisizin;
             $tgl1 = $req->tanggal1;
             $tgl2 = $req->tanggal2;
             $alasan = $req->alasan;
@@ -104,8 +104,8 @@ class CutiController extends Controller
             $idhrd = $req->id_hrd;
 
             if ($req->ketedit == 'no') {
-                $insert = CutiKaryawan::insert([
-                    'id_mcuti'        => $jeniscuti,
+                $insert = IzinKaryawan::insert([
+                    'id_mizin'        => $jenisizin,
                     'id_user'         => $iduser,
                     'tanggalmulai'    => $tgl1,
                     'tanggalselesai'  => $tgl2,
@@ -119,8 +119,8 @@ class CutiController extends Controller
                     'created_by'      => $profile->nik ?? Auth::id()
                 ]);
             } else {
-                $insert = CutiKaryawan::where('id', $req->idedit)->where('is_active', '1')->update([
-                    'id_mcuti'        => $jeniscuti,
+                $insert = IzinKaryawan::where('id', $req->idedit)->where('is_active', '1')->update([
+                    'id_mizin'        => $jenisizin,
                     'id_user'         => $iduser,
                     'tanggalmulai'    => $tgl1,
                     'tanggalselesai'  => $tgl2,
@@ -138,7 +138,7 @@ class CutiController extends Controller
             return response()->json([
                 'title' => 'Success!',
                 'status' => 'success',
-                'message' => 'Cuti berhasil disimpan'
+                'message' => 'Izin Berhasil Disimpan'
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -155,7 +155,7 @@ class CutiController extends Controller
         $profile = $this->getCurrentProfile();
         $profileId = $profile ? $profile->id : null;
 
-        $data = CutiKaryawan::with(['masterCuti', 'atasan', 'hrd'])
+        $data = IzinKaryawan::with(['masterIzin', 'atasan', 'hrd'])
             ->where('id_user', $profileId)
             ->where('is_active', '1')
             ->orderByDesc('created_at')
@@ -163,8 +163,8 @@ class CutiController extends Controller
 
         return DataTables::of($data)
             ->addIndexColumn()
-            ->addColumn('jeniscuti', function ($data) {
-                return $data->masterCuti ? $data->masterCuti->jeniscuti : '-';
+            ->addColumn('jenisizin', function ($data) {
+                return $data->masterIzin ? $data->masterIzin->jenisizin : '-';
             })
             ->addColumn('tanggalmulai', function ($data) {
                 $formatTanggal = Carbon::parse($data->tanggalmulai)->format('d F Y');
@@ -223,7 +223,7 @@ class CutiController extends Controller
         try {
             $myid = decrypt($req->myid);
 
-            $getdata = CutiKaryawan::where('id', $myid)
+            $getdata = IzinKaryawan::where('id', $myid)
                 ->where('is_active', '1')
                 ->first();
 
@@ -245,7 +245,7 @@ class CutiController extends Controller
 
             $profile = $this->getCurrentProfile();
 
-            $getdata = CutiKaryawan::with(['masterCuti', 'atasan', 'hrd'])
+            $getdata = IzinKaryawan::with(['masterIzin', 'atasan', 'hrd'])
                 ->where('id', $myid)
                 ->where('is_active', '1')
                 ->orderByDesc('created_at')
@@ -264,7 +264,7 @@ class CutiController extends Controller
 
             $jumlahHari = $mulai->diffInDays($selesai) + 1;
 
-            $form = view('users::cuti.modaldetail', ['data' => $getdata, 'profile' => $profile, 'jmlhari' => $jumlahHari, 'tanggal' => $tanggal]);
+            $form = view('users::izin.modaldetail', ['data' => $getdata, 'profile' => $profile, 'jmlhari' => $jumlahHari, 'tanggal' => $tanggal]);
             return $form->render();
         } catch (\Exception $e) {
             return response()->json([

@@ -22,7 +22,7 @@ return [
 
     // Main Apps
     'tsu_homebase' => [
-      'url' => env('HOMEBASE_URL'),
+        'url' => env('HOMEBASE_URL'),
     ],
 
     // Urutan menentukan prioritas pengecekan.
@@ -36,7 +36,7 @@ return [
     ],
 
     // Oauth Authorization Grant
-    'oauth' =>[
+    'oauth' => [
         'authorization' => [
             'id' => env('TSU_SSO_CLIENT_ID'),
             'secret' => env('TSU_SSO_CLIENT_SECRET'),
@@ -154,7 +154,7 @@ return [
     |
     */
 
-    'locale' => 'en',
+    'locale' => 'id',
 
     /*
     |--------------------------------------------------------------------------

@@ -28,8 +28,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot()
     {
         $superAdminModule = 'super admin ' . config('app.module.name');
-        Gate::before(static function ($user, $ability) use ($superAdminModule){
-            return $user->hasRole('super admin|'.$superAdminModule) ? true : null;
+        Gate::before(static function ($user, $ability) use ($superAdminModule) {
+            return $user->hasRole('super admin|' . $superAdminModule) ? true : null;
         });
     }
 }

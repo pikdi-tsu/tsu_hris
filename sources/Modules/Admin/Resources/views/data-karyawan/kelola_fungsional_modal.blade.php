@@ -100,34 +100,24 @@ $(document).ready(function() {
     $('#form-tambah-fungsional').on('submit', function(e) {
         e.preventDefault();
         let form = $(this);
-        let btn = $('#btn-save-fung');
-        let originalText = btn.html();
-
-        btn.html('<i class="fas fa-spinner fa-spin"></i> Loading...').prop('disabled', true);
-
-        $.ajax({
+        pikdiAjax({
             url: form.attr('action'),
             type: 'POST',
             data: form.serialize(),
-            success: function(res) {
-                btn.html(originalText).prop('disabled', false);
-                if(res.status === 'success') {
-                    $('#fungsional-list-container').html(res.html);
-                    form.trigger('reset');
-                    form.find('.select2').val('').trigger('change');
-                    Swal.fire({
-                        icon: 'success', title: 'Berhasil', text: res.message, timer: 1500, showConfirmButton: false
-                    });
-                    
-                    // Reload main datatable if exists
-                    if($.fn.DataTable.isDataTable('#table-karyawan')){
-                        $('#table-karyawan').DataTable().ajax.reload(null, false);
-                    }
+            onSuccess: function(res) {
+                if(res.data && res.data.html) {
+                    $('#fungsional-list-container').html(res.data.html);
+                }
+                form.trigger('reset');
+                form.find('.select2').val('').trigger('change');
+                
+                // Reload main datatable if exists
+                if($.fn.DataTable.isDataTable('#table-karyawan')){
+                    $('#table-karyawan').DataTable().ajax.reload(null, false);
                 }
             },
-            error: function(xhr) {
-                btn.html(originalText).prop('disabled', false);
-                Swal.fire('Error', 'Gagal menyimpan data.', 'error');
+            onError: function(xhr) {
+                // Notifikasi error sudah ditangani pikdiAjax
             }
         });
     });
@@ -148,24 +138,20 @@ $(document).ready(function() {
             confirmButtonText: 'Ya, Hapus!'
         }).then((result) => {
             if (result.isConfirmed) {
-                $.ajax({
+                pikdiAjax({
                     url: url,
                     type: 'POST',
                     data: {
-                        _method: 'DELETE',
-                        _token: '{{ csrf_token() }}'
+                        _method: 'DELETE'
                     },
-                    success: function(res) {
-                        if(res.status === 'success') {
-                            $('#fungsional-list-container').html(res.html);
-                            // Reload main datatable if exists
-                            if($.fn.DataTable.isDataTable('#table-karyawan')){
-                                $('#table-karyawan').DataTable().ajax.reload(null, false);
-                            }
+                    onSuccess: function(res) {
+                        if(res.data && res.data.html) {
+                            $('#fungsional-list-container').html(res.data.html);
                         }
-                    },
-                    error: function(xhr) {
-                        Swal.fire('Error', 'Gagal menghapus data.', 'error');
+                        // Reload main datatable if exists
+                        if($.fn.DataTable.isDataTable('#table-karyawan')){
+                            $('#table-karyawan').DataTable().ajax.reload(null, false);
+                        }
                     }
                 });
             }

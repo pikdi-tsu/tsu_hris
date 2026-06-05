@@ -603,36 +603,12 @@
                     cancelButtonText: 'Batal'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        $.ajax({
+                        pikdiAjax({
                             url: url,
                             type: 'DELETE',
                             data: form.serialize(),
-                            beforeSend: function(param) {
-                                Swal.fire({
-                                    title: 'Mohon Tunggu Sebentar',
-                                    allowEscapeKey: false,
-                                    allowOutsideClick: false,
-                                    didOpen: () => {
-                                        Swal.showLoading();
-                                    }
-                                })
-                            },
-                            success: function(response) {
-                                Swal.fire({
-                                    title: response.title,
-                                    text: response.message,
-                                    icon: 'success'
-                                }).then(() => {
-                                    oTable.draw();
-                                });
-                            },
-                            error: function(xhr, status, error) {
-                                let res = xhr.responseJSON;
-                                Swal.fire({
-                                    title: res?.title ?? 'Error',
-                                    text: res?.message ?? error,
-                                    icon: 'error'
-                                });
+                            onSuccess: function(response) {
+                                oTable.draw();
                             }
                         });
                     }
@@ -654,38 +630,14 @@
                     cancelButtonText: 'Batal'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        $.ajax({
+                        pikdiAjax({
                             url: url,
                             type: 'POST',
                             data: {
                                 _token: $('meta[name=csrf-token]').attr('content')
                             },
-                            beforeSend: function(param) {
-                                Swal.fire({
-                                    title: 'Menarik Pengajuan...',
-                                    allowEscapeKey: false,
-                                    allowOutsideClick: false,
-                                    didOpen: () => {
-                                        Swal.showLoading();
-                                    }
-                                })
-                            },
-                            success: function(response) {
-                                Swal.fire({
-                                    title: response.title,
-                                    text: response.message,
-                                    icon: 'success'
-                                }).then(() => {
-                                    oTable.draw();
-                                });
-                            },
-                            error: function(xhr, status, error) {
-                                let res = xhr.responseJSON;
-                                Swal.fire({
-                                    title: res?.title ?? 'Error',
-                                    text: res?.message ?? error,
-                                    icon: 'error'
-                                });
+                            onSuccess: function(response) {
+                                oTable.draw();
                             }
                         });
                     }
@@ -772,26 +724,13 @@
             });
 
             function processApproval(url, method) {
-                $.ajax({
+                pikdiAjax({
                     url: url,
                     type: method,
-                    data: {
-                        _token: '{{ csrf_token() }}'
-                    },
-                    beforeSend: function() {
-                        Swal.fire({
-                            title: 'Memproses...',
-                            allowOutsideClick: false,
-                            didOpen: () => { Swal.showLoading() }
-                        });
-                    },
-                    success: function(res) {
-                        Swal.fire('Berhasil!', res.message, 'success');
+                    data: {},
+                    onSuccess: function(res) {
                         oTableApproval.ajax.reload(null, false);
-                    },
-                    error: function(xhr) {
-                        let res = xhr.responseJSON;
-                        Swal.fire('Gagal!', res?.message ?? 'Terjadi kesalahan sistem', 'error');
+                        oTable.ajax.reload(null, false);
                     }
                 });
             }

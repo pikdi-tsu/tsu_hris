@@ -17,8 +17,12 @@ use App\Models\KaryawanJabatanStruktural;
 use App\Models\KaryawanJabatanFungsional;
 use App\Models\MasterPangkatGolongan;
 
+use App\Traits\ApiResponseTrait;
+
 class DataKaryawanController extends MiddlewareController
 {
+    use ApiResponseTrait;
+    
     public function __construct()
     {
         $this->registerPermissions('admin:data-karyawan');
@@ -518,7 +522,7 @@ class DataKaryawanController extends MiddlewareController
             }
 
             DB::commit();
-            return response()->json(['status' => 'success', 'message' => 'Berhasil memproses mutasi jabatan.']);
+            return $this->sendSuccess('Berhasil memproses mutasi jabatan.');
         } catch (\Exception $e) {
             DB::rollBack();
             return TsuErrorHandlerService::handleJson(
@@ -578,9 +582,7 @@ class DataKaryawanController extends MiddlewareController
             ]);
             
             // Return JSON for AJAX modal refresh
-            return response()->json([
-                'status' => 'success', 
-                'message' => 'Jabatan fungsional berhasil ditambahkan.',
+            return $this->sendSuccess('Jabatan fungsional berhasil ditambahkan.', [
                 'html' => view('admin::data-karyawan._fungsional_list', [
                     'fungsionals' => KaryawanJabatanFungsional::where('data_dosen_tendik_id', $id)->where('is_active', 'Y')->with(['masterFungsional', 'pangkatGolongan'])->orderBy('tgl_mulai', 'desc')->get()
                 ])->render()
@@ -603,9 +605,7 @@ class DataKaryawanController extends MiddlewareController
                 'tgl_akhir' => Carbon::now()->format('Y-m-d')
             ]);
             
-            return response()->json([
-                'status' => 'success', 
-                'message' => 'Jabatan fungsional berhasil dihapus/dinonaktifkan.',
+            return $this->sendSuccess('Jabatan fungsional berhasil dihapus/dinonaktifkan.', [
                 'html' => view('admin::data-karyawan._fungsional_list', [
                     'fungsionals' => KaryawanJabatanFungsional::where('data_dosen_tendik_id', $karyawanId)->where('is_active', 'Y')->with('masterFungsional')->orderBy('tgl_mulai', 'desc')->get()
                 ])->render()
@@ -657,9 +657,7 @@ class DataKaryawanController extends MiddlewareController
                 'is_active' => 'Y'
             ]);
             
-            return response()->json([
-                'status' => 'success', 
-                'message' => 'Jabatan struktural berhasil ditambahkan.',
+            return $this->sendSuccess('Jabatan struktural berhasil ditambahkan.', [
                 'html' => view('admin::data-karyawan._struktural_list', [
                     'strukturals' => KaryawanJabatanStruktural::where('data_dosen_tendik_id', $id)->where('is_active', 'Y')->with('masterStruktural')->orderBy('tgl_mulai', 'desc')->get()
                 ])->render()
@@ -681,9 +679,7 @@ class DataKaryawanController extends MiddlewareController
                 'tgl_akhir' => Carbon::now()->format('Y-m-d')
             ]);
             
-            return response()->json([
-                'status' => 'success', 
-                'message' => 'Jabatan struktural berhasil dilepas.',
+            return $this->sendSuccess('Jabatan struktural berhasil dilepas.', [
                 'html' => view('admin::data-karyawan._struktural_list', [
                     'strukturals' => KaryawanJabatanStruktural::where('data_dosen_tendik_id', $karyawanId)->where('is_active', 'Y')->with('masterStruktural')->orderBy('tgl_mulai', 'desc')->get()
                 ])->render()

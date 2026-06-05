@@ -99,20 +99,12 @@ class LemburController extends MiddlewareController
             ]);
 
             if ($validator->fails()) {
-                return response()->json([
-                    'title' => 'Failed!',
-                    'status' => 'error',
-                    'message' => $validator->errors()->first()
-                ], 422);
+                return $this->sendError($validator->errors()->first());
             }
 
             $profile = $this->getCurrentProfile();
             if (!$profile) {
-                 return response()->json([
-                    'title' => 'Failed!',
-                    'status' => 'error',
-                    'message' => 'Profil karyawan tidak ditemukan.'
-                ], 422);
+                 return $this->sendError('Profil karyawan tidak ditemukan.');
             }
 
             $dataLembur = [

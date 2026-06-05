@@ -12,8 +12,11 @@ use App\Models\MasterPangkatGolongan;
 use Yajra\DataTables\Facades\DataTables;
 use App\Services\TsuErrorHandlerService;
 
+use App\Traits\ApiResponseTrait;
+
 class MasterJabatanController extends MiddlewareController
 {
+    use ApiResponseTrait;
     public function __construct()
     {
         $this->registerPermissions('admin:master-jabatan');
@@ -72,7 +75,7 @@ class MasterJabatanController extends MiddlewareController
             ]);
 
             DB::commit();
-            return response()->json(['status' => 'success', 'message' => 'Master Jabatan Struktural berhasil ditambahkan.']);
+            return $this->sendSuccess('Master Jabatan Struktural berhasil ditambahkan.');
         } catch (\Exception $e) {
             DB::rollBack();
             return TsuErrorHandlerService::handleJson(
@@ -111,7 +114,7 @@ class MasterJabatanController extends MiddlewareController
             ]);
 
             DB::commit();
-            return response()->json(['status' => 'success', 'message' => 'Data Jabatan Struktural berhasil diperbarui!']);
+            return $this->sendSuccess('Data Jabatan Struktural berhasil diperbarui!');
         } catch (\Exception $e) {
             DB::rollBack();
             return TsuErrorHandlerService::handleJson(
@@ -132,7 +135,7 @@ class MasterJabatanController extends MiddlewareController
         try {
             $struktural->delete();
             DB::commit();
-            return response()->json(['status' => 'success', 'message' => 'Data Jabatan Struktural berhasil dihapus.']);
+            return $this->sendSuccess('Data Jabatan Struktural berhasil dihapus.');
         } catch (\Exception $e) {
             DB::rollBack();
             return TsuErrorHandlerService::handleJson(
@@ -192,7 +195,7 @@ class MasterJabatanController extends MiddlewareController
             ]);
 
             DB::commit();
-            return response()->json(['status' => 'success', 'message' => 'Master Jabatan Fungsional berhasil ditambahkan.']);
+            return $this->sendSuccess('Master Jabatan Fungsional berhasil ditambahkan.');
         } catch (\Exception $e) {
             DB::rollBack();
             return TsuErrorHandlerService::handleJson(
@@ -231,7 +234,7 @@ class MasterJabatanController extends MiddlewareController
             ]);
 
             DB::commit();
-            return response()->json(['status' => 'success', 'message' => 'Data Jabatan Fungsional berhasil diperbarui!']);
+            return $this->sendSuccess('Data Jabatan Fungsional berhasil diperbarui!');
         } catch (\Exception $e) {
             DB::rollBack();
             return TsuErrorHandlerService::handleJson(
@@ -252,7 +255,7 @@ class MasterJabatanController extends MiddlewareController
         try {
             $fungsional->delete();
             DB::commit();
-            return response()->json(['status' => 'success', 'message' => 'Data Jabatan Fungsional berhasil dihapus.']);
+            return $this->sendSuccess('Data Jabatan Fungsional berhasil dihapus.');
         } catch (\Exception $e) {
             DB::rollBack();
             return TsuErrorHandlerService::handleJson(
@@ -307,7 +310,7 @@ class MasterJabatanController extends MiddlewareController
             ]);
 
             DB::commit();
-            return response()->json(['status' => 'success', 'message' => 'Master Pangkat Golongan berhasil ditambahkan.']);
+            return $this->sendSuccess('Master Pangkat Golongan berhasil ditambahkan.');
         } catch (\Exception $e) {
             DB::rollBack();
             return TsuErrorHandlerService::handleJson(
@@ -344,7 +347,7 @@ class MasterJabatanController extends MiddlewareController
             ]);
 
             DB::commit();
-            return response()->json(['status' => 'success', 'message' => 'Data Pangkat Golongan berhasil diperbarui!']);
+            return $this->sendSuccess('Data Pangkat Golongan berhasil diperbarui!');
         } catch (\Exception $e) {
             DB::rollBack();
             return TsuErrorHandlerService::handleJson(
@@ -365,7 +368,7 @@ class MasterJabatanController extends MiddlewareController
         try {
             $pangkat->delete();
             DB::commit();
-            return response()->json(['status' => 'success', 'message' => 'Data Pangkat Golongan berhasil dihapus.']);
+            return $this->sendSuccess('Data Pangkat Golongan berhasil dihapus.');
         } catch (\Exception $e) {
             DB::rollBack();
             return TsuErrorHandlerService::handleJson(

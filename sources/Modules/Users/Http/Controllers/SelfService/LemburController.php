@@ -47,7 +47,7 @@ class LemburController extends MiddlewareController
         // Get list of atasan and HRD for dropdown selection (excluding self)
         // Usually, this would be filtered by role, but here we just get all active DosenTendik
         $listKaryawan = DataDosenTendik::whereNotNull('nama')
-                        ->whereNotNull('jabatan_struktural')
+                        ->has('jabatanStrukturals')
                         ->orderBy('nama', 'asc')
                         ->get(['id', 'nama', 'nik']);
 

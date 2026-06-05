@@ -97,6 +97,14 @@
                 }
             });
 
+            // Prevent export when datatable is empty
+            $('#btn-export').on('click', function(e) {
+                if (table.page.info().recordsTotal === 0) {
+                    e.preventDefault();
+                    Swal.fire('Data Kosong', 'Tidak ada data riwayat jabatan untuk diekspor!', 'warning');
+                }
+            });
+
             // Handle Edit Modal
             $(document).on('click', '.btn-edit', function(e) {
                 e.preventDefault();

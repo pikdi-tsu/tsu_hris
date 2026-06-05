@@ -709,4 +709,18 @@ class DataKaryawanController extends MiddlewareController
             
         return view('admin::data-karyawan.riwayat_modal', compact('karyawan', 'riwayats'));
     }
+    public function exportRiwayatExcel($id)
+    {
+        $this->guard('view', 'admin:data-karyawan');
+        
+        $count = RiwayatJabatan::where('data_dosen_tendik_id', $id)->count();
+        if ($count === 0) {
+            return response('<script>alert("Gagal: Pegawai ini belum memiliki catatan riwayat jabatan untuk diekspor!"); window.close();</script>');
+        }
+
+        $karyawan = DataDosenTendik::findOrFail($id);
+        
+        $fileName = 'Riwayat_Jabatan_' . str_replace(' ', '_', $karyawan->nama) . '_' . date('Ymd_His') . '.xlsx';
+        return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\RiwayatJabatanExport($id), $fileName);
+    }
 }

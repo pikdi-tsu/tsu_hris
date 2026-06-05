@@ -15,9 +15,15 @@
             <p class="text-muted small mb-0">Menampilkan sejarah perpindahan jabatan struktural dan fungsional.</p>
         </div>
         <div>
-            <a href="{{ route('admin.data-karyawan.export-riwayat', $karyawan->id) }}" class="btn btn-sm btn-success shadow-sm" target="_blank">
-                <i class="fas fa-file-excel mr-1"></i> Export Excel
-            </a>
+            @if($riwayats->isEmpty())
+                <button type="button" class="btn btn-sm btn-success shadow-sm" onclick="Swal.fire('Data Kosong', 'Pegawai ini belum memiliki catatan riwayat jabatan untuk diekspor!', 'warning');">
+                    <i class="fas fa-file-excel mr-1"></i> Export Excel
+                </button>
+            @else
+                <a href="{{ route('admin.data-karyawan.export-riwayat', $karyawan->id) }}" class="btn btn-sm btn-success shadow-sm" target="_blank">
+                    <i class="fas fa-file-excel mr-1"></i> Export Excel
+                </a>
+            @endif
         </div>
     </div>
 

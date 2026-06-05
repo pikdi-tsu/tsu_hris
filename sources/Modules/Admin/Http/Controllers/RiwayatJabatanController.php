@@ -90,14 +90,14 @@ class RiwayatJabatanController extends MiddlewareController
 
     public function edit($id)
     {
-        $this->guard('edit');
+        $this->guard('edit', 'admin:riwayat-jabatan');
         $riwayat = RiwayatJabatan::with(['dataDosenTendik', 'jabatanStruktural', 'jabatanFungsional'])->findOrFail($id);
         return view('admin::data-karyawan.edit_riwayat_modal', compact('riwayat')); // Reusing the modal view we created earlier
     }
 
     public function update(Request $request, $id)
     {
-        $this->guard('edit');
+        $this->guard('edit', 'admin:riwayat-jabatan');
         $riwayat = RiwayatJabatan::findOrFail($id);
 
         $request->validate([
@@ -135,7 +135,7 @@ class RiwayatJabatanController extends MiddlewareController
 
     public function destroy($id)
     {
-        $this->guard('delete');
+        $this->guard('delete', 'admin:riwayat-jabatan');
         
         try {
             $riwayat = RiwayatJabatan::findOrFail($id);
@@ -155,9 +155,18 @@ class RiwayatJabatanController extends MiddlewareController
 
     public function exportGlobal(Request $request)
     {
-        $this->guard('view');
+        $this->guard('view', 'admin:riwayat-jabatan');
         $karyawanId = $request->get('karyawan_id', null);
         
+        $query = RiwayatJabatan::query();
+        if ($karyawanId) {
+            $query->where('data_dosen_tendik_id', $karyawanId);
+        }
+        
+        if ($query->count() === 0) {
+            return response('<script>alert("Gagal: Tidak ada data riwayat jabatan untuk diekspor!"); window.close();</script>');
+        }
+
         if ($karyawanId) {
             $karyawan = DataDosenTendik::findOrFail($karyawanId);
             $fileName = 'Riwayat_Jabatan_' . str_replace(' ', '_', $karyawan->nama) . '_' . date('Ymd_His') . '.xlsx';

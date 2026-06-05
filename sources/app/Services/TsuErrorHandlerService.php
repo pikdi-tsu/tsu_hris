@@ -93,10 +93,12 @@ class TsuErrorHandlerService
         ]);
 
         return response()->json([
-            'title'   => 'Error!',
-            'status'  => 'error',
-            'code'    => $errorCode,
-            'message' => $userMsg
+            'success' => false,
+            'message' => $userMsg,
+            'data'    => null,
+            'errors'  => [
+                'code' => $errorCode
+            ]
         ], 500);
     }
 }

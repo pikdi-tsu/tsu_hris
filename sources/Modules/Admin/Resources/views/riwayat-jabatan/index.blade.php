@@ -176,18 +176,12 @@
                     confirmButtonText: 'Ya, Hapus!'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        $.ajax({
+                        pikdiAjax({
                             url: form.attr('action'),
                             type: 'POST',
                             data: form.serialize(),
-                            success: function(res) {
-                                if(res.status === 'success') {
-                                    Swal.fire('Berhasil!', res.message, 'success');
-                                    table.ajax.reload(null, false);
-                                }
-                            },
-                            error: function(xhr) {
-                                Swal.fire('Error', xhr.responseJSON.message || 'Gagal menghapus data.', 'error');
+                            onSuccess: function(res) {
+                                table.ajax.reload(null, false);
                             }
                         });
                     }

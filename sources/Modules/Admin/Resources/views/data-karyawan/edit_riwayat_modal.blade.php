@@ -68,36 +68,19 @@ $(document).ready(function() {
 
         btn.html('<i class="fas fa-spinner fa-spin"></i> Memproses...').prop('disabled', true);
         
-        $.ajax({
+        pikdiAjax({
             url: form.attr('action'),
-            type: 'POST', // Method override PUT via @method
+            type: 'POST',
             data: form.serialize(),
-            success: function(res) {
-                if (res.status === 'success') {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Tersimpan!',
-                        text: res.message,
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-                    // Balik ke timeline
-                    $('#modal-edit-content').html(`<div class="text-center p-5"><div class="spinner-border text-primary"></div><p>Memuat Ulang Timeline...</p></div>`);
-                    $.get(urlBack, function(html) {
-                        $('#modal-edit-content').html(html);
-                    });
-                }
+            onSuccess: function(res) {
+                // Balik ke timeline
+                $('#modal-edit-content').html(`<div class="text-center p-5"><div class="spinner-border text-primary"></div><p>Memuat Ulang Timeline...</p></div>`);
+                $.get(urlBack, function(html) {
+                    $('#modal-edit-content').html(html);
+                });
             },
-            error: function(xhr) {
+            onError: function() {
                 btn.html(originalText).prop('disabled', false);
-                if (xhr.status === 422) {
-                    let errors = xhr.responseJSON.errors;
-                    let msg = '';
-                    for (let k in errors) msg += errors[k][0] + '<br>';
-                    Swal.fire('Validasi Gagal', msg, 'warning');
-                } else {
-                    Swal.fire('Error', xhr.responseJSON.message || 'Terjadi kesalahan sistem.', 'error');
-                }
             }
         });
     });

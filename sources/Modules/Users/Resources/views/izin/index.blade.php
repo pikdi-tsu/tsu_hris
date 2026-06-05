@@ -15,7 +15,7 @@
                     <ol class="breadcrumb float-sm-right">
                         <li class="breadcrumb-item active"><a href="{{ route('users.dashboard') }}">Dashboard</a></li>
                         <li class="breadcrumb-item active">Self Service</li>
-                        <li class="breadcrumb-item active">Cuti Karyawan</li>
+                        <li class="breadcrumb-item active">Izin Karyawan</li>
                     </ol>
                 </div>
             </div>
@@ -37,61 +37,6 @@
                             <p class="card-text">Content</p>
                             <a href="#" class="btn btn-primary" id="testing-btn">Button</a> --}}
 
-                            <div class="row">
-                                <div class="col-md-1"></div>
-                                <div class="col-md-2 col-3">
-                                    <div class="card border border-success border-2">
-                                        <div class="card-header text-center fw-bold bg-success">
-                                            Cuti Tahunan
-                                        </div>
-                                        <div class="card-body text-center">
-                                            <span style="font-size: 13pt;">{{ $saldo->jatah }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-2 col-3">
-                                    <div class="card border border-info border-2">
-                                        <div class="card-header text-center fw-bold bg-info">
-                                            Cuti Bersama
-                                        </div>
-                                        <div class="card-body text-center">
-                                            <span style="font-size: 13pt;">0</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-2 col-3">
-                                    <div class="card border border-primary border-2">
-                                        <div class="card-header text-center fw-bold bg-primary">
-                                            Cuti Karyawan
-                                        </div>
-                                        <div class="card-body text-center">
-                                            <span style="font-size: 13pt;">{{ $saldo->terpakai }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-2 col-3">
-                                    <div class="card border border-warning border-2">
-                                        <div class="card-header text-center fw-bold bg-warning">
-                                            Sisa Cuti
-                                        </div>
-                                        <div class="card-body text-center">
-                                            <span style="font-size: 13pt;">{{ $saldo->sisa }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="col-md-2 col-3">
-                                    <div class="card border border-danger border-2">
-                                        <div class="card-header text-center fw-bold bg-danger">
-                                            Expired
-                                        </div>
-                                        <div class="card-body text-center">
-                                            <span
-                                                style="font-size: 13pt;">{{ \Carbon\Carbon::parse($saldo->expired)->translatedFormat('d F Y') }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
                             <form>
                                 <input type="hidden" id="idedit">
                                 <input type="hidden" id="ketedit" value="no">
@@ -112,18 +57,18 @@
                                             </div>
                                         </div>
                                         <div class="row mb-2">
-                                            <label for="jeniscuti" class="col-sm-2 col-form-label">Jenis Cuti</label>
+                                            <label for="jenisizin" class="col-sm-2 col-form-label">Jenis Izin</label>
                                             <div class="col-sm-8">
-                                                <select id="jeniscuti" class="form-control select2">
-                                                    <option value=''>..:: Pilih Cuti ::..</option>
-                                                    @foreach ($mcuti as $item)
-                                                        <option value={{ $item->id }}>{{ $item->jeniscuti }}</option>
+                                                <select id="jenisizin" class="form-control select2">
+                                                    <option value=''>..:: Pilih Izin ::..</option>
+                                                    @foreach ($mizin as $item)
+                                                        <option value={{ $item->id }}>{{ $item->jenisizin }}</option>
                                                     @endforeach
                                                 </select>
                                             </div>
                                         </div>
                                         <div class="row mb-2">
-                                            <label for="inputNik2" class="col-sm-2 col-form-label">Tanggal Cuti</label>
+                                            <label for="inputNik2" class="col-sm-2 col-form-label">Tanggal Izin</label>
                                             <div class="col-sm-4">
                                                 <input type="text" class="form-control" id="tanggal1" name="tanggal1"
                                                     autocomplete="off" placeholder="Tanggal Mulai">
@@ -148,7 +93,7 @@
                                                 <select id="id_atasan" class="form-control select2">
                                                     <option value=''>..:: Pilih Atasan ::..</option>
                                                     @foreach ($karyawans as $kry)
-                                                        @if ($profile && $profile->id != $kry->data_dosen_tendik_id)
+                                                        @if ($profile && $profile->id != $kry->id)
                                                             <option value="{{ $kry->data_dosen_tendik_id }}">
                                                                 {{ $kry->karyawan->nama }}
                                                             </option>
@@ -163,7 +108,7 @@
                                                 <select id="id_hrd" class="form-control select2">
                                                     <option value=''>..:: Pilih HRD ::..</option>
                                                     @foreach ($karyawans as $kry)
-                                                        @if ($profile && $profile->id != $kry->data_dosen_tendik_id)
+                                                        @if ($profile && $profile->id != $kry->id)
                                                             <option value="{{ $kry->data_dosen_tendik_id }}">
                                                                 {{ $kry->karyawan->nama }}
                                                             </option>
@@ -177,8 +122,7 @@
 
                                 <div class="row">
                                     <div class="ml-auto">
-                                        <button type="button" class="btn btn-warning d-none"
-                                            id="btnbatal">Batal</button>
+                                        <button type="button" class="btn btn-warning d-none" id="btnbatal">Batal</button>
                                         <button type="button" class="btn btn-info" id="btnsimpan">Simpan</button>
                                     </div>
                                 </div>
@@ -196,7 +140,7 @@
                                                         <center>No</center>
                                                     </th>
                                                     <th>
-                                                        <center>Jenis Absen</center>
+                                                        <center>Jenis Izin</center>
                                                     </th>
                                                     <th>
                                                         <center>Tanggal Mulai</center>
@@ -238,7 +182,7 @@
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h4 class="modal-title"><span id="modaltitle">Cuti Detail</span></h4>
+                    <h4 class="modal-title"><span id="modaltitle">Izin Detail</span></h4>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -258,7 +202,7 @@
                 }
             });
 
-            $('#jeniscuti').select2({
+            $('#jenisizin').select2({
                 width: 'element'
             });
 
@@ -289,15 +233,15 @@
             $("#btnsimpan").click(function(e) {
                 let idedit = $("#idedit").val();
                 let ketedit = $("#ketedit").val();
-                let jeniscuti = $("#jeniscuti").val();
+                let jenisizin = $("#jenisizin").val();
                 let tanggal1 = $("#tanggal1").val();
                 let tanggal2 = $("#tanggal2").val();
                 let alasan = $("#alasan").val();
                 let id_atasan = $("#id_atasan").val();
                 let id_hrd = $("#id_hrd").val();
 
-                if (jeniscuti == null || jeniscuti == '') {
-                    notifalert('Jenis Cuti');
+                if (jenisizin == null || jenisizin == '') {
+                    notifalert('Jenis Izin');
                 } else if (tanggal1 == null || tanggal1 == '') {
                     notifalert('Tanggal Mulai');
                 } else if (tanggal2 == null || tanggal2 == '') {
@@ -311,12 +255,12 @@
                 } else {
                     $.ajax({
                         type: "POST",
-                        url: "{!! route('users.cuti.simpan') !!}",
+                        url: "{!! route('users.izin.simpan') !!}",
                         data: {
                             _token: $('meta[name=csrf-token]').attr('content'),
                             'idedit': idedit,
                             'ketedit': ketedit,
-                            'jeniscuti': jeniscuti,
+                            'jenisizin': jenisizin,
                             'tanggal1': tanggal1,
                             'tanggal2': tanggal2,
                             'alasan': alasan,
@@ -341,6 +285,7 @@
                                 text: response.message,
                                 icon: (response.status != 'error') ? 'success' : 'error'
                             }).then((result) => {
+                                $('#modaldetail').modal('hide');
                                 location.reload();
                                 Swal.close();
                             });
@@ -364,7 +309,7 @@
                 processing: true,
                 serverSide: true,
                 ajax: {
-                    url: "{!! route('users.cuti.datatables') !!}",
+                    url: "{!! route('users.izin.datatables') !!}",
                     type: 'POST',
                     'headers': {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
@@ -376,8 +321,8 @@
                         orderable: false,
                         searchable: false
                     }, {
-                        data: 'jeniscuti',
-                        name: 'jeniscuti'
+                        data: 'jenisizin',
+                        name: 'jenisizin'
                     }, {
                         data: 'tanggalmulai',
                         name: 'tanggalmulai'
@@ -419,7 +364,7 @@
                 let idku = $(this).attr('data-id');
 
                 $.ajax({
-                    url: "{!! route('users.cuti.edit') !!}",
+                    url: "{!! route('users.izin.edit') !!}",
                     type: 'POST',
                     dataType: 'JSON',
                     data: {
@@ -442,7 +387,7 @@
                         $("#btnbatal").removeClass('d-none');
                         $("#ketedit").val('yes');
                         $("#idedit").val(response.id);
-                        $("#jeniscuti").val(response.id_mcuti).trigger('change');
+                        $("#jenisizin").val(response.id_mizin).trigger('change');
                         $("#tanggal1").val(response.tanggalmulai);
                         $("#tanggal2").val(response.tanggalselesai);
                         $("#alasan").val(response.keterangan);
@@ -467,7 +412,7 @@
                 $("#btnbatal").addClass('d-none');
                 $("#ketedit").val('no');
                 $("#idedit").val('');
-                $("#jeniscuti").val('').trigger('change');
+                $("#jenisizin").val('').trigger('change');
                 $("#tanggal1").val('');
                 $("#tanggal2").val('');
                 $("#alasan").val('');
@@ -479,7 +424,7 @@
                 let idku = $(this).attr('data-id');
 
                 $.ajax({
-                    url: "{!! route('users.cuti.detail') !!}",
+                    url: "{!! route('users.izin.detail') !!}",
                     type: 'POST',
                     // dataType: 'JSON',
                     data: {

@@ -25,7 +25,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     // --- ROUTE DATA KARYAWAN ---
-    Route::middleware(['permission:admin:data-karyawan:view'])->group(function() {
+    Route::middleware(['permission:admin:data-karyawan:view'])->group(function () {
         Route::prefix('data-karyawan')->name('data-karyawan.')->group(function () {
             // Route JSON
             Route::get('/json', [DataKaryawanController::class, 'datatable'])->name('json');
@@ -33,21 +33,21 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
             // Route Mutasi Jabatan
             Route::get('/{id}/mutasi', [DataKaryawanController::class, 'mutasiModal'])->name('mutasi');
             Route::post('/{id}/mutasi', [DataKaryawanController::class, 'storeMutasi'])->name('store-mutasi');
-            
+
             // Route Kelola Fungsional
             Route::get('/{id}/fungsional', [DataKaryawanController::class, 'kelolaFungsionalModal'])->name('kelola-fungsional');
             Route::post('/{id}/fungsional', [DataKaryawanController::class, 'storeFungsional'])->name('store-fungsional');
             Route::delete('/fungsional/{fungsional_id}', [DataKaryawanController::class, 'destroyFungsional'])->name('destroy-fungsional');
-            
+
             // Route Kelola Struktural
             Route::get('/{id}/struktural', [DataKaryawanController::class, 'kelolaStrukturalModal'])->name('kelola-struktural');
             Route::post('/{id}/struktural', [DataKaryawanController::class, 'storeStruktural'])->name('store-struktural');
             Route::delete('/struktural/{struktural_id}', [DataKaryawanController::class, 'destroyStruktural'])->name('destroy-struktural');
-            
+
             // Route Riwayat Jabatan (Read Only)
             Route::get('/{id}/riwayat', [DataKaryawanController::class, 'riwayatModal'])->name('riwayat');
             Route::get('/{id}/export-riwayat', [DataKaryawanController::class, 'exportRiwayatExcel'])->name('export-riwayat');
-            
+
             // Route CRUD
             Route::resource('/', DataKaryawanController::class)->parameters(['' => 'id']);
             Route::post('/{id}/bio-aktif', [DataKaryawanController::class, 'bioAktif'])->name('bio-aktif');
@@ -55,12 +55,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     });
 
     // --- ROUTE RIWAYAT JABATAN MENU ---
-    Route::middleware(['permission:admin:riwayat-jabatan:view'])->group(function() {
+    Route::middleware(['permission:admin:riwayat-jabatan:view'])->group(function () {
         Route::prefix('riwayat-jabatan')->name('riwayat-jabatan.')->group(function () {
             Route::get('/', [RiwayatJabatanController::class, 'index'])->name('index');
             Route::get('/json', [RiwayatJabatanController::class, 'datatable'])->name('json');
             Route::get('/export', [RiwayatJabatanController::class, 'exportGlobal'])->name('export');
-            
+
             Route::get('/{id}/edit', [RiwayatJabatanController::class, 'edit'])->name('edit');
             Route::put('/{id}', [RiwayatJabatanController::class, 'update'])->name('update');
             Route::delete('/{id}', [RiwayatJabatanController::class, 'destroy'])->name('destroy');
@@ -68,7 +68,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     });
 
     // --- ROUTE MASTER HARI LIBUR ---
-    Route::middleware(['permission:admin:hari-libur:view'])->group(function() {
+    Route::middleware(['permission:admin:hari-libur:view'])->group(function () {
         Route::prefix('hari-libur')->name('hari-libur.')->group(function () {
             // Route JSON
             Route::get('/json', [MasterHariLiburController::class, 'datatable'])->name('json');
@@ -83,7 +83,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     });
 
     // --- ROUTE MASTER LEMBUR ---
-    Route::middleware(['permission:admin:master-lembur:view'])->group(function() {
+    Route::middleware(['permission:admin:master-lembur:view'])->group(function () {
         Route::prefix('master-lembur')->name('master-lembur.')->group(function () {
             Route::get('/json', [MasterLemburController::class, 'datatable'])->name('json');
             Route::resource('/', MasterLemburController::class)->parameters(['' => 'id'])->except(['show']);
@@ -91,10 +91,10 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     });
 
     // --- ROUTE MASTER JABATAN ---
-    Route::middleware(['permission:admin:master-jabatan:view'])->group(function() {
+    Route::middleware(['permission:admin:master-jabatan:view'])->group(function () {
         Route::prefix('master-jabatan')->name('master-jabatan.')->group(function () {
             Route::get('/', [MasterJabatanController::class, 'index'])->name('index');
-            
+
             // Struktural
             Route::prefix('struktural')->name('struktural.')->group(function () {
                 Route::get('/json', [MasterJabatanController::class, 'datatableStruktural'])->name('json');
@@ -124,6 +124,22 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
                 Route::put('/{id}', [MasterJabatanController::class, 'updatePangkat'])->name('update');
                 Route::delete('/{id}', [MasterJabatanController::class, 'destroyPangkat'])->name('destroy');
             });
+        });
+    });
+
+    // --- ROUTE MASTER CUTI ---
+    Route::middleware(['permission:admin:master-cuti:view'])->group(function () {
+        Route::prefix('master-cuti')->name('master-cuti.')->group(function () {
+            Route::get('/json', [\Modules\Admin\Http\Controllers\MasterCutiController::class, 'datatable'])->name('json');
+            Route::resource('/', \Modules\Admin\Http\Controllers\MasterCutiController::class)->parameters(['' => 'id'])->except(['show']);
+        });
+    });
+
+    // --- ROUTE MASTER IZIN ---
+    Route::middleware(['permission:admin:master-izin:view'])->group(function () {
+        Route::prefix('master-izin')->name('master-izin.')->group(function () {
+            Route::get('/json', [\Modules\Admin\Http\Controllers\MasterIzinController::class, 'datatable'])->name('json');
+            Route::resource('/', \Modules\Admin\Http\Controllers\MasterIzinController::class)->parameters(['' => 'id'])->except(['show']);
         });
     });
 });

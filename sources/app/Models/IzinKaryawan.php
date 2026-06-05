@@ -6,17 +6,17 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
 
-class CutiKaryawan extends Authenticatable
+class IzinKaryawan extends Authenticatable
 {
     use Notifiable;
 
-    protected $table = 'cuti_karyawan';
+    protected $table = 'izin_karyawan';
     protected $primaryKey = 'id';
     protected $guarded = [];
 
-    public function masterCuti()
+    public function masterIzin()
     {
-        return $this->belongsTo(MasterCuti::class, 'id_mcuti');
+        return $this->belongsTo(MasterIzin::class, 'id_mizin');
     }
 
     public function user()

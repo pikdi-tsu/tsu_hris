@@ -14,10 +14,17 @@
                 placeholder="Contoh: Cuti Reguler" required>
         </div>
 
-        {{-- <div class="form-group mb-3">
-            <label for="keterangan">Keterangan</label>
-            <textarea class="form-control" id="keterangan" name="keterangan" rows="3" placeholder="Contoh: Lembur pada hari kerja biasa"></textarea>
-        </div> --}}
+        <div class="form-group mb-3">
+            <label for="durasicuti">Durasi Hari Cuti</label>
+            <input type="number" min="1" class="form-control" id="durasicuti" name="durasicuti"
+                placeholder="12">
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="minimalhari">Minimal Hari Pengajuan</label>
+            <input type="number" min="1" class="form-control" id="minimalhari" name="minimalhari"
+                placeholder="15">
+        </div>
     </div>
 
     <div class="modal-footer">

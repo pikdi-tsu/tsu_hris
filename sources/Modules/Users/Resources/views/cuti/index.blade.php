@@ -45,7 +45,7 @@
                                             Cuti Tahunan
                                         </div>
                                         <div class="card-body text-center">
-                                            <span style="font-size: 13pt;">{{ $saldo->jatah }}</span>
+                                            <span style="font-size: 13pt;">{{ $saldo == null ? 0 : $saldo->jatah }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -65,7 +65,8 @@
                                             Cuti Karyawan
                                         </div>
                                         <div class="card-body text-center">
-                                            <span style="font-size: 13pt;">{{ $saldo->terpakai }}</span>
+                                            <span
+                                                style="font-size: 13pt;">{{ $saldo == null ? 0 : $saldo->terpakai }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -75,7 +76,7 @@
                                             Sisa Cuti
                                         </div>
                                         <div class="card-body text-center">
-                                            <span style="font-size: 13pt;">{{ $saldo->sisa }}</span>
+                                            <span style="font-size: 13pt;">{{ $saldo == null ? 0 : $saldo->sisa }}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -86,7 +87,7 @@
                                         </div>
                                         <div class="card-body text-center">
                                             <span
-                                                style="font-size: 13pt;">{{ \Carbon\Carbon::parse($saldo->expired)->translatedFormat('d F Y') }}</span>
+                                                style="font-size: 13pt;">{{ $saldo == null ? '-' : \Carbon\Carbon::parse($saldo->expired)->translatedFormat('d F Y') }}</span>
                                         </div>
                                     </div>
                                 </div>

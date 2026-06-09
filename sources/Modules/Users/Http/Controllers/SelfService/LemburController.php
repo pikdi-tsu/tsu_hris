@@ -16,10 +16,14 @@ use App\Services\TsuErrorHandlerService;
 use App\Models\MasterLembur;
 use App\Models\LemburKaryawan;
 use App\Models\DataDosenTendik;
+use Modules\Users\Http\Controllers\UsersController;
+use App\Traits\ApiResponseTrait;
 use App\Http\Controllers\MiddlewareController;
 
 class LemburController extends MiddlewareController
 {
+    use ApiResponseTrait;
+
     public function __construct()
     {
         $this->middleware('auth');
@@ -47,7 +51,7 @@ class LemburController extends MiddlewareController
         // Get list of atasan and HRD for dropdown selection (excluding self)
         // Usually, this would be filtered by role, but here we just get all active DosenTendik
         $listKaryawan = DataDosenTendik::whereNotNull('nama')
-                        ->whereNotNull('jabatan_struktural')
+                        ->has('jabatanStrukturals')
                         ->orderBy('nama', 'asc')
                         ->get(['id', 'nama', 'nik']);
 
@@ -95,20 +99,12 @@ class LemburController extends MiddlewareController
             ]);
 
             if ($validator->fails()) {
-                return response()->json([
-                    'title' => 'Failed!',
-                    'status' => 'error',
-                    'message' => $validator->errors()->first()
-                ], 422);
+                return $this->sendError($validator->errors()->first());
             }
 
             $profile = $this->getCurrentProfile();
             if (!$profile) {
-                 return response()->json([
-                    'title' => 'Failed!',
-                    'status' => 'error',
-                    'message' => 'Profil karyawan tidak ditemukan.'
-                ], 422);
+                 return $this->sendError('Profil karyawan tidak ditemukan.');
             }
 
             $dataLembur = [
@@ -141,11 +137,7 @@ class LemburController extends MiddlewareController
                 LemburKaryawan::create($dataLembur);
             });
 
-            return response()->json([
-                'title' => 'Success!',
-                'status' => 'success',
-                'message' => 'Data berhasil disimpan'
-            ], 200);
+            return $this->sendSuccess('Data pengajuan lembur berhasil disimpan.');
 
         } catch (\Exception $e) {
             return TsuErrorHandlerService::handleJson(
@@ -176,21 +168,13 @@ class LemburController extends MiddlewareController
             ]);
 
             if ($validator->fails()) {
-                return response()->json([
-                    'title' => 'Failed!',
-                    'status' => 'error',
-                    'message' => $validator->errors()->first()
-                ], 422);
+                return $this->sendError($validator->errors()->first(), null, 422);
             }
 
             $myid = decrypt($id);
             $profile = $this->getCurrentProfile();
             if (!$profile) {
-                 return response()->json([
-                    'title' => 'Failed!',
-                    'status' => 'error',
-                    'message' => 'Profil karyawan tidak ditemukan.'
-                ], 422);
+                 return $this->sendError('Profil karyawan tidak ditemukan.', null, 422);
             }
 
             $dataLembur = [
@@ -237,11 +221,7 @@ class LemburController extends MiddlewareController
                 $lembur->update($dataLembur);
             });
 
-            return response()->json([
-                'title' => 'Success!',
-                'status' => 'success',
-                'message' => 'Data berhasil disimpan'
-            ], 200);
+            return $this->sendSuccess('Data berhasil disimpan');
 
         } catch (\Exception $e) {
             return TsuErrorHandlerService::handleJson(
@@ -349,11 +329,7 @@ class LemburController extends MiddlewareController
                 $lembur->save();
             });
 
-            return response()->json([
-                'title' => 'Success!',
-                'status' => 'success',
-                'message' => 'Pengajuan berhasil ditarik dan diubah menjadi Draft.'
-            ], 200);
+            return $this->sendSuccess('Pengajuan berhasil ditarik dan diubah menjadi Draft.');
 
         } catch (\Exception $e) {
             return TsuErrorHandlerService::handleJson(
@@ -387,7 +363,7 @@ class LemburController extends MiddlewareController
             }
                 
             $getdata->encrypted_id = $id;
-            return response()->json($getdata, 200);
+            return $this->sendSuccess('Berhasil memuat data.', $getdata);
         } catch (\Exception $e) {
             return TsuErrorHandlerService::handleJson(
                 $e, 
@@ -465,11 +441,7 @@ class LemburController extends MiddlewareController
 
             $lembur->delete();
 
-            return response()->json([
-                'title' => 'Success!',
-                'status' => 'success',
-                'message' => 'Data pengajuan berhasil dibatalkan/dihapus'
-            ], 200);
+            return $this->sendSuccess('Data pengajuan berhasil dibatalkan/dihapus');
         } catch (\Exception $e) {
             return TsuErrorHandlerService::handleJson(
                 $e, 
@@ -560,11 +532,7 @@ class LemburController extends MiddlewareController
                 $lembur->save();
             });
 
-            return response()->json([
-                'title' => 'Success!',
-                'status' => 'success',
-                'message' => 'Pengajuan lembur berhasil disetujui.'
-            ], 200);
+            return $this->sendSuccess('Pengajuan lembur berhasil disetujui.');
 
         } catch (\Exception $e) {
             return TsuErrorHandlerService::handleJson(
@@ -603,11 +571,7 @@ class LemburController extends MiddlewareController
                 $lembur->save();
             });
 
-            return response()->json([
-                'title' => 'Success!',
-                'status' => 'success',
-                'message' => 'Pengajuan lembur berhasil ditolak.'
-            ], 200);
+            return $this->sendSuccess('Pengajuan lembur berhasil ditolak.');
 
         } catch (\Exception $e) {
             return TsuErrorHandlerService::handleJson(

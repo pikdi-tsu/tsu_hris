@@ -310,9 +310,9 @@
                 } else if (id_hrd == null || id_hrd == '') {
                     notifalert('HRD');
                 } else {
-                    $.ajax({
-                        type: "POST",
+                    pikdiAjax({
                         url: "{!! route('users.cuti.simpan') !!}",
+                        type: 'POST',
                         data: {
                             _token: $('meta[name=csrf-token]').attr('content'),
                             'idedit': idedit,
@@ -324,37 +324,8 @@
                             'id_atasan': id_atasan,
                             'id_hrd': id_hrd
                         },
-                        dataType: "JSON",
-                        beforeSend: function(param) {
-                            Swal.fire({
-                                title: 'Sedang Proses',
-                                html: 'Mohon Tunggu Sebentar',
-                                allowEscapeKey: false,
-                                allowOutsideClick: false,
-                                didOpen: () => {
-                                    Swal.showLoading();
-                                }
-                            })
-                        },
-                        success: function(response) {
-                            Swal.fire({
-                                title: response.title,
-                                text: response.message,
-                                icon: (response.status != 'error') ? 'success' : 'error'
-                            }).then((result) => {
-                                location.reload();
-                                Swal.close();
-                            });
-                            return;
-                        },
-                        error: function(xhr, status, error) {
-                            let res = xhr.responseJSON;
-                            Swal.fire({
-                                title: res?.title ?? 'Error',
-                                text: res?.message ?? error,
-                                icon: status
-                            });
-                            return;
+                        onSuccess: function(res) {
+                            location.reload();
                         }
                     });
                 }

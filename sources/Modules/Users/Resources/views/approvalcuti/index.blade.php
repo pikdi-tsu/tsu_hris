@@ -199,49 +199,18 @@
                     notifalert('Jika Approval Rejected, Keterangan Approval Harus Diisi');
                 } else {
                     console.log('masuk :>> ', 'masuk');
-                    $.ajax({
+                    pikdiAjax({
                         url: "{!! route('users.simpanapproval') !!}",
                         type: 'POST',
-                        dataType: 'JSON',
                         data: {
                             idcutikaryawan: idcutikaryawan,
                             iduser: iduser,
                             approval: approval,
                             ketapproval: ketapproval
                         },
-                        beforeSend: function(param) {
-                            Swal.fire({
-                                title: 'Mohon Tunggu Sebentar',
-                                // html: '',
-                                allowEscapeKey: false,
-                                allowOutsideClick: false,
-                                showCancelButton: false,
-                                showConfirmButton: false,
-                                didOpen: () => {
-                                    Swal.showLoading();
-                                }
-                            })
-                        },
-                        success: function(response) {
-                            Swal.fire({
-                                title: response.title,
-                                text: response.message,
-                                icon: (response.status != 'error') ? 'success' : 'error'
-                            }).then((result) => {
-                                $('#modaldetail').modal('hide');
-                                location.reload();
-                                Swal.close();
-                            });
-                            return;
-                        },
-                        error: function(xhr, status, error) {
-                            let res = xhr.responseJSON;
-                            Swal.fire({
-                                title: res?.title ?? 'Error',
-                                text: res?.message ?? error,
-                                icon: status
-                            });
-                            return;
+                        onSuccess: function(res) {
+                            $('#modaldetail').modal('hide');
+                            oTable.ajax.reload(null, false);
                         }
                     });
                 }

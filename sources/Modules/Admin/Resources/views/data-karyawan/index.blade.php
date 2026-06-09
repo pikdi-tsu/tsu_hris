@@ -22,7 +22,7 @@
                     <th width="15%">Identitas</th>
                     <th width="20%">Keilmuan Inti</th>
                     <th width="25%">Jabatan</th>
-                    <th width="25%">Status</th>
+                    <th width="25%">Status & Tipe</th>
                     <th width="10%" class="text-center">Aksi</th>
                 </tr>
                 </thead>

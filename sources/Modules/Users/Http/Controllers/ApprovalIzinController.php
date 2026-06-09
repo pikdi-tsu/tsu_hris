@@ -15,11 +15,12 @@ use App\Models\CutiKaryawan;
 use App\Models\IzinKaryawan;
 use App\Models\SaldoCutiKaryawan;
 use App\Models\DataDosenTendik;
-
-use function PHPUnit\Framework\isEmpty;
+use App\Traits\ApiResponseTrait;
+use App\Services\TsuErrorHandlerService;
 
 class ApprovalIzinController extends Controller
 {
+    use ApiResponseTrait;
     public function __construct()
     {
         //        $this->middleware('checklogin');
@@ -129,12 +130,7 @@ class ApprovalIzinController extends Controller
             $form = view('users::approvalizin.modaldetail', ['data' => $getdata, 'profile' => $profile, 'jmlhari' => $jumlahHari, 'tanggal' => $tanggal]);
             return $form->render();
         } catch (\Exception $e) {
-            return response()->json([
-                'title' => 'Error!',
-                'status' => 'error',
-                'message' => 'Terjadi kesalahan pada server',
-                'error' => $e->getMessage()
-            ], 500);
+            return TsuErrorHandlerService::handleJson($e, '[TSU_APV_IZIN_DTL]', 'Gagal memuat detail persetujuan izin.');
         }
     }
 
@@ -150,20 +146,12 @@ class ApprovalIzinController extends Controller
             ]);
 
             if ($validator->fails()) {
-                return response()->json([
-                    'title' => 'Failed!',
-                    'status' => 'error',
-                    'message' => $validator->errors()->first()
-                ], 422);
+                return $this->sendError($validator->errors()->first());
             }
 
             $profile = $this->getCurrentProfile();
             if (!$profile) {
-                return response()->json([
-                    'title' => 'Failed!',
-                    'status' => 'error',
-                    'message' => 'Profil karyawan tidak ditemukan.'
-                ], 422);
+                return $this->sendError('Profil karyawan tidak ditemukan.');
             }
 
             $iduserlogin = $profile->id;
@@ -198,19 +186,10 @@ class ApprovalIzinController extends Controller
             }
 
             DB::commit();
-            return response()->json([
-                'title' => 'Success!',
-                'status' => 'success',
-                'message' => 'Approval Izin Berhasil Disimpan'
-            ], 200);
+            return $this->sendSuccess('Approval Izin Berhasil Disimpan');
         } catch (\Exception $e) {
             DB::rollback();
-            return response()->json([
-                'title' => 'Error!',
-                'status' => 'error',
-                'message' => 'Terjadi kesalahan pada server',
-                'error' => $e->getMessage()
-            ], 500);
+            return TsuErrorHandlerService::handleJson($e, '[TSU_APV_IZIN_SAVE_FAIL]', 'Gagal menyimpan persetujuan izin.');
         }
     }
 }

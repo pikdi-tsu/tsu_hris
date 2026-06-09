@@ -142,4 +142,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
             Route::resource('/', \Modules\Admin\Http\Controllers\MasterIzinController::class)->parameters(['' => 'id'])->except(['show']);
         });
     });
+
+    // --- ROUTE MASTER UNIT ---
+    Route::middleware(['permission:admin:master-unit:view'])->group(function () {
+        Route::prefix('master-unit')->name('master-unit.')->group(function () {
+            Route::get('/json', [\Modules\Admin\Http\Controllers\MasterUnitController::class, 'datatable'])->name('json');
+            Route::resource('/', \Modules\Admin\Http\Controllers\MasterUnitController::class)->parameters(['' => 'id'])->except(['show']);
+        });
+    });
 });

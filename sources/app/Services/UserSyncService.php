@@ -233,11 +233,19 @@ class UserSyncService
             $searchKey['nik'] = $data['nik'] ?? $data['username'];
         }
         
-        // Cari berdasarkan NIK, lalu klaim / update
-        DataDosenTendik::query()->updateOrCreate(
-            $searchKey,
-            $updateData
-        );
+        // Cari berdasarkan NIK, lalu klaim / update dengan proteksi Anti-Hijack
+        $existingProfile = DataDosenTendik::query()->where($searchKey)->first();
+
+        if ($existingProfile) {
+            if ($existingProfile->user_id !== null && $existingProfile->user_id !== $user->id) {
+                Log::warning("[PROFILE_HIJACK_ATTEMPT] User {$user->id} mencoba klaim profil NIK/NIDN yang sudah dimiliki oleh user {$existingProfile->user_id}");
+                throw new \Exception("[TSU_CLAIM_DENIED] Akses Ditolak! Data Identitas/NIK Anda sudah diklaim oleh akun lain. Silakan hubungi Admin HRIS.");
+            }
+            $existingProfile->update($updateData);
+        } else {
+            $createData = array_merge($searchKey, $updateData);
+            DataDosenTendik::query()->create($createData);
+        }
     }
 
     // --- LOGIC PROFIL MAHASISWA (MODE CLAIM PROFILE) ---
@@ -262,9 +270,18 @@ class UserSyncService
         if (!empty($data['nama_ibu'])) $updateData['nama_ibu'] = $data['nama_ibu'];
         if (!empty($data['no_hp_ortu'])) $updateData['no_hp_ortu'] = $data['no_hp_ortu'];
 
-        DataMahasiswa::query()->updateOrCreate(
-            ['nim' => $nim],
-            $updateData
-        );
+        // Cari berdasarkan NIM, lalu klaim / update dengan proteksi Anti-Hijack
+        $existingProfile = DataMahasiswa::query()->where('nim', $nim)->first();
+
+        if ($existingProfile) {
+            if ($existingProfile->user_id !== null && $existingProfile->user_id !== $user->id) {
+                Log::warning("[PROFILE_HIJACK_ATTEMPT] User {$user->id} mencoba klaim profil NIM {$nim} yang sudah dimiliki oleh user {$existingProfile->user_id}");
+                throw new \Exception("[TSU_CLAIM_DENIED] Akses Ditolak! Data NIM Anda sudah diklaim oleh akun lain. Silakan hubungi Admin Akademik.");
+            }
+            $existingProfile->update($updateData);
+        } else {
+            $createData = array_merge(['nim' => $nim], $updateData);
+            DataMahasiswa::query()->create($createData);
+        }
     }
 }

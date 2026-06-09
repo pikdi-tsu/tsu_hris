@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Yajra\DataTables\Facades\DataTables;
 use App\Services\TsuErrorHandlerService;
+use App\Services\HomebaseSyncService;
 use App\Models\MasterJabatanStruktural;
 use App\Models\MasterJabatanFungsional;
 use App\Models\RiwayatJabatan;
@@ -135,10 +136,13 @@ class DataKaryawanController extends MiddlewareController
                 return $htmlStruktural . $htmlFungsional;
             })
             ->addColumn('status_karyawan', function($row) {
-                if ($row->status_karyawan === 'NON-AKTIF') {
-                    return '<span class="badge badge-danger">' . $row->status_karyawan . '</span>';
-                }
-                return '<span class="badge badge-success">' . ($row->status_karyawan) . '</span>';
+                $statusBadge = ($row->is_active == 1) 
+                    ? '<span class="badge badge-success mb-1">AKTIF</span>' 
+                    : '<span class="badge badge-danger mb-1">NON-AKTIF</span>';
+                
+                $tipeBadge = '<span class="badge badge-info">' . ($row->status_karyawan ?? 'Belum Diatur') . '</span>';
+                
+                return $statusBadge . '<br>' . $tipeBadge;
             })
             ->addColumn('aksi', function ($row) {
                 $showUrl = route('admin.data-karyawan.show', $row->id);
@@ -155,7 +159,7 @@ class DataKaryawanController extends MiddlewareController
                 $btnMutasi = '<button type="button" class="btn btn-sm btn-primary text-white mx-1 btn-modal" data-url="'.$mutasiUrl.'" title="Pindah Jabatan (Mutasi)"><i class="fas fa-exchange-alt"></i></button>';
                 $btnRiwayat = '<button type="button" class="btn btn-sm btn-secondary text-white mx-1 btn-modal" data-url="'.$riwayatUrl.'" title="Riwayat Jabatan"><i class="fas fa-history"></i></button>';
 
-                if ($row->status_karyawan === 'NON-AKTIF') {
+                if ($row->is_active == 0) {
                     // JIKA NON-AKTIF: Tombol HIJAU (Nembak ke route POST 'aktifkan')
                     $aktifkanUrl = route('admin.data-karyawan.bio-aktif', $row->id);
                     $btnToggle = '
@@ -247,7 +251,7 @@ class DataKaryawanController extends MiddlewareController
                 }
             }
 
-            $newKaryawan = DataDosenTendik::create($request->all());
+            $newKaryawan = DataDosenTendik::create($data);
 
             return back()->with('new_karyawan_id', $newKaryawan->id);
         } catch (\Exception $e) {
@@ -289,7 +293,7 @@ class DataKaryawanController extends MiddlewareController
         ]);
 
         try {
-            $data = $request->except(['id', 'user_id', 'status_karyawan']);
+            $data = $request->except(['id', 'user_id']);
 
             if (!empty($data['no_hp'])) {
                 $cleanPhone = str_replace(['+', ' '], '', trim($data['no_hp']));
@@ -318,17 +322,32 @@ class DataKaryawanController extends MiddlewareController
     public function destroy($id)
     {
         $this->guard('delete', 'admin:karyawan');
-        $karyawan = DataDosenTendik::findOrFail($id);
+        $karyawan = DataDosenTendik::with('user')->findOrFail($id);
 
         try {
+            DB::beginTransaction();
+            
+            // Sync dengan Homebase jika user tertaut
+            $ssoId = $karyawan->user->sso_id ?? null;
+            if ($ssoId) {
+                HomebaseSyncService::syncUserStatus($ssoId, false);
+            }
+
             $karyawan->update([
-                'user_id' => null,
-                'status_karyawan' => 'NON-AKTIF'
+                'is_active' => 0
+                // user_id sengaja TIDAK di-null-kan agar relasi ke Homebase tetap terjaga
             ]);
+
+            DB::commit();
             return back()->with('success', 'Data karyawan berhasil dinonaktifkan.');
         } catch (\Exception $e) {
-            Log::error("[TSU_KARYAWAN_DEL_FAIL] Gagal Nonaktifkan ID: $id. Error: " . $e->getMessage());
-            return back()->with('error', 'Gagal menonaktifkan data karyawan.');
+            DB::rollBack();
+            return TsuErrorHandlerService::handleHtml(
+                $e, 
+                '[TSU_KARYAWAN_DEL_FAIL]', 
+                'Gagal menonaktifkan data karyawan karena gangguan sinkronisasi.', 
+                "Gagal Nonaktifkan ID: $id."
+            );
         }
     }
 
@@ -338,16 +357,31 @@ class DataKaryawanController extends MiddlewareController
     public function bioAktif($id)
     {
         $this->guard('edit', 'admin:data-karyawan');
-        $karyawan = DataDosenTendik::findOrFail($id);
+        $karyawan = DataDosenTendik::with('user')->findOrFail($id);
 
         try {
+            DB::beginTransaction();
+
+            // Sync dengan Homebase jika user tertaut
+            $ssoId = $karyawan->user->sso_id ?? null;
+            if ($ssoId) {
+                HomebaseSyncService::syncUserStatus($ssoId, true);
+            }
+
             $karyawan->update([
-                'status_karyawan' => 'AKTIF'
+                'is_active' => 1
             ]);
+
+            DB::commit();
             return back()->with('success', 'Mantap! Data karyawan berhasil diaktifkan kembali.');
         } catch (\Exception $e) {
-            Log::error("[TSU_KARYAWAN_ACT_FAIL] Gagal Aktifkan ID: $id. Error: " . $e->getMessage());
-            return back()->with('error', 'Gagal mengaktifkan kembali data karyawan.');
+            DB::rollBack();
+            return TsuErrorHandlerService::handleHtml(
+                $e, 
+                '[TSU_KARYAWAN_ACT_FAIL]', 
+                'Gagal mengaktifkan kembali data karyawan karena gangguan sinkronisasi.', 
+                "Gagal Aktifkan ID: $id."
+            );
         }
     }
 
@@ -367,7 +401,7 @@ class DataKaryawanController extends MiddlewareController
             }
         ])->findOrFail($id);
         
-        $listKaryawan = DataDosenTendik::where('status_karyawan', 'AKTIF')
+        $listKaryawan = DataDosenTendik::where('is_active', 1)
             ->where('id', '!=', $id)
             ->orderBy('nama', 'asc')
             ->get();

@@ -10,9 +10,13 @@ use Yajra\DataTables\Facades\DataTables;
 use Carbon\Carbon;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\RiwayatJabatanExport;
+use App\Traits\ApiResponseTrait;
+use App\Services\TsuErrorHandlerService;
 
 class RiwayatJabatanController extends MiddlewareController
 {
+    use ApiResponseTrait;
+
     public function __construct()
     {
         $this->registerPermissions('admin:riwayat-jabatan');
@@ -121,15 +125,14 @@ class RiwayatJabatanController extends MiddlewareController
                 'keterangan' => $request->keterangan
             ]);
 
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Data riwayat jabatan berhasil diperbarui.'
-            ]);
+            return $this->sendSuccess('Data riwayat jabatan berhasil diperbarui.');
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Gagal memperbarui riwayat: ' . $e->getMessage()
-            ], 500);
+            return TsuErrorHandlerService::handleJson(
+                $e, 
+                '[TSU_RIWAYAT_UPD_FAIL]', 
+                'Gagal memperbarui riwayat.', 
+                "Update Riwayat ID: $id."
+            );
         }
     }
 
@@ -141,15 +144,14 @@ class RiwayatJabatanController extends MiddlewareController
             $riwayat = RiwayatJabatan::findOrFail($id);
             $riwayat->delete();
             
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Data riwayat jabatan berhasil dihapus permanen.'
-            ]);
+            return $this->sendSuccess('Data riwayat jabatan berhasil dihapus permanen.');
         } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Gagal menghapus riwayat: ' . $e->getMessage()
-            ], 500);
+            return TsuErrorHandlerService::handleJson(
+                $e, 
+                '[TSU_RIWAYAT_DEL_FAIL]', 
+                'Gagal menghapus riwayat.', 
+                "Delete Riwayat ID: $id."
+            );
         }
     }
 

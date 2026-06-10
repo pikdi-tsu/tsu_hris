@@ -62,7 +62,6 @@
                                 @endphp
 
                                 @if($isDokumenTab)
-                                    {{-- 🔥 RENDER KHUSUS TAB DOKUMEN (MODE CARD MENYAMPING) 🔥 --}}
                                     @php
                                         $icon = 'fa-file-alt'; // default
                                         if(str_contains($field['name'], 'ktp')) $icon = 'fa-id-card';
@@ -90,7 +89,6 @@
                                     </div>
 
                                 @else
-                                    {{-- 🔥 RENDER STANDARD (UNTUK TAB LAINNYA) 🔥 --}}
                                     <div class="col-md-{{ $field['col_size'] ?? 12 }} mb-4">
                                         <div class="d-flex flex-column h-100 justify-content-between">
                                             <div>
@@ -103,7 +101,6 @@
                                                         <span class="text-black-50 font-italic" style="font-weight: 400; font-size: 0.9em;">Belum ada data</span>
 
                                                     @elseif($isWa)
-                                                        {{-- 🔥 TOMBOL WHATSAPP HIJAU 🔥 --}}
                                                         <a href="{{ $waHref }}" target="_blank" class="btn btn-sm btn-success mt-1 shadow-sm" style="border-radius: 15px; padding: 2px 14px; font-size: 0.85rem;">
                                                             <i class="fab fa-whatsapp mr-1" style="font-size: 1.1em;"></i> Hubungi WA
                                                         </a>
@@ -114,7 +111,9 @@
                                                         </a>
 
                                                     @elseif($isStatus)
-                                                        @if(strtolower($value) === 'aktif')
+                                                        @if(in_array(strtoupper($value), ['TETAP', 'KONTRAK']))
+                                                            <span class="badge badge-info px-3 py-1 shadow-sm"><i class="fas fa-id-badge mr-1"></i> {{ strtoupper($value) }}</span>
+                                                        @elseif(strtolower($value) === 'aktif')
                                                             <span class="badge badge-success px-3 py-1 shadow-sm"><i class="fas fa-check-circle mr-1"></i> AKTIF</span>
                                                         @else
                                                             <span class="badge badge-danger px-3 py-1 shadow-sm"><i class="fas fa-times-circle mr-1"></i> {{ strtoupper($value) }}</span>

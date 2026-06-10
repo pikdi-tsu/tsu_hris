@@ -25,7 +25,6 @@ return new class extends Migration
             $table->string('nidn', 50)->nullable()->unique();
             $table->string('nip', 50)->nullable(); // NIP PNS
             $table->string('nuptk', 100)->nullable();
-            $table->string('status_pegawai', 50)->nullable(); // TETAP, KONTRAK, LB
             $table->string('keilmuan_inti', 100)->nullable();
 
             // DATA PRIBADI
@@ -59,6 +58,10 @@ return new class extends Migration
             $table->text('scan_kk')->nullable();
             $table->text('scan_npwp')->nullable();
             $table->text('scan_ijazah')->nullable();
+
+            // STATUS KARYAWAN
+            $table->string('status_karyawan', 50)->nullable()->comment('TETAP dan KONTRAK');
+            $table->tinyInteger('is_active')->default(1)->comment('1=Aktif, 0=Non-Aktif');
 
             $table->timestamps();
         });

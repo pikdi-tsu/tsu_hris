@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 
 class DataDosenTendik extends Authenticatable
 {
@@ -53,6 +54,18 @@ class DataDosenTendik extends Authenticatable
         return $this->hasMany(RiwayatJabatan::class, 'data_dosen_tendik_id');
     }
 
+    protected function namaLengkap(): Attribute
+    {
+        return Attribute::make(
+            get: function (mixed $value, array $attributes) {
+                $depan = !empty($attributes['gelar_depan']) ? trim($attributes['gelar_depan']) . ' ' : '';
+                $belakang = !empty($attributes['gelar_belakang']) ? ', ' . trim($attributes['gelar_belakang']) : '';
+                
+                return $depan . $attributes['nama'] . $belakang;
+            },
+        );
+    }
+
     public static function getFormConfig()
     {
         return [
@@ -71,7 +84,7 @@ class DataDosenTendik extends Authenticatable
                     ['name' => 'nuptk', 'label' => 'NUPTK', 'type' => 'text', 'col_size' => 6],
 
                     ['name' => 'keilmuan_inti', 'label' => 'Keilmuan Inti', 'type' => 'text', 'col_size' => 6],
-                    ['name' => 'status_karyawan', 'label' => 'Status Karyawan', 'type' => 'text', 'col_size' => 6, 'readonly' => true, 'default' => 'AKTIF'],
+                    ['name' => 'status_karyawan', 'label' => 'Status Karyawan', 'type' => 'select', 'options' => ['' => '-- Pilih Status Karyawan --', 'TETAP' => 'TETAP', 'KONTRAK' => 'KONTRAK'], 'col_size' => 6],
                 ]
             ],
 

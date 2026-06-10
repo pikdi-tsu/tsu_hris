@@ -118,6 +118,12 @@ class SsoController extends Controller
                 // Prioritas Dosen
                 if (in_array('dosen', $roles, true) || in_array('tendik', $roles, true)) {
                     $profil = DataDosenTendik::query()->where('user_id', $user->id)->first();
+                    
+                    // BLOKIR LOGIN JIKA STATUS KARYAWAN NON-AKTIF
+                    if ($profil && $profil->is_active == 0) {
+                        throw new \Exception('[TSU_DENIED_ACCESS] Login Ditolak! Akun kepegawaian Anda telah dinonaktifkan.');
+                    }
+                    
                     $roleAktif = 'dosen';
                 } else {
                     $profil = DataMahasiswa::query()->where('user_id', $user->id)->first();

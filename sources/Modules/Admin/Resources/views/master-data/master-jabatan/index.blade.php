@@ -173,52 +173,20 @@
                 var btnSubmit = form.find('button[type="submit"]');
                 var originalBtnText = btnSubmit.html();
 
-                btnSubmit.html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...').prop('disabled', true);
-
-                $.ajax({
+                pikdiAjax({
                     url: url,
                     type: method,
                     data: formData,
-                    headers: {'X-Requested-With': 'XMLHttpRequest'},
-                    success: function(res) {
+                    onSuccess: function(res) {
                         btnSubmit.html(originalBtnText).prop('disabled', false);
-                        if (res.status === 'success') {
-                            $('#modal-edit').modal('hide');
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Berhasil!',
-                                text: res.message,
-                                timer: 1500,
-                                showConfirmButton: false
-                            });
-                            // Reload tables
-                            $('#table-struktural').DataTable().ajax.reload(null, false);
-                            $('#table-fungsional').DataTable().ajax.reload(null, false);
-                            $('#table-pangkat').DataTable().ajax.reload(null, false);
-                        }
+                        $('#modal-edit').modal('hide');
+                        // Reload tables
+                        $('#table-struktural').DataTable().ajax.reload(null, false);
+                        $('#table-fungsional').DataTable().ajax.reload(null, false);
+                        $('#table-pangkat').DataTable().ajax.reload(null, false);
                     },
-                    error: function(xhr) {
+                    onError: function(xhr) {
                         btnSubmit.html(originalBtnText).prop('disabled', false);
-                        if (xhr.status === 422) {
-                            var errors = xhr.responseJSON.errors;
-                            var errorMsg = '';
-                            for (var key in errors) {
-                                errorMsg += errors[key][0] + '<br>';
-                            }
-                            Swal.fire({
-                                icon: 'warning',
-                                title: 'Validasi Gagal',
-                                html: errorMsg
-                            });
-                        } else {
-                            var res = xhr.responseJSON;
-                            var errorMsg = res && res.message ? res.message : 'Terjadi kesalahan sistem.';
-                            Swal.fire({
-                                icon: 'error',
-                                title: res && res.title ? res.title : 'Error',
-                                text: errorMsg
-                            });
-                        }
                     }
                 });
             });
@@ -241,44 +209,17 @@
                     cancelButtonText: 'Batal'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        Swal.fire({
-                            title: 'Memproses...',
-                            text: 'Sedang menghapus data...',
-                            allowOutsideClick: false,
-                            didOpen: () => { Swal.showLoading() }
-                        });
-                        
-                        $.ajax({
+                        pikdiAjax({
                             url: url,
                             type: 'POST',
                             data: {
-                                _method: 'DELETE',
-                                _token: '{{ csrf_token() }}'
+                                _method: 'DELETE'
                             },
-                            headers: {'X-Requested-With': 'XMLHttpRequest'},
-                            success: function(res) {
-                                if (res.status === 'success') {
-                                    Swal.fire({
-                                        icon: 'success',
-                                        title: 'Berhasil!',
-                                        text: res.message,
-                                        timer: 1500,
-                                        showConfirmButton: false
-                                    });
-                                    // Reload tables
-                                    $('#table-struktural').DataTable().ajax.reload(null, false);
-                                    $('#table-fungsional').DataTable().ajax.reload(null, false);
-                                    $('#table-pangkat').DataTable().ajax.reload(null, false);
-                                }
-                            },
-                            error: function(xhr) {
-                                var res = xhr.responseJSON;
-                                var errorMsg = res && res.message ? res.message : 'Terjadi kesalahan sistem.';
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: res && res.title ? res.title : 'Error',
-                                    text: errorMsg
-                                });
+                            onSuccess: function(res) {
+                                // Reload tables
+                                $('#table-struktural').DataTable().ajax.reload(null, false);
+                                $('#table-fungsional').DataTable().ajax.reload(null, false);
+                                $('#table-pangkat').DataTable().ajax.reload(null, false);
                             }
                         });
                     }

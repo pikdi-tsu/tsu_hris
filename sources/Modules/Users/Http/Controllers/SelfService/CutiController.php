@@ -15,9 +15,12 @@ use App\Models\CutiKaryawan;
 use App\Models\SaldoCutiKaryawan;
 use App\Models\DataDosenTendik;
 use App\Models\KaryawanJabatanStruktural;
+use App\Traits\ApiResponseTrait;
+use App\Services\TsuErrorHandlerService;
 
 class CutiController extends Controller
 {
+    use ApiResponseTrait;
     public function __construct()
     {
         //        $this->middleware('checklogin');
@@ -79,20 +82,12 @@ class CutiController extends Controller
             ]);
 
             if ($validator->fails()) {
-                return response()->json([
-                    'title' => 'Failed!',
-                    'status' => 'error',
-                    'message' => $validator->errors()->first()
-                ], 422);
+                return $this->sendError($validator->errors()->first());
             }
 
             $profile = $this->getCurrentProfile();
             if (!$profile) {
-                return response()->json([
-                    'title' => 'Failed!',
-                    'status' => 'error',
-                    'message' => 'Profil karyawan tidak ditemukan.'
-                ], 422);
+                return $this->sendError('Profil karyawan tidak ditemukan.');
             }
 
             $iduser = $profile->id;
@@ -135,18 +130,9 @@ class CutiController extends Controller
                 ]);
             }
 
-            return response()->json([
-                'title' => 'Success!',
-                'status' => 'success',
-                'message' => 'Cuti berhasil disimpan'
-            ], 200);
+            return $this->sendSuccess('Cuti berhasil disimpan');
         } catch (\Exception $e) {
-            return response()->json([
-                'title' => 'Error!',
-                'status' => 'error',
-                'message' => 'Terjadi kesalahan pada server',
-                'error' => $e->getMessage()
-            ], 500);
+            return TsuErrorHandlerService::handleJson($e, '[TSU_SS_CUTI_SAVE_FAIL]', 'Gagal menyimpan data cuti.');
         }
     }
 
@@ -229,12 +215,7 @@ class CutiController extends Controller
 
             return response()->json($getdata, 200);
         } catch (\Exception $e) {
-            return response()->json([
-                'title' => 'Error!',
-                'status' => 'error',
-                'message' => 'Terjadi kesalahan pada server',
-                'error' => $e->getMessage()
-            ], 500);
+            return TsuErrorHandlerService::handleJson($e, '[TSU_SS_CUTI_EDIT_FAIL]', 'Gagal memuat data cuti.');
         }
     }
 
@@ -267,12 +248,7 @@ class CutiController extends Controller
             $form = view('users::cuti.modaldetail', ['data' => $getdata, 'profile' => $profile, 'jmlhari' => $jumlahHari, 'tanggal' => $tanggal]);
             return $form->render();
         } catch (\Exception $e) {
-            return response()->json([
-                'title' => 'Error!',
-                'status' => 'error',
-                'message' => 'Terjadi kesalahan pada server',
-                'error' => $e->getMessage()
-            ], 500);
+            return TsuErrorHandlerService::handleJson($e, '[TSU_SS_CUTI_DTL]', 'Gagal memuat detail cuti.');
         }
     }
 }

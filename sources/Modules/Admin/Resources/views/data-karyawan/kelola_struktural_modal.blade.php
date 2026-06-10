@@ -87,33 +87,23 @@ $(document).ready(function() {
     $('#form-tambah-struktural').on('submit', function(e) {
         e.preventDefault();
         let form = $(this);
-        let btn = $('#btn-save-str');
-        let originalText = btn.html();
-
-        btn.html('<i class="fas fa-spinner fa-spin"></i> Loading...').prop('disabled', true);
-
-        $.ajax({
+        pikdiAjax({
             url: form.attr('action'),
             type: 'POST',
             data: form.serialize(),
-            success: function(res) {
-                btn.html(originalText).prop('disabled', false);
-                if(res.status === 'success') {
-                    $('#struktural-list-container').html(res.html);
-                    form.trigger('reset');
-                    form.find('.select2').val('').trigger('change');
-                    Swal.fire({
-                        icon: 'success', title: 'Berhasil', text: res.message, timer: 1500, showConfirmButton: false
-                    });
-                    
-                    if($.fn.DataTable.isDataTable('#table-karyawan')){
-                        $('#table-karyawan').DataTable().ajax.reload(null, false);
-                    }
+            onSuccess: function(res) {
+                if(res.data && res.data.html) {
+                    $('#struktural-list-container').html(res.data.html);
+                }
+                form.trigger('reset');
+                form.find('.select2').val('').trigger('change');
+                
+                if($.fn.DataTable.isDataTable('#table-karyawan')){
+                    $('#table-karyawan').DataTable().ajax.reload(null, false);
                 }
             },
-            error: function(xhr) {
-                btn.html(originalText).prop('disabled', false);
-                Swal.fire('Error', 'Gagal menyimpan data.', 'error');
+            onError: function(xhr) {
+                // Notifikasi error sudah ditangani pikdiAjax
             }
         });
     });
@@ -134,23 +124,19 @@ $(document).ready(function() {
             confirmButtonText: 'Ya, Lepas!'
         }).then((result) => {
             if (result.isConfirmed) {
-                $.ajax({
+                pikdiAjax({
                     url: url,
                     type: 'POST',
                     data: {
-                        _method: 'DELETE',
-                        _token: '{{ csrf_token() }}'
+                        _method: 'DELETE'
                     },
-                    success: function(res) {
-                        if(res.status === 'success') {
-                            $('#struktural-list-container').html(res.html);
-                            if($.fn.DataTable.isDataTable('#table-karyawan')){
-                                $('#table-karyawan').DataTable().ajax.reload(null, false);
-                            }
+                    onSuccess: function(res) {
+                        if(res.data && res.data.html) {
+                            $('#struktural-list-container').html(res.data.html);
                         }
-                    },
-                    error: function(xhr) {
-                        Swal.fire('Error', 'Gagal melepas data.', 'error');
+                        if($.fn.DataTable.isDataTable('#table-karyawan')){
+                            $('#table-karyawan').DataTable().ajax.reload(null, false);
+                        }
                     }
                 });
             }

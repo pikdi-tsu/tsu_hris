@@ -15,9 +15,12 @@ use App\Models\MasterIzin;
 use App\Models\SaldoCutiKaryawan;
 use App\Models\DataDosenTendik;
 use App\Models\KaryawanJabatanStruktural;
+use App\Traits\ApiResponseTrait;
+use App\Services\TsuErrorHandlerService;
 
 class IzinController extends Controller
 {
+    use ApiResponseTrait;
     public function __construct()
     {
         //        $this->middleware('checklogin');
@@ -79,20 +82,12 @@ class IzinController extends Controller
             ]);
 
             if ($validator->fails()) {
-                return response()->json([
-                    'title' => 'Failed!',
-                    'status' => 'error',
-                    'message' => $validator->errors()->first()
-                ], 422);
+                return $this->sendError($validator->errors()->first());
             }
 
             $profile = $this->getCurrentProfile();
             if (!$profile) {
-                return response()->json([
-                    'title' => 'Failed!',
-                    'status' => 'error',
-                    'message' => 'Profil karyawan tidak ditemukan.'
-                ], 422);
+                return $this->sendError('Profil karyawan tidak ditemukan.');
             }
 
             $iduser = $profile->id;
@@ -135,18 +130,9 @@ class IzinController extends Controller
                 ]);
             }
 
-            return response()->json([
-                'title' => 'Success!',
-                'status' => 'success',
-                'message' => 'Izin Berhasil Disimpan'
-            ], 200);
+            return $this->sendSuccess('Izin Berhasil Disimpan');
         } catch (\Exception $e) {
-            return response()->json([
-                'title' => 'Error!',
-                'status' => 'error',
-                'message' => 'Terjadi kesalahan pada server',
-                'error' => $e->getMessage()
-            ], 500);
+            return TsuErrorHandlerService::handleJson($e, '[TSU_SS_IZIN_SAVE_FAIL]', 'Gagal menyimpan data izin.');
         }
     }
 
@@ -229,12 +215,7 @@ class IzinController extends Controller
 
             return response()->json($getdata, 200);
         } catch (\Exception $e) {
-            return response()->json([
-                'title' => 'Error!',
-                'status' => 'error',
-                'message' => 'Terjadi kesalahan pada server',
-                'error' => $e->getMessage()
-            ], 500);
+            return TsuErrorHandlerService::handleJson($e, '[TSU_SS_IZIN_EDIT_FAIL]', 'Gagal memuat data izin.');
         }
     }
 
@@ -267,12 +248,7 @@ class IzinController extends Controller
             $form = view('users::izin.modaldetail', ['data' => $getdata, 'profile' => $profile, 'jmlhari' => $jumlahHari, 'tanggal' => $tanggal]);
             return $form->render();
         } catch (\Exception $e) {
-            return response()->json([
-                'title' => 'Error!',
-                'status' => 'error',
-                'message' => 'Terjadi kesalahan pada server',
-                'error' => $e->getMessage()
-            ], 500);
+            return TsuErrorHandlerService::handleJson($e, '[TSU_SS_IZIN_DTL]', 'Gagal memuat detail izin.');
         }
     }
 }

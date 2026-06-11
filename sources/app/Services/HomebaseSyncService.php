@@ -17,28 +17,44 @@ class HomebaseSyncService
      */
     public static function syncUserStatus(string $ssoId, bool $isActive): void
     {
-        // TODO: Sesuaikan dengan Endpoint dan Token Homebase yang sebenarnya nanti
-        $apiUrl = config('app.homebase_url', 'https://homebase.tsu.ac.id') . '/api/users/sync-status';
-        $apiKey = config('app.homebase_api_key', 'mock_api_key');
+        $homebaseUrl = config('app.tsu_homebase.url', 'https://homebase.tsu.ac.id');
+        $apiUrl = $homebaseUrl . '/api/v1/users/toggle-status';
+        $apiKey = config('app.pikdi.key.sync');
 
-        // Untuk sementara kita MOCK log saja karena API Homebase belum siap.
-        // Uncomment blok Http di bawah jika endpoint sudah bisa diuji.
+        $clientId = config('app.oauth.client.id');
+        $clientSecret = config('app.oauth.client.secret');
 
-        Log::info("[HOMEBASE_SYNC] Mempersiapkan sinkronisasi status user.", [
-            'sso_id' => $ssoId,
-            'is_active' => $isActive
+        // Access Token Client Credential
+        $responseToken = Http::withoutVerifying()
+            ->withHeaders(['X-Sync-Secret' => $apiKey])
+            ->post($homebaseUrl . '/oauth/token', [
+            'grant_type' => 'client_credentials',
+            'client_id' => $clientId,
+            'client_secret' => $clientSecret,
+            'scope' => '',
         ]);
 
-        /*
-        $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $apiKey,
-            'Accept' => 'application/json'
+        if ($responseToken->failed()) {
+            Log::error("[HOMEBASE_SYNC_AUTH_FAIL] Gagal Otorisasi Client.", ['response' => $responseToken->body()]);
+            throw new Exception("Gagal mendapatkan akses otorisasi dari Homebase.");
+        }
+
+        $accessToken = $responseToken->json()['access_token'];
+
+        Log::info("[HOMEBASE_SYNC] Mempersiapkan sinkronisasi status user.", [
+            'id'        => $ssoId,
+            'isactive'  => $isActive
+        ]);
+
+        $response = Http::withoutVerifying()->withToken($accessToken)->withHeaders([
+            'X-Sync-Secret' => $apiKey,
+            'Accept'        => 'application/json'
         ])
         ->timeout(10)
         ->post($apiUrl, [
-            'sso_id' => $ssoId,
-            'is_active' => $isActive,
-            'source' => 'tsu_hris'
+            'id'        => $ssoId,
+            'isactive'  => $isActive,
+            'user_type' => 'dosen_tendik'
         ]);
 
         if ($response->failed()) {
@@ -46,12 +62,10 @@ class HomebaseSyncService
             Log::error("[HOMEBASE_SYNC_FAIL] Gagal sinkronisasi API: " . $errorMsg);
             throw new Exception("Gagal menyinkronkan status dengan Homebase: " . $errorMsg);
         }
-        */
 
-        // Simulasi kesuksesan sinkronisasi (Hapus jika API sudah aktif)
-        Log::info("[HOMEBASE_SYNC_SUCCESS] Berhasil sinkronisasi status user secara Mock.", [
-            'sso_id' => $ssoId,
-            'status' => $isActive ? 'AKTIF' : 'NON-AKTIF'
+        Log::info("[HOMEBASE_SYNC_SUCCESS] Berhasil sinkronisasi status user.", [
+            'id'       => $ssoId,
+            'status'   => $isActive ? 'AKTIF' : 'NON-AKTIF'
         ]);
     }
 }

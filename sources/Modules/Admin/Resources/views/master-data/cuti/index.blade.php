@@ -19,7 +19,8 @@
                     <tr>
                         <th width="5%">No</th>
                         <th>Jenis Cuti</th>
-                        {{-- <th>Keterangan</th> --}}
+                        <th>Durasi Cuti</th>
+                        <th>Minimal Hari Pengajuan</th>
                         <th width="15%">Status</th>
                         <th width="15%">Aksi</th>
                     </tr>
@@ -57,7 +58,14 @@
                     data: 'jeniscuti',
                     name: 'jeniscuti'
                 },
-                // {data: 'keterangan', name: 'keterangan'},
+                {
+                    data: 'durasicuti',
+                    name: 'durasicuti'
+                },
+                {
+                    data: 'minimalhari',
+                    name: 'minimalhari'
+                },
                 {
                     data: 'is_active',
                     name: 'is_active'

@@ -3,16 +3,24 @@
 namespace Modules\Admin\Http\Controllers;
 
 use App\Http\Controllers\MiddlewareController;
-use App\Models\MasterCuti;
 use Illuminate\Http\Request;
 use Yajra\DataTables\Facades\DataTables;
 use App\Services\TsuErrorHandlerService;
+use Illuminate\Support\Facades\Auth;
+
+use App\Models\DataDosenTendik;
+use App\Models\MasterCuti;
 
 class MasterCutiController extends MiddlewareController
 {
     public function __construct()
     {
         $this->registerPermissions('admin:master-cuti');
+    }
+
+    private function getCurrentProfile()
+    {
+        return DataDosenTendik::where('user_id', Auth::id())->first();
     }
 
     public function index()
@@ -53,21 +61,23 @@ class MasterCutiController extends MiddlewareController
         $this->guardStore($request->id, 'admin:master-cuti');
 
         $request->validate([
-            'jeniscuti' => 'required|string|max:255',
-            // 'keterangan'  => 'nullable|string|max:500'
+            'jeniscuti'     => 'required|string|max:255',
+            'durasicuti'    => 'required|integer',
+            'minimalhari'   => 'required|integer',
         ]);
 
         try {
             MasterCuti::create([
-                'jeniscuti' => $request->jeniscuti,
-                // 'keterangan'  => $request->keterangan,
+                'jeniscuti'   => $request->jeniscuti,
+                'durasicuti'  => $request->durasicuti,
+                'minimalhari' => $request->minimalhari,
                 'is_active'   => '1',
-                'created_at'  => date('Y-m-d'),
-                'created_by'  => auth()->check() ? auth()->user()->name : 'System',
+                'created_at'  => date("Y-m-d H:i:s"),
+                'created_by'  => Auth::check() ? $this->getCurrentProfile()->nik : 'System',
                 // 'updated_by'  => auth()->check() ? auth()->user()->name : 'System',
             ]);
 
-            return back()->with('success', 'Master Cuti berhasil ditambahkan.');
+            return back()->with('success', 'Master Cuti Berhasil Ditambahkan.');
         } catch (\Exception $e) {
             return TsuErrorHandlerService::handleHtml(
                 $e,
@@ -92,21 +102,23 @@ class MasterCutiController extends MiddlewareController
         $cuti = MasterCuti::findOrFail($id);
 
         $request->validate([
-            'jeniscuti' => 'required|string|max:255',
-            // 'keterangan'  => 'nullable|string|max:500',
+            'jeniscuti'   => 'required|string|max:255',
+            'durasicuti'  => 'required|integer',
+            'minimalhari' => 'required|integer',
             'is_active'   => 'required|in:0,1'
         ]);
 
         try {
             $cuti->update([
-                'jeniscuti' => $request->jeniscuti,
-                // 'keterangan'  => $request->keterangan,
+                'jeniscuti'   => $request->jeniscuti,
+                'durasicuti'  => $request->durasicuti,
+                'minimalhari' => $request->minimalhari,
                 'is_active'   => $request->is_active,
-                'updated_at'  => date('Y-m-d'),
-                'updated_by'  => auth()->check() ? auth()->user()->name : 'System',
+                'updated_at'  => date("Y-m-d H:i:s"),
+                'updated_by'  => Auth::check() ? $this->getCurrentProfile()->nik : 'System',
             ]);
 
-            return back()->with('success', 'Master Cuti berhasil diperbarui!');
+            return back()->with('success', 'Master Cuti Berhasil Diperbarui!');
         } catch (\Exception $e) {
             return TsuErrorHandlerService::handleHtml(
                 $e,
@@ -125,7 +137,7 @@ class MasterCutiController extends MiddlewareController
 
         try {
             $cuti->delete();
-            return back()->with('success', 'Master Cuti berhasil dihapus.');
+            return back()->with('success', 'Master Cuti Berhasil Dihapus.');
         } catch (\Exception $e) {
             return TsuErrorHandlerService::handleHtml(
                 $e,

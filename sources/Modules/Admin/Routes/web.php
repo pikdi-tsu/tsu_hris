@@ -18,6 +18,7 @@ use Modules\System\Http\Middleware\CheckAdminRole;
 use \Modules\Admin\Http\Controllers\MasterLemburController;
 use Modules\Admin\Http\Controllers\MasterJabatanController;
 use Modules\Admin\Http\Controllers\RiwayatJabatanController;
+use Modules\Admin\Http\Controllers\RiwayatIzinCutiController;
 use Illuminate\Support\Facades\Route;
 
 // Aktifkan CheckAdminRole::class di middleware jika ada dashboard users sendiri
@@ -130,6 +131,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     // --- ROUTE MASTER CUTI ---
     Route::middleware(['permission:admin:master-cuti:view'])->group(function () {
         Route::prefix('master-cuti')->name('master-cuti.')->group(function () {
+
             Route::get('/json', [\Modules\Admin\Http\Controllers\MasterCutiController::class, 'datatable'])->name('json');
             Route::resource('/', \Modules\Admin\Http\Controllers\MasterCutiController::class)->parameters(['' => 'id'])->except(['show']);
         });
@@ -148,6 +150,15 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
         Route::prefix('master-unit')->name('master-unit.')->group(function () {
             Route::get('/json', [\Modules\Admin\Http\Controllers\MasterUnitController::class, 'datatable'])->name('json');
             Route::resource('/', \Modules\Admin\Http\Controllers\MasterUnitController::class)->parameters(['' => 'id'])->except(['show']);
+        });
+    });
+
+    // --- ROUTE RIWAYAT IZIN CUTI MENU ---
+    Route::middleware(['permission:admin:riwayat-izincuti:view'])->group(function () {
+        Route::prefix('riwayat-izincuti')->name('riwayat-izincuti.')->group(function () {
+            Route::get('/', [RiwayatIzinCutiController::class, 'index'])->name('index');
+            Route::get('/jsonizin', [RiwayatIzinCutiController::class, 'datatableizin'])->name('jsonizin');
+            Route::get('/jsoncuti', [RiwayatIzinCutiController::class, 'datatablecuti'])->name('jsoncuti');
         });
     });
 });

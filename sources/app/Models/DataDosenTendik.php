@@ -54,6 +54,11 @@ class DataDosenTendik extends Authenticatable
         return $this->hasMany(KaryawanJabatanFungsional::class, 'data_dosen_tendik_id', 'id');
     }
 
+    public function statusKaryawan()
+    {
+        return $this->belongsTo(MasterStatusKaryawan::class, 'status_karyawan_id', 'id');
+    }
+
     public function riwayatJabatans()
     {
         return $this->hasMany(RiwayatJabatan::class, 'data_dosen_tendik_id');
@@ -93,7 +98,7 @@ class DataDosenTendik extends Authenticatable
                     ['name' => 'nuptk', 'label' => 'NUPTK', 'type' => 'text', 'col_size' => 6],
 
                     ['name' => 'keilmuan_inti', 'label' => 'Keilmuan Inti', 'type' => 'text', 'col_size' => 6],
-                    ['name' => 'status_karyawan', 'label' => 'Status Karyawan', 'type' => 'select', 'options' => ['' => '-- Pilih Status Karyawan --', 'TETAP' => 'TETAP', 'KONTRAK' => 'KONTRAK'], 'col_size' => 6],
+                    ['name' => 'status_karyawan_id', 'label' => 'Status Karyawan', 'type' => 'select', 'options' => \App\Models\MasterStatusKaryawan::pluck('nama_status', 'id')->toArray(), 'col_size' => 6],
                 ]
             ],
 

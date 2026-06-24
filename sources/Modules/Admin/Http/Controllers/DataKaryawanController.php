@@ -44,6 +44,7 @@ class DataKaryawanController extends MiddlewareController
     {
         $data = DataDosenTendik::with([
             'unit',
+            'statusKaryawan',
             'jabatanFungsionals' => function($q){
                 $q->where('is_active', 'Y')->with('masterFungsional');
             },
@@ -162,7 +163,7 @@ class DataKaryawanController extends MiddlewareController
                     ? '<span class="badge badge-success mb-1">AKTIF</span>' 
                     : '<span class="badge badge-danger mb-1">NON-AKTIF</span>';
                 
-                $tipeBadge = '<span class="badge badge-info">' . ($row->status_karyawan ?? 'Belum Diatur') . '</span>';
+                $tipeBadge = '<span class="badge badge-info">' . ($row->statusKaryawan ? $row->statusKaryawan->nama_status : 'Belum Diatur') . '</span>';
                 
                 return $statusBadge . '<br>' . $tipeBadge;
             })

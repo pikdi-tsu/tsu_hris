@@ -6,6 +6,7 @@ use App\Http\Controllers\MiddlewareController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\MasterUnit;
+use App\Models\MasterJabatanStruktural;
 use Yajra\DataTables\Facades\DataTables;
 use App\Services\TsuErrorHandlerService;
 use App\Traits\ApiResponseTrait;
@@ -44,7 +45,8 @@ class MasterUnitController extends MiddlewareController
     public function create()
     {
         $this->guard('create', 'admin:master-unit');
-        return view('admin::master-data.unit._modal');
+        $jabatans = MasterJabatanStruktural::orderBy('nama_jabatan', 'asc')->get();
+        return view('admin::master-data.unit._modal', compact('jabatans'));
     }
 
     public function store(Request $request)
@@ -53,7 +55,8 @@ class MasterUnitController extends MiddlewareController
 
         $request->validate([
             'nama_unit' => 'required|string|max:255',
-            'keterangan' => 'nullable|string'
+            'keterangan' => 'nullable|string',
+            'kepala_jabatan_id' => 'nullable|exists:master_jabatan_strukturals,id'
         ]);
 
         DB::beginTransaction();
@@ -61,6 +64,7 @@ class MasterUnitController extends MiddlewareController
             MasterUnit::create([
                 'nama_unit' => $request->nama_unit,
                 'keterangan' => $request->keterangan,
+                'kepala_jabatan_id' => $request->kepala_jabatan_id,
             ]);
 
             DB::commit();
@@ -80,7 +84,8 @@ class MasterUnitController extends MiddlewareController
     {
         $this->guard('edit', 'admin:master-unit');
         $unit = MasterUnit::findOrFail($id);
-        return view('admin::master-data.unit._modal', compact('unit'));
+        $jabatans = MasterJabatanStruktural::orderBy('nama_jabatan', 'asc')->get();
+        return view('admin::master-data.unit._modal', compact('unit', 'jabatans'));
     }
 
     public function update(Request $request, $id)
@@ -90,7 +95,8 @@ class MasterUnitController extends MiddlewareController
 
         $request->validate([
             'nama_unit' => 'required|string|max:255',
-            'keterangan' => 'nullable|string'
+            'keterangan' => 'nullable|string',
+            'kepala_jabatan_id' => 'nullable|exists:master_jabatan_strukturals,id'
         ]);
 
         DB::beginTransaction();
@@ -98,6 +104,7 @@ class MasterUnitController extends MiddlewareController
             $unit->update([
                 'nama_unit' => $request->nama_unit,
                 'keterangan' => $request->keterangan,
+                'kepala_jabatan_id' => $request->kepala_jabatan_id,
             ]);
 
             DB::commit();

@@ -227,12 +227,18 @@ class DataKaryawanController extends MiddlewareController
                 $keywordLower = strtolower(trim($keyword));
                 if (in_array($keywordLower, ['aktif', 'akt', 'akti'])) {
                     $query->where('is_active', 1)
-                          ->orWhere('status_pegawai', 'like', "%{$keyword}%");
+                          ->orWhereHas('statusKaryawan', function($q) use ($keyword) {
+                              $q->where('nama_status', 'like', "%{$keyword}%");
+                          });
                 } elseif (in_array($keywordLower, ['nonaktif', 'non-aktif', 'non', 'non aktif'])) {
                     $query->where('is_active', 0)
-                          ->orWhere('status_pegawai', 'like', "%{$keyword}%");
+                          ->orWhereHas('statusKaryawan', function($q) use ($keyword) {
+                              $q->where('nama_status', 'like', "%{$keyword}%");
+                          });
                 } else {
-                    $query->where('status_pegawai', 'like', "%{$keyword}%");
+                    $query->whereHas('statusKaryawan', function($q) use ($keyword) {
+                        $q->where('nama_status', 'like', "%{$keyword}%");
+                    });
                 }
             })
             ->rawColumns(['nama_lengkap', 'identitas', 'homebase_posisi', 'jabatan', 'status_karyawan', 'aksi'])

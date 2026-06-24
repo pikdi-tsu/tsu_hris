@@ -100,24 +100,12 @@
                                             </div>
                                         </div>
                                         
+
                                         <div class="row mb-2">
-                                            <label for="id_atasan" class="col-sm-3 col-form-label">Atasan</label>
-                                            <div class="col-sm-9">
-                                                <select id="id_atasan" class="form-control select2">
-                                                    <option value=''>..:: Pilih Atasan ::..</option>
-                                                    @foreach ($karyawans as $kry)
-                                                        @if($profile && $profile->id != $kry->id)
-                                                            <option value="{{$kry->id}}">{{$kry->nama}}</option>
-                                                        @endif
-                                                    @endforeach
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="row mb-2">
-                                            <label for="id_hrd" class="col-sm-3 col-form-label">HRD</label>
+                                            <label for="id_hrd" class="col-sm-3 col-form-label">SDM</label>
                                             <div class="col-sm-9">
                                                 <select id="id_hrd" class="form-control select2">
-                                                    <option value=''>..:: Pilih HRD ::..</option>
+                                                    <option value=''>..:: Pilih Pegawai SDM ::..</option>
                                                     @foreach ($karyawans as $kry)
                                                         @if($profile && $profile->id != $kry->id)
                                                             <option value="{{$kry->id}}">{{$kry->nama}}</option>
@@ -175,7 +163,7 @@
                                                     <th><center>Keterangan</center></th>
                                                     <th><center>Status</center></th>
                                                     <th><center>Atasan</center></th>
-                                                    <th><center>HRD</center></th>
+                                                    <th><center>Status SDM</center></th>
                                                     <th><center>Aksi</center></th>
                                                 </tr>
                                             </thead>
@@ -381,7 +369,6 @@
                 let tanggal1 = $("#tanggal1").val();
                 let tanggal2 = $("#tanggal2").val();
                 let alasan = $("#alasan").val();
-                let id_atasan = $("#id_atasan").val();
                 let id_hrd = $("#id_hrd").val();
 
                 if (!id_mlembur) {
@@ -392,10 +379,8 @@
                     notifalert('Waktu Selesai');
                 } else if (!alasan) {
                     notifalert('Keterangan');
-                } else if (!id_atasan) {
-                    notifalert('Atasan');
                 } else if (!id_hrd) {
-                    notifalert('HRD');
+                    notifalert('Pilihan SDM');
                 } else if (ketedit == 'no' && !$('#bukti_kegiatan')[0].files[0]) {
                     notifalert('Bukti Kegiatan');
                 } else {
@@ -409,7 +394,6 @@
                     formData.append('tanggal1', tanggal1);
                     formData.append('tanggal2', tanggal2);
                     formData.append('alasan', alasan);
-                    formData.append('id_atasan', id_atasan);
                     formData.append('id_hrd', id_hrd);
                     
                     let file = $('#bukti_kegiatan')[0].files[0];
@@ -478,7 +462,7 @@
                     { data: 'keterangan', name: 'keterangan' },
                     { data: 'status', name: 'status' },
                     { data: 'nama_atasan', name: 'nama_atasan' },
-                    { data: 'nama_hrd', name: 'nama_hrd' },
+                    { data: 'nama_hrd', name: 'nama_hrd', title: 'SDM' },
                     { data: 'action', name: 'action', orderable: false, searchable: false },
                 ],
             });
@@ -510,7 +494,6 @@
                         $("#tanggal1").val(response.tanggalmulai);
                         $("#tanggal2").val(response.tanggalselesai);
                         $("#alasan").val(response.keterangan);
-                        $("#id_atasan").val(response.id_atasan).trigger('change');
                         $("#id_hrd").val(response.id_hrd).trigger('change');
                         
                         $("#bukti_kegiatan").val('');
@@ -546,7 +529,6 @@
                 $("#tanggal1").val('');
                 $("#tanggal2").val('');
                 $("#alasan").val('');
-                $("#id_atasan").val('').trigger('change');
                 $("#id_hrd").val('').trigger('change');
             });
 

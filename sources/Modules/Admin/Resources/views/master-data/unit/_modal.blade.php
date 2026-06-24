@@ -25,6 +25,18 @@
             <label>Keterangan</label>
             <textarea name="keterangan" class="form-control" rows="3" placeholder="Opsional">{{ $unit->keterangan ?? '' }}</textarea>
         </div>
+        <div class="form-group">
+            <label>Jabatan Kepala Unit</label>
+            <select name="kepala_jabatan_id" class="form-control select2">
+                <option value="">-- Pilih Jabatan --</option>
+                @foreach($jabatans as $jabatan)
+                    <option value="{{ $jabatan->id }}" {{ (isset($unit) && $unit->kepala_jabatan_id == $jabatan->id) ? 'selected' : '' }}>
+                        {{ $jabatan->nama_jabatan }}
+                    </option>
+                @endforeach
+            </select>
+            <small class="text-muted">Pilih jabatan struktural yang menjadi pimpinan di unit ini.</small>
+        </div>
     </div>
     <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>

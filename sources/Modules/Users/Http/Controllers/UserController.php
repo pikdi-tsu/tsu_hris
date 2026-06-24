@@ -100,7 +100,9 @@ class UserController extends MiddlewareController
             $clientSecret = config('app.oauth.client.secret');
 
             // Access Token Client Credential
-            $responseToken = Http::withoutVerifying()->post($homebaseUrl . '/oauth/token', [
+            $responseToken = Http::withoutVerifying()
+                ->withHeaders(['X-Sync-Secret' => config('app.pikdi.key.sync')])
+                ->post($homebaseUrl . '/oauth/token', [
                 'grant_type' => 'client_credentials',
                 'client_id' => $clientId,
                 'client_secret' => $clientSecret,
@@ -123,7 +125,7 @@ class UserController extends MiddlewareController
             User::query()->whereNotNull('email')->chunk(50, function ($users) use ($apiUrl, $accessToken, $syncer, &$stats) {
                 $emailList = $users->pluck('email')->toArray();
                 try {
-                    $response = Http::withoutVerifying()->withToken($accessToken)->withHeaders(['Accept' => 'application/json'])->timeout(30)->post($apiUrl, ['emails' => $emailList]);
+                    $response = Http::withoutVerifying()->withToken($accessToken)->withHeaders(['Accept' => 'application/json', 'X-Sync-Secret' => config('app.pikdi.key.sync')])->timeout(30)->post($apiUrl, ['emails' => $emailList]);
 
                     if ($response->successful()) {
                         $usersData = $response->json()['data'] ?? [];

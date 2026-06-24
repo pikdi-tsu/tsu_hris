@@ -74,6 +74,11 @@
                                     <div>
                                         <span class="badge {{ $isStruktural ? 'badge-dark' : 'badge-info' }} mb-2 text-uppercase">{{ $riwayat->tipe_jabatan }}</span>
                                         <h6 class="font-weight-bold text-dark mb-1" style="font-size: 1.1rem; line-height: 1.3;">{{ $jabatanName }}</h6>
+                                        @if($isStruktural && $riwayat->unit)
+                                            <div class="text-secondary small mt-1 font-weight-bold">
+                                                <i class="fas fa-building mr-1"></i> {{ $riwayat->unit->nama_unit }}
+                                            </div>
+                                        @endif
                                         <div class="text-muted small mt-2">
                                             <i class="far fa-calendar-alt mr-1"></i> {{ $tglMulai }} &nbsp;&mdash;&nbsp; {{ $tglSelesai }}
                                             <span class="mx-2 text-light">|</span>

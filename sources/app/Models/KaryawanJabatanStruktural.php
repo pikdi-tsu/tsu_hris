@@ -28,4 +28,9 @@ class KaryawanJabatanStruktural extends Model
     {
         return $this->belongsTo(MasterJabatanStruktural::class, 'jabatan_struktural_id', 'id');
     }
+
+    public function unit()
+    {
+        return $this->belongsTo(MasterUnit::class, 'unit_id', 'id');
+    }
 }

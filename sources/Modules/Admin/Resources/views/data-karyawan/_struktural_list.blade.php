@@ -18,7 +18,12 @@
                 @foreach($strukturals as $index => $str)
                 <tr>
                     <td class="text-center">{{ $index + 1 }}</td>
-                    <td class="font-weight-bold">{{ $str->masterStruktural ? $str->masterStruktural->nama_jabatan : 'N/A' }}</td>
+                    <td>
+                        <div class="font-weight-bold">{{ $str->masterStruktural ? $str->masterStruktural->nama_jabatan : 'N/A' }}</div>
+                        @if($str->unit)
+                            <small class="text-muted"><i class="fas fa-building"></i> {{ $str->unit->nama_unit }}</small>
+                        @endif
+                    </td>
                     <td>{{ \Carbon\Carbon::parse($str->tgl_mulai)->format('d M Y') }}</td>
                     <td>{{ $str->tgl_akhir ? \Carbon\Carbon::parse($str->tgl_akhir)->format('d M Y') : '-' }}</td>
                     <td class="text-center">

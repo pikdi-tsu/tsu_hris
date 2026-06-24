@@ -16,16 +16,28 @@
                 <div class="row">
                     <div class="col-md-7 form-group">
                         <label>Pilih Jabatan Struktural <span class="text-danger">*</span></label>
-                        <select name="jabatan_struktural_id" class="form-control select2" required style="width: 100%;">
-                            <option value="">-- Pilih --</option>
+                        <select name="jabatan_struktural_id" id="jabatan_struktural_id" class="form-control select2" required style="width: 100%;">
+                            <option value="" data-is-unit-specific="">-- Pilih --</option>
                             @foreach($masterStruktural as $ms)
-                                <option value="{{ $ms->id }}">{{ $ms->nama_jabatan }}</option>
+                                <option value="{{ $ms->id }}" data-is-unit-specific="{{ $ms->is_unit_specific }}">{{ $ms->nama_jabatan }}</option>
                             @endforeach
                         </select>
                     </div>
                     <div class="col-md-5 form-group">
                         <label>Tgl Mulai Menjabat <span class="text-danger">*</span></label>
                         <input type="date" name="tgl_mulai" class="form-control" required value="{{ date('Y-m-d') }}">
+                    </div>
+                </div>
+                <div class="row" id="row-unit-penugasan" style="display: none;">
+                    <div class="col-md-12 form-group">
+                        <label>Unit Penugasan <span class="text-danger">*</span></label>
+                        <select name="unit_id" id="unit_id" class="form-control select2" style="width: 100%;">
+                            <option value="">-- Pilih Unit --</option>
+                            @foreach($masterUnit as $mu)
+                                <option value="{{ $mu->id }}">{{ $mu->nama_unit }}</option>
+                            @endforeach
+                        </select>
+                        <small class="text-info mt-1 d-block"><i class="fas fa-info-circle"></i> Jabatan ini menempel pada unit tertentu, silakan pilih unit penugasannya.</small>
                     </div>
                 </div>
                 <div class="text-right mt-2">
@@ -62,6 +74,18 @@ $(document).ready(function() {
             width: '100%'
         });
     }
+
+    $('#jabatan_struktural_id').on('change', function() {
+        let isSpecific = $(this).find('option:selected').data('is-unit-specific');
+        if (isSpecific === 'Y') {
+            $('#row-unit-penugasan').slideDown();
+            $('#unit_id').prop('required', true);
+        } else {
+            $('#row-unit-penugasan').slideUp();
+            $('#unit_id').prop('required', false);
+            $('#unit_id').val('').trigger('change');
+        }
+    });
 
     // Handle Kembali ke Edit Profil
     $('.btn-back-to-edit').on('click', function(e) {

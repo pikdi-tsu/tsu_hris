@@ -20,6 +20,10 @@ use Modules\Admin\Http\Controllers\MasterJabatanController;
 use Modules\Admin\Http\Controllers\RiwayatJabatanController;
 use Modules\Admin\Http\Controllers\RiwayatIzinCutiController;
 use Illuminate\Support\Facades\Route;
+use Modules\Admin\Http\Controllers\MasterStatusKaryawanController;
+use Modules\Admin\Http\Controllers\MasterUnitController;
+use Modules\Admin\Http\Controllers\MasterCutiController;
+use Modules\Admin\Http\Controllers\MasterIzinController;
 
 // Aktifkan CheckAdminRole::class di middleware jika ada dashboard users sendiri
 Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
@@ -131,25 +135,32 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     // --- ROUTE MASTER CUTI ---
     Route::middleware(['permission:admin:master-cuti:view'])->group(function () {
         Route::prefix('master-cuti')->name('master-cuti.')->group(function () {
-
-            Route::get('/json', [\Modules\Admin\Http\Controllers\MasterCutiController::class, 'datatable'])->name('json');
-            Route::resource('/', \Modules\Admin\Http\Controllers\MasterCutiController::class)->parameters(['' => 'id'])->except(['show']);
+            Route::get('/json', [MasterCutiController::class, 'datatable'])->name('json');
+            Route::resource('/', MasterCutiController::class)->parameters(['' => 'id'])->except(['show']);
         });
     });
 
     // --- ROUTE MASTER IZIN ---
     Route::middleware(['permission:admin:master-izin:view'])->group(function () {
         Route::prefix('master-izin')->name('master-izin.')->group(function () {
-            Route::get('/json', [\Modules\Admin\Http\Controllers\MasterIzinController::class, 'datatable'])->name('json');
-            Route::resource('/', \Modules\Admin\Http\Controllers\MasterIzinController::class)->parameters(['' => 'id'])->except(['show']);
+            Route::get('/json', [MasterIzinController::class, 'datatable'])->name('json');
+            Route::resource('/', MasterIzinController::class)->parameters(['' => 'id'])->except(['show']);
         });
     });
 
     // --- ROUTE MASTER UNIT ---
     Route::middleware(['permission:admin:master-unit:view'])->group(function () {
         Route::prefix('master-unit')->name('master-unit.')->group(function () {
-            Route::get('/json', [\Modules\Admin\Http\Controllers\MasterUnitController::class, 'datatable'])->name('json');
-            Route::resource('/', \Modules\Admin\Http\Controllers\MasterUnitController::class)->parameters(['' => 'id'])->except(['show']);
+            Route::get('/json', [MasterUnitController::class, 'datatable'])->name('json');
+            Route::resource('/', MasterUnitController::class)->parameters(['' => 'id'])->except(['show']);
+        });
+    });
+
+    // --- ROUTE MASTER STATUS KARYAWAN ---
+    Route::middleware(['permission:admin:master-status-karyawan:view'])->group(function () {
+        Route::prefix('master-status-karyawan')->name('master-status-karyawan.')->group(function () {
+            Route::get('/json', [MasterStatusKaryawanController::class, 'datatable'])->name('json');
+            Route::resource('/', MasterStatusKaryawanController::class)->parameters(['' => 'id'])->except(['show']);
         });
     });
 

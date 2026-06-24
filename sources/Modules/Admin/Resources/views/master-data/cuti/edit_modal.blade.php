@@ -15,10 +15,17 @@
                 required>
         </div>
 
-        {{-- <div class="form-group mb-3">
-            <label for="keterangan">Keterangan</label>
-            <textarea class="form-control" id="keterangan" name="keterangan" rows="3">{{ $lembur->keterangan }}</textarea>
-        </div> --}}
+        <div class="form-group mb-3">
+            <label for="durasicuti">Durasi Hari Cuti<span class="text-danger">*</span></label>
+            <input type="number" min="0" class="form-control" id="durasicuti" name="durasicuti" placeholder="12"
+                value="{{ $cuti->durasicuti }}">
+        </div>
+
+        <div class="form-group mb-3">
+            <label for="minimalhari">Minimal Hari Pengajuan<span class="text-danger">*</span></label>
+            <input type="number" min="0" class="form-control" id="minimalhari" name="minimalhari"
+                placeholder="15" value="{{ $cuti->minimalhari }}">
+        </div>
 
         <div class="form-group mb-3">
             <label for="is_active">Status Aktif <span class="text-danger">*</span></label>

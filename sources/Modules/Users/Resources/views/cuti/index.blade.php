@@ -118,7 +118,10 @@
                                                 <select id="jeniscuti" class="form-control select2">
                                                     <option value=''>..:: Pilih Cuti ::..</option>
                                                     @foreach ($mcuti as $item)
-                                                        <option value={{ $item->id }}>{{ $item->jeniscuti }}</option>
+                                                        <option value={{ $item->id }}
+                                                            data-minhari="{{ $item->minimalhari }}"
+                                                            data-durasi="{{ $item->durasicuti }}">{{ $item->jeniscuti }}
+                                                        </option>
                                                     @endforeach
                                                 </select>
                                             </div>
@@ -259,15 +262,15 @@
                 }
             });
 
-            $('#jeniscuti').select2({
-                width: 'element'
-            });
-
             $('#id_atasan').select2({
                 width: 'element'
             });
 
             $('#id_hrd').select2({
+                width: 'element'
+            });
+
+            $('#jeniscuti').select2({
                 width: 'element'
             });
 
@@ -279,12 +282,36 @@
                 yearRange: "-100:+20",
             });
 
+            $('#jeniscuti').on('change', function() {
+                let minHari = $(this)
+                    .find(':selected')
+                    .data('minhari');
+
+                $("#tanggal1").datepicker(
+                    "option",
+                    "minDate",
+                    parseInt(minHari)
+                );
+            });
+
             $('#tanggal2').datepicker({
                 minDate: 0,
                 changeYear: true,
                 changeMonth: true,
                 dateFormat: "yy-m-dd",
                 yearRange: "-100:+20",
+            });
+
+            $("#tanggal1").on('change', function() {
+
+                let tanggalMulai = $(this).datepicker('getDate');
+
+                $("#tanggal2").datepicker(
+                    "option",
+                    "minDate",
+                    tanggalMulai
+                );
+
             });
 
             $("#btnsimpan").click(function(e) {

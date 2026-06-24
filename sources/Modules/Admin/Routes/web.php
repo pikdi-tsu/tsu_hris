@@ -18,6 +18,7 @@ use Modules\System\Http\Middleware\CheckAdminRole;
 use \Modules\Admin\Http\Controllers\MasterLemburController;
 use Modules\Admin\Http\Controllers\MasterJabatanController;
 use Modules\Admin\Http\Controllers\RiwayatJabatanController;
+use Modules\Admin\Http\Controllers\RiwayatIzinCutiController;
 use Illuminate\Support\Facades\Route;
 use Modules\Admin\Http\Controllers\MasterStatusKaryawanController;
 use Modules\Admin\Http\Controllers\MasterUnitController;
@@ -160,6 +161,15 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
         Route::prefix('master-status-karyawan')->name('master-status-karyawan.')->group(function () {
             Route::get('/json', [MasterStatusKaryawanController::class, 'datatable'])->name('json');
             Route::resource('/', MasterStatusKaryawanController::class)->parameters(['' => 'id'])->except(['show']);
+        });
+    });
+
+    // --- ROUTE RIWAYAT IZIN CUTI MENU ---
+    Route::middleware(['permission:admin:riwayat-izincuti:view'])->group(function () {
+        Route::prefix('riwayat-izincuti')->name('riwayat-izincuti.')->group(function () {
+            Route::get('/', [RiwayatIzinCutiController::class, 'index'])->name('index');
+            Route::get('/jsonizin', [RiwayatIzinCutiController::class, 'datatableizin'])->name('jsonizin');
+            Route::get('/jsoncuti', [RiwayatIzinCutiController::class, 'datatablecuti'])->name('jsoncuti');
         });
     });
 });

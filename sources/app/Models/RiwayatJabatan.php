@@ -18,6 +18,7 @@ class RiwayatJabatan extends Model
         'data_dosen_tendik_id',
         'tipe_jabatan',
         'jabatan_struktural_id',
+        'unit_id',
         'jabatan_fungsional_id',
         'pangkat_golongan_id',
         'tgl_mulai',
@@ -54,5 +55,10 @@ class RiwayatJabatan extends Model
     public function pangkatGolongan()
     {
         return $this->belongsTo(MasterPangkatGolongan::class, 'pangkat_golongan_id');
+    }
+
+    public function unit()
+    {
+        return $this->belongsTo(MasterUnit::class, 'unit_id');
     }
 }

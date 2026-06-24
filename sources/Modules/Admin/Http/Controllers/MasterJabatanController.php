@@ -32,12 +32,15 @@ class MasterJabatanController extends MiddlewareController
     // =========================================================================
     public function datatableStruktural()
     {
-        $data = MasterJabatanStruktural::query()->latest();
+        $data = MasterJabatanStruktural::withCount('karyawanAktifs')->latest();
 
         return DataTables::of($data)
             ->addIndexColumn()
             ->addColumn('periode', function ($row) {
                 return $row->periode_jabatan ? $row->periode_jabatan . ' Bulan' : '-';
+            })
+            ->addColumn('jumlah_karyawan', function($row) {
+                return '<span class="badge badge-info">'.$row->karyawan_aktifs_count.' Pegawai</span>';
             })
             ->addColumn('action', function ($row) {
                 return $this->getActionButtons($row, 'admin:master-jabatan', [
@@ -46,7 +49,7 @@ class MasterJabatanController extends MiddlewareController
                     'delete_url' => route('admin.master-jabatan.struktural.destroy', $row->id),
                 ]);
             })
-            ->rawColumns(['action'])
+            ->rawColumns(['action', 'jumlah_karyawan'])
             ->make(true);
     }
 
@@ -63,7 +66,8 @@ class MasterJabatanController extends MiddlewareController
         $request->validate([
             'nama_jabatan' => 'required|string|max:255',
             'periode_jabatan' => 'nullable|integer|min:1',
-            'keterangan' => 'nullable|string'
+            'keterangan' => 'nullable|string',
+            'is_unit_specific' => 'required|in:Y,N'
         ]);
 
         DB::beginTransaction();
@@ -72,6 +76,7 @@ class MasterJabatanController extends MiddlewareController
                 'nama_jabatan' => $request->nama_jabatan,
                 'periode_jabatan' => $request->periode_jabatan,
                 'keterangan' => $request->keterangan,
+                'is_unit_specific' => $request->is_unit_specific,
             ]);
 
             DB::commit();
@@ -102,7 +107,8 @@ class MasterJabatanController extends MiddlewareController
         $request->validate([
             'nama_jabatan' => 'required|string|max:255',
             'periode_jabatan' => 'nullable|integer|min:1',
-            'keterangan' => 'nullable|string'
+            'keterangan' => 'nullable|string',
+            'is_unit_specific' => 'required|in:Y,N'
         ]);
 
         DB::beginTransaction();
@@ -111,6 +117,7 @@ class MasterJabatanController extends MiddlewareController
                 'nama_jabatan' => $request->nama_jabatan,
                 'periode_jabatan' => $request->periode_jabatan,
                 'keterangan' => $request->keterangan,
+                'is_unit_specific' => $request->is_unit_specific,
             ]);
 
             DB::commit();
@@ -130,6 +137,11 @@ class MasterJabatanController extends MiddlewareController
     {
         $this->guard('delete', 'admin:master-jabatan');
         $struktural = MasterJabatanStruktural::findOrFail($id);
+
+        $isInUse = \App\Models\KaryawanJabatanStruktural::where('jabatan_struktural_id', $id)->exists();
+        if ($isInUse) {
+            return $this->sendError('Data tidak bisa dihapus karena masih digunakan oleh Karyawan (Riwayat/Aktif).');
+        }
 
         DB::beginTransaction();
         try {
@@ -152,12 +164,15 @@ class MasterJabatanController extends MiddlewareController
     // =========================================================================
     public function datatableFungsional()
     {
-        $data = MasterJabatanFungsional::query()->latest();
+        $data = MasterJabatanFungsional::withCount('karyawanAktifs')->latest();
 
         return DataTables::of($data)
             ->addIndexColumn()
             ->addColumn('periode', function ($row) {
                 return $row->periode_jabatan ? $row->periode_jabatan . ' Bulan' : '-';
+            })
+            ->addColumn('jumlah_karyawan', function($row) {
+                return '<span class="badge badge-info">'.$row->karyawan_aktifs_count.' Pegawai</span>';
             })
             ->addColumn('action', function ($row) {
                 return $this->getActionButtons($row, 'admin:master-jabatan', [
@@ -166,7 +181,7 @@ class MasterJabatanController extends MiddlewareController
                     'delete_url' => route('admin.master-jabatan.fungsional.destroy', $row->id),
                 ]);
             })
-            ->rawColumns(['action'])
+            ->rawColumns(['action', 'jumlah_karyawan'])
             ->make(true);
     }
 
@@ -251,6 +266,11 @@ class MasterJabatanController extends MiddlewareController
         $this->guard('delete', 'admin:master-jabatan');
         $fungsional = MasterJabatanFungsional::findOrFail($id);
 
+        $isInUse = \App\Models\KaryawanJabatanFungsional::where('jabatan_fungsional_id', $id)->exists();
+        if ($isInUse) {
+            return $this->sendError('Data tidak bisa dihapus karena masih digunakan oleh Karyawan (Riwayat/Aktif).');
+        }
+
         DB::beginTransaction();
         try {
             $fungsional->delete();
@@ -272,10 +292,13 @@ class MasterJabatanController extends MiddlewareController
     // =========================================================================
     public function datatablePangkat()
     {
-        $data = MasterPangkatGolongan::query()->latest();
+        $data = MasterPangkatGolongan::withCount('karyawanAktifs')->latest();
 
         return DataTables::of($data)
             ->addIndexColumn()
+            ->addColumn('jumlah_karyawan', function($row) {
+                return '<span class="badge badge-info">'.$row->karyawan_aktifs_count.' Pegawai</span>';
+            })
             ->addColumn('action', function ($row) {
                 return $this->getActionButtons($row, 'admin:master-jabatan', [
                     'use_modal'  => true,
@@ -283,7 +306,7 @@ class MasterJabatanController extends MiddlewareController
                     'delete_url' => route('admin.master-jabatan.pangkat.destroy', $row->id),
                 ]);
             })
-            ->rawColumns(['action'])
+            ->rawColumns(['action', 'jumlah_karyawan'])
             ->make(true);
     }
 
@@ -363,6 +386,11 @@ class MasterJabatanController extends MiddlewareController
     {
         $this->guard('delete', 'admin:master-jabatan');
         $pangkat = MasterPangkatGolongan::findOrFail($id);
+
+        $isInUse = \App\Models\KaryawanJabatanFungsional::where('pangkat_golongan_id', $id)->exists();
+        if ($isInUse) {
+            return $this->sendError('Data tidak bisa dihapus karena masih digunakan oleh Karyawan (Riwayat/Aktif).');
+        }
 
         DB::beginTransaction();
         try {

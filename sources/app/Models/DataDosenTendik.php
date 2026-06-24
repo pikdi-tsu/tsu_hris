@@ -33,6 +33,11 @@ class DataDosenTendik extends Authenticatable
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    public function unit()
+    {
+        return $this->belongsTo(MasterUnit::class, 'unit_id');
+    }
+
     /**
      * Relasi ke Jabatan Struktural (Bisa lebih dari 1 / Many)
      */
@@ -76,6 +81,10 @@ class DataDosenTendik extends Authenticatable
                     ['name' => 'gelar_depan', 'label' => 'Gelar Depan', 'type' => 'text', 'col_size' => 3],
                     ['name' => 'nama', 'label' => 'Nama Lengkap', 'type' => 'text', 'col_size' => 6, 'required' => true],
                     ['name' => 'gelar_belakang', 'label' => 'Gelar Belakang', 'type' => 'text', 'col_size' => 3],
+
+                    ['name' => 'tipe_karyawan', 'label' => 'Tipe Karyawan', 'type' => 'select', 'options' => ['Dosen' => 'Dosen', 'Tendik' => 'Tendik'], 'col_size' => 4, 'required' => true],
+                    ['name' => 'unit_id', 'label' => 'Homebase / Unit Kerja', 'type' => 'select', 'options' => \App\Models\MasterUnit::orderBy('nama_unit')->pluck('nama_unit', 'id')->toArray(), 'col_size' => 4, 'required' => true],
+                    ['name' => 'posisi', 'label' => 'Posisi Pekerjaan Harian', 'type' => 'text', 'col_size' => 4, 'placeholder' => 'Contoh: Programmer, Staf Keuangan'],
 
                     ['name' => 'nik', 'label' => 'NIK (Identitas Utama)', 'type' => 'text', 'col_size' => 6, 'required' => true],
                     ['name' => 'nip', 'label' => 'NIP', 'type' => 'text', 'col_size' => 6],

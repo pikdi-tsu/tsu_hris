@@ -44,6 +44,11 @@
                                         $value = tglIndo($value);
                                     }
 
+                                    // Override khusus untuk unit_id (Tampilkan nama_unit, bukan UUID-nya)
+                                    if ($field['name'] === 'unit_id' && $karyawan->unit) {
+                                        $value = $karyawan->unit->nama_unit;
+                                    }
+
                                     $isEmpty = is_null($value) || $value === '' || $value === '0' || $value === '-';
 
                                     $valStr = trim((string)$value);

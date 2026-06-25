@@ -20,6 +20,7 @@
                         <th width="5%">No</th>
                         <th>Nama Unit</th>
                         <th>Keterangan</th>
+                        <th>Kepala Unit</th>
                         <th width="15%">Aksi</th>
                     </tr>
                 </thead>
@@ -60,6 +61,10 @@
                     {
                         data: 'keterangan',
                         name: 'keterangan'
+                    },
+                    {
+                        data: 'kepala_unit',
+                        name: 'kepala_unit'
                     },
                     {
                         data: 'action',

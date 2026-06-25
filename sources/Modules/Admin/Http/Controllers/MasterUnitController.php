@@ -27,10 +27,13 @@ class MasterUnitController extends MiddlewareController
 
     public function datatable()
     {
-        $data = MasterUnit::query()->latest();
+        $data = MasterUnit::with('kepalaJabatan')->latest();
 
         return DataTables::of($data)
             ->addIndexColumn()
+            ->addColumn('kepala_unit', function ($row) {
+                return $row->kepalaJabatan ? $row->kepalaJabatan->nama_jabatan : '-';
+            })
             ->addColumn('action', function ($row) {
                 return $this->getActionButtons($row, 'admin:master-unit', [
                     'use_modal'  => true,

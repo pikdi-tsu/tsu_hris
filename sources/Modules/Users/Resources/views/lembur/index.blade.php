@@ -102,6 +102,14 @@
                                         
 
                                         <div class="row mb-2">
+                                            <label for="nama_atasan" class="col-sm-3 col-form-label">Atasan (Kepala Unit)</label>
+                                            <div class="col-sm-9">
+                                                <input type="text" class="form-control" value="{{ $namaAtasan }}" readonly>
+                                                <small class="text-muted">Atasan terdeteksi otomatis berdasarkan struktur unit Anda.</small>
+                                            </div>
+                                        </div>
+
+                                        <div class="row mb-2">
                                             <label for="id_hrd" class="col-sm-3 col-form-label">SDM</label>
                                             <div class="col-sm-9">
                                                 <select id="id_hrd" class="form-control select2">
@@ -118,7 +126,10 @@
                                             <label for="bukti_kegiatan" class="col-sm-3 col-form-label">Bukti Kegiatan (Max 2MB)</label>
                                             <div class="col-sm-9">
                                                 <div class="input-group">
-                                                    <input type="file" id="bukti_kegiatan" name="bukti_kegiatan" class="form-control" accept=".jpg,.jpeg,.png,.pdf">
+                                                    <div class="custom-file">
+                                                        <input type="file" class="custom-file-input" id="bukti_kegiatan" name="bukti_kegiatan" accept=".jpg,.jpeg,.png,.pdf">
+                                                        <label class="custom-file-label" for="bukti_kegiatan" id="lbl-bukti_kegiatan">Choose file...</label>
+                                                    </div>
                                                     <div class="input-group-append">
                                                         <button type="button" class="btn btn-info" id="btn-preview" disabled><i class="fas fa-eye"></i> Preview</button>
                                                     </div>
@@ -291,6 +302,7 @@
                     if (file.size > 2 * 1024 * 1024) {
                         Swal.fire('Peringatan', 'Ukuran file maksimal 2MB', 'warning');
                         $(this).val('');
+                        $('#lbl-bukti_kegiatan').html('Choose file...');
                         
                         $("#btn-preview").prop('disabled', true);
                         $("#konfirmasi-container").hide();
@@ -312,6 +324,7 @@
                     } else {
                         Swal.fire('Peringatan', 'Format file tidak didukung', 'warning');
                         $(this).val('');
+                        $('#lbl-bukti_kegiatan').html('Choose file...');
                         
                         $("#btn-preview").prop('disabled', true);
                         $("#konfirmasi-container").hide();
@@ -322,7 +335,9 @@
                     $("#btn-preview").prop('disabled', false);
                     $("#konfirmasi-container").show();
                     $("#check-konfirmasi").prop('checked', false).trigger('change');
+                    $('#lbl-bukti_kegiatan').html(file.name);
                 } else {
+                    $('#lbl-bukti_kegiatan').html('Choose file...');
                     $("#btn-preview").prop('disabled', true);
                     $("#konfirmasi-container").hide();
                     $("#check-konfirmasi").prop('checked', false).trigger('change');
@@ -355,6 +370,7 @@
                 $("#id_hrd").val('').trigger('change');
                 
                 $("#bukti_kegiatan").val('');
+                $('#lbl-bukti_kegiatan').html('Choose file...');
                 $("#btn-preview").prop('disabled', true);
                 $("#konfirmasi-container").hide();
                 $("#check-konfirmasi").prop('checked', false).trigger('change');

@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Yajra\Datatables\Datatables;
 use Carbon\Carbon;
@@ -16,7 +15,8 @@ use App\Services\TsuErrorHandlerService;
 use App\Models\MasterLembur;
 use App\Models\LemburKaryawan;
 use App\Models\DataDosenTendik;
-use Modules\Users\Http\Controllers\UsersController;
+use App\Models\MasterUnit;
+use App\Models\KaryawanJabatanStruktural;
 use App\Traits\ApiResponseTrait;
 use App\Http\Controllers\MiddlewareController;
 
@@ -59,8 +59,21 @@ class LemburController extends MiddlewareController
                         ->get(['id', 'nama', 'nik']);
 
         $isAtasan = false;
+        $namaAtasan = 'Belum/Tidak Ada Atasan (Silakan hubungi SDM)';
         if ($profile) {
             $isAtasan = LemburKaryawan::where('id_atasan', $profile->id)->exists();
+            if ($profile->unit_id) {
+                $unit = MasterUnit::find($profile->unit_id);
+                if ($unit) {
+                    $id_atasan = $this->findAtasanId($unit, $profile->id);
+                    if ($id_atasan) {
+                        $atasan = DataDosenTendik::find($id_atasan);
+                        if ($atasan) {
+                            $namaAtasan = $atasan->nama;
+                        }
+                    }
+                }
+            }
         }
 
         $data = [
@@ -68,8 +81,9 @@ class LemburController extends MiddlewareController
             'menu'    => 'dashboard',
             'mlembur' => $mlembur,
             'profile' => $profile,
-            'karyawans' => $listSdm, // passing to 'karyawans' so we don't have to rename all view variables immediately, or we can rename it. Let's just keep 'karyawans' but it contains only SDM
-            'isAtasan'  => $isAtasan
+            'karyawans' => $listSdm,
+            'isAtasan'  => $isAtasan,
+            'namaAtasan' => $namaAtasan
         ];
 
         return view('users::lembur.index', $data);
@@ -119,7 +133,7 @@ class LemburController extends MiddlewareController
 
             $id_atasan = $this->findAtasanId($unit, $profile->id);
             if (!$id_atasan) {
-                return $this->sendError('Unit Anda (atau Unit Induk) belum memiliki Kepala Unit. Silakan hubungi HRD.');
+                return $this->sendError('Unit Anda (atau Unit Induk) belum memiliki Kepala Unit. Silakan hubungi SDM.');
             }
 
             $dataLembur = [
@@ -547,10 +561,16 @@ class LemburController extends MiddlewareController
 
         $kepalaJabatanId = $unit->kepala_jabatan_id;
         if ($kepalaJabatanId) {
-            $kepala = \App\Models\KaryawanJabatanStruktural::where('unit_id', $unit->id)
-                ->where('jabatan_struktural_id', $kepalaJabatanId)
-                ->where('is_active', 1)
-                ->first();
+            $kepalas = KaryawanJabatanStruktural::where('jabatan_struktural_id', $kepalaJabatanId)
+                ->whereIn('is_active', [1, '1', 'Y', 'y'])
+                ->get();
+                
+            $kepala = null;
+            if ($kepalas->count() == 1) {
+                $kepala = $kepalas->first();
+            } elseif ($kepalas->count() > 1) {
+                $kepala = $kepalas->where('unit_id', $unit->id)->first() ?? $kepalas->first();
+            }
                 
             if ($kepala && $kepala->data_dosen_tendik_id !== $currentUserId) {
                 return $kepala->data_dosen_tendik_id;

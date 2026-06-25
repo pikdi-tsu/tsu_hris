@@ -17,6 +17,7 @@ use App\Models\LemburKaryawan;
 use App\Models\DataDosenTendik;
 use App\Models\MasterUnit;
 use App\Models\KaryawanJabatanStruktural;
+use App\Models\User;
 use App\Traits\ApiResponseTrait;
 use App\Http\Controllers\MiddlewareController;
 
@@ -162,9 +163,22 @@ class LemburController extends MiddlewareController
                 $dataLembur['bukti_kegiatan'] = $filename;
             }
                 
-            DB::transaction(function () use ($dataLembur) {
-                LemburKaryawan::create($dataLembur);
+            DB::transaction(function () use ($dataLembur, &$lemburCreated) {
+                $lemburCreated = LemburKaryawan::create($dataLembur);
             });
+
+            if (isset($lemburCreated) && $id_atasan) {
+                $atasanProfile = DataDosenTendik::find($id_atasan);
+                if ($atasanProfile && $atasanProfile->user_id) {
+                    $atasanUser = User::find($atasanProfile->user_id);
+                    if ($atasanUser) {
+                        $atasanUser->notify(new \App\Notifications\LemburDiajukanNotification(
+                            $lemburCreated,
+                            'Pengajuan lembur baru dari ' . ($profile->nama ?? 'Bawahan') . ' menunggu persetujuan Anda.'
+                        ));
+                    }
+                }
+            }
 
             return $this->sendSuccess('Data pengajuan lembur berhasil disimpan.');
 

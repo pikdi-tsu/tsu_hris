@@ -27,10 +27,10 @@
                 <a class="nav-link" data-toggle="dropdown" href="#">
                     <i class="far fa-bell"></i>
                     {{-- Badge Jumlah Notif --}}
-                    <span class="badge badge-danger navbar-badge">{{ $all }}</span>
+                    <span class="badge badge-danger navbar-badge" id="global-notif-badge" {!! $all > 0 ? '' : 'style="display:none;"' !!}>{{ $all }}</span>
                 </a>
                 <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
-                    <span class="dropdown-item dropdown-header font-weight-bold bg-light">{{ $all }} Pengajuan Menunggu Persetujuan</span>
+                    <span class="dropdown-item dropdown-header font-weight-bold bg-light"><span id="global-notif-text">{{ $all }}</span> Pengajuan Menunggu Persetujuan</span>
                     
                     @if ($notifcutiatasan > 0)
                         <div class="dropdown-divider"></div>
@@ -68,15 +68,12 @@
                         </a>
                     @endif
 
-                    @if ($notiflemburatasan > 0)
-                        <div class="dropdown-divider"></div>
-                        {{-- Nanti ganti route nya sesuai halaman lembur --}}
-                        <a href="{{ route('users.lembur.index') }}" class="dropdown-item">
-                            <i class="fas fa-business-time mr-2 text-primary"></i>
-                            <span class="badge badge-primary float-right">{{ $notiflemburatasan }}</span>
-                            Persetujuan Lembur
-                        </a>
-                    @endif
+                    <div class="dropdown-divider" id="lembur-atasan-divider" {!! $notiflemburatasan > 0 ? '' : 'style="display:none;"' !!}></div>
+                    <a href="{{ route('users.lembur.index') }}" class="dropdown-item" id="lembur-atasan-item" {!! $notiflemburatasan > 0 ? '' : 'style="display:none;"' !!}>
+                        <i class="fas fa-business-time mr-2 text-primary"></i>
+                        <span class="badge badge-primary float-right" id="badge-notif-lembur-atasan">{{ $notiflemburatasan }}</span>
+                        Persetujuan Lembur
+                    </a>
 
                     @if ($notiflemburhrd > 0)
                         <div class="dropdown-divider"></div>

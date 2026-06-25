@@ -75,3 +75,67 @@
 </script>
 @include('system::components.alert')
 @yield('script')
+
+<script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/laravel-echo@1.16.1/dist/echo.iife.js"></script>
+<script>
+    if (typeof Echo !== 'undefined' && '{{ env('REVERB_APP_KEY') }}' !== '') {
+        window.Pusher = Pusher;
+        window.Echo = new Echo({
+            broadcaster: 'reverb',
+            key: '{{ env('REVERB_APP_KEY') }}',
+            wsHost: '{{ env('REVERB_HOST') }}',
+            wsPort: {{ env('REVERB_PORT', 80) }},
+            wssPort: {{ env('REVERB_PORT', 443) }},
+            forceTLS: {{ env('REVERB_SCHEME', 'https') === 'https' ? 'true' : 'false' }},
+            enabledTransports: ['ws', 'wss'],
+        });
+
+        @if(Auth::check())
+            window.Echo.private('App.Models.User.{{ Auth::id() }}')
+                .notification((notification) => {
+                    console.log('New notification:', notification);
+                    // Update global badge
+                    let globalBadge = $('#global-notif-badge');
+                    let currentGlobal = parseInt(globalBadge.text()) || 0;
+                    
+                    if (notification.jenis === 'lembur') {
+                        let lemburBadge = $('#badge-notif-lembur-atasan');
+                        let currentLembur = parseInt(lemburBadge.text()) || 0;
+                        
+                        lemburBadge.text(currentLembur + 1);
+                        $('#lembur-atasan-divider').show();
+                        $('#lembur-atasan-item').show();
+                        
+                        globalBadge.text(currentGlobal + 1);
+                        $('#global-notif-text').text(currentGlobal + 1);
+                        globalBadge.show();
+
+                        // SweetAlert toast
+                        const Toast = Swal.mixin({
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 5000,
+                            timerProgressBar: true,
+                        });
+
+                        Toast.fire({
+                            icon: 'info',
+                            title: notification.message
+                        });
+                        
+                        // If we are on the lembur index page, reload the datatable
+                        if (typeof window.LaravelDataTables !== 'undefined' && window.LaravelDataTables['lemburApprovalTable']) {
+                            window.LaravelDataTables['lemburApprovalTable'].ajax.reload(null, false);
+                            let tabBadge = $('#tab-persetujuan-bawahan .badge');
+                            if (tabBadge.length) {
+                                tabBadge.text(currentLembur + 1);
+                                tabBadge.show();
+                            }
+                        }
+                    }
+                });
+        @endif
+    }
+</script>

@@ -426,42 +426,15 @@
                         formData.append('_method', 'PUT');
                     }
 
-                    $.ajax({
-                        type: 'POST', // Always POST for FormData, use _method for PUT
+                    $("#btnsimpan").prop('disabled', true).text('Memproses...');
+                    pikdiAjax({
                         url: ajaxUrl,
                         data: formData,
-                        processData: false,
-                        contentType: false,
-                        dataType: "JSON",
-                        beforeSend: function(param) {
-                            $("#btnsimpan").prop('disabled', true).text('Memproses...');
-                            Swal.fire({
-                                title: 'Sedang Proses',
-                                html: 'Mohon Tunggu Sebentar',
-                                allowEscapeKey: false,
-                                allowOutsideClick: false,
-                                didOpen: () => {
-                                    Swal.showLoading();
-                                }
-                            })
+                        onSuccess: function(response) {
+                            location.reload();
                         },
-                        success: function(response) {
-                            Swal.fire({
-                                title: response.title,
-                                text: response.message,
-                                icon: (response.status != 'error') ? 'success' : 'error'
-                            }).then((result) => {
-                                location.reload();
-                            });
-                        },
-                        error: function(xhr, status, error) {
+                        onError: function(response, xhr) {
                             $("#btnsimpan").prop('disabled', false).text('Simpan');
-                            let res = xhr.responseJSON;
-                            Swal.fire({
-                                title: res?.title ?? 'Error',
-                                text: res?.message ?? error,
-                                icon: 'error'
-                            });
                         }
                     });
                 }

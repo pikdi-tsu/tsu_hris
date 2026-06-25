@@ -69,7 +69,7 @@
                     @endif
 
                     <div class="dropdown-divider" id="lembur-atasan-divider" {!! $notiflemburatasan > 0 ? '' : 'style="display:none;"' !!}></div>
-                    <a href="{{ route('users.lembur.index') }}" class="dropdown-item" id="lembur-atasan-item" {!! $notiflemburatasan > 0 ? '' : 'style="display:none;"' !!}>
+                    <a href="{{ route('users.lembur.index') }}#content-persetujuan-bawahan" class="dropdown-item" id="lembur-atasan-item" {!! $notiflemburatasan > 0 ? '' : 'style="display:none;"' !!}>
                         <i class="fas fa-business-time mr-2 text-primary"></i>
                         <span class="badge badge-primary float-right" id="badge-notif-lembur-atasan">{{ $notiflemburatasan }}</span>
                         Persetujuan Lembur
@@ -77,7 +77,7 @@
 
                     @if ($notiflemburhrd > 0)
                         <div class="dropdown-divider"></div>
-                        <a href="{{ route('users.lembur.index') }}" class="dropdown-item">
+                        <a href="{{ route('users.lembur.index') }}#content-persetujuan-bawahan" class="dropdown-item">
                             <i class="fas fa-business-time mr-2 text-primary"></i>
                             <span class="badge badge-primary float-right">{{ $notiflemburhrd }}</span>
                             Persetujuan Lembur (SDM)

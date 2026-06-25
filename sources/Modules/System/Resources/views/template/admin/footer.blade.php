@@ -71,6 +71,25 @@
         if (typeof bsCustomFileInput !== 'undefined') {
             bsCustomFileInput.init();
         }
+
+        // --- GLOBAL: Auto open Bootstrap tab based on URL hash ---
+        let url = window.location.href;
+        if (url.includes('#')) {
+            let hash = url.substring(url.indexOf('#'));
+            let tabLink = $('ul.nav-tabs a[href="' + hash + '"]');
+            if (tabLink.length) {
+                tabLink.tab('show');
+            }
+        }
+        
+        // --- GLOBAL: Update URL hash when a tab is clicked ---
+        $('ul.nav-tabs a[data-toggle="pill"], ul.nav-tabs a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+            if(history.pushState) {
+                history.pushState(null, null, e.target.hash);
+            } else {
+                window.location.hash = e.target.hash;
+            }
+        });
     });
 </script>
 @include('system::components.alert')
@@ -79,16 +98,21 @@
 <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/laravel-echo@1.16.1/dist/echo.iife.js"></script>
 <script>
-    if (typeof Echo !== 'undefined' && '{{ env('REVERB_APP_KEY') }}' !== '') {
+    if (typeof Echo !== 'undefined' && '{{ config('broadcasting.connections.reverb.key') }}' !== '') {
         window.Pusher = Pusher;
         window.Echo = new Echo({
             broadcaster: 'reverb',
-            key: '{{ env('REVERB_APP_KEY') }}',
-            wsHost: '{{ env('REVERB_HOST') }}',
-            wsPort: {{ env('REVERB_PORT', 80) }},
-            wssPort: {{ env('REVERB_PORT', 443) }},
-            forceTLS: {{ env('REVERB_SCHEME', 'https') === 'https' ? 'true' : 'false' }},
+            key: '{{ config('broadcasting.connections.reverb.key') }}',
+            wsHost: '{{ config('broadcasting.connections.reverb.options.host') }}',
+            wsPort: {{ config('broadcasting.connections.reverb.options.port', 80) }},
+            wssPort: {{ config('broadcasting.connections.reverb.options.port', 443) }},
+            forceTLS: {{ config('broadcasting.connections.reverb.options.scheme', 'http') === 'https' ? 'true' : 'false' }},
             enabledTransports: ['ws', 'wss'],
+            auth: {
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            }
         });
 
         @if(Auth::check())
@@ -125,14 +149,22 @@
                             title: notification.message
                         });
                         
-                        // If we are on the lembur index page, reload the datatable
-                        if (typeof window.LaravelDataTables !== 'undefined' && window.LaravelDataTables['lemburApprovalTable']) {
-                            window.LaravelDataTables['lemburApprovalTable'].ajax.reload(null, false);
-                            let tabBadge = $('#tab-persetujuan-bawahan .badge');
-                            if (tabBadge.length) {
-                                tabBadge.text(currentLembur + 1);
-                                tabBadge.show();
+                        // If we are on the lembur index page, reload the datatables
+                        if ($.fn.DataTable.isDataTable('#dataTablesApproval')) {
+                            $('#dataTablesApproval').DataTable().ajax.reload(null, false);
+                            let tab = $('#tab-persetujuan-bawahan');
+                            if (tab.length) {
+                                let tabBadge = tab.find('.badge');
+                                if (tabBadge.length) {
+                                    tabBadge.text(currentLembur + 1);
+                                    tabBadge.show();
+                                } else {
+                                    tab.append(' <span class="badge badge-danger" id="badge-approval">' + (currentLembur + 1) + '</span>');
+                                }
                             }
+                        }
+                        if ($.fn.DataTable.isDataTable('#dataTables')) {
+                            $('#dataTables').DataTable().ajax.reload(null, false);
                         }
                     }
                 });

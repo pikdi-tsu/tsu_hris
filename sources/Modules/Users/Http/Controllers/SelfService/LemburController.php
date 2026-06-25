@@ -62,7 +62,9 @@ class LemburController extends MiddlewareController
         $isAtasan = false;
         $namaAtasan = 'Belum/Tidak Ada Atasan (Silakan hubungi SDM)';
         if ($profile) {
-            $isAtasan = LemburKaryawan::where('id_atasan', $profile->id)->exists();
+            $isKepala = KaryawanJabatanStruktural::where('data_dosen_tendik_id', $profile->id)
+                ->whereIn('is_active', [1, '1', 'Y', 'y'])->exists();
+            $isAtasan = $isKepala || LemburKaryawan::where('id_atasan', $profile->id)->exists();
             if ($profile->unit_id) {
                 $unit = MasterUnit::find($profile->unit_id);
                 if ($unit) {

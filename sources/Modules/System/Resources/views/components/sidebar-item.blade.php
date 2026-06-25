@@ -44,6 +44,17 @@
     }
 @endphp
 
+@php
+    $badgeCount = 0;
+    if ($menu->route === 'users.indexapprovalcuti') {
+        $badgeCount = session('notifcutiatasan', 0) + session('notifcutihrd', 0);
+    } elseif ($menu->route === 'users.indexapprovalizin') {
+        $badgeCount = session('notifizinatasan', 0) + session('notifizinhrd', 0);
+    } elseif ($menu->route === 'users.lembur.index') {
+        $badgeCount = session('notiflemburatasan', 0) + session('notiflemburhrd', 0);
+    }
+@endphp
+
 <li class="nav-item {{ $hasChildren && $isActive ? 'menu-open' : '' }}">
 
     <a href="{{ $href }}"
@@ -53,6 +64,9 @@
         <i class="nav-icon {{ $mainIcon }} mr-2"></i>
         <p class="mb-0" style="flex: 1;">
             {{ $menu->name }}
+            @if($badgeCount > 0)
+                <span class="badge badge-danger right">{{ $badgeCount }}</span>
+            @endif
         </p>
     </a>
 

@@ -38,7 +38,12 @@
                                 </li>
                                 @if($isAtasan)
                                 <li class="nav-item">
-                                    <a class="nav-link" id="tab-persetujuan-bawahan" data-toggle="pill" href="#content-persetujuan-bawahan" role="tab" aria-controls="content-persetujuan-bawahan" aria-selected="false">Persetujuan Bawahan <span class="badge badge-danger" id="badge-approval" style="display:none;">0</span></a>
+                                    <a class="nav-link" id="tab-persetujuan-bawahan" data-toggle="pill" href="#content-persetujuan-bawahan" role="tab" aria-controls="content-persetujuan-bawahan" aria-selected="false">
+                                        Persetujuan Bawahan 
+                                        @if(session('notiflemburatasan', 0) > 0)
+                                            <span class="badge badge-danger" id="badge-approval">{{ session('notiflemburatasan') }}</span>
+                                        @endif
+                                    </a>
                                 </li>
                                 @endif
                             </ul>
@@ -667,16 +672,7 @@
                     {data: 'keterangan', name: 'keterangan'},
                     {data: 'status', name: 'status'},
                     {data: 'action', name: 'action', orderable: false, searchable: false}
-                ],
-                drawCallback: function(settings) {
-                    var api = this.api();
-                    var count = api.rows().count();
-                    if(count > 0) {
-                        $('#badge-approval').text(count).show();
-                    } else {
-                        $('#badge-approval').hide();
-                    }
-                }
+                ]
             });
 
             // Action Approve

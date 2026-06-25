@@ -17,48 +17,73 @@
             $notifcutihrd = session('notifcutihrd');
             $notifizinatasan = session('notifizinatasan');
             $notifizinhrd = session('notifizinhrd');
-            $all = $notifcutiatasan + $notifizinatasan + $notifcutihrd + $notifizinhrd;
+            $notiflemburatasan = session('notiflemburatasan');
+            $notiflemburhrd = session('notiflemburhrd');
+            $all = $notifcutiatasan + $notifizinatasan + $notifcutihrd + $notifizinhrd + $notiflemburatasan + $notiflemburhrd;
         @endphp
         <!-- Notifications Dropdown Menu -->
         @if ($all > 0)
             <li class="nav-item dropdown">
                 <a class="nav-link" data-toggle="dropdown" href="#">
                     <i class="far fa-bell"></i>
-                    {{-- Badge Jumlah Notif (Nanti dinamis, sekarang hide dulu atau kasih 0) --}}
-                    <span class="badge badge-warning navbar-badge">{{ $all }}</span>
+                    {{-- Badge Jumlah Notif --}}
+                    <span class="badge badge-danger navbar-badge">{{ $all }}</span>
                 </a>
                 <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
-                    <span class="dropdown-item dropdown-header">{{ $all }} Notifikasi Sistem</span>
+                    <span class="dropdown-item dropdown-header font-weight-bold bg-light">{{ $all }} Pengajuan Menunggu Persetujuan</span>
+                    
                     @if ($notifcutiatasan > 0)
                         <div class="dropdown-divider"></div>
-                        {{-- KONDISI 1: KALAU KOSONG (Default Sekarang) --}}
-                        <a href=" {{ route('users.indexapprovalcuti') }} " class="dropdown-item">
-                            <i class="fas fa-check-circle mr-2 text-primary"></i>
-                            {{ $notifcutiatasan }} Approval Cuti
+                        <a href="{{ route('users.indexapprovalcuti') }}" class="dropdown-item">
+                            <i class="fas fa-umbrella-beach mr-2 text-warning"></i>
+                            <span class="badge badge-warning float-right">{{ $notifcutiatasan }}</span>
+                            Persetujuan Cuti
                         </a>
                     @endif
+
                     @if ($notifcutihrd > 0)
                         <div class="dropdown-divider"></div>
-                        {{-- KONDISI 1: KALAU KOSONG (Default Sekarang) --}}
-                        <a href="{{ route('users.indexapprovalcuti') }} " class="dropdown-item">
-                            <i class="fas fa-check-circle mr-2 text-primary"></i>
-                            {{ $notifcutihrd }} Approval Cuti HRD
+                        <a href="{{ route('users.indexapprovalcuti') }}" class="dropdown-item">
+                            <i class="fas fa-umbrella-beach mr-2 text-warning"></i>
+                            <span class="badge badge-warning float-right">{{ $notifcutihrd }}</span>
+                            Persetujuan Cuti (SDM)
                         </a>
                     @endif
+
                     @if ($notifizinatasan > 0)
                         <div class="dropdown-divider"></div>
-                        {{-- KONDISI 1: KALAU KOSONG (Default Sekarang) --}}
-                        <a href=" {{ route('users.indexapprovalizin') }} " class="dropdown-item">
-                            <i class="fas fa-check-circle mr-2 text-primary"></i>
-                            {{ $notifizinatasan }} Approval Izin
+                        <a href="{{ route('users.indexapprovalizin') }}" class="dropdown-item">
+                            <i class="fas fa-file-medical-alt mr-2 text-info"></i>
+                            <span class="badge badge-info float-right">{{ $notifizinatasan }}</span>
+                            Persetujuan Izin
                         </a>
                     @endif
+
                     @if ($notifizinhrd > 0)
                         <div class="dropdown-divider"></div>
-                        {{-- KONDISI 1: KALAU KOSONG (Default Sekarang) --}}
                         <a href="{{ route('users.indexapprovalizin') }}" class="dropdown-item">
-                            <i class="fas fa-check-circle mr-2 text-primary"></i>
-                            {{ $notifizinhrd }} Approval Izin HRD
+                            <i class="fas fa-file-medical-alt mr-2 text-info"></i>
+                            <span class="badge badge-info float-right">{{ $notifizinhrd }}</span>
+                            Persetujuan Izin (SDM)
+                        </a>
+                    @endif
+
+                    @if ($notiflemburatasan > 0)
+                        <div class="dropdown-divider"></div>
+                        {{-- Nanti ganti route nya sesuai halaman lembur --}}
+                        <a href="{{ route('users.lembur.index') }}" class="dropdown-item">
+                            <i class="fas fa-business-time mr-2 text-primary"></i>
+                            <span class="badge badge-primary float-right">{{ $notiflemburatasan }}</span>
+                            Persetujuan Lembur
+                        </a>
+                    @endif
+
+                    @if ($notiflemburhrd > 0)
+                        <div class="dropdown-divider"></div>
+                        <a href="{{ route('users.lembur.index') }}" class="dropdown-item">
+                            <i class="fas fa-business-time mr-2 text-primary"></i>
+                            <span class="badge badge-primary float-right">{{ $notiflemburhrd }}</span>
+                            Persetujuan Lembur (SDM)
                         </a>
                     @endif
                     {{-- KONDISI 2: CONTOH KALAU ADA ISI (Disimpan dulu sbg komentar buat contekan) --}}

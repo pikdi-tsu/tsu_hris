@@ -28,6 +28,11 @@ class MasterUnit extends Model
         return $this->hasMany(MasterUnit::class, 'parent_unit_id');
     }
 
+    public function kepalaJabatan()
+    {
+        return $this->belongsTo(MasterJabatanStruktural::class, 'kepala_jabatan_id');
+    }
+
     public function dosenTendiks()
     {
         return $this->hasMany(DataDosenTendik::class, 'unit_id');

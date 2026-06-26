@@ -38,7 +38,12 @@
                                 </li>
                                 @if($isAtasan)
                                 <li class="nav-item">
-                                    <a class="nav-link" id="tab-persetujuan-bawahan" data-toggle="pill" href="#content-persetujuan-bawahan" role="tab" aria-controls="content-persetujuan-bawahan" aria-selected="false">Persetujuan Bawahan <span class="badge badge-danger" id="badge-approval" style="display:none;">0</span></a>
+                                    <a class="nav-link" id="tab-persetujuan-bawahan" data-toggle="pill" href="#content-persetujuan-bawahan" role="tab" aria-controls="content-persetujuan-bawahan" aria-selected="false">
+                                        Persetujuan Bawahan 
+                                        @if(session('notiflemburatasan', 0) > 0)
+                                            <span class="badge badge-danger" id="badge-approval">{{ session('notiflemburatasan') }}</span>
+                                        @endif
+                                    </a>
                                 </li>
                                 @endif
                             </ul>
@@ -100,24 +105,20 @@
                                             </div>
                                         </div>
                                         
+
                                         <div class="row mb-2">
-                                            <label for="id_atasan" class="col-sm-3 col-form-label">Atasan</label>
+                                            <label for="nama_atasan" class="col-sm-3 col-form-label">Atasan (Kepala Unit)</label>
                                             <div class="col-sm-9">
-                                                <select id="id_atasan" class="form-control select2">
-                                                    <option value=''>..:: Pilih Atasan ::..</option>
-                                                    @foreach ($karyawans as $kry)
-                                                        @if($profile && $profile->id != $kry->id)
-                                                            <option value="{{$kry->id}}">{{$kry->nama}}</option>
-                                                        @endif
-                                                    @endforeach
-                                                </select>
+                                                <input type="text" class="form-control" value="{{ $namaAtasan }}" readonly>
+                                                <small class="text-muted">Atasan terdeteksi otomatis berdasarkan struktur unit Anda.</small>
                                             </div>
                                         </div>
+
                                         <div class="row mb-2">
-                                            <label for="id_hrd" class="col-sm-3 col-form-label">HRD</label>
+                                            <label for="id_hrd" class="col-sm-3 col-form-label">SDM</label>
                                             <div class="col-sm-9">
                                                 <select id="id_hrd" class="form-control select2">
-                                                    <option value=''>..:: Pilih HRD ::..</option>
+                                                    <option value=''>..:: Pilih Pegawai SDM ::..</option>
                                                     @foreach ($karyawans as $kry)
                                                         @if($profile && $profile->id != $kry->id)
                                                             <option value="{{$kry->id}}">{{$kry->nama}}</option>
@@ -130,7 +131,10 @@
                                             <label for="bukti_kegiatan" class="col-sm-3 col-form-label">Bukti Kegiatan (Max 2MB)</label>
                                             <div class="col-sm-9">
                                                 <div class="input-group">
-                                                    <input type="file" id="bukti_kegiatan" name="bukti_kegiatan" class="form-control" accept=".jpg,.jpeg,.png,.pdf">
+                                                    <div class="custom-file">
+                                                        <input type="file" class="custom-file-input" id="bukti_kegiatan" name="bukti_kegiatan" accept=".jpg,.jpeg,.png,.pdf">
+                                                        <label class="custom-file-label" for="bukti_kegiatan" id="lbl-bukti_kegiatan">Choose file...</label>
+                                                    </div>
                                                     <div class="input-group-append">
                                                         <button type="button" class="btn btn-info" id="btn-preview" disabled><i class="fas fa-eye"></i> Preview</button>
                                                     </div>
@@ -175,7 +179,7 @@
                                                     <th><center>Keterangan</center></th>
                                                     <th><center>Status</center></th>
                                                     <th><center>Atasan</center></th>
-                                                    <th><center>HRD</center></th>
+                                                    <th><center>Status SDM</center></th>
                                                     <th><center>Aksi</center></th>
                                                 </tr>
                                             </thead>
@@ -303,6 +307,7 @@
                     if (file.size > 2 * 1024 * 1024) {
                         Swal.fire('Peringatan', 'Ukuran file maksimal 2MB', 'warning');
                         $(this).val('');
+                        $('#lbl-bukti_kegiatan').html('Choose file...');
                         
                         $("#btn-preview").prop('disabled', true);
                         $("#konfirmasi-container").hide();
@@ -324,6 +329,7 @@
                     } else {
                         Swal.fire('Peringatan', 'Format file tidak didukung', 'warning');
                         $(this).val('');
+                        $('#lbl-bukti_kegiatan').html('Choose file...');
                         
                         $("#btn-preview").prop('disabled', true);
                         $("#konfirmasi-container").hide();
@@ -334,7 +340,9 @@
                     $("#btn-preview").prop('disabled', false);
                     $("#konfirmasi-container").show();
                     $("#check-konfirmasi").prop('checked', false).trigger('change');
+                    $('#lbl-bukti_kegiatan').html(file.name);
                 } else {
+                    $('#lbl-bukti_kegiatan').html('Choose file...');
                     $("#btn-preview").prop('disabled', true);
                     $("#konfirmasi-container").hide();
                     $("#check-konfirmasi").prop('checked', false).trigger('change');
@@ -367,6 +375,7 @@
                 $("#id_hrd").val('').trigger('change');
                 
                 $("#bukti_kegiatan").val('');
+                $('#lbl-bukti_kegiatan').html('Choose file...');
                 $("#btn-preview").prop('disabled', true);
                 $("#konfirmasi-container").hide();
                 $("#check-konfirmasi").prop('checked', false).trigger('change');
@@ -381,7 +390,6 @@
                 let tanggal1 = $("#tanggal1").val();
                 let tanggal2 = $("#tanggal2").val();
                 let alasan = $("#alasan").val();
-                let id_atasan = $("#id_atasan").val();
                 let id_hrd = $("#id_hrd").val();
 
                 if (!id_mlembur) {
@@ -392,10 +400,8 @@
                     notifalert('Waktu Selesai');
                 } else if (!alasan) {
                     notifalert('Keterangan');
-                } else if (!id_atasan) {
-                    notifalert('Atasan');
                 } else if (!id_hrd) {
-                    notifalert('HRD');
+                    notifalert('Pilihan SDM');
                 } else if (ketedit == 'no' && !$('#bukti_kegiatan')[0].files[0]) {
                     notifalert('Bukti Kegiatan');
                 } else {
@@ -409,7 +415,6 @@
                     formData.append('tanggal1', tanggal1);
                     formData.append('tanggal2', tanggal2);
                     formData.append('alasan', alasan);
-                    formData.append('id_atasan', id_atasan);
                     formData.append('id_hrd', id_hrd);
                     
                     let file = $('#bukti_kegiatan')[0].files[0];
@@ -421,42 +426,15 @@
                         formData.append('_method', 'PUT');
                     }
 
-                    $.ajax({
-                        type: 'POST', // Always POST for FormData, use _method for PUT
+                    $("#btnsimpan").prop('disabled', true).text('Memproses...');
+                    pikdiAjax({
                         url: ajaxUrl,
                         data: formData,
-                        processData: false,
-                        contentType: false,
-                        dataType: "JSON",
-                        beforeSend: function(param) {
-                            $("#btnsimpan").prop('disabled', true).text('Memproses...');
-                            Swal.fire({
-                                title: 'Sedang Proses',
-                                html: 'Mohon Tunggu Sebentar',
-                                allowEscapeKey: false,
-                                allowOutsideClick: false,
-                                didOpen: () => {
-                                    Swal.showLoading();
-                                }
-                            })
+                        onSuccess: function(response) {
+                            location.reload();
                         },
-                        success: function(response) {
-                            Swal.fire({
-                                title: response.title,
-                                text: response.message,
-                                icon: (response.status != 'error') ? 'success' : 'error'
-                            }).then((result) => {
-                                location.reload();
-                            });
-                        },
-                        error: function(xhr, status, error) {
+                        onError: function(response, xhr) {
                             $("#btnsimpan").prop('disabled', false).text('Simpan');
-                            let res = xhr.responseJSON;
-                            Swal.fire({
-                                title: res?.title ?? 'Error',
-                                text: res?.message ?? error,
-                                icon: 'error'
-                            });
                         }
                     });
                 }
@@ -478,7 +456,7 @@
                     { data: 'keterangan', name: 'keterangan' },
                     { data: 'status', name: 'status' },
                     { data: 'nama_atasan', name: 'nama_atasan' },
-                    { data: 'nama_hrd', name: 'nama_hrd' },
+                    { data: 'nama_hrd', name: 'nama_hrd', title: 'SDM' },
                     { data: 'action', name: 'action', orderable: false, searchable: false },
                 ],
             });
@@ -510,7 +488,6 @@
                         $("#tanggal1").val(response.tanggalmulai);
                         $("#tanggal2").val(response.tanggalselesai);
                         $("#alasan").val(response.keterangan);
-                        $("#id_atasan").val(response.id_atasan).trigger('change');
                         $("#id_hrd").val(response.id_hrd).trigger('change');
                         
                         $("#bukti_kegiatan").val('');
@@ -546,7 +523,6 @@
                 $("#tanggal1").val('');
                 $("#tanggal2").val('');
                 $("#alasan").val('');
-                $("#id_atasan").val('').trigger('change');
                 $("#id_hrd").val('').trigger('change');
             });
 
@@ -669,16 +645,7 @@
                     {data: 'keterangan', name: 'keterangan'},
                     {data: 'status', name: 'status'},
                     {data: 'action', name: 'action', orderable: false, searchable: false}
-                ],
-                drawCallback: function(settings) {
-                    var api = this.api();
-                    var count = api.rows().count();
-                    if(count > 0) {
-                        $('#badge-approval').text(count).show();
-                    } else {
-                        $('#badge-approval').hide();
-                    }
-                }
+                ]
             });
 
             // Action Approve
@@ -731,6 +698,54 @@
                     onSuccess: function(res) {
                         oTableApproval.ajax.reload(null, false);
                         oTable.ajax.reload(null, false);
+
+                        // 1. Decrement Sidebar Badge
+                        let sidebarBadge = $('#sidebar-badge-users-lembur-index');
+                        if(sidebarBadge.length > 0) {
+                            let val = parseInt(sidebarBadge.text()) || 0;
+                            if (val > 0) {
+                                sidebarBadge.text(val - 1);
+                                if (val - 1 === 0) sidebarBadge.hide();
+                            }
+                        }
+
+                        // 2. Decrement Navbar Badge & Dropdown Item
+                        let navbarBadge = $('#badge-notif-lembur-atasan');
+                        if(navbarBadge.length > 0) {
+                            let val = parseInt(navbarBadge.text()) || 0;
+                            if (val > 0) {
+                                navbarBadge.text(val - 1);
+                                if (val - 1 === 0) {
+                                    $('#lembur-atasan-divider').hide();
+                                    $('#lembur-atasan-item').hide();
+                                }
+                            }
+                        }
+
+                        // 3. Decrement Global Navbar Badge
+                        let globalBadge = $('#global-notif-badge');
+                        if(globalBadge.length > 0) {
+                            let val = parseInt(globalBadge.text()) || 0;
+                            if (val > 0) {
+                                globalBadge.text(val - 1);
+                                $('#global-notif-text').text(val - 1);
+                                if (val - 1 === 0) {
+                                    globalBadge.hide();
+                                    $('#global-notif-header').hide();
+                                    $('#global-notif-empty').show();
+                                }
+                            }
+                        }
+
+                        // 4. Decrement Tab Approval Badge
+                        let tabBadge = $('#badge-approval');
+                        if(tabBadge.length > 0) {
+                            let val = parseInt(tabBadge.text()) || 0;
+                            if (val > 0) {
+                                tabBadge.text(val - 1);
+                                if (val - 1 === 0) tabBadge.remove(); // Remove instead of hide since it might be appended dynamically
+                            }
+                        }
                     }
                 });
             }

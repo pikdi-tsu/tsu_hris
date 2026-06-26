@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Session;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Storage;
 use Yajra\Datatables\Datatables;
 use Carbon\Carbon;
@@ -16,7 +15,9 @@ use App\Services\TsuErrorHandlerService;
 use App\Models\MasterLembur;
 use App\Models\LemburKaryawan;
 use App\Models\DataDosenTendik;
-use Modules\Users\Http\Controllers\UsersController;
+use App\Models\MasterUnit;
+use App\Models\KaryawanJabatanStruktural;
+use App\Models\User;
 use App\Traits\ApiResponseTrait;
 use App\Http\Controllers\MiddlewareController;
 
@@ -48,16 +49,34 @@ class LemburController extends MiddlewareController
         
         $mlembur = MasterLembur::where('is_active', '1')->get();
 
-        // Get list of atasan and HRD for dropdown selection (excluding self)
-        // Usually, this would be filtered by role, but here we just get all active DosenTendik
-        $listKaryawan = DataDosenTendik::whereNotNull('nama')
-                        ->has('jabatanStrukturals')
+        // Get list of SDM for dropdown selection
+        $listSdm = DataDosenTendik::whereNotNull('nama')
+                        ->where('tipe_karyawan', 'Tendik')
+                        ->where(function ($q) {
+                            $q->where('posisi', 'like', '%SDM%')
+                              ->orWhere('posisi', 'like', '%Sumber Daya Manusia%');
+                        })
                         ->orderBy('nama', 'asc')
                         ->get(['id', 'nama', 'nik']);
 
         $isAtasan = false;
+        $namaAtasan = 'Belum/Tidak Ada Atasan (Silakan hubungi SDM)';
         if ($profile) {
-            $isAtasan = LemburKaryawan::where('id_atasan', $profile->id)->exists();
+            $isKepala = KaryawanJabatanStruktural::where('data_dosen_tendik_id', $profile->id)
+                ->whereIn('is_active', [1, '1', 'Y', 'y'])->exists();
+            $isAtasan = $isKepala || LemburKaryawan::where('id_atasan', $profile->id)->exists();
+            if ($profile->unit_id) {
+                $unit = MasterUnit::find($profile->unit_id);
+                if ($unit) {
+                    $id_atasan = $this->findAtasanId($unit, $profile->id);
+                    if ($id_atasan) {
+                        $atasan = DataDosenTendik::find($id_atasan);
+                        if ($atasan) {
+                            $namaAtasan = $atasan->nama;
+                        }
+                    }
+                }
+            }
         }
 
         $data = [
@@ -65,8 +84,9 @@ class LemburController extends MiddlewareController
             'menu'    => 'dashboard',
             'mlembur' => $mlembur,
             'profile' => $profile,
-            'karyawans' => $listKaryawan,
-            'isAtasan'  => $isAtasan
+            'karyawans' => $listSdm,
+            'isAtasan'  => $isAtasan,
+            'namaAtasan' => $namaAtasan
         ];
 
         return view('users::lembur.index', $data);
@@ -82,7 +102,6 @@ class LemburController extends MiddlewareController
                 'tanggal1' => 'required|date',
                 'tanggal2' => 'required|date|after_or_equal:tanggal1',
                 'alasan' => 'required',
-                'id_atasan' => 'required',
                 'id_hrd' => 'required',
                 'bukti_kegiatan' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
             ], [
@@ -91,8 +110,7 @@ class LemburController extends MiddlewareController
                 'tanggal2.required' => 'Tanggal & Jam Selesai Tidak Boleh Kosong',
                 'tanggal2.after_or_equal' => 'Waktu Selesai harus setelah Waktu Mulai',
                 'alasan.required' => 'Alasan/Keterangan Tidak Boleh Kosong',
-                'id_atasan.required' => 'Atasan Tidak Boleh Kosong',
-                'id_hrd.required' => 'HRD Tidak Boleh Kosong',
+                'id_hrd.required' => 'Pilihan SDM Tidak Boleh Kosong',
                 'bukti_kegiatan.required' => 'Bukti Kegiatan Tidak Boleh Kosong',
                 'bukti_kegiatan.mimes' => 'Format file harus JPG, PNG, atau PDF',
                 'bukti_kegiatan.max' => 'Ukuran file maksimal 2MB',
@@ -107,13 +125,27 @@ class LemburController extends MiddlewareController
                  return $this->sendError('Profil karyawan tidak ditemukan.');
             }
 
+            if (!$profile->unit_id) {
+                return $this->sendError('Anda belum ditugaskan ke Unit manapun. Silakan hubungi HRD.');
+            }
+
+            $unit = MasterUnit::find($profile->unit_id);
+            if (!$unit) {
+                return $this->sendError('Unit Anda tidak ditemukan di sistem.');
+            }
+
+            $id_atasan = $this->findAtasanId($unit, $profile->id);
+            if (!$id_atasan) {
+                return $this->sendError('Unit Anda (atau Unit Induk) belum memiliki Kepala Unit. Silakan hubungi SDM.');
+            }
+
             $dataLembur = [
                 'id_mlembur'      => $req->id_mlembur,
                 'id_user'         => $profile->id,
                 'tanggalmulai'    => $req->tanggal1,
                 'tanggalselesai'  => $req->tanggal2,
                 'keterangan'      => $req->alasan,
-                'id_atasan'       => $req->id_atasan,
+                'id_atasan'       => $id_atasan,
                 'id_hrd'          => $req->id_hrd,
                 'updated_by'      => $profile->nik ?? Auth::id(),
                 'statusatasan'    => 'waiting',
@@ -133,9 +165,22 @@ class LemburController extends MiddlewareController
                 $dataLembur['bukti_kegiatan'] = $filename;
             }
                 
-            DB::transaction(function () use ($dataLembur) {
-                LemburKaryawan::create($dataLembur);
+            DB::transaction(function () use ($dataLembur, &$lemburCreated) {
+                $lemburCreated = LemburKaryawan::create($dataLembur);
             });
+
+            if (isset($lemburCreated) && $id_atasan) {
+                $atasanProfile = DataDosenTendik::find($id_atasan);
+                if ($atasanProfile && $atasanProfile->user_id) {
+                    $atasanUser = User::find($atasanProfile->user_id);
+                    if ($atasanUser) {
+                        $atasanUser->notify(new \App\Notifications\LemburDiajukanNotification(
+                            $lemburCreated,
+                            'Pengajuan lembur baru dari ' . ($profile->nama ?? 'Bawahan') . ' menunggu persetujuan Anda.'
+                        ));
+                    }
+                }
+            }
 
             return $this->sendSuccess('Data pengajuan lembur berhasil disimpan.');
 
@@ -266,7 +311,7 @@ class LemburController extends MiddlewareController
             ->addColumn('status', function ($row) {
                 if ($row->statusatasan == 'draft') return '<span class="badge badge-secondary">Draft</span>';
                 if ($row->statusatasan == 'waiting') return '<span class="badge badge-warning">Menunggu Atasan</span>';
-                if ($row->statusatasan == 'approved' && $row->statushrd == 'waiting') return '<span class="badge badge-info">Menunggu HRD</span>';
+                if ($row->statusatasan == 'approved' && $row->statushrd == 'waiting') return '<span class="badge badge-info">Menunggu SDM</span>';
                 if ($row->statusatasan == 'approved' && $row->statushrd == 'approved') return '<span class="badge badge-success">Disetujui</span>';
                 if ($row->statusatasan == 'rejected' || $row->statushrd == 'rejected') return '<span class="badge badge-danger">Ditolak</span>';
                 return '-';
@@ -505,6 +550,55 @@ class LemburController extends MiddlewareController
             })
             ->rawColumns(['status', 'action'])
             ->make(true);
+    }
+
+    public function detailPekerjaan(Request $request, $id)
+    {
+        $this->guard('view', 'users:lembur');
+        
+        $karyawan = LemburKaryawan::find($id);
+        
+        if ($karyawan) {
+            return response()->json([
+                'success' => true,
+                'data' => $karyawan->keterangan
+            ]);
+        }
+        
+        return response()->json([
+            'success' => false,
+            'message' => 'Data tidak ditemukan'
+        ], 404);
+    }
+
+    private function findAtasanId($unit, $currentUserId)
+    {
+        if (!$unit) return null;
+
+        $kepalaJabatanId = $unit->kepala_jabatan_id;
+        if ($kepalaJabatanId) {
+            $kepalas = KaryawanJabatanStruktural::where('jabatan_struktural_id', $kepalaJabatanId)
+                ->whereIn('is_active', [1, '1', 'Y', 'y'])
+                ->get();
+                
+            $kepala = null;
+            if ($kepalas->count() == 1) {
+                $kepala = $kepalas->first();
+            } elseif ($kepalas->count() > 1) {
+                $kepala = $kepalas->where('unit_id', $unit->id)->first() ?? $kepalas->first();
+            }
+                
+            if ($kepala && $kepala->data_dosen_tendik_id !== $currentUserId) {
+                return $kepala->data_dosen_tendik_id;
+            }
+        }
+
+        if ($unit->parent_unit_id) {
+            $parentUnit = \App\Models\MasterUnit::find($unit->parent_unit_id);
+            return $this->findAtasanId($parentUnit, $currentUserId);
+        }
+
+        return null;
     }
 
     public function approve(Request $request, $id)

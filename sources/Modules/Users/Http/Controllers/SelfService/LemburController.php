@@ -311,7 +311,7 @@ class LemburController extends MiddlewareController
             ->addColumn('status', function ($row) {
                 if ($row->statusatasan == 'draft') return '<span class="badge badge-secondary">Draft</span>';
                 if ($row->statusatasan == 'waiting') return '<span class="badge badge-warning">Menunggu Atasan</span>';
-                if ($row->statusatasan == 'approved' && $row->statushrd == 'waiting') return '<span class="badge badge-info">Menunggu HRD</span>';
+                if ($row->statusatasan == 'approved' && $row->statushrd == 'waiting') return '<span class="badge badge-info">Menunggu SDM</span>';
                 if ($row->statusatasan == 'approved' && $row->statushrd == 'approved') return '<span class="badge badge-success">Disetujui</span>';
                 if ($row->statusatasan == 'rejected' || $row->statushrd == 'rejected') return '<span class="badge badge-danger">Ditolak</span>';
                 return '-';

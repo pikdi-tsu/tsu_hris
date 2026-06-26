@@ -134,6 +134,9 @@
                         globalBadge.text(currentGlobal + 1);
                         $('#global-notif-text').text(currentGlobal + 1);
                         globalBadge.show();
+                        
+                        $('#global-notif-empty').hide();
+                        $('#global-notif-header').show();
 
                         // SweetAlert toast
                         const Toast = Swal.mixin({
@@ -142,12 +145,24 @@
                             showConfirmButton: false,
                             timer: 5000,
                             timerProgressBar: true,
+                            didOpen: (toast) => {
+                                toast.addEventListener('mouseenter', Swal.stopTimer)
+                                toast.addEventListener('mouseleave', Swal.resumeTimer)
+                            }
                         });
 
                         Toast.fire({
                             icon: 'info',
                             title: notification.message
                         });
+                        
+                        // Update sidebar badge
+                        let sidebarBadge = $('#sidebar-badge-users-lembur-index');
+                        if (sidebarBadge.length) {
+                            let currentSidebar = parseInt(sidebarBadge.text()) || 0;
+                            sidebarBadge.text(currentSidebar + 1);
+                            sidebarBadge.show();
+                        }
                         
                         // If we are on the lembur index page, reload the datatables
                         if ($.fn.DataTable.isDataTable('#dataTablesApproval')) {

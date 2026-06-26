@@ -698,6 +698,54 @@
                     onSuccess: function(res) {
                         oTableApproval.ajax.reload(null, false);
                         oTable.ajax.reload(null, false);
+
+                        // 1. Decrement Sidebar Badge
+                        let sidebarBadge = $('#sidebar-badge-users-lembur-index');
+                        if(sidebarBadge.length > 0) {
+                            let val = parseInt(sidebarBadge.text()) || 0;
+                            if (val > 0) {
+                                sidebarBadge.text(val - 1);
+                                if (val - 1 === 0) sidebarBadge.hide();
+                            }
+                        }
+
+                        // 2. Decrement Navbar Badge & Dropdown Item
+                        let navbarBadge = $('#badge-notif-lembur-atasan');
+                        if(navbarBadge.length > 0) {
+                            let val = parseInt(navbarBadge.text()) || 0;
+                            if (val > 0) {
+                                navbarBadge.text(val - 1);
+                                if (val - 1 === 0) {
+                                    $('#lembur-atasan-divider').hide();
+                                    $('#lembur-atasan-item').hide();
+                                }
+                            }
+                        }
+
+                        // 3. Decrement Global Navbar Badge
+                        let globalBadge = $('#global-notif-badge');
+                        if(globalBadge.length > 0) {
+                            let val = parseInt(globalBadge.text()) || 0;
+                            if (val > 0) {
+                                globalBadge.text(val - 1);
+                                $('#global-notif-text').text(val - 1);
+                                if (val - 1 === 0) {
+                                    globalBadge.hide();
+                                    $('#global-notif-header').hide();
+                                    $('#global-notif-empty').show();
+                                }
+                            }
+                        }
+
+                        // 4. Decrement Tab Approval Badge
+                        let tabBadge = $('#badge-approval');
+                        if(tabBadge.length > 0) {
+                            let val = parseInt(tabBadge.text()) || 0;
+                            if (val > 0) {
+                                tabBadge.text(val - 1);
+                                if (val - 1 === 0) tabBadge.remove(); // Remove instead of hide since it might be appended dynamically
+                            }
+                        }
                     }
                 });
             }

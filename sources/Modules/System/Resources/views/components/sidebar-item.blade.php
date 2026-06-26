@@ -62,11 +62,9 @@
        style="padding-left: {{ $paddingLeft }}rem !important; display: flex; align-items: center;">
         <i class="nav-indicator {{ $indicator }} mr-2"></i>
         <i class="nav-icon {{ $mainIcon }} mr-2"></i>
-        <p class="mb-0" style="flex: 1;">
+        <p class="mb-0" style="flex: 1;" id="sidebar-menu-{{ str_replace('.', '-', $menu->route ?? 'folder') }}">
             {{ $menu->name }}
-            @if($badgeCount > 0)
-                <span class="badge badge-danger right">{{ $badgeCount }}</span>
-            @endif
+            <span class="badge badge-danger right" id="sidebar-badge-{{ str_replace('.', '-', $menu->route ?? 'folder') }}" {!! $badgeCount > 0 ? '' : 'style="display:none;"' !!}>{{ $badgeCount }}</span>
         </p>
     </a>
 

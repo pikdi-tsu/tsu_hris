@@ -129,7 +129,7 @@ class LemburController extends MiddlewareController
                 return $this->sendError('Anda belum ditugaskan ke Unit manapun. Silakan hubungi HRD.');
             }
 
-            $unit = \App\Models\MasterUnit::find($profile->unit_id);
+            $unit = MasterUnit::find($profile->unit_id);
             if (!$unit) {
                 return $this->sendError('Unit Anda tidak ditemukan di sistem.');
             }

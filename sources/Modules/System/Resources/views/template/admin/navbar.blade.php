@@ -22,110 +22,78 @@
             $all = $notifcutiatasan + $notifizinatasan + $notifcutihrd + $notifizinhrd + $notiflemburatasan + $notiflemburhrd;
         @endphp
         <!-- Notifications Dropdown Menu -->
-        @if ($all > 0)
-            <li class="nav-item dropdown">
-                <a class="nav-link" data-toggle="dropdown" href="#">
-                    <i class="far fa-bell"></i>
-                    {{-- Badge Jumlah Notif --}}
-                    <span class="badge badge-danger navbar-badge" id="global-notif-badge" {!! $all > 0 ? '' : 'style="display:none;"' !!}>{{ $all }}</span>
+        <li class="nav-item dropdown">
+            <a class="nav-link" data-toggle="dropdown" href="#">
+                <i class="far fa-bell"></i>
+                <span class="badge badge-danger navbar-badge" id="global-notif-badge" {!! $all > 0 ? '' : 'style="display:none;"' !!}>{{ $all }}</span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
+                
+                <span class="dropdown-item dropdown-header font-weight-bold bg-light" id="global-notif-header" {!! $all > 0 ? '' : 'style="display:none;"' !!}>
+                    <span id="global-notif-text">{{ $all }}</span> Pengajuan Menunggu Persetujuan
+                </span>
+
+                <a href="#" class="dropdown-item text-center text-muted py-3" id="global-notif-empty" {!! $all == 0 ? '' : 'style="display:none;"' !!}>
+                    <i class="fas fa-check-circle mb-2" style="font-size: 1.5rem;"></i><br>
+                    Tidak ada notifikasi baru
                 </a>
-                <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
-                    <span class="dropdown-item dropdown-header font-weight-bold bg-light"><span id="global-notif-text">{{ $all }}</span> Pengajuan Menunggu Persetujuan</span>
-                    
-                    @if ($notifcutiatasan > 0)
-                        <div class="dropdown-divider"></div>
-                        <a href="{{ route('users.indexapprovalcuti') }}" class="dropdown-item">
-                            <i class="fas fa-umbrella-beach mr-2 text-warning"></i>
-                            <span class="badge badge-warning float-right">{{ $notifcutiatasan }}</span>
-                            Persetujuan Cuti
-                        </a>
-                    @endif
+                
+                @if ($notifcutiatasan > 0)
+                    <div class="dropdown-divider"></div>
+                    <a href="{{ route('users.indexapprovalcuti') }}" class="dropdown-item">
+                        <i class="fas fa-umbrella-beach mr-2 text-warning"></i>
+                        <span class="badge badge-warning float-right">{{ $notifcutiatasan }}</span>
+                        Persetujuan Cuti
+                    </a>
+                @endif
 
-                    @if ($notifcutihrd > 0)
-                        <div class="dropdown-divider"></div>
-                        <a href="{{ route('users.indexapprovalcuti') }}" class="dropdown-item">
-                            <i class="fas fa-umbrella-beach mr-2 text-warning"></i>
-                            <span class="badge badge-warning float-right">{{ $notifcutihrd }}</span>
-                            Persetujuan Cuti (SDM)
-                        </a>
-                    @endif
+                @if ($notifcutihrd > 0)
+                    <div class="dropdown-divider"></div>
+                    <a href="{{ route('users.indexapprovalcuti') }}" class="dropdown-item">
+                        <i class="fas fa-umbrella-beach mr-2 text-warning"></i>
+                        <span class="badge badge-warning float-right">{{ $notifcutihrd }}</span>
+                        Persetujuan Cuti (SDM)
+                    </a>
+                @endif
 
-                    @if ($notifizinatasan > 0)
-                        <div class="dropdown-divider"></div>
-                        <a href="{{ route('users.indexapprovalizin') }}" class="dropdown-item">
-                            <i class="fas fa-file-medical-alt mr-2 text-info"></i>
-                            <span class="badge badge-info float-right">{{ $notifizinatasan }}</span>
-                            Persetujuan Izin
-                        </a>
-                    @endif
+                @if ($notifizinatasan > 0)
+                    <div class="dropdown-divider"></div>
+                    <a href="{{ route('users.indexapprovalizin') }}" class="dropdown-item">
+                        <i class="fas fa-file-medical-alt mr-2 text-info"></i>
+                        <span class="badge badge-info float-right">{{ $notifizinatasan }}</span>
+                        Persetujuan Izin
+                    </a>
+                @endif
 
-                    @if ($notifizinhrd > 0)
-                        <div class="dropdown-divider"></div>
-                        <a href="{{ route('users.indexapprovalizin') }}" class="dropdown-item">
-                            <i class="fas fa-file-medical-alt mr-2 text-info"></i>
-                            <span class="badge badge-info float-right">{{ $notifizinhrd }}</span>
-                            Persetujuan Izin (SDM)
-                        </a>
-                    @endif
+                @if ($notifizinhrd > 0)
+                    <div class="dropdown-divider"></div>
+                    <a href="{{ route('users.indexapprovalizin') }}" class="dropdown-item">
+                        <i class="fas fa-file-medical-alt mr-2 text-info"></i>
+                        <span class="badge badge-info float-right">{{ $notifizinhrd }}</span>
+                        Persetujuan Izin (SDM)
+                    </a>
+                @endif
 
-                    <div class="dropdown-divider" id="lembur-atasan-divider" {!! $notiflemburatasan > 0 ? '' : 'style="display:none;"' !!}></div>
-                    <a href="{{ route('users.lembur.index') }}#content-persetujuan-bawahan" class="dropdown-item" id="lembur-atasan-item" {!! $notiflemburatasan > 0 ? '' : 'style="display:none;"' !!}>
+                <div class="dropdown-divider" id="lembur-atasan-divider" {!! $notiflemburatasan > 0 ? '' : 'style="display:none;"' !!}></div>
+                <a href="{{ route('users.lembur.index') }}#content-persetujuan-bawahan" class="dropdown-item" id="lembur-atasan-item" {!! $notiflemburatasan > 0 ? '' : 'style="display:none;"' !!}>
+                    <i class="fas fa-business-time mr-2 text-primary"></i>
+                    <span class="badge badge-primary float-right" id="badge-notif-lembur-atasan">{{ $notiflemburatasan }}</span>
+                    Persetujuan Lembur
+                </a>
+
+                @if ($notiflemburhrd > 0)
+                    <div class="dropdown-divider"></div>
+                    <a href="{{ route('users.lembur.index') }}#content-persetujuan-bawahan" class="dropdown-item">
                         <i class="fas fa-business-time mr-2 text-primary"></i>
-                        <span class="badge badge-primary float-right" id="badge-notif-lembur-atasan">{{ $notiflemburatasan }}</span>
-                        Persetujuan Lembur
+                        <span class="badge badge-primary float-right">{{ $notiflemburhrd }}</span>
+                        Persetujuan Lembur (SDM)
                     </a>
+                @endif
 
-                    @if ($notiflemburhrd > 0)
-                        <div class="dropdown-divider"></div>
-                        <a href="{{ route('users.lembur.index') }}#content-persetujuan-bawahan" class="dropdown-item">
-                            <i class="fas fa-business-time mr-2 text-primary"></i>
-                            <span class="badge badge-primary float-right">{{ $notiflemburhrd }}</span>
-                            Persetujuan Lembur (SDM)
-                        </a>
-                    @endif
-                    {{-- KONDISI 2: CONTOH KALAU ADA ISI (Disimpan dulu sbg komentar buat contekan) --}}
-                    {{--
-                <a href="#" class="dropdown-item">
-                    <i class="fas fa-file-signature mr-2"></i> KRS Disetujui
-                    <span class="float-right text-muted text-sm">3 mins</span>
-                </a>
                 <div class="dropdown-divider"></div>
-                --}}
-
-                    {{-- <div class="dropdown-divider"></div>
-                    <a href="#" class="dropdown-item dropdown-footer text-center">Lihat Semua Notifikasi</a> --}}
-                </div>
-            </li>
-        @else
-            <li class="nav-item dropdown">
-                <a class="nav-link" data-toggle="dropdown" href="#">
-                    <i class="far fa-bell"></i>
-                    {{-- Badge Jumlah Notif (Nanti dinamis, sekarang hide dulu atau kasih 0) --}}
-                    {{-- <span class="badge badge-warning navbar-badge"></span> --}}
-                </a>
-                <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
-                    <span class="dropdown-item dropdown-header">Notifikasi Sistem</span>
-                    <div class="dropdown-divider"></div>
-                    {{-- KONDISI 1: KALAU KOSONG (Default Sekarang) --}}
-                    <a href="#" class="dropdown-item text-center text-muted py-3">
-                        <i class="fas fa-check-circle mb-2" style="font-size: 1.5rem;"></i><br>
-                        Tidak ada notifikasi baru
-                    </a>
-
-                    {{-- KONDISI 2: CONTOH KALAU ADA ISI (Disimpan dulu sbg komentar buat contekan) --}}
-                    {{--
-                    <a href="#" class="dropdown-item">
-                        <i class="fas fa-file-signature mr-2"></i> KRS Disetujui
-                        <span class="float-right text-muted text-sm">3 mins</span>
-                    </a>
-                    <div class="dropdown-divider"></div>
-                    --}}
-
-                    <div class="dropdown-divider"></div>
-                    <a href="#" class="dropdown-item dropdown-footer text-center">Lihat Semua Notifikasi</a>
-                </div>
-            </li>
-        @endif
+                <a href="#" class="dropdown-item dropdown-footer text-center">Lihat Semua Notifikasi</a>
+            </div>
+        </li>
 
         <li class="dropdown user user-menu" style="margin-top: 8px;">
             <a href="#" class="dropdown-toggle" data-toggle="dropdown">

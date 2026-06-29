@@ -99,6 +99,7 @@ class DataDosenTendik extends Authenticatable
 
                     ['name' => 'keilmuan_inti', 'label' => 'Keilmuan Inti', 'type' => 'text', 'col_size' => 6],
                     ['name' => 'status_karyawan_id', 'label' => 'Status Karyawan', 'type' => 'select', 'options' => \App\Models\MasterStatusKaryawan::pluck('nama_status', 'id')->toArray(), 'col_size' => 6],
+                    ['name' => 'pin_absensi', 'label' => 'PIN Absensi', 'type' => 'text', 'col_size' => 6],
                 ]
             ],
 

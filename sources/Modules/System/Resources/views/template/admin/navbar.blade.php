@@ -38,41 +38,33 @@
                     Tidak ada notifikasi baru
                 </a>
                 
-                @if ($notifcutiatasan > 0)
-                    <div class="dropdown-divider"></div>
-                    <a href="{{ route('users.indexapprovalcuti') }}" class="dropdown-item">
-                        <i class="fas fa-umbrella-beach mr-2 text-warning"></i>
-                        <span class="badge badge-warning float-right">{{ $notifcutiatasan }}</span>
-                        Persetujuan Cuti
-                    </a>
-                @endif
+                <div class="dropdown-divider" id="cuti-atasan-divider" {!! $notifcutiatasan > 0 ? '' : 'style="display:none;"' !!}></div>
+                <a href="{{ route('users.indexapprovalcuti') }}" class="dropdown-item" id="cuti-atasan-item" {!! $notifcutiatasan > 0 ? '' : 'style="display:none;"' !!}>
+                    <i class="fas fa-umbrella-beach mr-2 text-warning"></i>
+                    <span class="badge badge-warning float-right" id="badge-notif-cuti-atasan">{{ $notifcutiatasan }}</span>
+                    Persetujuan Cuti
+                </a>
 
-                @if ($notifcutihrd > 0)
-                    <div class="dropdown-divider"></div>
-                    <a href="{{ route('users.indexapprovalcuti') }}" class="dropdown-item">
-                        <i class="fas fa-umbrella-beach mr-2 text-warning"></i>
-                        <span class="badge badge-warning float-right">{{ $notifcutihrd }}</span>
-                        Persetujuan Cuti (SDM)
-                    </a>
-                @endif
+                <div class="dropdown-divider" id="cuti-hrd-divider" {!! $notifcutihrd > 0 ? '' : 'style="display:none;"' !!}></div>
+                <a href="{{ route('users.indexapprovalcuti') }}" class="dropdown-item" id="cuti-hrd-item" {!! $notifcutihrd > 0 ? '' : 'style="display:none;"' !!}>
+                    <i class="fas fa-umbrella-beach mr-2 text-warning"></i>
+                    <span class="badge badge-warning float-right" id="badge-notif-cuti-hrd">{{ $notifcutihrd }}</span>
+                    Persetujuan Cuti (SDM)
+                </a>
 
-                @if ($notifizinatasan > 0)
-                    <div class="dropdown-divider"></div>
-                    <a href="{{ route('users.indexapprovalizin') }}" class="dropdown-item">
-                        <i class="fas fa-file-medical-alt mr-2 text-info"></i>
-                        <span class="badge badge-info float-right">{{ $notifizinatasan }}</span>
-                        Persetujuan Izin
-                    </a>
-                @endif
+                <div class="dropdown-divider" id="izin-atasan-divider" {!! $notifizinatasan > 0 ? '' : 'style="display:none;"' !!}></div>
+                <a href="{{ route('users.indexapprovalizin') }}" class="dropdown-item" id="izin-atasan-item" {!! $notifizinatasan > 0 ? '' : 'style="display:none;"' !!}>
+                    <i class="fas fa-file-medical-alt mr-2 text-info"></i>
+                    <span class="badge badge-info float-right" id="badge-notif-izin-atasan">{{ $notifizinatasan }}</span>
+                    Persetujuan Izin
+                </a>
 
-                @if ($notifizinhrd > 0)
-                    <div class="dropdown-divider"></div>
-                    <a href="{{ route('users.indexapprovalizin') }}" class="dropdown-item">
-                        <i class="fas fa-file-medical-alt mr-2 text-info"></i>
-                        <span class="badge badge-info float-right">{{ $notifizinhrd }}</span>
-                        Persetujuan Izin (SDM)
-                    </a>
-                @endif
+                <div class="dropdown-divider" id="izin-hrd-divider" {!! $notifizinhrd > 0 ? '' : 'style="display:none;"' !!}></div>
+                <a href="{{ route('users.indexapprovalizin') }}" class="dropdown-item" id="izin-hrd-item" {!! $notifizinhrd > 0 ? '' : 'style="display:none;"' !!}>
+                    <i class="fas fa-file-medical-alt mr-2 text-info"></i>
+                    <span class="badge badge-info float-right" id="badge-notif-izin-hrd">{{ $notifizinhrd }}</span>
+                    Persetujuan Izin (SDM)
+                </a>
 
                 <div class="dropdown-divider" id="lembur-atasan-divider" {!! $notiflemburatasan > 0 ? '' : 'style="display:none;"' !!}></div>
                 <a href="{{ route('users.lembur.index') }}#content-persetujuan-bawahan" class="dropdown-item" id="lembur-atasan-item" {!! $notiflemburatasan > 0 ? '' : 'style="display:none;"' !!}>
@@ -81,14 +73,12 @@
                     Persetujuan Lembur
                 </a>
 
-                @if ($notiflemburhrd > 0)
-                    <div class="dropdown-divider"></div>
-                    <a href="{{ route('users.lembur.index') }}#content-persetujuan-bawahan" class="dropdown-item">
-                        <i class="fas fa-business-time mr-2 text-primary"></i>
-                        <span class="badge badge-primary float-right">{{ $notiflemburhrd }}</span>
-                        Persetujuan Lembur (SDM)
-                    </a>
-                @endif
+                <div class="dropdown-divider" id="lembur-hrd-divider" {!! $notiflemburhrd > 0 ? '' : 'style="display:none;"' !!}></div>
+                <a href="{{ route('users.lembur.index') }}#content-persetujuan-bawahan" class="dropdown-item" id="lembur-hrd-item" {!! $notiflemburhrd > 0 ? '' : 'style="display:none;"' !!}>
+                    <i class="fas fa-business-time mr-2 text-primary"></i>
+                    <span class="badge badge-primary float-right" id="badge-notif-lembur-hrd">{{ $notiflemburhrd }}</span>
+                    Persetujuan Lembur (SDM)
+                </a>
 
                 <div class="dropdown-divider"></div>
                 <a href="#" class="dropdown-item dropdown-footer text-center">Lihat Semua Notifikasi</a>

@@ -709,15 +709,28 @@
                             }
                         }
 
-                        // 2. Decrement Navbar Badge & Dropdown Item
-                        let navbarBadge = $('#badge-notif-lembur-atasan');
-                        if(navbarBadge.length > 0) {
-                            let val = parseInt(navbarBadge.text()) || 0;
+                        // 2. Decrement Navbar Badge & Dropdown Item (Atasan)
+                        let navbarBadgeAtasan = $('#badge-notif-lembur-atasan');
+                        if(navbarBadgeAtasan.length > 0) {
+                            let val = parseInt(navbarBadgeAtasan.text()) || 0;
                             if (val > 0) {
-                                navbarBadge.text(val - 1);
+                                navbarBadgeAtasan.text(val - 1);
                                 if (val - 1 === 0) {
                                     $('#lembur-atasan-divider').hide();
                                     $('#lembur-atasan-item').hide();
+                                }
+                            }
+                        }
+
+                        // Decrement Navbar Badge & Dropdown Item (HRD)
+                        let navbarBadgeHrd = $('#badge-notif-lembur-hrd');
+                        if(navbarBadgeHrd.length > 0) {
+                            let val = parseInt(navbarBadgeHrd.text()) || 0;
+                            if (val > 0) {
+                                navbarBadgeHrd.text(val - 1);
+                                if (val - 1 === 0) {
+                                    $('#lembur-hrd-divider').hide();
+                                    $('#lembur-hrd-item').hide();
                                 }
                             }
                         }

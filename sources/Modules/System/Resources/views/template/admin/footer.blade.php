@@ -123,13 +123,17 @@
                     let globalBadge = $('#global-notif-badge');
                     let currentGlobal = parseInt(globalBadge.text()) || 0;
                     
-                    if (notification.jenis === 'lembur') {
-                        let lemburBadge = $('#badge-notif-lembur-atasan');
-                        let currentLembur = parseInt(lemburBadge.text()) || 0;
+                    if (notification.jenis === 'lembur' || notification.jenis === 'cuti' || notification.jenis === 'izin') {
+                        let type = notification.jenis;
+                        let role = notification.role || 'atasan';
                         
-                        lemburBadge.text(currentLembur + 1);
-                        $('#lembur-atasan-divider').show();
-                        $('#lembur-atasan-item').show();
+                        // Using dynamic ID construction based on the type and role
+                        let typeBadge = $('#badge-notif-' + type + '-' + role);
+                        let currentType = parseInt(typeBadge.text()) || 0;
+                        
+                        typeBadge.text(currentType + 1);
+                        $('#' + type + '-' + role + '-divider').show();
+                        $('#' + type + '-' + role + '-item').show();
                         
                         globalBadge.text(currentGlobal + 1);
                         $('#global-notif-text').text(currentGlobal + 1);
@@ -156,25 +160,29 @@
                             title: notification.message
                         });
                         
-                        // Update sidebar badge
-                        let sidebarBadge = $('#sidebar-badge-users-lembur-index');
+                        // Update sidebar badge dynamically
+                        let sidebarId = 'sidebar-badge-users-' + type + '-index';
+                        if (type === 'cuti') sidebarId = 'sidebar-badge-users-indexapprovalcuti';
+                        if (type === 'izin') sidebarId = 'sidebar-badge-users-indexapprovalizin';
+                        
+                        let sidebarBadge = $('#' + sidebarId);
                         if (sidebarBadge.length) {
                             let currentSidebar = parseInt(sidebarBadge.text()) || 0;
                             sidebarBadge.text(currentSidebar + 1);
                             sidebarBadge.show();
                         }
                         
-                        // If we are on the lembur index page, reload the datatables
+                        // If we are on the specific index page, reload the datatables
                         if ($.fn.DataTable.isDataTable('#dataTablesApproval')) {
                             $('#dataTablesApproval').DataTable().ajax.reload(null, false);
                             let tab = $('#tab-persetujuan-bawahan');
                             if (tab.length) {
                                 let tabBadge = tab.find('.badge');
                                 if (tabBadge.length) {
-                                    tabBadge.text(currentLembur + 1);
+                                    tabBadge.text(currentType + 1);
                                     tabBadge.show();
                                 } else {
-                                    tab.append(' <span class="badge badge-danger" id="badge-approval">' + (currentLembur + 1) + '</span>');
+                                    tab.append(' <span class="badge badge-danger" id="badge-approval">' + (currentType + 1) + '</span>');
                                 }
                             }
                         }

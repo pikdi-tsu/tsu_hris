@@ -16,6 +16,7 @@ use App\Models\SaldoCutiKaryawan;
 use App\Models\DataDosenTendik;
 use App\Traits\ApiResponseTrait;
 use App\Services\TsuErrorHandlerService;
+use App\Models\User;
 
 class ApprovalCutiController extends Controller
 {
@@ -191,6 +192,23 @@ class ApprovalCutiController extends Controller
                         'updated_at'  => date("Y-m-d H:i:s"),
                         'updated_by'  => $profile->nik ?? Auth::id()
                     ]);
+
+                    // Real-Time Notification to HRD after Atasan approves
+                    if ($check->id_hrd) {
+                        $hrdProfile = DataDosenTendik::find($check->id_hrd);
+                        if ($hrdProfile && $hrdProfile->user_id) {
+                            $hrdUser = User::find($hrdProfile->user_id);
+                            if ($hrdUser) {
+                                $karyawanProfile = DataDosenTendik::find($check->id_user);
+                                $namaKaryawan = $karyawanProfile ? $karyawanProfile->nama : 'Karyawan';
+                                $hrdUser->notify(new \App\Notifications\CutiDiajukanNotification(
+                                    $check,
+                                    'Pengajuan cuti dari ' . $namaKaryawan . ' telah disetujui Atasan dan menunggu persetujuan Anda.',
+                                    'hrd'
+                                ));
+                            }
+                        }
+                    }
                 }
             } else if ($checkhrd) {
                 $update = CutiKaryawan::where('id', $idcutikaryawan)->where('id_user', $iduserinput)->where('id_hrd', $check->id_hrd)->where('is_active', '1')->update([

@@ -147,30 +147,20 @@
                                             </div>
                                         </div>
                                         <div class="row mb-2">
-                                            <label for="inputNik2" class="col-sm-2 col-form-label">NIK Atasan</label>
+                                            <label for="nama_atasan" class="col-sm-2 col-form-label">Atasan (Kepala Unit)</label>
                                             <div class="col-sm-8">
-                                                <select id="id_atasan" class="form-control select2">
-                                                    <option value=''>..:: Pilih Atasan ::..</option>
-                                                    @foreach ($karyawans as $kry)
-                                                        @if ($profile && $profile->id != $kry->data_dosen_tendik_id)
-                                                            <option value="{{ $kry->data_dosen_tendik_id }}">
-                                                                {{ $kry->karyawan->nama }}
-                                                            </option>
-                                                        @endif
-                                                    @endforeach
-                                                </select>
+                                                <input type="text" class="form-control" value="{{ $namaAtasan }}" readonly>
+                                                <small class="text-muted">Atasan terdeteksi otomatis berdasarkan struktur unit Anda.</small>
                                             </div>
                                         </div>
                                         <div class="row mb-2">
-                                            <label for="inputNik2" class="col-sm-2 col-form-label">NIK HRD</label>
+                                            <label for="id_hrd" class="col-sm-2 col-form-label">SDM</label>
                                             <div class="col-sm-8">
                                                 <select id="id_hrd" class="form-control select2">
-                                                    <option value=''>..:: Pilih HRD ::..</option>
+                                                    <option value=''>..:: Pilih Pegawai SDM ::..</option>
                                                     @foreach ($karyawans as $kry)
-                                                        @if ($profile && $profile->id != $kry->data_dosen_tendik_id)
-                                                            <option value="{{ $kry->data_dosen_tendik_id }}">
-                                                                {{ $kry->karyawan->nama }}
-                                                            </option>
+                                                        @if($profile && $profile->id != $kry->id)
+                                                            <option value="{{$kry->id}}">{{$kry->nama}}</option>
                                                         @endif
                                                     @endforeach
                                                 </select>
@@ -262,10 +252,6 @@
                 }
             });
 
-            $('#id_atasan').select2({
-                width: 'element'
-            });
-
             $('#id_hrd').select2({
                 width: 'element'
             });
@@ -321,7 +307,6 @@
                 let tanggal1 = $("#tanggal1").val();
                 let tanggal2 = $("#tanggal2").val();
                 let alasan = $("#alasan").val();
-                let id_atasan = $("#id_atasan").val();
                 let id_hrd = $("#id_hrd").val();
 
                 if (jeniscuti == null || jeniscuti == '') {
@@ -332,8 +317,6 @@
                     notifalert('Tanggal Selesai');
                 } else if (alasan == null || alasan == '') {
                     notifalert('Alasan');
-                } else if (id_atasan == null || id_atasan == '') {
-                    notifalert('Atasan');
                 } else if (id_hrd == null || id_hrd == '') {
                     notifalert('HRD');
                 } else {
@@ -348,7 +331,6 @@
                             'tanggal1': tanggal1,
                             'tanggal2': tanggal2,
                             'alasan': alasan,
-                            'id_atasan': id_atasan,
                             'id_hrd': id_hrd
                         },
                         onSuccess: function(res) {
@@ -445,7 +427,6 @@
                         $("#tanggal1").val(response.tanggalmulai);
                         $("#tanggal2").val(response.tanggalselesai);
                         $("#alasan").val(response.keterangan);
-                        $("#id_atasan").val(response.id_atasan).trigger('change');
                         $("#id_hrd").val(response.id_hrd).trigger('change');
                         Swal.close();
                         return;
@@ -470,7 +451,6 @@
                 $("#tanggal1").val('');
                 $("#tanggal2").val('');
                 $("#alasan").val('');
-                $("#id_atasan").val('').trigger('change');
                 $("#id_hrd").val('').trigger('change');
             });
 

@@ -19,6 +19,7 @@ use \Modules\Admin\Http\Controllers\MasterLemburController;
 use Modules\Admin\Http\Controllers\MasterJabatanController;
 use Modules\Admin\Http\Controllers\RiwayatJabatanController;
 use Modules\Admin\Http\Controllers\RiwayatIzinCutiController;
+use Modules\Admin\Http\Controllers\RiwayatLemburController;
 use Illuminate\Support\Facades\Route;
 use Modules\Admin\Http\Controllers\MasterStatusKaryawanController;
 use Modules\Admin\Http\Controllers\MasterUnitController;
@@ -170,6 +171,15 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
             Route::get('/', [RiwayatIzinCutiController::class, 'index'])->name('index');
             Route::get('/jsonizin', [RiwayatIzinCutiController::class, 'datatableizin'])->name('jsonizin');
             Route::get('/jsoncuti', [RiwayatIzinCutiController::class, 'datatablecuti'])->name('jsoncuti');
+        });
+    });
+
+    // --- ROUTE RIWAYAT LEMBUR MENU ---
+    Route::middleware(['permission:admin:riwayat-lembur:view'])->group(function () {
+        Route::prefix('riwayat-lembur')->name('riwayat-lembur.')->group(function () {
+            Route::get('/', [RiwayatLemburController::class, 'index'])->name('index');
+            Route::get('/json', [RiwayatLemburController::class, 'datatable'])->name('json');
+            Route::get('/export', [RiwayatLemburController::class, 'export'])->name('export');
         });
     });
 });

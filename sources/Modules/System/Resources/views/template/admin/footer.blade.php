@@ -210,6 +210,52 @@
                             icon: 'info',
                             title: notification.message
                         });
+                    } else if (notification.statusatasan === 'export-ready') {
+                        // Clear frontend timeout stopwatch
+                        if (typeof window.exportTimeout !== 'undefined') {
+                            clearTimeout(window.exportTimeout);
+                        }
+
+                        // SweetAlert toast for Export Ready
+                        const Toast = Swal.mixin({
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 10000,
+                            timerProgressBar: true,
+                            didOpen: (toast) => {
+                                toast.addEventListener('mouseenter', Swal.stopTimer)
+                                toast.addEventListener('mouseleave', Swal.resumeTimer)
+                            }
+                        });
+
+                        Toast.fire({
+                            icon: 'success',
+                            title: notification.message + ' <br><a href="' + notification.download_url + '" class="btn btn-sm btn-success mt-2" target="_blank"><i class="fas fa-download mr-1"></i> Download Sekarang</a>'
+                        });
+                    } else if (notification.statusatasan === 'export-failed') {
+                        // Clear frontend timeout stopwatch
+                        if (typeof window.exportTimeout !== 'undefined') {
+                            clearTimeout(window.exportTimeout);
+                        }
+
+                        // SweetAlert toast for Export Failed
+                        const Toast = Swal.mixin({
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 10000,
+                            timerProgressBar: true,
+                            didOpen: (toast) => {
+                                toast.addEventListener('mouseenter', Swal.stopTimer)
+                                toast.addEventListener('mouseleave', Swal.resumeTimer)
+                            }
+                        });
+
+                        Toast.fire({
+                            icon: 'error',
+                            title: notification.message + '<br><small class="text-danger mt-1 d-block">' + (notification.error_detail || 'Terjadi kesalahan sistem') + '</small>'
+                        });
                     }
                 });
         @endif

@@ -48,7 +48,8 @@ class CutiDiajukanNotification extends Notification implements ShouldQueue, Shou
             'id_cuti' => $this->cuti->id,
             'message' => $this->message,
             'jenis' => 'cuti',
-            'role' => $this->role
+            'role' => $this->role,
+            'statusatasan' => $this->cuti->statusatasan
         ];
     }
 
@@ -61,7 +62,8 @@ class CutiDiajukanNotification extends Notification implements ShouldQueue, Shou
             'id_cuti' => $this->cuti->id,
             'message' => $this->message,
             'jenis' => 'cuti',
-            'role' => $this->role
+            'role' => $this->role,
+            'statusatasan' => $this->cuti->statusatasan
         ]);
     }
 }

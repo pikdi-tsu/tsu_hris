@@ -126,21 +126,72 @@
                     if (notification.jenis === 'lembur' || notification.jenis === 'cuti' || notification.jenis === 'izin') {
                         let type = notification.jenis;
                         let role = notification.role || 'atasan';
+                        let statusatasan = notification.statusatasan || 'waiting';
                         
-                        // Using dynamic ID construction based on the type and role
-                        let typeBadge = $('#badge-notif-' + type + '-' + role);
-                        let currentType = parseInt(typeBadge.text()) || 0;
-                        
-                        typeBadge.text(currentType + 1);
-                        $('#' + type + '-' + role + '-divider').show();
-                        $('#' + type + '-' + role + '-item').show();
-                        
-                        globalBadge.text(currentGlobal + 1);
-                        $('#global-notif-text').text(currentGlobal + 1);
-                        globalBadge.show();
-                        
-                        $('#global-notif-empty').hide();
-                        $('#global-notif-header').show();
+                        // Condition: Only increment badges if Atasan has approved (for HRD) or it's Atasan role
+                        let shouldIncrementBadge = true;
+                        if (role === 'hrd' && statusatasan === 'waiting') {
+                            shouldIncrementBadge = false;
+                        }
+
+                        if (shouldIncrementBadge) {
+                            // 1. Update Global Badge
+                            let currentGlobal = parseInt(globalBadge.text()) || 0;
+                            globalBadge.text(currentGlobal + 1);
+                            $('#global-notif-text').text(currentGlobal + 1);
+                            globalBadge.show();
+                            $('#global-notif-empty').hide();
+                            $('#global-notif-header').show();
+
+                            // 2. Update Navbar Type Badge
+                            let typeBadge = $('#badge-notif-' + type + '-' + role);
+                            let currentType = parseInt(typeBadge.text()) || 0;
+                            typeBadge.text(currentType + 1);
+                            $('#' + type + '-' + role + '-divider').show();
+                            $('#' + type + '-' + role + '-item').show();
+                            
+                            // 3. Update Sidebar Badge
+                            let sidebarId = 'sidebar-badge-users-' + type + '-index';
+                            if (type === 'cuti') sidebarId = 'sidebar-badge-users-indexapprovalcuti';
+                            if (type === 'izin') sidebarId = 'sidebar-badge-users-indexapprovalizin';
+                            
+                            let sidebarBadge = $('#' + sidebarId);
+                            if (sidebarBadge.length) {
+                                let currentSidebar = parseInt(sidebarBadge.text()) || 0;
+                                sidebarBadge.text(currentSidebar + 1);
+                                sidebarBadge.show();
+                            } else {
+                                // If badge doesn't exist, inject it
+                                let routeName = (type === 'lembur') ? 'lembur' : (type === 'cuti' ? 'approvalcuti' : 'approvalizin');
+                                let sidebarLink = $('a[href*="users/' + routeName + '"] p');
+                                if (sidebarLink.length) {
+                                    sidebarLink.append('<span id="' + sidebarId + '" class="badge badge-danger right">1</span>');
+                                }
+                            }
+
+                            // 4. Update Tab Persetujuan Badge
+                            if ($.fn.DataTable.isDataTable('#dataTablesApproval')) {
+                                let tab = $('#tab-persetujuan-bawahan');
+                                if (tab.length) {
+                                    let tabBadge = tab.find('.badge');
+                                    if (tabBadge.length) {
+                                        let currentTab = parseInt(tabBadge.text()) || 0;
+                                        tabBadge.text(currentTab + 1);
+                                        tabBadge.show();
+                                    } else {
+                                        tab.append(' <span class="badge badge-danger" id="badge-approval">1</span>');
+                                    }
+                                }
+                            }
+                        }
+
+                        // ALWAYS Reload DataTables and Show Toast regardless of shouldIncrementBadge
+                        if ($.fn.DataTable.isDataTable('#dataTablesApproval')) {
+                            $('#dataTablesApproval').DataTable().ajax.reload(null, false);
+                        }
+                        if ($.fn.DataTable.isDataTable('#dataTables')) {
+                            $('#dataTables').DataTable().ajax.reload(null, false);
+                        }
 
                         // SweetAlert toast
                         const Toast = Swal.mixin({
@@ -159,36 +210,6 @@
                             icon: 'info',
                             title: notification.message
                         });
-                        
-                        // Update sidebar badge dynamically
-                        let sidebarId = 'sidebar-badge-users-' + type + '-index';
-                        if (type === 'cuti') sidebarId = 'sidebar-badge-users-indexapprovalcuti';
-                        if (type === 'izin') sidebarId = 'sidebar-badge-users-indexapprovalizin';
-                        
-                        let sidebarBadge = $('#' + sidebarId);
-                        if (sidebarBadge.length) {
-                            let currentSidebar = parseInt(sidebarBadge.text()) || 0;
-                            sidebarBadge.text(currentSidebar + 1);
-                            sidebarBadge.show();
-                        }
-                        
-                        // If we are on the specific index page, reload the datatables
-                        if ($.fn.DataTable.isDataTable('#dataTablesApproval')) {
-                            $('#dataTablesApproval').DataTable().ajax.reload(null, false);
-                            let tab = $('#tab-persetujuan-bawahan');
-                            if (tab.length) {
-                                let tabBadge = tab.find('.badge');
-                                if (tabBadge.length) {
-                                    tabBadge.text(currentType + 1);
-                                    tabBadge.show();
-                                } else {
-                                    tab.append(' <span class="badge badge-danger" id="badge-approval">' + (currentType + 1) + '</span>');
-                                }
-                            }
-                        }
-                        if ($.fn.DataTable.isDataTable('#dataTables')) {
-                            $('#dataTables').DataTable().ajax.reload(null, false);
-                        }
                     }
                 });
         @endif

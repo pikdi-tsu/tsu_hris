@@ -48,7 +48,8 @@ class LemburDiajukanNotification extends Notification implements ShouldQueue, Sh
             'id_lembur' => $this->lembur->id,
             'message' => $this->message,
             'jenis' => 'lembur',
-            'role' => $this->role
+            'role' => $this->role,
+            'statusatasan' => $this->lembur->statusatasan
         ];
     }
 
@@ -61,7 +62,8 @@ class LemburDiajukanNotification extends Notification implements ShouldQueue, Sh
             'id_lembur' => $this->lembur->id,
             'message' => $this->message,
             'jenis' => 'lembur',
-            'role' => $this->role
+            'role' => $this->role,
+            'statusatasan' => $this->lembur->statusatasan
         ]);
     }
 }

@@ -36,12 +36,19 @@
                                 <li class="nav-item">
                                     <a class="nav-link active" id="tab-pengajuan-saya" data-toggle="pill" href="#content-pengajuan-saya" role="tab" aria-controls="content-pengajuan-saya" aria-selected="true">Pengajuan Saya</a>
                                 </li>
-                                @if($isAtasan)
+                                @if($isAtasan || $isSdm)
                                 <li class="nav-item">
                                     <a class="nav-link" id="tab-persetujuan-bawahan" data-toggle="pill" href="#content-persetujuan-bawahan" role="tab" aria-controls="content-persetujuan-bawahan" aria-selected="false">
-                                        Persetujuan Bawahan 
-                                        @if(session('notiflemburatasan', 0) > 0)
-                                            <span class="badge badge-danger" id="badge-approval">{{ session('notiflemburatasan') }}</span>
+                                        Persetujuan Lembur 
+                                        @if(session('notiflemburatasan', 0) > 0 || session('notiflemburhrd', 0) > 0)
+                                            @php
+                                                $totalNotifLembur = 0;
+                                                if ($isAtasan) $totalNotifLembur += session('notiflemburatasan', 0);
+                                                if ($isSdm) $totalNotifLembur += session('notiflemburhrd', 0);
+                                            @endphp
+                                            @if($totalNotifLembur > 0)
+                                                <span class="badge badge-danger" id="badge-approval">{{ $totalNotifLembur }}</span>
+                                            @endif
                                         @endif
                                     </a>
                                 </li>
@@ -191,7 +198,7 @@
                                 </div>
                                 {{-- END TAB 1 --}}
 
-                                @if($isAtasan)
+                                @if($isAtasan || $isSdm)
                                 {{-- TAB 2: PERSETUJUAN BAWAHAN --}}
                                 <div class="tab-pane fade" id="content-persetujuan-bawahan" role="tabpanel" aria-labelledby="tab-persetujuan-bawahan">
                                     <div class="row" style="font-size: 10pt">
@@ -628,7 +635,7 @@
                 });
             }
 
-            @if($isAtasan)
+            @if($isAtasan || $isSdm)
             // --- TAB 2: PERSETUJUAN BAWAHAN ---
             var oTableApproval = $('#dataTablesApproval').DataTable({
                 processing: true,

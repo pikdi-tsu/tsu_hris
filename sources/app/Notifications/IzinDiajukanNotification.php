@@ -48,7 +48,8 @@ class IzinDiajukanNotification extends Notification implements ShouldQueue, Shou
             'id_izin' => $this->izin->id,
             'message' => $this->message,
             'jenis' => 'izin',
-            'role' => $this->role
+            'role' => $this->role,
+            'statusatasan' => $this->izin->statusatasan
         ];
     }
 
@@ -61,7 +62,8 @@ class IzinDiajukanNotification extends Notification implements ShouldQueue, Shou
             'id_izin' => $this->izin->id,
             'message' => $this->message,
             'jenis' => 'izin',
-            'role' => $this->role
+            'role' => $this->role,
+            'statusatasan' => $this->izin->statusatasan
         ]);
     }
 }

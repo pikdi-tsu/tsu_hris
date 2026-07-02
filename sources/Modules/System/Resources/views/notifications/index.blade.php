@@ -1,4 +1,4 @@
-@extends('system::template.admin.index')
+@extends('system::template.admin.header')
 
 @section('content')
     <!-- Content Header (Page header) -->
@@ -9,12 +9,18 @@
                     <h1 class="m-0"><i class="fas fa-inbox text-primary mr-2"></i> Kotak Masuk Notifikasi</h1>
                 </div>
                 <div class="col-sm-6 text-right">
-                    <form action="{{ route('users.notifications.readAll') }}" method="POST">
-                        @csrf
-                        <button type="submit" class="btn btn-outline-secondary">
-                            <i class="fas fa-check-double mr-1"></i> Tandai Semua Dibaca
-                        </button>
-                    </form>
+                    @if($filter == 'unread')
+                        <form action="{{ route('users.notifications.readAll') }}" method="POST">
+                            @csrf
+                            <button type="submit" class="btn btn-outline-secondary">
+                                <i class="fas fa-check-double mr-1"></i> Tandai Semua Dibaca
+                            </button>
+                        </form>
+                    @elseif($filter == 'read' && $readCount > 0)
+                        <a href="{{ route('users.notifications.backupClear') }}" class="btn btn-danger" onclick="return confirm('Anda yakin ingin mem-backup {{ $readCount }} riwayat ini ke Excel dan menghapusnya dari sistem?')">
+                            <i class="fas fa-file-excel mr-1"></i> Backup & Bersihkan Riwayat
+                        </a>
+                    @endif
                 </div>
             </div>
         </div>
@@ -32,7 +38,36 @@
                 </div>
             @endif
 
+            @if(session('error'))
+                <div class="alert alert-danger alert-dismissible fade show">
+                    <button type="button" class="close" data-dismiss="alert">&times;</button>
+                    {{ session('error') }}
+                </div>
+            @endif
+
             <div class="card card-outline card-primary">
+                <div class="card-header p-2">
+                    <ul class="nav nav-pills">
+                        <li class="nav-item">
+                            <a class="nav-link {{ $filter == 'unread' ? 'active' : '' }}" href="{{ route('users.notifications.index', ['filter' => 'unread']) }}">
+                                <i class="fas fa-envelope mr-1"></i> Pesan Baru
+                                @if($unreadCount > 0)
+                                    <span class="badge badge-warning ml-1">{{ $unreadCount }}</span>
+                                @endif
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ $filter == 'read' ? 'active' : '' }}" href="{{ route('users.notifications.index', ['filter' => 'read']) }}">
+                                <i class="fas fa-history mr-1"></i> Riwayat (Sudah Dibaca)
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ $filter == 'all' ? 'active' : '' }}" href="{{ route('users.notifications.index', ['filter' => 'all']) }}">
+                                <i class="fas fa-list mr-1"></i> Semua
+                            </a>
+                        </li>
+                    </ul>
+                </div><!-- /.card-header -->
                 <div class="card-body p-0">
                     <div class="table-responsive">
                         <table class="table table-hover table-striped mb-0">
@@ -74,23 +109,39 @@
                                         <td class="align-middle text-right" style="width: 250px;">
                                             <span class="text-muted text-sm d-block mb-2"><i class="far fa-clock"></i> {{ $notif->created_at->format('d M Y, H:i') }}</span>
                                             
-                                            @if(isset($data['download_url']))
-                                                <a href="{{ route('users.notifications.read', $notif->id) }}" class="btn btn-sm btn-success">
-                                                    <i class="fas fa-download mr-1"></i> Download File
-                                                </a>
-                                            @elseif($isUnread)
-                                                <a href="{{ route('users.notifications.read', $notif->id) }}" class="btn btn-sm btn-outline-secondary">
-                                                    <i class="fas fa-check mr-1"></i> Tandai Dibaca
-                                                </a>
-                                            @endif
+                                            <div class="btn-group">
+                                                @if(isset($data['download_url']))
+                                                    <a href="{{ $data['download_url'] }}" target="_blank" class="btn btn-sm btn-success" title="Download">
+                                                        <i class="fas fa-download"></i> Download
+                                                    </a>
+                                                @endif
+                                                
+                                                @if($isUnread)
+                                                    <a href="{{ route('users.notifications.read', $notif->id) }}" class="btn btn-sm btn-outline-secondary" title="Tandai Dibaca">
+                                                        <i class="fas fa-check"></i>
+                                                    </a>
+                                                @else
+                                                    <button class="btn btn-sm btn-outline-secondary disabled" title="Sudah Dibaca">
+                                                        <i class="fas fa-check-double text-primary"></i>
+                                                    </button>
+                                                @endif
+                                            </div>
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
                                         <td colspan="3" class="text-center py-5 text-muted">
                                             <i class="fas fa-inbox fa-3x mb-3 text-light"></i>
-                                            <h5>Belum ada notifikasi</h5>
-                                            <p>Semua notifikasi sistem yang masuk akan tampil di sini.</p>
+                                            @if($filter == 'unread')
+                                                <h5>Horee! Kosong.</h5>
+                                                <p>Tidak ada pesan baru yang masuk.</p>
+                                            @elseif($filter == 'read')
+                                                <h5>Belum ada riwayat</h5>
+                                                <p>Notifikasi yang sudah dibaca akan dikumpulkan di sini.</p>
+                                            @else
+                                                <h5>Belum ada notifikasi sama sekali</h5>
+                                                <p>Semua notifikasi sistem yang masuk akan tampil di sini.</p>
+                                            @endif
                                         </td>
                                     </tr>
                                 @endforelse

@@ -69,7 +69,7 @@
                     </ul>
                 </div><!-- /.card-header -->
                 <div class="card-body p-0">
-                    <div class="table-responsive">
+                    <div class="table-responsive" style="max-height: 60vh; overflow-y: auto;">
                         <table class="table table-hover table-striped mb-0">
                             <tbody>
                                 @forelse($notifications as $notif)

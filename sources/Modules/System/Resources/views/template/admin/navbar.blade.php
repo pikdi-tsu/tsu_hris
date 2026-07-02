@@ -31,7 +31,7 @@
                 <i class="far fa-bell"></i>
                 <span class="badge badge-danger navbar-badge" id="global-notif-badge" {!! $all > 0 ? '' : 'style="display:none;"' !!}>{{ $all }}</span>
             </a>
-            <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
+            <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right" id="dropdown-notif-lonceng" style="max-height: 350px; overflow-y: auto; overflow-x: hidden;">
                 
                 <span class="dropdown-item dropdown-header font-weight-bold bg-light" id="global-notif-header" {!! $all > 0 ? '' : 'style="display:none;"' !!}>
                     <span id="global-notif-text">{{ $all }}</span> Pengajuan Menunggu Persetujuan

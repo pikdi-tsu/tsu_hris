@@ -67,6 +67,16 @@ Route::prefix('')->group(function() {
         });
 
         // Custom Route View File
+        Route::middleware(['auth'])->get('/storage/exports/{filename}', function ($filename) {
+            $path = storage_path('app/public/exports/' . $filename);
+            
+            if (!File::exists($path)) {
+                abort(404);
+            }
+            
+            return Response::download($path);
+        });
+        
         Route::middleware(['auth'])->get('/storage/lembur/bukti/{filename}', function ($filename) {
             $path = storage_path('app/public/lembur/bukti/' . $filename);
             

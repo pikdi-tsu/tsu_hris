@@ -233,6 +233,48 @@
                             icon: 'success',
                             title: notification.message + ' <br><a href="' + notification.download_url + '" class="btn btn-sm btn-success mt-2" target="_blank"><i class="fas fa-download mr-1"></i> Download Sekarang</a>'
                         });
+                        
+                        // Update Bell Badge
+                        let badge = $('#global-notif-badge');
+                        let currentCount = parseInt(badge.text() || 0);
+                        badge.text(currentCount + 1).show();
+                        $('#global-notif-empty').hide();
+                        
+                        // Append to Dropdown dynamically
+                        let dropdownFooter = $('.dropdown-footer').closest('a');
+                        let notifHtml = `
+                        <a href="${notification.download_url}" class="dropdown-item bg-white border-bottom db-notif-item" style="white-space: normal;" target="_blank">
+                            <div class="media">
+                                <i class="fas fa-file-excel text-success mr-3 mt-1" style="font-size: 1.2rem;"></i>
+                                <div class="media-body">
+                                    <p class="text-sm text-dark mb-1">
+                                        ${notification.message}
+                                    </p>
+                                    <span class="badge badge-success mt-1"><i class="fas fa-download"></i> File Siap</span>
+                                    <p class="text-xs text-muted mb-0 mt-1">
+                                        <i class="far fa-clock mr-1"></i> Baru saja
+                                    </p>
+                                </div>
+                            </div>
+                        </a>
+                        `;
+                        
+                        // Check if Inbox header exists
+                        if($('#inbox-header').length === 0) {
+                            dropdownFooter.before('<div class="dropdown-divider inbox-divider"></div><span class="dropdown-item dropdown-header font-weight-bold bg-light text-left" id="inbox-header"><i class="fas fa-inbox mr-1"></i> Kotak Masuk (<span id="inbox-count">1</span> Baru)</span>');
+                        } else {
+                            let inboxCountElem = $('#inbox-count');
+                            if(inboxCountElem.length) {
+                                inboxCountElem.text(parseInt(inboxCountElem.text() || 0) + 1);
+                            }
+                        }
+                        
+                        $('#inbox-header').after(notifHtml);
+                        
+                        // Remove oldest if more than 5
+                        if($('.db-notif-item').length > 5) {
+                            $('.db-notif-item').last().remove();
+                        }
                     } else if (notification.statusatasan === 'export-failed') {
                         // Clear frontend timeout stopwatch
                         if (typeof window.exportTimeout !== 'undefined') {

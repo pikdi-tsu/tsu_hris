@@ -22,7 +22,16 @@ class ExportGagalNotification extends Notification implements ShouldBroadcastNow
 
     public function via($notifiable)
     {
-        return ['broadcast']; // We only want Reverb toast
+        return ['broadcast', 'database'];
+    }
+
+    public function toArray($notifiable)
+    {
+        return [
+            'message' => $this->message,
+            'error_detail' => $this->errorDetail,
+            'statusatasan' => 'export-failed'
+        ];
     }
 
     public function toBroadcast($notifiable)

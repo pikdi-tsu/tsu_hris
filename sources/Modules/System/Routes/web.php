@@ -58,6 +58,13 @@ Route::prefix('')->group(function() {
             });
         });
 
+        // Notifications
+        Route::prefix('notifications')->name('users.notifications.')->group(function() {
+            Route::get('/', [\Modules\System\Http\Controllers\NotificationController::class, 'index'])->name('index');
+            Route::get('/read/{id}', [\Modules\System\Http\Controllers\NotificationController::class, 'read'])->name('read');
+            Route::post('/read-all', [\Modules\System\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('readAll');
+        });
+
         // Custom Route View File
         Route::middleware(['auth'])->get('/storage/lembur/bukti/{filename}', function ($filename) {
             $path = storage_path('app/public/lembur/bukti/' . $filename);

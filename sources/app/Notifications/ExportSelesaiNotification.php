@@ -22,7 +22,16 @@ class ExportSelesaiNotification extends Notification implements ShouldBroadcastN
 
     public function via($notifiable)
     {
-        return ['broadcast']; // We only want Reverb toast for now
+        return ['broadcast', 'database']; 
+    }
+
+    public function toArray($notifiable)
+    {
+        return [
+            'message' => $this->message,
+            'download_url' => $this->downloadUrl,
+            'statusatasan' => 'export-ready'
+        ];
     }
 
     public function toBroadcast($notifiable)

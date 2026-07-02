@@ -19,7 +19,11 @@
             $notifizinhrd = session('notifizinhrd');
             $notiflemburatasan = session('notiflemburatasan');
             $notiflemburhrd = session('notiflemburhrd');
-            $all = $notifcutiatasan + $notifizinatasan + $notifcutihrd + $notifizinhrd + $notiflemburatasan + $notiflemburhrd;
+            
+            $dbNotifs = Auth::user()->notifications()->latest()->take(5)->get();
+            $dbNotifCount = Auth::user()->unreadNotifications()->count();
+            
+            $all = $notifcutiatasan + $notifizinatasan + $notifcutihrd + $notifizinhrd + $notiflemburatasan + $notiflemburhrd + $dbNotifCount;
         @endphp
         <!-- Notifications Dropdown Menu -->
         <li class="nav-item dropdown">
@@ -80,8 +84,46 @@
                     Persetujuan Lembur (SDM)
                 </a>
 
+                @if($dbNotifs->count() > 0)
+                    <div class="dropdown-divider inbox-divider"></div>
+                    <span class="dropdown-item dropdown-header font-weight-bold bg-light text-left" id="inbox-header">
+                        <i class="fas fa-inbox mr-1"></i> Kotak Masuk (<span id="inbox-count">{{ $dbNotifCount }}</span> Baru)
+                    </span>
+                    @foreach($dbNotifs as $notif)
+                        @php
+                            $isUnread = is_null($notif->read_at);
+                            $bgColor = $isUnread ? 'bg-white' : 'bg-light';
+                            $data = $notif->data;
+                            $icon = 'fas fa-bell text-secondary';
+                            
+                            if (isset($data['statusatasan'])) {
+                                if ($data['statusatasan'] == 'export-ready') $icon = 'fas fa-file-excel text-success';
+                                if ($data['statusatasan'] == 'export-failed') $icon = 'fas fa-exclamation-triangle text-danger';
+                            }
+                        @endphp
+                        <a href="{{ route('users.notifications.read', $notif->id) }}" class="dropdown-item {{ $bgColor }} border-bottom db-notif-item" style="white-space: normal;">
+                            <div class="media">
+                                <i class="{{ $icon }} mr-3 mt-1" style="font-size: 1.2rem;"></i>
+                                <div class="media-body">
+                                    <p class="text-sm text-dark mb-1">
+                                        {{ Str::limit($data['message'] ?? 'Ada notifikasi baru', 60) }}
+                                    </p>
+                                    @if(isset($data['download_url']))
+                                        <span class="badge badge-success mt-1"><i class="fas fa-download"></i> File Siap</span>
+                                    @elseif(isset($data['error_detail']))
+                                        <span class="badge badge-danger mt-1">Gagal</span>
+                                    @endif
+                                    <p class="text-xs text-muted mb-0 mt-1">
+                                        <i class="far fa-clock mr-1"></i> {{ $notif->created_at->diffForHumans() }}
+                                    </p>
+                                </div>
+                            </div>
+                        </a>
+                    @endforeach
+                @endif
+
                 <div class="dropdown-divider"></div>
-                <a href="#" class="dropdown-item dropdown-footer text-center">Lihat Semua Notifikasi</a>
+                <a href="{{ route('users.notifications.index') }}" class="dropdown-item dropdown-footer text-center">Lihat Semua Notifikasi</a>
             </div>
         </li>
 

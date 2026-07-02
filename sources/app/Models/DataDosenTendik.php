@@ -33,6 +33,11 @@ class DataDosenTendik extends Authenticatable
         return $this->belongsTo(User::class, 'user_id');
     }
 
+    public function unit()
+    {
+        return $this->belongsTo(MasterUnit::class, 'unit_id');
+    }
+
     /**
      * Relasi ke Jabatan Struktural (Bisa lebih dari 1 / Many)
      */
@@ -47,6 +52,11 @@ class DataDosenTendik extends Authenticatable
     public function jabatanFungsionals()
     {
         return $this->hasMany(KaryawanJabatanFungsional::class, 'data_dosen_tendik_id', 'id');
+    }
+
+    public function statusKaryawan()
+    {
+        return $this->belongsTo(MasterStatusKaryawan::class, 'status_karyawan_id', 'id');
     }
 
     public function riwayatJabatans()
@@ -77,6 +87,10 @@ class DataDosenTendik extends Authenticatable
                     ['name' => 'nama', 'label' => 'Nama Lengkap', 'type' => 'text', 'col_size' => 6, 'required' => true],
                     ['name' => 'gelar_belakang', 'label' => 'Gelar Belakang', 'type' => 'text', 'col_size' => 3],
 
+                    ['name' => 'tipe_karyawan', 'label' => 'Tipe Karyawan', 'type' => 'select', 'options' => ['Dosen' => 'Dosen', 'Tendik' => 'Tendik'], 'col_size' => 4, 'required' => true],
+                    ['name' => 'unit_id', 'label' => 'Homebase / Unit Kerja', 'type' => 'select', 'options' => \App\Models\MasterUnit::orderBy('nama_unit')->pluck('nama_unit', 'id')->toArray(), 'col_size' => 4, 'required' => true],
+                    ['name' => 'posisi', 'label' => 'Posisi Pekerjaan Harian', 'type' => 'text', 'col_size' => 4, 'placeholder' => 'Contoh: Programmer, Staf Keuangan'],
+
                     ['name' => 'nik', 'label' => 'NIK (Identitas Utama)', 'type' => 'text', 'col_size' => 6, 'required' => true],
                     ['name' => 'nip', 'label' => 'NIP', 'type' => 'text', 'col_size' => 6],
 
@@ -84,7 +98,8 @@ class DataDosenTendik extends Authenticatable
                     ['name' => 'nuptk', 'label' => 'NUPTK', 'type' => 'text', 'col_size' => 6],
 
                     ['name' => 'keilmuan_inti', 'label' => 'Keilmuan Inti', 'type' => 'text', 'col_size' => 6],
-                    ['name' => 'status_karyawan', 'label' => 'Status Karyawan', 'type' => 'select', 'options' => ['' => '-- Pilih Status Karyawan --', 'TETAP' => 'TETAP', 'KONTRAK' => 'KONTRAK'], 'col_size' => 6],
+                    ['name' => 'status_karyawan_id', 'label' => 'Status Karyawan', 'type' => 'select', 'options' => \App\Models\MasterStatusKaryawan::pluck('nama_status', 'id')->toArray(), 'col_size' => 6],
+                    ['name' => 'pin_absensi', 'label' => 'PIN Absensi', 'type' => 'text', 'col_size' => 6],
                 ]
             ],
 

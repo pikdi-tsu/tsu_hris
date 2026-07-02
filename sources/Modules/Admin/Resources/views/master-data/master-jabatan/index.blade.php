@@ -33,6 +33,7 @@
                                 <th>Nama Jabatan</th>
                                 <th>Periode</th>
                                 <th>Keterangan</th>
+                                <th>Jumlah Pegawai</th>
                                 <th width="15%">Aksi</th>
                             </tr>
                         </thead>
@@ -54,6 +55,7 @@
                                 <th>Nama Jabatan</th>
                                 <th>Periode</th>
                                 <th>Keterangan</th>
+                                <th>Jumlah Pegawai</th>
                                 <th width="15%">Aksi</th>
                             </tr>
                         </thead>
@@ -74,6 +76,7 @@
                                 <th width="5%">No</th>
                                 <th>Pangkat / Golongan</th>
                                 <th>Keterangan</th>
+                                <th>Jumlah Pegawai</th>
                                 <th width="15%">Aksi</th>
                             </tr>
                         </thead>
@@ -108,6 +111,7 @@
                     {data: 'nama_jabatan', name: 'nama_jabatan'},
                     {data: 'periode', name: 'periode'},
                     {data: 'keterangan', name: 'keterangan'},
+                    {data: 'jumlah_karyawan', name: 'jumlah_karyawan', orderable: false, searchable: false},
                     {data: 'action', name: 'action', orderable: false, searchable: false},
                 ]
             });
@@ -121,6 +125,7 @@
                     {data: 'nama_jabatan', name: 'nama_jabatan'},
                     {data: 'periode', name: 'periode'},
                     {data: 'keterangan', name: 'keterangan'},
+                    {data: 'jumlah_karyawan', name: 'jumlah_karyawan', orderable: false, searchable: false},
                     {data: 'action', name: 'action', orderable: false, searchable: false},
                 ]
             });
@@ -133,6 +138,7 @@
                     {data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false},
                     {data: 'nama_pangkat_golongan', name: 'nama_pangkat_golongan'},
                     {data: 'keterangan', name: 'keterangan'},
+                    {data: 'jumlah_karyawan', name: 'jumlah_karyawan', orderable: false, searchable: false},
                     {data: 'action', name: 'action', orderable: false, searchable: false},
                 ]
             });

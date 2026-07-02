@@ -43,6 +43,8 @@ class DataKaryawanController extends MiddlewareController
     public function datatable()
     {
         $data = DataDosenTendik::with([
+            'unit',
+            'statusKaryawan',
             'jabatanFungsionals' => function($q){
                 $q->where('is_active', 'Y')->with('masterFungsional');
             },
@@ -135,12 +137,33 @@ class DataKaryawanController extends MiddlewareController
 
                 return $htmlStruktural . $htmlFungsional;
             })
+            ->addColumn('homebase_posisi', function($row) {
+                // Tipe Karyawan Badge
+                $tipeKaryawanBadge = '';
+                if ($row->tipe_karyawan == 'Dosen') {
+                    $tipeKaryawanBadge = '<span class="badge badge-primary px-2 py-1 mb-1 shadow-sm"><i class="fas fa-chalkboard-teacher mr-1"></i> DOSEN</span>';
+                } elseif ($row->tipe_karyawan == 'Tendik') {
+                    $tipeKaryawanBadge = '<span class="badge badge-warning text-dark px-2 py-1 mb-1 shadow-sm"><i class="fas fa-user-tie mr-1"></i> TENDIK</span>';
+                } else {
+                    $tipeKaryawanBadge = '<span class="badge badge-secondary px-2 py-1 mb-1 shadow-sm">Belum Diatur</span>';
+                }
+
+                // Homebase / Unit
+                $unitName = $row->unit ? $row->unit->nama_unit : '<span class="text-black-50 font-italic">Homebase belum diatur</span>';
+                $htmlUnit = '<div class="font-weight-bold text-dark mt-1" style="font-size: 0.9rem;"><i class="fas fa-building text-info mr-1"></i> ' . $unitName . '</div>';
+
+                // Posisi
+                $posisi = $row->posisi ? $row->posisi : '<span class="text-black-50 font-italic">Posisi belum diatur</span>';
+                $htmlPosisi = '<div class="text-muted mt-1" style="font-size: 0.85rem;"><i class="fas fa-user-tag text-secondary mr-1"></i> ' . $posisi . '</div>';
+
+                return $tipeKaryawanBadge . $htmlUnit . $htmlPosisi;
+            })
             ->addColumn('status_karyawan', function($row) {
                 $statusBadge = ($row->is_active == 1) 
                     ? '<span class="badge badge-success mb-1">AKTIF</span>' 
                     : '<span class="badge badge-danger mb-1">NON-AKTIF</span>';
                 
-                $tipeBadge = '<span class="badge badge-info">' . ($row->status_karyawan ?? 'Belum Diatur') . '</span>';
+                $tipeBadge = '<span class="badge badge-info">' . ($row->statusKaryawan ? $row->statusKaryawan->nama_status : 'Belum Diatur') . '</span>';
                 
                 return $statusBadge . '<br>' . $tipeBadge;
             })
@@ -193,7 +216,32 @@ class DataKaryawanController extends MiddlewareController
                     $q->where('nama_jabatan', 'like', "%{$keyword}%");
                 });
             })
-            ->rawColumns(['nama_lengkap', 'identitas', 'jabatan', 'status_karyawan', 'aksi'])
+            ->filterColumn('homebase_posisi', function($query, $keyword) {
+                $query->whereHas('unit', function($q) use ($keyword) {
+                    $q->where('nama_unit', 'like', "%{$keyword}%");
+                })
+                ->orWhere('posisi', 'like', "%{$keyword}%")
+                ->orWhere('tipe_karyawan', 'like', "%{$keyword}%");
+            })
+            ->filterColumn('status_karyawan', function($query, $keyword) {
+                $keywordLower = strtolower(trim($keyword));
+                if (in_array($keywordLower, ['aktif', 'akt', 'akti'])) {
+                    $query->where('is_active', 1)
+                          ->orWhereHas('statusKaryawan', function($q) use ($keyword) {
+                              $q->where('nama_status', 'like', "%{$keyword}%");
+                          });
+                } elseif (in_array($keywordLower, ['nonaktif', 'non-aktif', 'non', 'non aktif'])) {
+                    $query->where('is_active', 0)
+                          ->orWhereHas('statusKaryawan', function($q) use ($keyword) {
+                              $q->where('nama_status', 'like', "%{$keyword}%");
+                          });
+                } else {
+                    $query->whereHas('statusKaryawan', function($q) use ($keyword) {
+                        $q->where('nama_status', 'like', "%{$keyword}%");
+                    });
+                }
+            })
+            ->rawColumns(['nama_lengkap', 'identitas', 'homebase_posisi', 'jabatan', 'status_karyawan', 'aksi'])
             ->make(true);
     }
 
@@ -457,6 +505,7 @@ class DataKaryawanController extends MiddlewareController
                 $lamaBulan = $tglMulai->diffInMonths($tglSekarang);
                 
                 $riwayatData['jabatan_struktural_id'] = $jabatanStrPivot->jabatan_struktural_id;
+                $riwayatData['unit_id'] = $jabatanStrPivot->unit_id;
                 $riwayatData['tgl_mulai'] = $jabatanStrPivot->tgl_mulai;
                 $riwayatData['lama_menjabat_bulan'] = $lamaBulan;
                 
@@ -531,6 +580,7 @@ class DataKaryawanController extends MiddlewareController
                     KaryawanJabatanStruktural::create([
                         'data_dosen_tendik_id' => $pegawaiBaru->id,
                         'jabatan_struktural_id' => $riwayatData['jabatan_struktural_id'],
+                        'unit_id' => $riwayatData['unit_id'],
                         'tgl_mulai' => $tglSekarang->format('Y-m-d'),
                         'is_active' => 'Y'
                     ]);
@@ -659,13 +709,14 @@ class DataKaryawanController extends MiddlewareController
         
         $strukturals = KaryawanJabatanStruktural::where('data_dosen_tendik_id', $id)
             ->where('is_active', 'Y')
-            ->with('masterStruktural')
+            ->with(['masterStruktural', 'unit'])
             ->orderBy('tgl_mulai', 'desc')
             ->get();
             
         $masterStruktural = MasterJabatanStruktural::orderBy('nama_jabatan', 'asc')->get();
+        $masterUnit = \App\Models\MasterUnit::orderBy('nama_unit', 'asc')->get();
 
-        return view('admin::data-karyawan.kelola_struktural_modal', compact('karyawan', 'strukturals', 'masterStruktural'));
+        return view('admin::data-karyawan.kelola_struktural_modal', compact('karyawan', 'strukturals', 'masterStruktural', 'masterUnit'));
     }
 
     public function storeStruktural(Request $request, $id)
@@ -674,10 +725,15 @@ class DataKaryawanController extends MiddlewareController
         $request->validate([
             'jabatan_struktural_id' => 'required',
             'tgl_mulai' => 'required|date',
+            'unit_id' => 'nullable'
         ]);
 
         try {
             $master = MasterJabatanStruktural::find($request->jabatan_struktural_id);
+            if ($master && $master->is_unit_specific == 'Y' && empty($request->unit_id)) {
+                throw new \Exception("Jabatan ini mewajibkan Unit Penugasan untuk diisi.");
+            }
+
             $tglAkhir = null;
             if ($master && $master->periode_jabatan && $request->tgl_mulai) {
                 $tglAkhir = Carbon::parse($request->tgl_mulai)->addMonths($master->periode_jabatan)->format('Y-m-d');
@@ -686,6 +742,7 @@ class DataKaryawanController extends MiddlewareController
             KaryawanJabatanStruktural::create([
                 'data_dosen_tendik_id' => $id,
                 'jabatan_struktural_id' => $request->jabatan_struktural_id,
+                'unit_id' => $master->is_unit_specific == 'Y' ? $request->unit_id : null,
                 'tgl_mulai' => $request->tgl_mulai,
                 'tgl_akhir' => $tglAkhir,
                 'is_active' => 'Y'
@@ -693,7 +750,7 @@ class DataKaryawanController extends MiddlewareController
             
             return $this->sendSuccess('Jabatan struktural berhasil ditambahkan.', [
                 'html' => view('admin::data-karyawan._struktural_list', [
-                    'strukturals' => KaryawanJabatanStruktural::where('data_dosen_tendik_id', $id)->where('is_active', 'Y')->with('masterStruktural')->orderBy('tgl_mulai', 'desc')->get()
+                    'strukturals' => KaryawanJabatanStruktural::where('data_dosen_tendik_id', $id)->where('is_active', 'Y')->with(['masterStruktural', 'unit'])->orderBy('tgl_mulai', 'desc')->get()
                 ])->render()
             ]);
         } catch (\Exception $e) {
@@ -715,7 +772,7 @@ class DataKaryawanController extends MiddlewareController
             
             return $this->sendSuccess('Jabatan struktural berhasil dilepas.', [
                 'html' => view('admin::data-karyawan._struktural_list', [
-                    'strukturals' => KaryawanJabatanStruktural::where('data_dosen_tendik_id', $karyawanId)->where('is_active', 'Y')->with('masterStruktural')->orderBy('tgl_mulai', 'desc')->get()
+                    'strukturals' => KaryawanJabatanStruktural::where('data_dosen_tendik_id', $karyawanId)->where('is_active', 'Y')->with(['masterStruktural', 'unit'])->orderBy('tgl_mulai', 'desc')->get()
                 ])->render()
             ]);
         } catch (\Exception $e) {
@@ -731,7 +788,7 @@ class DataKaryawanController extends MiddlewareController
         $this->guard('view', 'admin:data-karyawan');
         $karyawan = DataDosenTendik::findOrFail($id);
         
-        $riwayats = RiwayatJabatan::with(['jabatanStruktural', 'jabatanFungsional', 'pangkatGolongan'])
+        $riwayats = RiwayatJabatan::with(['jabatanStruktural', 'jabatanFungsional', 'pangkatGolongan', 'unit'])
             ->where('data_dosen_tendik_id', $id)
             ->orderBy('tgl_selesai', 'desc')
             ->orderBy('created_at', 'desc')

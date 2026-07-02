@@ -17,7 +17,8 @@ class MasterJabatanStruktural extends Model
     protected $fillable = [
         'nama_jabatan',
         'periode_jabatan',
-        'keterangan'
+        'keterangan',
+        'is_unit_specific'
     ];
 
     public function getTable()
@@ -28,5 +29,10 @@ class MasterJabatanStruktural extends Model
     public function dataDosenTendiks()
     {
         return $this->hasMany(DataDosenTendik::class, 'jabatan_struktural_id');
+    }
+
+    public function karyawanAktifs()
+    {
+        return $this->hasMany(KaryawanJabatanStruktural::class, 'jabatan_struktural_id')->where('is_active', 'Y');
     }
 }

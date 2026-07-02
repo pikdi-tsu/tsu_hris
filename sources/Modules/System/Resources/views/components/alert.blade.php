@@ -221,8 +221,26 @@
     }
 
     $(document).ready(function() {
-        // 403 alert
+        // Global AJAX Error Handler
         $(document).ajaxError(function(event, jqxhr, settings, thrownError) {
+            // Cek error 401 (Unauthorized) atau 419 (CSRF/Session Expired)
+            if (jqxhr.status === 401 || jqxhr.status === 419) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Sesi Berakhir!',
+                    text: 'Sesi Anda telah habis. Silakan muat ulang halaman atau login kembali.',
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: '<i class="fas fa-sign-in-alt"></i> Login Kembali',
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.reload();
+                    }
+                });
+                return;
+            }
+
             // Cek error 403 (Unauthorized / Permission)
             if (jqxhr.status === 403) {
                 let response = jqxhr.responseJSON;

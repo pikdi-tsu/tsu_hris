@@ -17,4 +17,24 @@ class MasterUnit extends Model
         parent::__construct($attributes);
         $this->setTable('master_units');
     }
+
+    public function parent()
+    {
+        return $this->belongsTo(MasterUnit::class, 'parent_unit_id');
+    }
+
+    public function children()
+    {
+        return $this->hasMany(MasterUnit::class, 'parent_unit_id');
+    }
+
+    public function kepalaJabatan()
+    {
+        return $this->belongsTo(MasterJabatanStruktural::class, 'kepala_jabatan_id');
+    }
+
+    public function dosenTendiks()
+    {
+        return $this->hasMany(DataDosenTendik::class, 'unit_id');
+    }
 }

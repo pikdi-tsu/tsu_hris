@@ -29,4 +29,9 @@ class MasterJabatanFungsional extends Model
     {
         return $this->hasMany(DataDosenTendik::class, 'jabatan_fungsional_id');
     }
+
+    public function karyawanAktifs()
+    {
+        return $this->hasMany(KaryawanJabatanFungsional::class, 'jabatan_fungsional_id')->where('is_active', 'Y');
+    }
 }

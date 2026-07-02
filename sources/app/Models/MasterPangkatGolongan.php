@@ -28,4 +28,9 @@ class MasterPangkatGolongan extends Model
     {
         return $this->hasMany(DataDosenTendik::class, 'pangkat_golongan_id');
     }
+
+    public function karyawanAktifs()
+    {
+        return $this->hasMany(KaryawanJabatanFungsional::class, 'pangkat_golongan_id')->where('is_active', 'Y');
+    }
 }

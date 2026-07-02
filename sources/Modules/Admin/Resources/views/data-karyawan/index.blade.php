@@ -18,11 +18,11 @@
                 <thead>
                 <tr>
                     <th width="5%" class="text-center">No</th>
-                    <th width="25%">Nama Lengkap & Kontak</th>
+                    <th width="20%">Nama Lengkap & Kontak</th>
                     <th width="15%">Identitas</th>
-                    <th width="20%">Keilmuan Inti</th>
-                    <th width="25%">Jabatan</th>
-                    <th width="25%">Status & Tipe</th>
+                    <th width="20%">Homebase & Posisi</th>
+                    <th width="20%">Jabatan Struktural/Fungsional</th>
+                    <th width="10%">Status</th>
                     <th width="10%" class="text-center">Aksi</th>
                 </tr>
                 </thead>
@@ -52,8 +52,8 @@
             columns: [
                 {data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, className: 'text-center'},
                 {data: 'nama_lengkap', name: 'nama'},
-                {data: 'identitas', name: 'nik'}, // Bisa ditambah name: 'nidn' di backend kalau mau multi-search
-                {data: 'keilmuan_inti', name: 'keilmuan_inti', defaultContent: '-'}, // Langsung tarik dari DB
+                {data: 'identitas', name: 'nik'}, 
+                {data: 'homebase_posisi', name: 'homebase_posisi'},
                 {data: 'jabatan', name: 'jabatan'},
                 {data: 'status_karyawan', name: 'status_karyawan'},
                 {data: 'aksi', name: 'aksi', orderable: false, searchable: false, className: 'text-center'},

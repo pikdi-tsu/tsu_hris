@@ -44,6 +44,17 @@
     }
 @endphp
 
+@php
+    $badgeCount = 0;
+    if ($menu->route === 'users.indexapprovalcuti') {
+        $badgeCount = session('notifcutiatasan', 0) + session('notifcutihrd', 0);
+    } elseif ($menu->route === 'users.indexapprovalizin') {
+        $badgeCount = session('notifizinatasan', 0) + session('notifizinhrd', 0);
+    } elseif ($menu->route === 'users.lembur.index') {
+        $badgeCount = session('notiflemburatasan', 0) + session('notiflemburhrd', 0);
+    }
+@endphp
+
 <li class="nav-item {{ $hasChildren && $isActive ? 'menu-open' : '' }}">
 
     <a href="{{ $href }}"
@@ -51,8 +62,9 @@
        style="padding-left: {{ $paddingLeft }}rem !important; display: flex; align-items: center;">
         <i class="nav-indicator {{ $indicator }} mr-2"></i>
         <i class="nav-icon {{ $mainIcon }} mr-2"></i>
-        <p class="mb-0" style="flex: 1;">
+        <p class="mb-0" style="flex: 1;" id="sidebar-menu-{{ str_replace('.', '-', $menu->route ?? 'folder') }}">
             {{ $menu->name }}
+            <span class="badge badge-danger right" id="sidebar-badge-{{ str_replace('.', '-', $menu->route ?? 'folder') }}" {!! $badgeCount > 0 ? '' : 'style="display:none;"' !!}>{{ $badgeCount }}</span>
         </p>
     </a>
 

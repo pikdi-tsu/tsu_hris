@@ -71,7 +71,118 @@
         if (typeof bsCustomFileInput !== 'undefined') {
             bsCustomFileInput.init();
         }
+
+        // --- GLOBAL: Auto open Bootstrap tab based on URL hash ---
+        let url = window.location.href;
+        if (url.includes('#')) {
+            let hash = url.substring(url.indexOf('#'));
+            let tabLink = $('ul.nav-tabs a[href="' + hash + '"]');
+            if (tabLink.length) {
+                tabLink.tab('show');
+            }
+        }
+        
+        // --- GLOBAL: Update URL hash when a tab is clicked ---
+        $('ul.nav-tabs a[data-toggle="pill"], ul.nav-tabs a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+            if(history.pushState) {
+                history.pushState(null, null, e.target.hash);
+            } else {
+                window.location.hash = e.target.hash;
+            }
+        });
     });
 </script>
 @include('system::components.alert')
 @yield('script')
+
+<script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/laravel-echo@1.16.1/dist/echo.iife.js"></script>
+<script>
+    if (typeof Echo !== 'undefined' && '{{ config('broadcasting.connections.reverb.key') }}' !== '') {
+        window.Pusher = Pusher;
+        window.Echo = new Echo({
+            broadcaster: 'reverb',
+            key: '{{ config('broadcasting.connections.reverb.key') }}',
+            wsHost: '{{ config('broadcasting.connections.reverb.options.host') }}',
+            wsPort: {{ config('broadcasting.connections.reverb.options.port', 80) }},
+            wssPort: {{ config('broadcasting.connections.reverb.options.port', 443) }},
+            forceTLS: {{ config('broadcasting.connections.reverb.options.scheme', 'http') === 'https' ? 'true' : 'false' }},
+            enabledTransports: ['ws', 'wss'],
+            auth: {
+                headers: {
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            }
+        });
+
+        @if(Auth::check())
+            window.Echo.private('App.Models.User.{{ Auth::id() }}')
+                .notification((notification) => {
+                    console.log('New notification:', notification);
+                    // Update global badge
+                    let globalBadge = $('#global-notif-badge');
+                    let currentGlobal = parseInt(globalBadge.text()) || 0;
+                    
+                    if (notification.jenis === 'lembur') {
+                        let lemburBadge = $('#badge-notif-lembur-atasan');
+                        let currentLembur = parseInt(lemburBadge.text()) || 0;
+                        
+                        lemburBadge.text(currentLembur + 1);
+                        $('#lembur-atasan-divider').show();
+                        $('#lembur-atasan-item').show();
+                        
+                        globalBadge.text(currentGlobal + 1);
+                        $('#global-notif-text').text(currentGlobal + 1);
+                        globalBadge.show();
+                        
+                        $('#global-notif-empty').hide();
+                        $('#global-notif-header').show();
+
+                        // SweetAlert toast
+                        const Toast = Swal.mixin({
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 5000,
+                            timerProgressBar: true,
+                            didOpen: (toast) => {
+                                toast.addEventListener('mouseenter', Swal.stopTimer)
+                                toast.addEventListener('mouseleave', Swal.resumeTimer)
+                            }
+                        });
+
+                        Toast.fire({
+                            icon: 'info',
+                            title: notification.message
+                        });
+                        
+                        // Update sidebar badge
+                        let sidebarBadge = $('#sidebar-badge-users-lembur-index');
+                        if (sidebarBadge.length) {
+                            let currentSidebar = parseInt(sidebarBadge.text()) || 0;
+                            sidebarBadge.text(currentSidebar + 1);
+                            sidebarBadge.show();
+                        }
+                        
+                        // If we are on the lembur index page, reload the datatables
+                        if ($.fn.DataTable.isDataTable('#dataTablesApproval')) {
+                            $('#dataTablesApproval').DataTable().ajax.reload(null, false);
+                            let tab = $('#tab-persetujuan-bawahan');
+                            if (tab.length) {
+                                let tabBadge = tab.find('.badge');
+                                if (tabBadge.length) {
+                                    tabBadge.text(currentLembur + 1);
+                                    tabBadge.show();
+                                } else {
+                                    tab.append(' <span class="badge badge-danger" id="badge-approval">' + (currentLembur + 1) + '</span>');
+                                }
+                            }
+                        }
+                        if ($.fn.DataTable.isDataTable('#dataTables')) {
+                            $('#dataTables').DataTable().ajax.reload(null, false);
+                        }
+                    }
+                });
+        @endif
+    }
+</script>

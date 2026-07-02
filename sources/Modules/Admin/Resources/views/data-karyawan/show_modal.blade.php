@@ -44,6 +44,16 @@
                                         $value = tglIndo($value);
                                     }
 
+                                    // Override khusus untuk unit_id (Tampilkan nama_unit, bukan UUID-nya)
+                                    if ($field['name'] === 'unit_id' && $karyawan->unit) {
+                                        $value = $karyawan->unit->nama_unit;
+                                    }
+
+                                    // Override khusus untuk status_karyawan_id
+                                    if ($field['name'] === 'status_karyawan_id' && $karyawan->statusKaryawan) {
+                                        $value = $karyawan->statusKaryawan->nama_status;
+                                    }
+
                                     $isEmpty = is_null($value) || $value === '' || $value === '0' || $value === '-';
 
                                     $valStr = trim((string)$value);
@@ -57,7 +67,7 @@
                                     $isUrl = !$isEmpty && !$isWa && (str_starts_with($valStr, 'http://') || str_starts_with($valStr, 'https://'));
 
                                     // 3. Deteksi Status & Tab
-                                    $isStatus = in_array($field['name'], ['status_karyawan', 'status_pegawai']);
+                                    $isStatus = in_array($field['name'], ['status_karyawan_id', 'status_pegawai']);
                                     $isDokumenTab = $tabKey === 'tab_dokumen';
                                 @endphp
 

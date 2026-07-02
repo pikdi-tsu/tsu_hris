@@ -20,6 +20,13 @@
             <label>Keterangan</label>
             <textarea name="keterangan" class="form-control" rows="3" placeholder="Opsional"></textarea>
         </div>
+        <div class="form-group">
+            <label>Wajib Pilih Unit Penugasan? <span class="text-danger">*</span></label>
+            <select name="is_unit_specific" class="form-control" required>
+                <option value="Y">Ya (Wajib pilih unit, misal: Kepala Biro)</option>
+                <option value="N">Tidak (Tingkat Universitas, misal: Rektor)</option>
+            </select>
+        </div>
     </div>
     <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>

@@ -21,9 +21,10 @@
             $notiflemburhrd = session('notiflemburhrd');
             
             $dbNotifs = Auth::user()->notifications()->latest()->take(5)->get();
+            $dbNotifSystemOnly = Auth::user()->unreadNotifications()->where('type', 'NOT LIKE', '%DiajukanNotification%')->count();
             $dbNotifCount = Auth::user()->unreadNotifications()->count();
             
-            $all = $notifcutiatasan + $notifizinatasan + $notifcutihrd + $notifizinhrd + $notiflemburatasan + $notiflemburhrd + $dbNotifCount;
+            $all = $notifcutiatasan + $notifizinatasan + $notifcutihrd + $notifizinhrd + $notiflemburatasan + $notiflemburhrd + $dbNotifSystemOnly;
         @endphp
         <!-- Notifications Dropdown Menu -->
         <li class="nav-item dropdown">
@@ -93,6 +94,7 @@
                         @php
                             $isUnread = is_null($notif->read_at);
                             $bgColor = $isUnread ? 'bg-white' : 'bg-light';
+                            $textColor = $isUnread ? 'text-dark font-weight-bold' : 'text-muted';
                             $data = $notif->data;
                             $icon = 'fas fa-bell text-secondary';
                             
@@ -105,7 +107,10 @@
                             <div class="media">
                                 <i class="{{ $icon }} mr-3 mt-1" style="font-size: 1.2rem;"></i>
                                 <div class="media-body">
-                                    <p class="text-sm text-dark mb-1">
+                                    <p class="text-sm {{ $textColor }} mb-1">
+                                        @if($isUnread)
+                                            <i class="fas fa-circle text-primary mr-1" style="font-size: 0.4rem; vertical-align: middle;"></i>
+                                        @endif
                                         {{ Str::limit($data['message'] ?? 'Ada notifikasi baru', 60) }}
                                     </p>
                                     @if(isset($data['download_url']))

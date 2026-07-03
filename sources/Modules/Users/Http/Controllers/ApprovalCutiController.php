@@ -218,6 +218,24 @@ class ApprovalCutiController extends Controller
                 ]);
             }
 
+            // Real-Time Notification to Karyawan (Feedback)
+            $karyawanProfile = DataDosenTendik::find($check->id_user);
+            if ($karyawanProfile && $karyawanProfile->user_id) {
+                $karyawanUser = User::find($karyawanProfile->user_id);
+                if ($karyawanUser) {
+                    $statusText = $approval == 'approved' ? 'Disetujui' : 'Ditolak';
+                    $roleText = $checkatasan ? 'Atasan' : 'SDM';
+                    $iconClass = $approval == 'approved' ? 'fa-check-circle text-success' : 'fa-times-circle text-danger';
+                    $karyawanUser->notify(new \App\Notifications\PengajuanDiprosesNotification(
+                        "Pengajuan Cuti Anda telah {$statusText} oleh {$roleText}.",
+                        'feedback',
+                        route('users.cuti.index'),
+                        'Cek Riwayat',
+                        $iconClass
+                    ));
+                }
+            }
+
             DB::commit();
             return $this->sendSuccess('Approval Cuti Berhasil Disimpan');
         } catch (\Exception $e) {

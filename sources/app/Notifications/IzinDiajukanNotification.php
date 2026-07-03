@@ -49,7 +49,9 @@ class IzinDiajukanNotification extends Notification implements ShouldQueue, Shou
             'message' => $this->message,
             'jenis' => 'izin',
             'role' => $this->role,
-            'statusatasan' => $this->izin->statusatasan
+            'statusatasan' => $this->izin->statusatasan,
+            'action_text' => 'Proses Izin',
+            'action_url' => route('users.indexapprovalizin')
         ];
     }
 

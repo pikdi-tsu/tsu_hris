@@ -17,7 +17,7 @@
                             </button>
                         </form>
                     @elseif($filter == 'read' && $readCount > 0)
-                        <a href="{{ route('users.notifications.backupClear') }}" class="btn btn-danger" onclick="return confirm('Anda yakin ingin mem-backup {{ $readCount }} riwayat ini ke Excel dan menghapusnya dari sistem?')">
+                        <a href="{{ route('users.notifications.backupClear') }}" class="btn btn-danger btn-backup-clear">
                             <i class="fas fa-file-excel mr-1"></i> Backup & Bersihkan Riwayat
                         </a>
                     @endif
@@ -86,10 +86,22 @@
                                             if ($data['statusatasan'] == 'export-ready') {
                                                 $icon = 'fas fa-file-excel text-success';
                                                 $title = 'Export Selesai';
-                                            }
-                                            if ($data['statusatasan'] == 'export-failed') {
+                                            } elseif ($data['statusatasan'] == 'export-failed') {
                                                 $icon = 'fas fa-exclamation-triangle text-danger';
                                                 $title = 'Export Gagal';
+                                            }
+                                        }
+                                        
+                                        if (isset($data['jenis'])) {
+                                            if ($data['jenis'] == 'izin') {
+                                                $icon = 'fas fa-envelope-open-text text-primary';
+                                                $title = 'Pengajuan Izin';
+                                            } elseif ($data['jenis'] == 'cuti') {
+                                                $icon = 'fas fa-umbrella-beach text-warning';
+                                                $title = 'Pengajuan Cuti';
+                                            } elseif ($data['jenis'] == 'lembur') {
+                                                $icon = 'fas fa-clock text-info';
+                                                $title = 'Pengajuan Lembur';
                                             }
                                         }
                                     @endphp
@@ -110,20 +122,24 @@
                                             <span class="text-muted text-sm d-block mb-2"><i class="far fa-clock"></i> {{ $notif->created_at->format('d M Y, H:i') }}</span>
                                             
                                             <div class="btn-group">
-                                                @if(isset($data['download_url']))
+                                                @if(isset($data['action_url']))
+                                                    <a href="{{ route('users.notifications.read', $notif->id) }}" class="btn btn-sm btn-primary" title="{{ $data['action_text'] ?? 'Proses' }}">
+                                                        <i class="fas fa-arrow-right"></i> {{ $data['action_text'] ?? 'Proses' }}
+                                                    </a>
+                                                @elseif(isset($data['download_url']))
                                                     <a href="{{ $data['download_url'] }}" target="_blank" class="btn btn-sm btn-success" title="Download">
                                                         <i class="fas fa-download"></i> Download
                                                     </a>
                                                 @endif
                                                 
                                                 @if($isUnread)
-                                                    <a href="{{ route('users.notifications.read', $notif->id) }}" class="btn btn-sm btn-outline-secondary" title="Tandai Dibaca">
+                                                    <a href="{{ route('users.notifications.read', $notif->id) }}?redirect=false" class="btn btn-sm btn-outline-secondary" title="Tandai Dibaca">
                                                         <i class="fas fa-check"></i>
                                                     </a>
                                                 @else
-                                                    <button class="btn btn-sm btn-outline-secondary disabled" title="Sudah Dibaca">
+                                                    <a href="javascript:void(0)" class="btn btn-sm btn-outline-secondary disabled" title="Sudah Dibaca" style="pointer-events: none;">
                                                         <i class="fas fa-check-double text-primary"></i>
-                                                    </button>
+                                                    </a>
                                                 @endif
                                             </div>
                                         </td>
@@ -161,3 +177,30 @@
         </div>
     </section>
 @endsection
+
+@section('scripts')
+    <script>
+        $(document).ready(function() {
+            $('.btn-backup-clear').on('click', function(e) {
+                e.preventDefault();
+                let url = $(this).attr('href');
+                
+                Swal.fire({
+                    title: 'Backup & Bersihkan?',
+                    text: "Anda yakin ingin mem-backup {{ $readCount }} riwayat ini ke Excel dan menghapusnya dari sistem?",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: 'Ya, Backup & Hapus',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        window.location.href = url;
+                    }
+                });
+            });
+        });
+    </script>
+@endsection
+

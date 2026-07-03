@@ -49,7 +49,9 @@ class CutiDiajukanNotification extends Notification implements ShouldQueue, Shou
             'message' => $this->message,
             'jenis' => 'cuti',
             'role' => $this->role,
-            'statusatasan' => $this->cuti->statusatasan
+            'statusatasan' => $this->cuti->statusatasan,
+            'action_text' => 'Proses Cuti',
+            'action_url' => route('users.indexapprovalcuti')
         ];
     }
 

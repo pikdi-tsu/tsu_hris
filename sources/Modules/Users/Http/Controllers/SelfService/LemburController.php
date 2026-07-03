@@ -714,11 +714,41 @@ class LemburController extends MiddlewareController
                         }
                     }
                 }
+                
+                // Feedback to Karyawan
+                $karyawanProfile = DataDosenTendik::find($lembur->id_user);
+                if ($karyawanProfile && $karyawanProfile->user_id) {
+                    $karyawanUser = User::find($karyawanProfile->user_id);
+                    if ($karyawanUser) {
+                        $karyawanUser->notify(new \App\Notifications\PengajuanDiprosesNotification(
+                            "Pengajuan Lembur Anda telah Disetujui oleh Atasan.",
+                            'feedback',
+                            route('users.lembur.index'),
+                            'Cek Riwayat',
+                            'fa-check-circle text-success'
+                        ));
+                    }
+                }
             } else if ($isHrd && $lembur->statusatasan == 'approved' && $lembur->statushrd == 'waiting') {
                 DB::transaction(function () use ($lembur) {
                     $lembur->statushrd = 'approved';
                     $lembur->save();
                 });
+                
+                // Feedback to Karyawan
+                $karyawanProfile = DataDosenTendik::find($lembur->id_user);
+                if ($karyawanProfile && $karyawanProfile->user_id) {
+                    $karyawanUser = User::find($karyawanProfile->user_id);
+                    if ($karyawanUser) {
+                        $karyawanUser->notify(new \App\Notifications\PengajuanDiprosesNotification(
+                            "Pengajuan Lembur Anda telah Disetujui oleh SDM.",
+                            'feedback',
+                            route('users.lembur.index'),
+                            'Cek Riwayat',
+                            'fa-check-circle text-success'
+                        ));
+                    }
+                }
             } else {
                 throw new \Exception("Status pengajuan tidak valid untuk disetujui oleh Anda saat ini. (Menunggu persetujuan Atasan)");
             }
@@ -764,11 +794,41 @@ class LemburController extends MiddlewareController
                     $lembur->statushrd = 'rejected';
                     $lembur->save();
                 });
+                
+                // Feedback to Karyawan
+                $karyawanProfile = DataDosenTendik::find($lembur->id_user);
+                if ($karyawanProfile && $karyawanProfile->user_id) {
+                    $karyawanUser = User::find($karyawanProfile->user_id);
+                    if ($karyawanUser) {
+                        $karyawanUser->notify(new \App\Notifications\PengajuanDiprosesNotification(
+                            "Pengajuan Lembur Anda telah Ditolak oleh Atasan.",
+                            'feedback',
+                            route('users.lembur.index'),
+                            'Cek Riwayat',
+                            'fa-times-circle text-danger'
+                        ));
+                    }
+                }
             } else if ($isHrd && $lembur->statusatasan == 'approved' && $lembur->statushrd == 'waiting') {
                 DB::transaction(function () use ($lembur) {
                     $lembur->statushrd = 'rejected';
                     $lembur->save();
                 });
+                
+                // Feedback to Karyawan
+                $karyawanProfile = DataDosenTendik::find($lembur->id_user);
+                if ($karyawanProfile && $karyawanProfile->user_id) {
+                    $karyawanUser = User::find($karyawanProfile->user_id);
+                    if ($karyawanUser) {
+                        $karyawanUser->notify(new \App\Notifications\PengajuanDiprosesNotification(
+                            "Pengajuan Lembur Anda telah Ditolak oleh SDM.",
+                            'feedback',
+                            route('users.lembur.index'),
+                            'Cek Riwayat',
+                            'fa-times-circle text-danger'
+                        ));
+                    }
+                }
             } else {
                 throw new \Exception("Status pengajuan tidak valid untuk ditolak oleh Anda saat ini. (Menunggu persetujuan Atasan)");
             }

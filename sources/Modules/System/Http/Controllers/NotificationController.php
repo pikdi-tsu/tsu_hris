@@ -44,17 +44,28 @@ class NotificationController extends Controller
      * @param string $id
      * @return \Illuminate\Http\RedirectResponse
      */
-    public function read($id)
+    public function read(Request $request, $id)
     {
         $user = Auth::user();
         $notification = $user->notifications()->find($id);
+        
+        $shouldRedirect = $request->query('redirect', 'true') === 'true';
 
         if ($notification) {
             $notification->markAsRead();
             
-            // Extract download URL if it exists
-            if (isset($notification->data['download_url'])) {
-                return redirect($notification->data['download_url']);
+            if ($shouldRedirect) {
+                // Extract dynamic action URL if it exists (for Cuti, Izin, Lembur)
+                if (isset($notification->data['action_url'])) {
+                    return redirect($notification->data['action_url']);
+                }
+
+                // Extract download URL if it exists (for Export)
+                if (isset($notification->data['download_url'])) {
+                    return redirect()->back()
+                        ->with('success', 'File sedang diunduh...')
+                        ->with('download_url', $notification->data['download_url']);
+                }
             }
         }
 
@@ -91,13 +102,15 @@ class NotificationController extends Controller
         // Export to Excel
         $filename = 'Backup_Notifikasi_' . $user->name . '_' . date('Ymd_His') . '.xlsx';
         $export = new NotificationBackupExport($readNotifs);
-        
-        // After generating the file, we can't easily delete right after return Excel::download because it halts execution.
-        // But Excel::download returns a response. We can do it before, by saving to disk, downloading, and then deleting.
-        // Wait, a simpler way is to delete them first since we already loaded them into memory ($readNotifs).
+        // Save to disk first
+        Excel::store($export, 'public/exports/' . $filename);
         
         $user->readNotifications()->delete();
         
-        return Excel::download($export, $filename);
+        // Redirect back with download_url so the browser refreshes and UI updates
+        $downloadUrl = url('/storage/exports/' . $filename);
+        return redirect()->back()
+            ->with('success', 'Riwayat berhasil dibackup dan dihapus. File sedang diunduh...')
+            ->with('download_url', $downloadUrl);
     }
 }

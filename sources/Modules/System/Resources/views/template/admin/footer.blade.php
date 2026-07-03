@@ -123,25 +123,92 @@
                     let globalBadge = $('#global-notif-badge');
                     let currentGlobal = parseInt(globalBadge.text()) || 0;
                     
-                    if (notification.jenis === 'lembur' || notification.jenis === 'cuti' || notification.jenis === 'izin') {
+                    if (notification.jenis === 'feedback') {
+                        // 1. Update Global Badge
+                        let currentGlobal = parseInt(globalBadge.text()) || 0;
+                        globalBadge.text(currentGlobal + 1);
+                        $('#global-notif-text').text(currentGlobal + 1);
+                        globalBadge.show();
+                        $('#global-notif-empty').hide();
+                        $('#global-notif-header').show();
+                        
+                        // 2. Append to Inbox Dropdown
+                        let dropdownFooter = $('.dropdown-footer').closest('a');
+                        let iconClass = notification.icon_class || 'fa-info-circle text-info';
+                        let readUrl = notification.id ? '{{ url('notifications/read') }}/' + notification.id : (notification.action_url || '#');
+                        let actionText = notification.action_text || 'Lihat';
+                        
+                        let notifHtml = `
+                        <a href="${readUrl}" class="dropdown-item bg-white border-bottom db-notif-item" style="white-space: normal;">
+                            <div class="media">
+                                <i class="fas ${iconClass} mr-3 mt-1" style="font-size: 1.2rem;"></i>
+                                <div class="media-body">
+                                    <p class="text-sm text-dark mb-1">
+                                        ${notification.message}
+                                    </p>
+                                    <span class="badge badge-primary mt-1"><i class="fas fa-arrow-right"></i> ${actionText}</span>
+                                    <p class="text-xs text-muted mb-0 mt-1">
+                                        <i class="far fa-clock mr-1"></i> Baru saja
+                                    </p>
+                                </div>
+                            </div>
+                        </a>
+                        `;
+                        
+                        if($('#inbox-header').length === 0) {
+                            dropdownFooter.before('<div class="dropdown-divider inbox-divider"></div><span class="dropdown-item dropdown-header font-weight-bold bg-light text-left" id="inbox-header"><i class="fas fa-inbox mr-1"></i> Kotak Masuk (<span id="inbox-count">1</span> Baru)</span>');
+                        } else {
+                            let inboxCountElem = $('#inbox-count');
+                            if(inboxCountElem.length) {
+                                inboxCountElem.text(parseInt(inboxCountElem.text() || 0) + 1);
+                            }
+                        }
+                        
+                        $('#inbox-header').after(notifHtml);
+                        
+                        if($('.db-notif-item').length > 5) {
+                            $('.db-notif-item').last().remove();
+                        }
+                        
+                        // 3. Show Toast
+                        const Toast = Swal.mixin({
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: 5000,
+                            timerProgressBar: true,
+                            didOpen: (toast) => {
+                                toast.addEventListener('mouseenter', Swal.stopTimer)
+                                toast.addEventListener('mouseleave', Swal.resumeTimer)
+                            }
+                        });
+
+                        Toast.fire({
+                            icon: 'success',
+                            title: notification.message
+                        });
+                        
+                        // ALWAYS Reload DataTables if on the corresponding page
+                        let currentUrl = window.location.href;
+                        let actionUrl2 = notification.action_url || '#';
+                        if (actionUrl2 !== '#' && currentUrl.includes(actionUrl2)) {
+                            if ($.fn.DataTable.isDataTable('#dataTables')) {
+                                $('#dataTables').DataTable().ajax.reload(null, false);
+                            }
+                        }
+
+                    } else if (notification.jenis === 'lembur' || notification.jenis === 'cuti' || notification.jenis === 'izin') {
                         let type = notification.jenis;
                         let role = notification.role || 'atasan';
                         let statusatasan = notification.statusatasan || 'waiting';
                         
-                        // Condition: Only increment badges if Atasan has approved (for HRD) or it's Atasan role
-                        let shouldIncrementBadge = true;
-                        if (role === 'hrd' && statusatasan === 'waiting') {
-                            shouldIncrementBadge = false;
-                        }
-
-                        if (shouldIncrementBadge) {
-                            // 1. Update Global Badge
-                            let currentGlobal = parseInt(globalBadge.text()) || 0;
-                            globalBadge.text(currentGlobal + 1);
-                            $('#global-notif-text').text(currentGlobal + 1);
-                            globalBadge.show();
-                            $('#global-notif-empty').hide();
-                            $('#global-notif-header').show();
+                        // 1. Update Global Badge
+                        let currentGlobal = parseInt(globalBadge.text()) || 0;
+                        globalBadge.text(currentGlobal + 1);
+                        $('#global-notif-text').text(currentGlobal + 1);
+                        globalBadge.show();
+                        $('#global-notif-empty').hide();
+                        $('#global-notif-header').show();
 
                             // 2. Update Navbar Type Badge
                             let typeBadge = $('#badge-notif-' + type + '-' + role);
@@ -169,27 +236,73 @@
                                 }
                             }
 
-                            // 4. Update Tab Persetujuan Badge
-                            if ($.fn.DataTable.isDataTable('#dataTablesApproval')) {
-                                let tab = $('#tab-persetujuan-bawahan');
-                                if (tab.length) {
-                                    let tabBadge = tab.find('.badge');
-                                    if (tabBadge.length) {
-                                        let currentTab = parseInt(tabBadge.text()) || 0;
-                                        tabBadge.text(currentTab + 1);
-                                        tabBadge.show();
-                                    } else {
-                                        tab.append(' <span class="badge badge-danger" id="badge-approval">1</span>');
-                                    }
+                        // 4. Update Tab Persetujuan Badge (HANYA JIKA DI HALAMAN YANG SESUAI)
+                        let currentUrl = window.location.href;
+                        let isCorrectPage = false;
+                        if (type === 'lembur' && currentUrl.includes('/users/lembur')) isCorrectPage = true;
+                        if (type === 'izin' && currentUrl.includes('/users/approvalizin')) isCorrectPage = true;
+                        if (type === 'cuti' && currentUrl.includes('/users/approvalcuti')) isCorrectPage = true;
+
+                        if (isCorrectPage && $.fn.DataTable.isDataTable('#dataTablesApproval')) {
+                            let tab = $('#tab-persetujuan-bawahan');
+                            if (tab.length) {
+                                let tabBadge = tab.find('.badge');
+                                if (tabBadge.length) {
+                                    let currentTab = parseInt(tabBadge.text()) || 0;
+                                    tabBadge.text(currentTab + 1);
+                                    tabBadge.show();
+                                } else {
+                                    tab.append(' <span class="badge badge-danger" id="badge-approval">1</span>');
                                 }
                             }
                         }
 
-                        // ALWAYS Reload DataTables and Show Toast regardless of shouldIncrementBadge
-                        if ($.fn.DataTable.isDataTable('#dataTablesApproval')) {
+                        // 5. Append to Inbox Dropdown dynamically
+                        let dropdownFooter = $('.dropdown-footer').closest('a');
+                        let iconClass = type === 'izin' ? 'fa-envelope-open-text text-primary' : (type === 'cuti' ? 'fa-umbrella-beach text-warning' : 'fa-clock text-info');
+                        
+                        // We use index route because we don't know the exact notification ID here, but they can click it via notification page later
+                        // We route through users.notifications.read so it gets marked as read in database
+                        let readUrl = notification.id ? '{{ url('notifications/read') }}/' + notification.id : (notification.action_url || (type === 'izin' ? '{{ route('users.indexapprovalizin') }}' : (type === 'cuti' ? '{{ route('users.indexapprovalcuti') }}' : '{{ route('users.lembur.index') }}#content-persetujuan-bawahan')));
+                        let actionText = notification.action_text || 'Proses';
+                        
+                        let notifHtml = `
+                        <a href="${readUrl}" class="dropdown-item bg-white border-bottom db-notif-item" style="white-space: normal;">
+                            <div class="media">
+                                <i class="fas ${iconClass} mr-3 mt-1" style="font-size: 1.2rem;"></i>
+                                <div class="media-body">
+                                    <p class="text-sm text-dark mb-1">
+                                        ${notification.message}
+                                    </p>
+                                    <span class="badge badge-primary mt-1"><i class="fas fa-arrow-right"></i> ${actionText}</span>
+                                    <p class="text-xs text-muted mb-0 mt-1">
+                                        <i class="far fa-clock mr-1"></i> Baru saja
+                                    </p>
+                                </div>
+                            </div>
+                        </a>
+                        `;
+                        
+                        if($('#inbox-header').length === 0) {
+                            dropdownFooter.before('<div class="dropdown-divider inbox-divider"></div><span class="dropdown-item dropdown-header font-weight-bold bg-light text-left" id="inbox-header"><i class="fas fa-inbox mr-1"></i> Kotak Masuk (<span id="inbox-count">1</span> Baru)</span>');
+                        } else {
+                            let inboxCountElem = $('#inbox-count');
+                            if(inboxCountElem.length) {
+                                inboxCountElem.text(parseInt(inboxCountElem.text() || 0) + 1);
+                            }
+                        }
+                        
+                        $('#inbox-header').after(notifHtml);
+                        
+                        if($('.db-notif-item').length > 5) {
+                            $('.db-notif-item').last().remove();
+                        }
+
+                        // ALWAYS Reload DataTables and Show Toast regardless of shouldIncrementBadge (HANYA JIKA DI HALAMAN YANG SESUAI)
+                        if (isCorrectPage && $.fn.DataTable.isDataTable('#dataTablesApproval')) {
                             $('#dataTablesApproval').DataTable().ajax.reload(null, false);
                         }
-                        if ($.fn.DataTable.isDataTable('#dataTables')) {
+                        if (isCorrectPage && $.fn.DataTable.isDataTable('#dataTables')) {
                             $('#dataTables').DataTable().ajax.reload(null, false);
                         }
 

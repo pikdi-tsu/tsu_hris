@@ -19,6 +19,7 @@ use \Modules\Admin\Http\Controllers\MasterLemburController;
 use Modules\Admin\Http\Controllers\MasterJabatanController;
 use Modules\Admin\Http\Controllers\RiwayatJabatanController;
 use Modules\Admin\Http\Controllers\RiwayatIzinCutiController;
+use Modules\Admin\Http\Controllers\AbsensiController;
 use Illuminate\Support\Facades\Route;
 use Modules\Admin\Http\Controllers\MasterStatusKaryawanController;
 use Modules\Admin\Http\Controllers\MasterUnitController;
@@ -171,5 +172,16 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
             Route::get('/jsonizin', [RiwayatIzinCutiController::class, 'datatableizin'])->name('jsonizin');
             Route::get('/jsoncuti', [RiwayatIzinCutiController::class, 'datatablecuti'])->name('jsoncuti');
         });
+    });
+
+    // --- ROUTE ABSENSI ---
+    Route::prefix('absensi')->name('absensi.')->group(function () {
+        Route::get('/', [AbsensiController::class, 'index'])->name('index');
+        Route::post('/uploadexcel', [AbsensiController::class, 'simpanexcel'])->name('uploadexcel');
+        Route::get('/datatablesabsensi', [AbsensiController::class, 'datatableabsensi'])->name('datatablesabsensi');
+        Route::post('/updateperiode', [AbsensiController::class, 'update'])->name('updateperiode');
+
+        // Route::post('/edit', [AbsensiController::class, 'edit'])->name('edit');
+        // Route::post('/detail', [AbsensiController::class, 'detail'])->name('detail');
     });
 });

@@ -13,14 +13,15 @@
                     <h1>{{ $title ?? 'Halaman Dashboard' }}</h1>
                 </div>
                 <div class="col-sm-6">
-                     <div class="d-flex justify-content-end">
-                        <a href="{{route('users.dashboard')}}" type="button" class="btn btn-primary bg-gradient-primary rounded-circle p-3" style="font-size: 10pt">
+                    <div class="d-flex justify-content-end">
+                        <a href="{{ route('users.dashboard') }}" type="button"
+                            class="btn btn-primary bg-gradient-primary rounded-circle p-3" style="font-size: 10pt">
                             Self.S
                         </a>
                     </div>
                     {{-- <ol class="breadcrumb float-sm-right"> --}}
-                        {{-- <li class="breadcrumb-item active"><a href="{{route('admin.dashboard')}}">Dashboard</a></li> --}}
-                        {{-- <li class="breadcrumb-item active">Starter Page</li> --}}
+                    {{-- <li class="breadcrumb-item active"><a href="{{route('admin.dashboard')}}">Dashboard</a></li> --}}
+                    {{-- <li class="breadcrumb-item active">Starter Page</li> --}}
                     {{-- </ol> --}}
                 </div>
             </div>
@@ -43,8 +44,11 @@
                             <a href="#" class="btn btn-primary" id="testing-btn">Button</a> --}}
 
                             <div class="d-grid gap-2 d-md-block">
-                                <a href="#" type="button" class="btn bg-gradient-primary">
-                                    Absensi
+                                <a href="{{ route('admin.absensi.index') }}" type="button" class="btn bg-gradient-primary">
+                                    Upload Absensi
+                                </a>
+                                <a href="{{ route('admin.absensi.index') }}" type="button" class="btn bg-gradient-primary">
+                                    Riwayat Absensi
                                 </a>
                             </div>
                         </div>
@@ -56,7 +60,7 @@
 @endsection
 @section('script')
     <script>
-        $(function () {
+        $(function() {
             $.ajaxSetup({
                 headers: {
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')

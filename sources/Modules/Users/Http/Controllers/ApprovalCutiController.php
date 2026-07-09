@@ -184,6 +184,12 @@ class ApprovalCutiController extends Controller
 
                 if ($approval == 'approved') {
                     $checksaldo = SaldoCutiKaryawan::lockForUpdate()->where('id_user', $iduserinput)->where('is_active', '1')->first();
+                    
+                    if (!$checksaldo) {
+                        DB::rollback();
+                        return $this->sendError('Gagal menyetujui: Karyawan belum memiliki data Saldo Cuti aktif. Silakan hubungi SDM untuk mengatur saldo.');
+                    }
+
                     $saldoterpakai = $checksaldo->terpakai + $jumlahHari;
                     $saldosisa = $checksaldo->sisa - $jumlahHari;
                     $update2 = SaldoCutiKaryawan::where('id_user', $iduserinput)->where('is_active', '1')->update([

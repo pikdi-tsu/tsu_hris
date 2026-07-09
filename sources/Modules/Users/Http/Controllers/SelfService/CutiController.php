@@ -18,6 +18,8 @@ use App\Models\KaryawanJabatanStruktural;
 use App\Traits\ApiResponseTrait;
 use App\Services\TsuErrorHandlerService;
 use App\Models\User;
+use App\Notifications\CutiDiajukanNotification;
+use App\Models\MasterUnit;
 
 class CutiController extends Controller
 {
@@ -62,7 +64,7 @@ class CutiController extends Controller
                 ->whereIn('is_active', [1, '1', 'Y', 'y'])->exists();
             
             if ($profile->unit_id) {
-                $unit = \App\Models\MasterUnit::find($profile->unit_id);
+                $unit = MasterUnit::find($profile->unit_id);
                 if ($unit) {
                     $atasanId = $this->findAtasanId($unit, $profile->id);
                     if ($atasanId) {
@@ -122,7 +124,7 @@ class CutiController extends Controller
                 return $this->sendError('Unit Anda tidak ditemukan di sistem.');
             }
 
-            $unit = \App\Models\MasterUnit::find($profile->unit_id);
+            $unit = MasterUnit::find($profile->unit_id);
             if (!$unit) {
                 return $this->sendError('Unit Anda tidak ditemukan di sistem.');
             }
@@ -138,6 +140,24 @@ class CutiController extends Controller
             $tgl2 = $req->tanggal2;
             $alasan = $req->alasan;
             $idhrd = $req->id_hrd;
+
+            // Validasi Saldo Cuti
+            $start = Carbon::parse($tgl1);
+            $end = Carbon::parse($tgl2);
+            $jumlahHari = $start->diffInDays($end) + 1;
+
+            $checksaldo = SaldoCutiKaryawan::where('id_user', $iduser)->where('is_active', '1')->first();
+            
+            if (!$checksaldo) {
+                return $this->sendError('Gagal mengajukan: Anda belum memiliki data Saldo Cuti aktif. Silakan hubungi SDM untuk mengatur saldo cuti Anda terlebih dahulu.');
+            }
+
+            // Jika form edit, kita perlu memperhitungkan cuti ini (tidak menghabiskan saldo ganda)
+            // Namun karena approval mengurangi saldo nanti, saat pengajuan (waiting) saldo belum terpotong.
+            // Kita harus menghitung total hari cuti "waiting" lain jika diperlukan, tapi minimal cek sisa saat ini:
+            if ($checksaldo->sisa < $jumlahHari) {
+                return $this->sendError('Gagal mengajukan: Sisa saldo cuti Anda (' . $checksaldo->sisa . ' hari) tidak mencukupi untuk pengajuan ini (' . $jumlahHari . ' hari).');
+            }
 
             $cutiId = null;
             if ($req->ketedit == 'no') {
@@ -183,7 +203,7 @@ class CutiController extends Controller
                     if ($atasanProfile && $atasanProfile->user_id) {
                         $atasanUser = User::find($atasanProfile->user_id);
                         if ($atasanUser) {
-                            $atasanUser->notify(new \App\Notifications\CutiDiajukanNotification(
+                            $atasanUser->notify(new CutiDiajukanNotification(
                                 $cutiCreated,
                                 'Pengajuan cuti baru dari ' . ($profile->nama ?? 'Bawahan') . ' menunggu persetujuan Anda.'
                             ));
@@ -197,7 +217,7 @@ class CutiController extends Controller
                     if ($hrdProfile && $hrdProfile->user_id) {
                         $hrdUser = User::find($hrdProfile->user_id);
                         if ($hrdUser) {
-                            $hrdUser->notify(new \App\Notifications\CutiDiajukanNotification(
+                            $hrdUser->notify(new CutiDiajukanNotification(
                                 $cutiCreated,
                                 'Ada pengajuan cuti baru dari ' . ($profile->nama ?? 'Karyawan') . ' yang diajukan ke Atasan.',
                                 'hrd'
@@ -352,7 +372,7 @@ class CutiController extends Controller
         }
 
         if ($unit->parent_unit_id) {
-            $parentUnit = \App\Models\MasterUnit::find($unit->parent_unit_id);
+            $parentUnit = MasterUnit::find($unit->parent_unit_id);
             return $this->findAtasanId($parentUnit, $currentUserId);
         }
 

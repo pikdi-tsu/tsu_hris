@@ -9,20 +9,20 @@ use Illuminate\Notifications\Notification;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 
-class LemburDiajukanNotification extends Notification implements ShouldQueue, ShouldBroadcast
+class IzinDiajukanNotification extends Notification implements ShouldQueue, ShouldBroadcast
 {
     use Queueable;
 
-    public $lembur;
+    public $izin;
     public $message;
     public $role;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct($lembur, $message, $role = 'atasan')
+    public function __construct($izin, $message, $role = 'atasan')
     {
-        $this->lembur = $lembur;
+        $this->izin = $izin;
         $this->message = $message;
         $this->role = $role;
     }
@@ -45,13 +45,13 @@ class LemburDiajukanNotification extends Notification implements ShouldQueue, Sh
     public function toArray(object $notifiable): array
     {
         return [
-            'id_lembur' => $this->lembur->id,
+            'id_izin' => $this->izin->id,
             'message' => $this->message,
-            'jenis' => 'lembur',
+            'jenis' => 'izin',
             'role' => $this->role,
-            'statusatasan' => $this->lembur->statusatasan,
-            'action_text' => 'Proses Lembur',
-            'action_url' => route('users.lembur.index') . '#content-persetujuan-bawahan'
+            'statusatasan' => $this->izin->statusatasan,
+            'action_text' => 'Proses Izin',
+            'action_url' => route('users.indexapprovalizin')
         ];
     }
 
@@ -61,11 +61,11 @@ class LemburDiajukanNotification extends Notification implements ShouldQueue, Sh
     public function toBroadcast(object $notifiable): BroadcastMessage
     {
         return new BroadcastMessage([
-            'id_lembur' => $this->lembur->id,
+            'id_izin' => $this->izin->id,
             'message' => $this->message,
-            'jenis' => 'lembur',
+            'jenis' => 'izin',
             'role' => $this->role,
-            'statusatasan' => $this->lembur->statusatasan
+            'statusatasan' => $this->izin->statusatasan
         ]);
     }
 }

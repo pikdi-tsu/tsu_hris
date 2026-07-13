@@ -211,6 +211,57 @@
                         onSuccess: function(res) {
                             $('#modaldetail').modal('hide');
                             oTable.ajax.reload(null, false);
+
+                            // 1. Decrement Sidebar Badge
+                            let sidebarBadge = $('#sidebar-badge-users-indexapprovalcuti');
+                            if(sidebarBadge.length > 0) {
+                                let val = parseInt(sidebarBadge.text()) || 0;
+                                if (val > 0) {
+                                    sidebarBadge.text(val - 1);
+                                    if (val - 1 === 0) sidebarBadge.hide();
+                                }
+                            }
+
+                            // 2. Decrement Navbar Badge & Dropdown Item (Atasan)
+                            let navbarBadgeAtasan = $('#badge-notif-cuti-atasan');
+                            if(navbarBadgeAtasan.length > 0) {
+                                let val = parseInt(navbarBadgeAtasan.text()) || 0;
+                                if (val > 0) {
+                                    navbarBadgeAtasan.text(val - 1);
+                                    if (val - 1 === 0) {
+                                        $('#cuti-atasan-divider').hide();
+                                        $('#cuti-atasan-item').hide();
+                                    }
+                                }
+                            }
+
+                            // Decrement Navbar Badge & Dropdown Item (HRD)
+                            let navbarBadgeHrd = $('#badge-notif-cuti-hrd');
+                            if(navbarBadgeHrd.length > 0) {
+                                let val = parseInt(navbarBadgeHrd.text()) || 0;
+                                if (val > 0) {
+                                    navbarBadgeHrd.text(val - 1);
+                                    if (val - 1 === 0) {
+                                        $('#cuti-hrd-divider').hide();
+                                        $('#cuti-hrd-item').hide();
+                                    }
+                                }
+                            }
+
+                            // 3. Decrement Global Badge
+                            let globalBadge = $('#global-notif-badge');
+                            if(globalBadge.length > 0) {
+                                let val = parseInt(globalBadge.text()) || 0;
+                                if (val > 0) {
+                                    globalBadge.text(val - 1);
+                                    $('#global-notif-text').text(val - 1);
+                                    if (val - 1 === 0) {
+                                        globalBadge.hide();
+                                        $('#global-notif-header').hide();
+                                        $('#global-notif-empty').show();
+                                    }
+                                }
+                            }
                         }
                     });
                 }

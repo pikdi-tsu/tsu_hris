@@ -58,7 +58,25 @@ Route::prefix('')->group(function() {
             });
         });
 
+        // Notifications
+        Route::prefix('notifications')->middleware(['auth'])->name('users.notifications.')->group(function() {
+            Route::get('/', [\Modules\System\Http\Controllers\NotificationController::class, 'index'])->name('index');
+            Route::get('/read/{id}', [\Modules\System\Http\Controllers\NotificationController::class, 'read'])->name('read');
+            Route::post('/read-all', [\Modules\System\Http\Controllers\NotificationController::class, 'markAllAsRead'])->name('readAll');
+            Route::get('/backup-clear', [\Modules\System\Http\Controllers\NotificationController::class, 'backupAndClear'])->name('backupClear');
+        });
+
         // Custom Route View File
+        Route::middleware(['auth'])->get('/storage/exports/{filename}', function ($filename) {
+            $path = storage_path('app/public/exports/' . $filename);
+            
+            if (!File::exists($path)) {
+                abort(404);
+            }
+            
+            return Response::download($path);
+        });
+        
         Route::middleware(['auth'])->get('/storage/lembur/bukti/{filename}', function ($filename) {
             $path = storage_path('app/public/lembur/bukti/' . $filename);
             

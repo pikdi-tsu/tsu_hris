@@ -16,6 +16,7 @@ use App\Models\SaldoCutiKaryawan;
 use App\Models\DataDosenTendik;
 use App\Traits\ApiResponseTrait;
 use App\Services\TsuErrorHandlerService;
+use App\Models\User;
 
 class ApprovalCutiController extends Controller
 {
@@ -183,6 +184,12 @@ class ApprovalCutiController extends Controller
 
                 if ($approval == 'approved') {
                     $checksaldo = SaldoCutiKaryawan::lockForUpdate()->where('id_user', $iduserinput)->where('is_active', '1')->first();
+                    
+                    if (!$checksaldo) {
+                        DB::rollback();
+                        return $this->sendError('Gagal menyetujui: Karyawan belum memiliki data Saldo Cuti aktif. Silakan hubungi SDM untuk mengatur saldo.');
+                    }
+
                     $saldoterpakai = $checksaldo->terpakai + $jumlahHari;
                     $saldosisa = $checksaldo->sisa - $jumlahHari;
                     $update2 = SaldoCutiKaryawan::where('id_user', $iduserinput)->where('is_active', '1')->update([
@@ -191,6 +198,23 @@ class ApprovalCutiController extends Controller
                         'updated_at'  => date("Y-m-d H:i:s"),
                         'updated_by'  => $profile->nik ?? Auth::id()
                     ]);
+
+                    // Real-Time Notification to HRD after Atasan approves
+                    if ($check->id_hrd) {
+                        $hrdProfile = DataDosenTendik::find($check->id_hrd);
+                        if ($hrdProfile && $hrdProfile->user_id) {
+                            $hrdUser = User::find($hrdProfile->user_id);
+                            if ($hrdUser) {
+                                $karyawanProfile = DataDosenTendik::find($check->id_user);
+                                $namaKaryawan = $karyawanProfile ? $karyawanProfile->nama : 'Karyawan';
+                                $hrdUser->notify(new \App\Notifications\CutiDiajukanNotification(
+                                    $check,
+                                    'Pengajuan cuti dari ' . $namaKaryawan . ' telah disetujui Atasan dan menunggu persetujuan Anda.',
+                                    'hrd'
+                                ));
+                            }
+                        }
+                    }
                 }
             } else if ($checkhrd) {
                 $update = CutiKaryawan::where('id', $idcutikaryawan)->where('id_user', $iduserinput)->where('id_hrd', $check->id_hrd)->where('is_active', '1')->update([
@@ -198,6 +222,24 @@ class ApprovalCutiController extends Controller
                     'alasanhrd'       => $ketapproval,
                     'hrdapprovaldate' => date("Y-m-d H:i:s")
                 ]);
+            }
+
+            // Real-Time Notification to Karyawan (Feedback)
+            $karyawanProfile = DataDosenTendik::find($check->id_user);
+            if ($karyawanProfile && $karyawanProfile->user_id) {
+                $karyawanUser = User::find($karyawanProfile->user_id);
+                if ($karyawanUser) {
+                    $statusText = $approval == 'approved' ? 'Disetujui' : 'Ditolak';
+                    $roleText = $checkatasan ? 'Atasan' : 'SDM';
+                    $iconClass = $approval == 'approved' ? 'fa-check-circle text-success' : 'fa-times-circle text-danger';
+                    $karyawanUser->notify(new \App\Notifications\PengajuanDiprosesNotification(
+                        "Pengajuan Cuti Anda telah {$statusText} oleh {$roleText}.",
+                        'feedback',
+                        route('users.cuti.index'),
+                        'Cek Riwayat',
+                        $iconClass
+                    ));
+                }
             }
 
             DB::commit();

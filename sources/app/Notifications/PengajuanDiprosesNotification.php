@@ -6,25 +6,28 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Notifications\Messages\BroadcastMessage;
 
-class LemburDiajukanNotification extends Notification implements ShouldQueue, ShouldBroadcast
+class PengajuanDiprosesNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    public $lembur;
     public $message;
-    public $role;
+    public $jenis;
+    public $action_url;
+    public $action_text;
+    public $icon_class;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct($lembur, $message, $role = 'atasan')
+    public function __construct($message, $jenis, $action_url, $action_text = 'Cek Riwayat', $icon_class = 'fa-info-circle text-info')
     {
-        $this->lembur = $lembur;
         $this->message = $message;
-        $this->role = $role;
+        $this->jenis = $jenis;
+        $this->action_url = $action_url;
+        $this->action_text = $action_text;
+        $this->icon_class = $icon_class;
     }
 
     /**
@@ -45,13 +48,11 @@ class LemburDiajukanNotification extends Notification implements ShouldQueue, Sh
     public function toArray(object $notifiable): array
     {
         return [
-            'id_lembur' => $this->lembur->id,
             'message' => $this->message,
-            'jenis' => 'lembur',
-            'role' => $this->role,
-            'statusatasan' => $this->lembur->statusatasan,
-            'action_text' => 'Proses Lembur',
-            'action_url' => route('users.lembur.index') . '#content-persetujuan-bawahan'
+            'jenis' => $this->jenis,
+            'action_url' => $this->action_url,
+            'action_text' => $this->action_text,
+            'icon_class' => $this->icon_class
         ];
     }
 
@@ -61,11 +62,11 @@ class LemburDiajukanNotification extends Notification implements ShouldQueue, Sh
     public function toBroadcast(object $notifiable): BroadcastMessage
     {
         return new BroadcastMessage([
-            'id_lembur' => $this->lembur->id,
             'message' => $this->message,
-            'jenis' => 'lembur',
-            'role' => $this->role,
-            'statusatasan' => $this->lembur->statusatasan
+            'jenis' => $this->jenis,
+            'action_url' => $this->action_url,
+            'action_text' => $this->action_text,
+            'icon_class' => $this->icon_class
         ]);
     }
 }

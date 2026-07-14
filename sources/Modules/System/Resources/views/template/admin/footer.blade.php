@@ -202,14 +202,21 @@
                         let role = notification.role || 'atasan';
                         let statusatasan = notification.statusatasan || 'waiting';
                         
-                        // 1. Update Global Badge
-                        let currentGlobal = parseInt(globalBadge.text()) || 0;
-                        globalBadge.text(currentGlobal + 1);
-                        $('#global-notif-text').text(currentGlobal + 1);
-                        globalBadge.show();
-                        $('#global-notif-empty').hide();
-                        $('#global-notif-header').show();
+                        // Condition: Only increment badges if Atasan has approved (for HRD) or it's Atasan role
+                        let shouldIncrementBadge = true;
+                        if (role === 'hrd' && statusatasan === 'waiting') {
+                            shouldIncrementBadge = false;
+                        }
 
+                        if (shouldIncrementBadge) {
+                            // 1. Update Global Badge
+                            let currentGlobal = parseInt(globalBadge.text()) || 0;
+                            globalBadge.text(currentGlobal + 1);
+                            $('#global-notif-text').text(currentGlobal + 1);
+                            globalBadge.show();
+                            $('#global-notif-empty').hide();
+                            $('#global-notif-header').show();
+    
                             // 2. Update Navbar Type Badge
                             let typeBadge = $('#badge-notif-' + type + '-' + role);
                             let currentType = parseInt(typeBadge.text()) || 0;
@@ -229,21 +236,22 @@
                                 sidebarBadge.show();
                             } else {
                                 // If badge doesn't exist, inject it
-                                let routeName = (type === 'lembur') ? 'lembur' : (type === 'cuti' ? 'approvalcuti' : 'approvalizin');
+                                let routeName = (type === 'lembur') ? 'lembur' : (type === 'cuti' ? 'indexapprovalcuti' : 'indexapprovalizin');
                                 let sidebarLink = $('a[href*="users/' + routeName + '"] p');
                                 if (sidebarLink.length) {
                                     sidebarLink.append('<span id="' + sidebarId + '" class="badge badge-danger right">1</span>');
                                 }
                             }
+                        }
 
                         // 4. Update Tab Persetujuan Badge (HANYA JIKA DI HALAMAN YANG SESUAI)
                         let currentUrl = window.location.href;
                         let isCorrectPage = false;
                         if (type === 'lembur' && currentUrl.includes('/users/lembur')) isCorrectPage = true;
-                        if (type === 'izin' && currentUrl.includes('/users/approvalizin')) isCorrectPage = true;
-                        if (type === 'cuti' && currentUrl.includes('/users/approvalcuti')) isCorrectPage = true;
+                        if (type === 'izin' && currentUrl.includes('/users/indexapprovalizin')) isCorrectPage = true;
+                        if (type === 'cuti' && currentUrl.includes('/users/indexapprovalcuti')) isCorrectPage = true;
 
-                        if (isCorrectPage && $.fn.DataTable.isDataTable('#dataTablesApproval')) {
+                        if (shouldIncrementBadge && isCorrectPage && $.fn.DataTable.isDataTable('#dataTablesApproval')) {
                             let tab = $('#tab-persetujuan-bawahan');
                             if (tab.length) {
                                 let tabBadge = tab.find('.badge');

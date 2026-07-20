@@ -15,17 +15,19 @@ class CutiDiajukanNotification extends TsuRealtimeNotification
         $this->cuti = $cuti;
         $this->role = $role;
 
-        // Condition for silent notification
+        // Condition for silent notification and action text
         $is_silent = false;
+        $action_text = 'Proses Cuti';
         if ($role === 'hrd' && $cuti->statusatasan === 'waiting') {
             $is_silent = true;
+            $action_text = 'Lihat Cuti';
         }
 
         parent::__construct(
             $message,
             'indexapprovalcuti', // module
             route('users.indexapprovalcuti'), // action_url
-            'Proses Cuti', // action_text
+            $action_text, // action_text
             'Pengajuan Cuti', // title
             'fas fa-umbrella-beach text-warning', // icon
             $is_silent, // is_silent

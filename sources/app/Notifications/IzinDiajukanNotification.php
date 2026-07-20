@@ -15,17 +15,19 @@ class IzinDiajukanNotification extends TsuRealtimeNotification
         $this->izin = $izin;
         $this->role = $role;
 
-        // Condition for silent notification
+        // Condition for silent notification and action text
         $is_silent = false;
+        $action_text = 'Proses Izin';
         if ($role === 'hrd' && $izin->statusatasan === 'waiting') {
             $is_silent = true;
+            $action_text = 'Lihat Izin';
         }
 
         parent::__construct(
             $message,
             'indexapprovalizin', // module
             route('users.indexapprovalizin'), // action_url
-            'Proses Izin', // action_text
+            $action_text, // action_text
             'Pengajuan Izin', // title
             'fas fa-envelope-open-text text-primary', // icon
             $is_silent, // is_silent

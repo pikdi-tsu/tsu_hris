@@ -15,17 +15,19 @@ class LemburDiajukanNotification extends TsuRealtimeNotification
         $this->lembur = $lembur;
         $this->role = $role;
 
-        // Condition for silent notification (dari legacy footer)
+        // Condition for silent notification (dari legacy footer) and action text
         $is_silent = false;
+        $action_text = 'Proses Lembur';
         if ($role === 'hrd' && $lembur->statusatasan === 'waiting') {
             $is_silent = true;
+            $action_text = 'Lihat Lembur';
         }
 
         parent::__construct(
             $message,
             'lembur', // module
             route('users.lembur.index') . '#content-persetujuan-bawahan', // action_url
-            'Proses Lembur', // action_text
+            $action_text, // action_text
             'Pengajuan Lembur', // title
             'fas fa-clock text-info', // icon
             $is_silent, // is_silent

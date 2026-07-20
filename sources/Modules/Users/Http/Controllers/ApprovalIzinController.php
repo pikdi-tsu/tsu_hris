@@ -179,6 +179,9 @@ class ApprovalIzinController extends Controller
                     'atasanapprovaldate' => date("Y-m-d H:i:s")
                 ]);
 
+                // Update memory variable for notification
+                $check->statusatasan = $approval;
+
                 if ($approval == 'approved') {
                     // Real-Time Notification to HRD after Atasan approves
                     if ($check->id_hrd) {

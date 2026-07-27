@@ -194,4 +194,13 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
         // Route::post('/edit', [AbsensiController::class, 'edit'])->name('edit');
         // Route::post('/detail', [AbsensiController::class, 'detail'])->name('detail');
     });
+    // --- ROUTE MANPOWER PLANNING (MPP) ---
+    // Route::middleware(['permission:admin:mpp:view'])->group(function () { // Uncomment later when permission is added
+        Route::prefix('mpp')->name('mpp.')->group(function () {
+            Route::get('/', [\Modules\Admin\Http\Controllers\ManpowerPlanningController::class, 'index'])->name('index');
+            Route::post('/datatables', [\Modules\Admin\Http\Controllers\ManpowerPlanningController::class, 'datatables'])->name('datatables');
+            Route::post('/approve', [\Modules\Admin\Http\Controllers\ManpowerPlanningController::class, 'approve'])->name('approve');
+            Route::post('/detail', [\Modules\Admin\Http\Controllers\ManpowerPlanningController::class, 'detail'])->name('detail');
+        });
+    // });
 });

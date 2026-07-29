@@ -13,9 +13,12 @@ use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Models\DataDosenTendik;
+use App\Traits\ApiResponseTrait;
 
 class ManpowerPlanningController extends MiddlewareController
 {
+    use ApiResponseTrait;
+
     public function __construct()
     {
         $this->registerPermissions('admin:mpp');

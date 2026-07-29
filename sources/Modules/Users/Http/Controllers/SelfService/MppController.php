@@ -31,9 +31,28 @@ class MppController extends Controller
         return DataDosenTendik::where('user_id', Auth::id())->first();
     }
 
+    protected function checkIsAtasan($profile)
+    {
+        if (Auth::user()->hasRole(['super admin hris', 'admin hris'])) {
+            return;
+        }
+
+        if (!$profile) abort(403, 'Profil tidak ditemukan.');
+
+        $jabatanStrukturalIds = \App\Models\KaryawanJabatanStruktural::where('data_dosen_tendik_id', $profile->id)
+            ->pluck('jabatan_struktural_id');
+
+        $isAtasan = MasterUnit::whereIn('kepala_jabatan_id', $jabatanStrukturalIds)->exists();
+        
+        if (!$isAtasan) {
+            abort(403, 'Akses ditolak. Fitur ini khusus untuk Kepala Unit/Atasan.');
+        }
+    }
+
     public function index()
     {
         $profile = $this->getCurrentProfile();
+        $this->checkIsAtasan($profile);
         
         $jabatans = [];
         if ($profile) {
@@ -71,6 +90,7 @@ class MppController extends Controller
     public function datatables(Request $request)
     {
         $profile = $this->getCurrentProfile();
+        $this->checkIsAtasan($profile);
         $query = ManpowerPlanning::with(['jabatan', 'hrd'])->where('id_pengaju', $profile->id)->orderBy('created_at', 'desc');
 
         if ($request->tahun) {
@@ -148,6 +168,8 @@ class MppController extends Controller
 
     public function detail(Request $request)
     {
+        $profile = $this->getCurrentProfile();
+        $this->checkIsAtasan($profile);
         try {
             $data = ManpowerPlanning::with(['jabatan', 'hrd'])->find($request->id);
 

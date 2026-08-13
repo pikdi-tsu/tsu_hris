@@ -18,6 +18,7 @@
             if (!$profile) return;
             
             $jabatanStrukturalIds = \App\Models\KaryawanJabatanStruktural::where('data_dosen_tendik_id', $profile->id)
+                ->where('is_active', 'Y')
                 ->pluck('jabatan_struktural_id');
 
             $isAtasan = \App\Models\MasterUnit::whereIn('kepala_jabatan_id', $jabatanStrukturalIds)->exists();

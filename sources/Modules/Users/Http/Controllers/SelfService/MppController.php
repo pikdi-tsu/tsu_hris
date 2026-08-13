@@ -40,6 +40,7 @@ class MppController extends Controller
         if (!$profile) abort(403, 'Profil tidak ditemukan.');
 
         $jabatanStrukturalIds = \App\Models\KaryawanJabatanStruktural::where('data_dosen_tendik_id', $profile->id)
+            ->where('is_active', 'Y')
             ->pluck('jabatan_struktural_id');
 
         $isAtasan = MasterUnit::whereIn('kepala_jabatan_id', $jabatanStrukturalIds)->exists();
@@ -58,6 +59,7 @@ class MppController extends Controller
         if ($profile) {
             // Ambil semua ID jabatan struktural yang sedang dipegang user ini
             $jabatanStrukturalIds = \App\Models\KaryawanJabatanStruktural::where('data_dosen_tendik_id', $profile->id)
+                ->where('is_active', 'Y')
                 ->pluck('jabatan_struktural_id');
 
             // Cari unit-unit di mana jabatan tersebut adalah kepalanya

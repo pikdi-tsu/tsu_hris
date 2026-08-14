@@ -14,6 +14,7 @@
 use Modules\Admin\Http\Controllers\DashboardController;
 use Modules\Admin\Http\Controllers\DataKaryawanController;
 use Modules\Admin\Http\Controllers\MasterHariLiburController;
+use Modules\Admin\Http\Controllers\StrukturOrganisasiController;
 use Modules\System\Http\Middleware\CheckAdminRole;
 use \Modules\Admin\Http\Controllers\MasterLemburController;
 use Modules\Admin\Http\Controllers\MasterJabatanController;
@@ -203,4 +204,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
             Route::post('/detail', [\Modules\Admin\Http\Controllers\ManpowerPlanningController::class, 'detail'])->name('detail');
         });
     // });
+
+    // --- ROUTE STRUKTUR ORGANISASI ---
+    Route::prefix('struktur-organisasi')->name('struktur-organisasi.')->group(function () {
+        Route::get('/', [StrukturOrganisasiController::class, 'index'])->name('index');
+        Route::get('/core-units', [StrukturOrganisasiController::class, 'getCoreUnits'])->name('core-units');
+        Route::post('/unit-details', [StrukturOrganisasiController::class, 'getUnitDetails'])->name('unit-details');
+    });
 });

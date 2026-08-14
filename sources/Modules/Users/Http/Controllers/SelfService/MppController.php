@@ -16,14 +16,18 @@ use Illuminate\Support\Facades\DB;
 use App\Notifications\MppDiajukanNotification;
 use App\Models\User;
 use App\Traits\ApiResponseTrait;
+use App\Services\OrgStructureService;
 
 class MppController extends Controller
 {
     use ApiResponseTrait;
 
-    public function __construct()
+    protected $orgService;
+
+    public function __construct(OrgStructureService $orgService)
     {
         $this->middleware('auth');
+        $this->orgService = $orgService;
     }
 
     protected function getCurrentProfile()
@@ -39,11 +43,7 @@ class MppController extends Controller
 
         if (!$profile) abort(403, 'Profil tidak ditemukan.');
 
-        $jabatanStrukturalIds = \App\Models\KaryawanJabatanStruktural::where('data_dosen_tendik_id', $profile->id)
-            ->where('is_active', 'Y')
-            ->pluck('jabatan_struktural_id');
-
-        $isAtasan = MasterUnit::whereIn('kepala_jabatan_id', $jabatanStrukturalIds)->exists();
+        $isAtasan = $this->orgService->isKepalaUnit($profile->id);
         
         if (!$isAtasan) {
             abort(403, 'Akses ditolak. Fitur ini khusus untuk Kepala Unit/Atasan.');
@@ -57,25 +57,9 @@ class MppController extends Controller
         
         $jabatans = [];
         if ($profile) {
-            // Ambil semua ID jabatan struktural yang sedang dipegang user ini
-            $jabatanStrukturalIds = \App\Models\KaryawanJabatanStruktural::where('data_dosen_tendik_id', $profile->id)
-                ->where('is_active', 'Y')
-                ->pluck('jabatan_struktural_id');
+            $unitIds = $this->orgService->getSubordinatedUnitIds($profile->id, $profile->unit_id);
 
-            // Cari unit-unit di mana jabatan tersebut adalah kepalanya
-            $ledUnitIds = MasterUnit::whereIn('kepala_jabatan_id', $jabatanStrukturalIds)->pluck('id')->toArray();
-            
-            // Tambahkan unit_id bawaan profil (homebase) jika ada
-            if ($profile->unit_id) {
-                $ledUnitIds[] = $profile->unit_id;
-            }
-
-            if (!empty($ledUnitIds)) {
-                // Ambil unit-unit tersebut beserta semua anak unit di bawahnya
-                $unitIds = MasterUnit::whereIn('id', $ledUnitIds)
-                    ->orWhereIn('parent_unit_id', $ledUnitIds)
-                    ->pluck('id');
-
+            if (!empty($unitIds)) {
                 $jabatanIds = MasterUnit::whereIn('id', $unitIds)
                     ->whereNotNull('kepala_jabatan_id')
                     ->pluck('kepala_jabatan_id');

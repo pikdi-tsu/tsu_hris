@@ -26,6 +26,18 @@
             <textarea name="keterangan" class="form-control" rows="3" placeholder="Opsional">{{ $unit->keterangan ?? '' }}</textarea>
         </div>
         <div class="form-group">
+            <label>Unit Induk (Berada di Bawah Unit)</label>
+            <select name="parent_unit_id" class="form-control select2">
+                <option value="">-- Tidak Ada (Tingkat Tertinggi) --</option>
+                @foreach($parentUnits as $parent)
+                    <option value="{{ $parent->id }}" {{ (isset($unit) && $unit->parent_unit_id == $parent->id) ? 'selected' : '' }}>
+                        {{ $parent->nama_unit }}
+                    </option>
+                @endforeach
+            </select>
+            <small class="text-muted">Pilih unit tempat bernaungnya unit ini.</small>
+        </div>
+        <div class="form-group">
             <label>Jabatan Kepala Unit</label>
             <select name="kepala_jabatan_id" class="form-control select2">
                 <option value="">-- Pilih Jabatan --</option>

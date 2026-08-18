@@ -210,5 +210,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
         Route::get('/', [StrukturOrganisasiController::class, 'index'])->name('index');
         Route::get('/core-units', [StrukturOrganisasiController::class, 'getCoreUnits'])->name('core-units');
         Route::post('/unit-details', [StrukturOrganisasiController::class, 'getUnitDetails'])->name('unit-details');
+        Route::get('/all-units', [StrukturOrganisasiController::class, 'getAllUnitsForSelect'])->name('all-units');
+        Route::post('/move-unit', [StrukturOrganisasiController::class, 'moveUnit'])->name('move-unit');
+        Route::get('/full-tree-data', [StrukturOrganisasiController::class, 'getFullTreeData'])->name('full-tree-data');
     });
 });

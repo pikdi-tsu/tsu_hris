@@ -37,7 +37,7 @@ class MppController extends Controller
 
     protected function checkIsAtasan($profile)
     {
-        if (Auth::user()->hasRole(['super admin hris', 'admin hris'])) {
+        if (Auth::user()->hasRole(['super admin', 'super admin hris', 'admin', 'admin hris'])) {
             return;
         }
 
@@ -132,7 +132,7 @@ class MppController extends Controller
             if($hrds->isEmpty()) {
                 // Fallback yang aman (tidak melempar exception meskipun nama role diganti/dihapus di DB)
                 $hrds = User::whereHas('roles', function ($q) {
-                    $q->whereIn('name', ['super admin hris', 'admin hris']);
+                    $q->whereIn('name', ['super admin', 'super admin hris', 'admin', 'admin hris']);
                 })->get();
             }
 

@@ -13,7 +13,7 @@
     if ($menu->route === 'users.mpp.index') {
         $user = auth()->user();
         // Bypass untuk super admin & admin
-        if (!$user->hasRole(['super admin hris', 'admin hris'])) {
+        if (!$user->hasRole(['super admin', 'super admin hris', 'admin', 'admin hris'])) {
             $profile = \App\Models\DataDosenTendik::where('user_id', $user->id)->first();
             if (!$profile) return;
             

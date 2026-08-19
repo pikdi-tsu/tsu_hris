@@ -91,4 +91,12 @@ Route::prefix('users')->name('users.')->middleware(['auth'])->group(function () 
     Route::post('/datatablesapprovalizin', [ApprovalIzinController::class, 'datatables'])->name('datatablesapprovalizin');
     Route::post('/approvalizindetail', [ApprovalIzinController::class, 'detail'])->name('approvalizindetail');
     Route::post('/simpanapprovalizin', [ApprovalIzinController::class, 'simpan'])->name('simpanapprovalizin');
+
+    // MPP (Manpower Planning)
+    Route::prefix('mpp')->name('mpp.')->group(function () {
+        Route::get('/', [\Modules\Users\Http\Controllers\SelfService\MppController::class, 'index'])->name('index');
+        Route::post('/datatables', [\Modules\Users\Http\Controllers\SelfService\MppController::class, 'datatables'])->name('datatables');
+        Route::post('/simpan', [\Modules\Users\Http\Controllers\SelfService\MppController::class, 'simpan'])->name('simpan');
+        Route::post('/detail', [\Modules\Users\Http\Controllers\SelfService\MppController::class, 'detail'])->name('detail');
+    });
 });

@@ -27,10 +27,13 @@ class MasterUnitController extends MiddlewareController
 
     public function datatable()
     {
-        $data = MasterUnit::with('kepalaJabatan')->latest();
+        $data = MasterUnit::with(['kepalaJabatan', 'parent'])->latest();
 
         return DataTables::of($data)
             ->addIndexColumn()
+            ->addColumn('unit_induk', function ($row) {
+                return $row->parent ? $row->parent->nama_unit : '-';
+            })
             ->addColumn('kepala_unit', function ($row) {
                 return $row->kepalaJabatan ? $row->kepalaJabatan->nama_jabatan : '-';
             })
@@ -49,7 +52,8 @@ class MasterUnitController extends MiddlewareController
     {
         $this->guard('create', 'admin:master-unit');
         $jabatans = MasterJabatanStruktural::orderBy('nama_jabatan', 'asc')->get();
-        return view('admin::master-data.unit._modal', compact('jabatans'));
+        $parentUnits = MasterUnit::orderBy('nama_unit', 'asc')->get();
+        return view('admin::master-data.unit._modal', compact('jabatans', 'parentUnits'));
     }
 
     public function store(Request $request)
@@ -59,7 +63,8 @@ class MasterUnitController extends MiddlewareController
         $request->validate([
             'nama_unit' => 'required|string|max:255',
             'keterangan' => 'nullable|string',
-            'kepala_jabatan_id' => 'nullable|exists:master_jabatan_strukturals,id'
+            'kepala_jabatan_id' => 'nullable|exists:master_jabatan_strukturals,id',
+            'parent_unit_id' => 'nullable|exists:master_units,id'
         ]);
 
         DB::beginTransaction();
@@ -68,6 +73,7 @@ class MasterUnitController extends MiddlewareController
                 'nama_unit' => $request->nama_unit,
                 'keterangan' => $request->keterangan,
                 'kepala_jabatan_id' => $request->kepala_jabatan_id,
+                'parent_unit_id' => $request->parent_unit_id,
             ]);
 
             DB::commit();
@@ -88,7 +94,8 @@ class MasterUnitController extends MiddlewareController
         $this->guard('edit', 'admin:master-unit');
         $unit = MasterUnit::findOrFail($id);
         $jabatans = MasterJabatanStruktural::orderBy('nama_jabatan', 'asc')->get();
-        return view('admin::master-data.unit._modal', compact('unit', 'jabatans'));
+        $parentUnits = MasterUnit::where('id', '!=', $id)->orderBy('nama_unit', 'asc')->get();
+        return view('admin::master-data.unit._modal', compact('unit', 'jabatans', 'parentUnits'));
     }
 
     public function update(Request $request, $id)
@@ -99,7 +106,8 @@ class MasterUnitController extends MiddlewareController
         $request->validate([
             'nama_unit' => 'required|string|max:255',
             'keterangan' => 'nullable|string',
-            'kepala_jabatan_id' => 'nullable|exists:master_jabatan_strukturals,id'
+            'kepala_jabatan_id' => 'nullable|exists:master_jabatan_strukturals,id',
+            'parent_unit_id' => 'nullable|exists:master_units,id'
         ]);
 
         DB::beginTransaction();
@@ -108,6 +116,7 @@ class MasterUnitController extends MiddlewareController
                 'nama_unit' => $request->nama_unit,
                 'keterangan' => $request->keterangan,
                 'kepala_jabatan_id' => $request->kepala_jabatan_id,
+                'parent_unit_id' => $request->parent_unit_id,
             ]);
 
             DB::commit();

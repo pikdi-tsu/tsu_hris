@@ -2,19 +2,9 @@
 
 namespace App\Notifications;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
-use Illuminate\Notifications\Notification;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
-use Illuminate\Notifications\Messages\BroadcastMessage;
-
-class IzinDiajukanNotification extends Notification implements ShouldQueue, ShouldBroadcast
+class IzinDiajukanNotification extends TsuRealtimeNotification
 {
-    use Queueable;
-
     public $izin;
-    public $message;
     public $role;
 
     /**
@@ -23,49 +13,25 @@ class IzinDiajukanNotification extends Notification implements ShouldQueue, Shou
     public function __construct($izin, $message, $role = 'atasan')
     {
         $this->izin = $izin;
-        $this->message = $message;
         $this->role = $role;
-    }
 
-    /**
-     * Get the notification's delivery channels.
-     *
-     * @return array<int, string>
-     */
-    public function via(object $notifiable): array
-    {
-        return ['database', 'broadcast'];
-    }
+        // Condition for silent notification and action text
+        $is_silent = false;
+        $action_text = 'Proses Izin';
+        if ($role === 'hrd' && $izin->statusatasan === 'waiting') {
+            $is_silent = true;
+            $action_text = 'Lihat Izin';
+        }
 
-    /**
-     * Get the array representation of the notification.
-     *
-     * @return array<string, mixed>
-     */
-    public function toArray(object $notifiable): array
-    {
-        return [
-            'id_izin' => $this->izin->id,
-            'message' => $this->message,
-            'jenis' => 'izin',
-            'role' => $this->role,
-            'statusatasan' => $this->izin->statusatasan,
-            'action_text' => 'Proses Izin',
-            'action_url' => route('users.indexapprovalizin')
-        ];
-    }
-
-    /**
-     * Get the broadcastable representation of the notification.
-     */
-    public function toBroadcast(object $notifiable): BroadcastMessage
-    {
-        return new BroadcastMessage([
-            'id_izin' => $this->izin->id,
-            'message' => $this->message,
-            'jenis' => 'izin',
-            'role' => $this->role,
-            'statusatasan' => $this->izin->statusatasan
-        ]);
+        parent::__construct(
+            $message,
+            'indexapprovalizin', // module
+            route('users.indexapprovalizin'), // action_url
+            $action_text, // action_text
+            'Pengajuan Izin', // title
+            'fas fa-envelope-open-text text-primary', // icon
+            $is_silent, // is_silent
+            ['id_izin' => $izin->id, 'role' => $role, 'statusatasan' => $izin->statusatasan, 'jenis' => 'izin'] // options
+        );
     }
 }

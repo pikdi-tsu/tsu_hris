@@ -103,10 +103,10 @@
         window.Echo = new Echo({
             broadcaster: 'reverb',
             key: '{{ config('broadcasting.connections.reverb.key') }}',
-            wsHost: '{{ config('broadcasting.connections.reverb.options.host') }}',
-            wsPort: {{ config('broadcasting.connections.reverb.options.port', 80) }},
-            wssPort: {{ config('broadcasting.connections.reverb.options.port', 443) }},
-            forceTLS: {{ config('broadcasting.connections.reverb.options.scheme', 'http') === 'https' ? 'true' : 'false' }},
+            wsHost: window.location.hostname,
+            wsPort: {{ config('broadcasting.connections.reverb.options.port', 8080) }},
+            wssPort: (window.location.protocol === 'https:') ? 443 : {{ config('broadcasting.connections.reverb.options.port', 8080) }},
+            forceTLS: (window.location.protocol === 'https:') ? true : false,
             enabledTransports: ['ws', 'wss'],
             auth: {
                 headers: {
@@ -119,12 +119,14 @@
             window.Echo.private('App.Models.User.{{ Auth::id() }}')
                 .notification((notification) => {
                     console.log('New notification:', notification);
-                    // Update global badge
-                    let globalBadge = $('#global-notif-badge');
-                    let currentGlobal = parseInt(globalBadge.text()) || 0;
                     
-                    if (notification.jenis === 'feedback') {
-                        // 1. Update Global Badge
+                    // 1. Silent Notification Check
+                    let shouldIncrementBadge = (notification.is_silent !== true);
+                    
+                    let globalBadge = $('#global-notif-badge');
+                    
+                    if (shouldIncrementBadge) {
+                        // Update Global Badge
                         let currentGlobal = parseInt(globalBadge.text()) || 0;
                         globalBadge.text(currentGlobal + 1);
                         $('#global-notif-text').text(currentGlobal + 1);
@@ -132,285 +134,135 @@
                         $('#global-notif-empty').hide();
                         $('#global-notif-header').show();
                         
-                        // 2. Append to Inbox Dropdown
-                        let dropdownFooter = $('.dropdown-footer').closest('a');
-                        let iconClass = notification.icon_class || 'fa-info-circle text-info';
-                        let readUrl = notification.id ? '{{ url('notifications/read') }}/' + notification.id : (notification.action_url || '#');
-                        let actionText = notification.action_text || 'Lihat';
-                        
-                        let notifHtml = `
-                        <a href="${readUrl}" class="dropdown-item bg-white border-bottom db-notif-item" style="white-space: normal;">
-                            <div class="media">
-                                <i class="fas ${iconClass} mr-3 mt-1" style="font-size: 1.2rem;"></i>
-                                <div class="media-body">
-                                    <p class="text-sm text-dark mb-1">
-                                        ${notification.message}
-                                    </p>
-                                    <span class="badge badge-primary mt-1"><i class="fas fa-arrow-right"></i> ${actionText}</span>
-                                    <p class="text-xs text-muted mb-0 mt-1">
-                                        <i class="far fa-clock mr-1"></i> Baru saja
-                                    </p>
-                                </div>
-                            </div>
-                        </a>
-                        `;
-                        
-                        if($('#inbox-header').length === 0) {
-                            dropdownFooter.before('<div class="dropdown-divider inbox-divider"></div><span class="dropdown-item dropdown-header font-weight-bold bg-light text-left" id="inbox-header"><i class="fas fa-inbox mr-1"></i> Kotak Masuk (<span id="inbox-count">1</span> Baru)</span>');
-                        } else {
-                            let inboxCountElem = $('#inbox-count');
-                            if(inboxCountElem.length) {
-                                inboxCountElem.text(parseInt(inboxCountElem.text() || 0) + 1);
+                        // Update Sidebar Badge (Dynamic Injection)
+                        if (notification.module) {
+                            // Coba cari dari selector spesifik (seperti di template) atau nama standar
+                            let sidebarBadge = $('#sidebar-badge-' + notification.module);
+                            if (sidebarBadge.length === 0) {
+                                // Fallback legacy HRIS ID (opsional)
+                                sidebarBadge = $('#sidebar-badge-users-' + notification.module + '-index');
                             }
-                        }
-                        
-                        $('#inbox-header').after(notifHtml);
-                        
-                        if($('.db-notif-item').length > 5) {
-                            $('.db-notif-item').last().remove();
-                        }
-                        
-                        // 3. Show Toast
-                        const Toast = Swal.mixin({
-                            toast: true,
-                            position: 'top-end',
-                            showConfirmButton: false,
-                            timer: 5000,
-                            timerProgressBar: true,
-                            didOpen: (toast) => {
-                                toast.addEventListener('mouseenter', Swal.stopTimer)
-                                toast.addEventListener('mouseleave', Swal.resumeTimer)
-                            }
-                        });
 
-                        Toast.fire({
-                            icon: 'success',
-                            title: notification.message
-                        });
-                        
-                        // ALWAYS Reload DataTables if on the corresponding page
-                        let currentUrl = window.location.href;
-                        let actionUrl2 = notification.action_url || '#';
-                        if (actionUrl2 !== '#' && currentUrl.includes(actionUrl2)) {
-                            if ($.fn.DataTable.isDataTable('#dataTables')) {
-                                $('#dataTables').DataTable().ajax.reload(null, false);
-                            }
-                        }
-
-                    } else if (notification.jenis === 'lembur' || notification.jenis === 'cuti' || notification.jenis === 'izin') {
-                        let type = notification.jenis;
-                        let role = notification.role || 'atasan';
-                        let statusatasan = notification.statusatasan || 'waiting';
-                        
-                        // 1. Update Global Badge
-                        let currentGlobal = parseInt(globalBadge.text()) || 0;
-                        globalBadge.text(currentGlobal + 1);
-                        $('#global-notif-text').text(currentGlobal + 1);
-                        globalBadge.show();
-                        $('#global-notif-empty').hide();
-                        $('#global-notif-header').show();
-
-                            // 2. Update Navbar Type Badge
-                            let typeBadge = $('#badge-notif-' + type + '-' + role);
-                            let currentType = parseInt(typeBadge.text()) || 0;
-                            typeBadge.text(currentType + 1);
-                            $('#' + type + '-' + role + '-divider').show();
-                            $('#' + type + '-' + role + '-item').show();
-                            
-                            // 3. Update Sidebar Badge
-                            let sidebarId = 'sidebar-badge-users-' + type + '-index';
-                            if (type === 'cuti') sidebarId = 'sidebar-badge-users-indexapprovalcuti';
-                            if (type === 'izin') sidebarId = 'sidebar-badge-users-indexapprovalizin';
-                            
-                            let sidebarBadge = $('#' + sidebarId);
-                            if (sidebarBadge.length) {
-                                let currentSidebar = parseInt(sidebarBadge.text()) || 0;
-                                sidebarBadge.text(currentSidebar + 1);
+                            if (sidebarBadge.length > 0) {
+                                let sbCount = parseInt(sidebarBadge.text()) || 0;
+                                sbCount++;
+                                sidebarBadge.text(sbCount);
                                 sidebarBadge.show();
                             } else {
-                                // If badge doesn't exist, inject it
-                                let routeName = (type === 'lembur') ? 'lembur' : (type === 'cuti' ? 'approvalcuti' : 'approvalizin');
-                                let sidebarLink = $('a[href*="users/' + routeName + '"] p');
-                                if (sidebarLink.length) {
-                                    sidebarLink.append('<span id="' + sidebarId + '" class="badge badge-danger right">1</span>');
+                                // Inject badge dynamically jika elemennya belum dirender
+                                let sidebarLink = $('a.nav-link[href*="' + notification.module + '"]');
+                                if (sidebarLink.length > 0) {
+                                    sidebarLink.find('p').append('<span id="sidebar-badge-' + notification.module + '" class="right badge badge-danger">1</span>');
+                                } else {
+                                    // Legacy HRIS fallback route search
+                                    let legacyLink = $('a[href*="users/' + notification.module + '"] p');
+                                    if (legacyLink.length) {
+                                        legacyLink.append('<span id="sidebar-badge-' + notification.module + '" class="badge badge-danger right">1</span>');
+                                    }
                                 }
                             }
+                        }
+                    }
+                    
+                    // 2. Append to Inbox Dropdown
+                    let dropdownFooter = $('.dropdown-footer').closest('a');
+                    let iconClass = notification.icon || 'fa-bell text-secondary';
+                    let readUrl = notification.id ? '{{ url('notifications/read') }}/' + notification.id : (notification.action_url || '#');
+                    let actionText = notification.action_text || 'Lihat';
+                    
+                    let notifHtml = `
+                    <a href="${readUrl}" class="dropdown-item bg-white border-bottom db-notif-item" style="white-space: normal;">
+                        <div class="media">
+                            <i class="${iconClass.includes('fas') || iconClass.includes('far') ? iconClass : 'fas ' + iconClass} mr-3 mt-1" style="font-size: 1.2rem;"></i>
+                            <div class="media-body">
+                                <p class="text-sm text-dark mb-1">
+                                    ${notification.message || 'Pemberitahuan Sistem'}
+                                </p>
+                                ${
+                                    notification.download_url 
+                                    ? '<span class="badge badge-success mt-1"><i class="fas fa-download"></i> File Siap</span>' 
+                                    : (notification.error_detail 
+                                        ? '<span class="badge badge-danger mt-1">Gagal</span>' 
+                                        : `<span class="badge badge-primary mt-1"><i class="fas fa-arrow-right"></i> ${actionText}</span>`)
+                                }
+                                <p class="text-xs text-muted mb-0 mt-1">
+                                    <i class="far fa-clock mr-1"></i> Baru saja
+                                </p>
+                            </div>
+                        </div>
+                    </a>
+                    `;
+                    
+                    if($('#inbox-header').length === 0) {
+                        dropdownFooter.before('<div class="dropdown-divider inbox-divider"></div><span class="dropdown-item dropdown-header font-weight-bold bg-light text-left" id="inbox-header"><i class="fas fa-inbox mr-1"></i> Kotak Masuk (<span id="inbox-count">1</span> Baru)</span>');
+                    } else {
+                        let inboxCountElem = $('#inbox-count');
+                        if(inboxCountElem.length) {
+                            inboxCountElem.text(parseInt(inboxCountElem.text() || 0) + 1);
+                        }
+                    }
+                    
+                    $('#inbox-header').after(notifHtml);
+                    
+                    if($('.db-notif-item').length > 5) {
+                        $('.db-notif-item').last().remove();
+                    }
+                    
+                    // 3. Show SweetAlert2 Toast (Pause on Hover)
+                    let toastTitle = notification.message || 'Pemberitahuan Baru';
+                    if (notification.download_url) {
+                        toastTitle += ' <br><a href="' + notification.download_url + '" class="btn btn-sm btn-success mt-2" target="_blank"><i class="fas fa-download mr-1"></i> Download Sekarang</a>';
+                        if (typeof window.exportTimeout !== 'undefined') {
+                            clearTimeout(window.exportTimeout);
+                        }
+                    }
+                    if (notification.error_detail) {
+                        toastTitle += '<br><small class="text-danger mt-1 d-block">' + notification.error_detail + '</small>';
+                        if (typeof window.exportTimeout !== 'undefined') {
+                            clearTimeout(window.exportTimeout);
+                        }
+                    }
 
-                        // 4. Update Tab Persetujuan Badge (HANYA JIKA DI HALAMAN YANG SESUAI)
-                        let currentUrl = window.location.href;
-                        let isCorrectPage = false;
-                        if (type === 'lembur' && currentUrl.includes('/users/lembur')) isCorrectPage = true;
-                        if (type === 'izin' && currentUrl.includes('/users/approvalizin')) isCorrectPage = true;
-                        if (type === 'cuti' && currentUrl.includes('/users/approvalcuti')) isCorrectPage = true;
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: notification.download_url || notification.error_detail ? 10000 : 5000,
+                        timerProgressBar: true,
+                        didOpen: (toast) => {
+                            toast.addEventListener('mouseenter', Swal.stopTimer)
+                            toast.addEventListener('mouseleave', Swal.resumeTimer)
+                        }
+                    });
 
-                        if (isCorrectPage && $.fn.DataTable.isDataTable('#dataTablesApproval')) {
+                    Toast.fire({
+                        icon: notification.error_detail ? 'error' : (notification.download_url ? 'success' : 'info'),
+                        title: toastTitle
+                    });
+
+                    // 4. Universal DataTables & Tab Badge Reloader (Pencegahan Cross-Contamination)
+                    let currentUrl = window.location.href;
+                    if (notification.module && currentUrl.includes(notification.module)) {
+                        // Reload semua DataTables yang aktif di halaman ini
+                        $('.dataTable').each(function() {
+                            let tableId = $(this).attr('id');
+                            if (tableId && $.fn.DataTable.isDataTable('#' + tableId)) {
+                                $('#' + tableId).DataTable().ajax.reload(null, false);
+                            }
+                        });
+
+                        // Update Tab Badge jika target disematkan di options (fallback ke #badge-approval untuk legacy)
+                        let targetTabId = (notification.options && notification.options.target_tab) ? notification.options.target_tab : 'badge-approval';
+                        let tabBadge = $('#' + targetTabId);
+                        if (tabBadge.length) {
+                            tabBadge.text((parseInt(tabBadge.text()) || 0) + 1).show();
+                        } else {
+                            // Legacy fallback
                             let tab = $('#tab-persetujuan-bawahan');
                             if (tab.length) {
-                                let tabBadge = tab.find('.badge');
-                                if (tabBadge.length) {
-                                    let currentTab = parseInt(tabBadge.text()) || 0;
-                                    tabBadge.text(currentTab + 1);
-                                    tabBadge.show();
-                                } else {
-                                    tab.append(' <span class="badge badge-danger" id="badge-approval">1</span>');
-                                }
+                                tab.append(' <span class="badge badge-danger" id="' + targetTabId + '">1</span>');
                             }
                         }
-
-                        // 5. Append to Inbox Dropdown dynamically
-                        let dropdownFooter = $('.dropdown-footer').closest('a');
-                        let iconClass = type === 'izin' ? 'fa-envelope-open-text text-primary' : (type === 'cuti' ? 'fa-umbrella-beach text-warning' : 'fa-clock text-info');
-                        
-                        // We use index route because we don't know the exact notification ID here, but they can click it via notification page later
-                        // We route through users.notifications.read so it gets marked as read in database
-                        let readUrl = notification.id ? '{{ url('notifications/read') }}/' + notification.id : (notification.action_url || (type === 'izin' ? '{{ route('users.indexapprovalizin') }}' : (type === 'cuti' ? '{{ route('users.indexapprovalcuti') }}' : '{{ route('users.lembur.index') }}#content-persetujuan-bawahan')));
-                        let actionText = notification.action_text || 'Proses';
-                        
-                        let notifHtml = `
-                        <a href="${readUrl}" class="dropdown-item bg-white border-bottom db-notif-item" style="white-space: normal;">
-                            <div class="media">
-                                <i class="fas ${iconClass} mr-3 mt-1" style="font-size: 1.2rem;"></i>
-                                <div class="media-body">
-                                    <p class="text-sm text-dark mb-1">
-                                        ${notification.message}
-                                    </p>
-                                    <span class="badge badge-primary mt-1"><i class="fas fa-arrow-right"></i> ${actionText}</span>
-                                    <p class="text-xs text-muted mb-0 mt-1">
-                                        <i class="far fa-clock mr-1"></i> Baru saja
-                                    </p>
-                                </div>
-                            </div>
-                        </a>
-                        `;
-                        
-                        if($('#inbox-header').length === 0) {
-                            dropdownFooter.before('<div class="dropdown-divider inbox-divider"></div><span class="dropdown-item dropdown-header font-weight-bold bg-light text-left" id="inbox-header"><i class="fas fa-inbox mr-1"></i> Kotak Masuk (<span id="inbox-count">1</span> Baru)</span>');
-                        } else {
-                            let inboxCountElem = $('#inbox-count');
-                            if(inboxCountElem.length) {
-                                inboxCountElem.text(parseInt(inboxCountElem.text() || 0) + 1);
-                            }
-                        }
-                        
-                        $('#inbox-header').after(notifHtml);
-                        
-                        if($('.db-notif-item').length > 5) {
-                            $('.db-notif-item').last().remove();
-                        }
-
-                        // ALWAYS Reload DataTables and Show Toast regardless of shouldIncrementBadge (HANYA JIKA DI HALAMAN YANG SESUAI)
-                        if (isCorrectPage && $.fn.DataTable.isDataTable('#dataTablesApproval')) {
-                            $('#dataTablesApproval').DataTable().ajax.reload(null, false);
-                        }
-                        if (isCorrectPage && $.fn.DataTable.isDataTable('#dataTables')) {
-                            $('#dataTables').DataTable().ajax.reload(null, false);
-                        }
-
-                        // SweetAlert toast
-                        const Toast = Swal.mixin({
-                            toast: true,
-                            position: 'top-end',
-                            showConfirmButton: false,
-                            timer: 5000,
-                            timerProgressBar: true,
-                            didOpen: (toast) => {
-                                toast.addEventListener('mouseenter', Swal.stopTimer)
-                                toast.addEventListener('mouseleave', Swal.resumeTimer)
-                            }
-                        });
-
-                        Toast.fire({
-                            icon: 'info',
-                            title: notification.message
-                        });
-                    } else if (notification.statusatasan === 'export-ready') {
-                        // Clear frontend timeout stopwatch
-                        if (typeof window.exportTimeout !== 'undefined') {
-                            clearTimeout(window.exportTimeout);
-                        }
-
-                        // SweetAlert toast for Export Ready
-                        const Toast = Swal.mixin({
-                            toast: true,
-                            position: 'top-end',
-                            showConfirmButton: false,
-                            timer: 10000,
-                            timerProgressBar: true,
-                            didOpen: (toast) => {
-                                toast.addEventListener('mouseenter', Swal.stopTimer)
-                                toast.addEventListener('mouseleave', Swal.resumeTimer)
-                            }
-                        });
-
-                        Toast.fire({
-                            icon: 'success',
-                            title: notification.message + ' <br><a href="' + notification.download_url + '" class="btn btn-sm btn-success mt-2" target="_blank"><i class="fas fa-download mr-1"></i> Download Sekarang</a>'
-                        });
-                        
-                        // Update Bell Badge
-                        let badge = $('#global-notif-badge');
-                        let currentCount = parseInt(badge.text() || 0);
-                        badge.text(currentCount + 1).show();
-                        $('#global-notif-empty').hide();
-                        
-                        // Append to Dropdown dynamically
-                        let dropdownFooter = $('.dropdown-footer').closest('a');
-                        let notifHtml = `
-                        <a href="${notification.download_url}" class="dropdown-item bg-white border-bottom db-notif-item" style="white-space: normal;" target="_blank">
-                            <div class="media">
-                                <i class="fas fa-file-excel text-success mr-3 mt-1" style="font-size: 1.2rem;"></i>
-                                <div class="media-body">
-                                    <p class="text-sm text-dark mb-1">
-                                        ${notification.message}
-                                    </p>
-                                    <span class="badge badge-success mt-1"><i class="fas fa-download"></i> File Siap</span>
-                                    <p class="text-xs text-muted mb-0 mt-1">
-                                        <i class="far fa-clock mr-1"></i> Baru saja
-                                    </p>
-                                </div>
-                            </div>
-                        </a>
-                        `;
-                        
-                        // Check if Inbox header exists
-                        if($('#inbox-header').length === 0) {
-                            dropdownFooter.before('<div class="dropdown-divider inbox-divider"></div><span class="dropdown-item dropdown-header font-weight-bold bg-light text-left" id="inbox-header"><i class="fas fa-inbox mr-1"></i> Kotak Masuk (<span id="inbox-count">1</span> Baru)</span>');
-                        } else {
-                            let inboxCountElem = $('#inbox-count');
-                            if(inboxCountElem.length) {
-                                inboxCountElem.text(parseInt(inboxCountElem.text() || 0) + 1);
-                            }
-                        }
-                        
-                        $('#inbox-header').after(notifHtml);
-                        
-                        // Remove oldest if more than 5
-                        if($('.db-notif-item').length > 5) {
-                            $('.db-notif-item').last().remove();
-                        }
-                    } else if (notification.statusatasan === 'export-failed') {
-                        // Clear frontend timeout stopwatch
-                        if (typeof window.exportTimeout !== 'undefined') {
-                            clearTimeout(window.exportTimeout);
-                        }
-
-                        // SweetAlert toast for Export Failed
-                        const Toast = Swal.mixin({
-                            toast: true,
-                            position: 'top-end',
-                            showConfirmButton: false,
-                            timer: 10000,
-                            timerProgressBar: true,
-                            didOpen: (toast) => {
-                                toast.addEventListener('mouseenter', Swal.stopTimer)
-                                toast.addEventListener('mouseleave', Swal.resumeTimer)
-                            }
-                        });
-
-                        Toast.fire({
-                            icon: 'error',
-                            title: notification.message + '<br><small class="text-danger mt-1 d-block">' + (notification.error_detail || 'Terjadi kesalahan sistem') + '</small>'
-                        });
                     }
                 });
         @endif

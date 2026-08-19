@@ -68,23 +68,26 @@ class UserController extends MiddlewareController
                 $deleteUrl = route('users.user.destroy', $row->id);
                 $token = csrf_token();
 
-                $btnEdit = '<button type="button" class="btn btn-sm btn-primary shadow-sm mr-1 btn-edit"
+                $btnEdit = '<button type="button" class="btn btn-sm btn-primary btn-edit"
                                 data-url="'.$editUrl.'"
+                                data-toggle="tooltip"
                                 title="Atur Role Aplikasi">
-                                <i class="fas fa-user-tag mr-1"></i> Pasang Role
+                                <i class="fas fa-user-tag"></i>
                             </button>';
 
                 $btnDelete = '
                                 <form action="'.$deleteUrl.'" method="POST" style="display:inline-block; margin: 0;">
                                     <input type="hidden" name="_token" value="'.$token.'">
                                     <input type="hidden" name="_method" value="DELETE">
-                                    <button type="button" class="btn btn-sm btn-danger btn-delete shadow-sm" data-name="'. htmlspecialchars($row->name) .'" title="Hapus Akses Sistem">
-                                        <i class="fas fa-user-times mr-1"></i> Cabut Akses
+                                    <button type="button" class="btn btn-sm btn-danger btn-delete" data-toggle="tooltip" data-name="'. htmlspecialchars($row->name) .'" title="Hapus Akses Sistem">
+                                        <i class="fas fa-user-times"></i>
                                     </button>
                                 </form>
                             ';
 
-                return '<div class="text-center" style="white-space: nowrap;">' . $btnEdit . $btnDelete . '</div>';
+                return '<div class="text-center" style="white-space: nowrap;">
+                            <div class="btn-group shadow-sm">' . $btnEdit . $btnDelete . '</div>
+                        </div>';
             })
             ->rawColumns(['avatar', 'roles', 'action'])
             ->make(true);

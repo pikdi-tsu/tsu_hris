@@ -9,6 +9,25 @@
         return;
     }
 
+    // CUSTOM LOGIC: Hide MPP from non-atasan
+    if ($menu->route === 'users.mpp.index') {
+        $user = auth()->user();
+        // Bypass untuk super admin & admin
+        if (!$user->hasRole(['super admin', 'super admin hris', 'admin', 'admin hris'])) {
+            $profile = \App\Models\DataDosenTendik::where('user_id', $user->id)->first();
+            if (!$profile) return;
+            
+            $jabatanStrukturalIds = \App\Models\KaryawanJabatanStruktural::where('data_dosen_tendik_id', $profile->id)
+                ->where('is_active', 'Y')
+                ->pluck('jabatan_struktural_id');
+
+            $isAtasan = \App\Models\MasterUnit::whereIn('kepala_jabatan_id', $jabatanStrukturalIds)->exists();
+            if (!$isAtasan) {
+                return;
+            }
+        }
+    }
+
     // Filter Children
     $visibleChildren = $menu->children->filter(function ($child) {
         return empty($child->permission_name) || auth()->user()->can($child->permission_name);

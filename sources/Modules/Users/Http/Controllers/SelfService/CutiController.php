@@ -20,14 +20,18 @@ use App\Services\TsuErrorHandlerService;
 use App\Models\User;
 use App\Notifications\CutiDiajukanNotification;
 use App\Models\MasterUnit;
+use App\Services\OrgStructureService;
 
 class CutiController extends Controller
 {
     use ApiResponseTrait;
-    public function __construct()
+    protected $orgService;
+
+    public function __construct(OrgStructureService $orgService)
     {
         //        $this->middleware('checklogin');
         $this->middleware('auth');
+        $this->orgService = $orgService;
         //        $this->middleware('verified');
     }
 
@@ -66,7 +70,7 @@ class CutiController extends Controller
             if ($profile->unit_id) {
                 $unit = MasterUnit::find($profile->unit_id);
                 if ($unit) {
-                    $atasanId = $this->findAtasanId($unit, $profile->id);
+                    $atasanId = $this->orgService->findAtasanId($unit, $profile->id);
                     if ($atasanId) {
                         $atasan = DataDosenTendik::find($atasanId);
                         if ($atasan) {
@@ -129,7 +133,7 @@ class CutiController extends Controller
                 return $this->sendError('Unit Anda tidak ditemukan di sistem.');
             }
 
-            $idatasan = $this->findAtasanId($unit, $profile->id);
+            $idatasan = $this->orgService->findAtasanId($unit, $profile->id);
             if (!$idatasan) {
                 return $this->sendError('Unit Anda (atau Unit Induk) belum memiliki Kepala Unit. Silakan hubungi SDM.');
             }
@@ -347,35 +351,5 @@ class CutiController extends Controller
         } catch (\Exception $e) {
             return TsuErrorHandlerService::handleJson($e, '[TSU_SS_CUTI_DTL]', 'Gagal memuat detail cuti.');
         }
-    }
-
-    private function findAtasanId($unit, $currentUserId)
-    {
-        if (!$unit) return null;
-
-        $kepalaJabatanId = $unit->kepala_jabatan_id;
-        if ($kepalaJabatanId) {
-            $kepalas = KaryawanJabatanStruktural::where('jabatan_struktural_id', $kepalaJabatanId)
-                ->whereIn('is_active', [1, '1', 'Y', 'y'])
-                ->get();
-                
-            $kepala = null;
-            if ($kepalas->count() == 1) {
-                $kepala = $kepalas->first();
-            } elseif ($kepalas->count() > 1) {
-                $kepala = $kepalas->where('unit_id', $unit->id)->first() ?? $kepalas->first();
-            }
-                
-            if ($kepala && $kepala->data_dosen_tendik_id !== $currentUserId) {
-                return $kepala->data_dosen_tendik_id;
-            }
-        }
-
-        if ($unit->parent_unit_id) {
-            $parentUnit = MasterUnit::find($unit->parent_unit_id);
-            return $this->findAtasanId($parentUnit, $currentUserId);
-        }
-
-        return null;
     }
 }

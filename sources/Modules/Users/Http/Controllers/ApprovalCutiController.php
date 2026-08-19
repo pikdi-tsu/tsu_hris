@@ -182,6 +182,9 @@ class ApprovalCutiController extends Controller
                     'atasanapprovaldate' => date("Y-m-d H:i:s")
                 ]);
 
+                // Update memory variable for notification
+                $check->statusatasan = $approval;
+
                 if ($approval == 'approved') {
                     $checksaldo = SaldoCutiKaryawan::lockForUpdate()->where('id_user', $iduserinput)->where('is_active', '1')->first();
                     

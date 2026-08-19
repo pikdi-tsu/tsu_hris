@@ -44,7 +44,7 @@
     @yield('link_href')
     @yield('css')
 </head>
-<body class="hold-transition sidebar-mini layout-navbar-fixed">
+<body class="hold-transition sidebar-mini layout-fixed layout-navbar-fixed">
 <div class="wrapper">
     @include('system::template/admin/sidebar')
     @include('system::template/admin/navbar')

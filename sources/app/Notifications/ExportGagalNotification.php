@@ -2,44 +2,24 @@
 
 namespace App\Notifications;
 
-use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
-use Illuminate\Notifications\Messages\BroadcastMessage;
-use Illuminate\Notifications\Notification;
 
-class ExportGagalNotification extends Notification implements ShouldBroadcastNow
+class ExportGagalNotification extends TsuRealtimeNotification implements ShouldBroadcastNow
 {
-    use Queueable;
-
-    public $message;
-    public $errorDetail;
-
+    /**
+     * Create a new notification instance.
+     */
     public function __construct($message, $errorDetail = null)
     {
-        $this->message = $message;
-        $this->errorDetail = $errorDetail;
-    }
-
-    public function via($notifiable)
-    {
-        return ['broadcast', 'database'];
-    }
-
-    public function toArray($notifiable)
-    {
-        return [
-            'message' => $this->message,
-            'error_detail' => $this->errorDetail,
-            'statusatasan' => 'export-failed'
-        ];
-    }
-
-    public function toBroadcast($notifiable)
-    {
-        return new BroadcastMessage([
-            'message' => $this->message,
-            'error_detail' => $this->errorDetail,
-            'statusatasan' => 'export-failed' // Indicator for frontend to show error toast
-        ]);
+        parent::__construct(
+            $message,
+            'export', // module
+            '#', // action_url
+            'Gagal', // action_text
+            'Export Gagal', // title
+            'fas fa-times-circle text-danger', // icon
+            false, // is_silent
+            ['error_detail' => $errorDetail, 'statusatasan' => 'export-failed'] // options
+        );
     }
 }

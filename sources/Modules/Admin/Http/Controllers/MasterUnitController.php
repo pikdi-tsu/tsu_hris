@@ -64,16 +64,28 @@ class MasterUnitController extends MiddlewareController
             'nama_unit' => 'required|string|max:255',
             'keterangan' => 'nullable|string',
             'kepala_jabatan_id' => 'nullable|exists:master_jabatan_strukturals,id',
-            'parent_unit_id' => 'nullable|exists:master_units,id'
+            'parent_unit_id' => 'nullable|exists:master_units,id',
+            'kuota_mpp' => 'nullable|integer|min:0'
         ]);
 
         DB::beginTransaction();
         try {
+            $kepalaJabatanId = $request->kepala_jabatan_id;
+
+            if ($request->has('auto_create_jabatan')) {
+                $jabatan = MasterJabatanStruktural::create([
+                    'nama_jabatan' => 'Kepala ' . $request->nama_unit,
+                    'is_unit_specific' => 'Y'
+                ]);
+                $kepalaJabatanId = $jabatan->id;
+            }
+
             MasterUnit::create([
                 'nama_unit' => $request->nama_unit,
                 'keterangan' => $request->keterangan,
-                'kepala_jabatan_id' => $request->kepala_jabatan_id,
+                'kepala_jabatan_id' => $kepalaJabatanId,
                 'parent_unit_id' => $request->parent_unit_id,
+                'kuota_mpp' => $request->kuota_mpp ?? 0
             ]);
 
             DB::commit();
@@ -107,7 +119,8 @@ class MasterUnitController extends MiddlewareController
             'nama_unit' => 'required|string|max:255',
             'keterangan' => 'nullable|string',
             'kepala_jabatan_id' => 'nullable|exists:master_jabatan_strukturals,id',
-            'parent_unit_id' => 'nullable|exists:master_units,id'
+            'parent_unit_id' => 'nullable|exists:master_units,id',
+            'kuota_mpp' => 'nullable|integer|min:0'
         ]);
 
         DB::beginTransaction();
@@ -117,6 +130,7 @@ class MasterUnitController extends MiddlewareController
                 'keterangan' => $request->keterangan,
                 'kepala_jabatan_id' => $request->kepala_jabatan_id,
                 'parent_unit_id' => $request->parent_unit_id,
+                'kuota_mpp' => $request->kuota_mpp ?? 0
             ]);
 
             DB::commit();

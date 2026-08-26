@@ -20,6 +20,13 @@
                                 <td>: {{ $data->unit ? $data->unit->nama_unit : '-' }}</td>
                             </tr>
                             <tr>
+                                <th>Data SO Unit</th>
+                                <td>
+                                    <span class="badge badge-info"><i class="fas fa-users"></i> Saat Ini: {{ $existing_count }} Orang</span>
+                                    <span class="badge {{ ($kuota_mpp > 0 && ($existing_count + $data->jumlah_kebutuhan) > $kuota_mpp) ? 'badge-danger' : 'badge-success' }}"><i class="fas fa-chart-pie"></i> Kuota: {{ $kuota_mpp > 0 ? $kuota_mpp : '∞' }}</span>
+                                </td>
+                            </tr>
+                            <tr>
                                 <th>Jabatan Diminta</th>
                                 <td>: <strong class="text-primary">{{ $data->jabatan ? $data->jabatan->nama_jabatan : '-' }}</strong></td>
                             </tr>

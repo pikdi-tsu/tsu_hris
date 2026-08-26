@@ -56,21 +56,14 @@ class MppController extends Controller
         $this->checkIsAtasan($profile);
         
         $jabatans = [];
-        if ($profile) {
-            $unitIds = $this->orgService->getSubordinatedUnitIds($profile->id, $profile->unit_id);
-
-            if (!empty($unitIds)) {
-                $jabatanIds = MasterUnit::whereIn('id', $unitIds)
-                    ->whereNotNull('kepala_jabatan_id')
-                    ->pluck('kepala_jabatan_id');
-
-                $jabatans = MasterJabatanStruktural::whereIn('id', $jabatanIds)->get();
-            }
-        }
-
+        $jabatans = MasterJabatanStruktural::orderBy('nama_jabatan', 'asc')->get();
+        $unit = \App\Models\MasterUnit::find($profile->unit_id);
+        $kuota = $unit ? $unit->kuota_mpp : 0;
+        $existingCount = $unit ? \App\Models\DataDosenTendik::where('unit_id', $unit->id)->count() : 0;
         $title = 'Manpower Planning (MPP)';
         $menu = 'dashboard';
-        return view('users::mpp.index', compact('jabatans', 'profile', 'title', 'menu'));
+        
+        return view('users::mpp.index', compact('jabatans', 'profile', 'title', 'menu', 'unit', 'kuota', 'existingCount'));
     }
 
     public function datatables(Request $request)
@@ -114,6 +107,15 @@ class MppController extends Controller
             $profile = $this->getCurrentProfile();
             if (!$profile || !$profile->unit_id) {
                 throw new \Exception('Anda tidak memiliki unit kerja. Hubungi administrator.');
+            }
+
+            // Validasi Kuota MPP
+            $unit = \App\Models\MasterUnit::find($profile->unit_id);
+            if ($unit && $unit->kuota_mpp > 0) {
+                $existingCount = \App\Models\DataDosenTendik::where('unit_id', $unit->id)->count();
+                if (($existingCount + $request->jumlah_kebutuhan) > $unit->kuota_mpp) {
+                    throw new \Exception("Pengajuan ditolak. Kuota MPP unit Anda adalah {$unit->kuota_mpp} orang, saat ini sudah terisi {$existingCount} orang. Sisa kuota tidak mencukupi untuk penambahan {$request->jumlah_kebutuhan} orang.");
+                }
             }
 
             $mpp = ManpowerPlanning::create([

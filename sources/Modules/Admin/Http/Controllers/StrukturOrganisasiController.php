@@ -191,6 +191,7 @@ class StrukturOrganisasiController extends MiddlewareController
                 'head_name' => $kepala ? $kepala['nama'] : 'Kosong',
                 'title' => $kepala ? $kepala['jabatan'] : 'Belum Ada Kepala',
                 'employee_count' => $employeeCount,
+                'kuota_mpp' => $unit->kuota_mpp ?? 0,
                 'image_url' => $imageUrl
             ];
         }

@@ -120,7 +120,7 @@ class ManpowerPlanningController extends MiddlewareController
     public function detail(Request $request)
     {
         try {
-            $data = ManpowerPlanning::with(['jabatan', 'unit', 'pengaju'])->find($request->id);
+            $data = ManpowerPlanning::with(['jabatan', 'unit.kepalaJabatan', 'unit.parent', 'pengaju'])->find($request->id);
             
             $hrdName = '-';
             if ($data->hrd) {
@@ -128,7 +128,11 @@ class ManpowerPlanningController extends MiddlewareController
                 $hrdName = $hrdProf ? $hrdProf->nama : $data->hrd->name;
             }
 
-            $html = view('admin::mpp.modalapproval', compact('data', 'hrdName'))->render();
+            // Dapatkan jumlah karyawan saat ini di unit tersebut dari Struktur Organisasi
+            $existing_count = DataDosenTendik::where('unit_id', $data->unit_id)->count();
+            $kuota_mpp = $data->unit ? $data->unit->kuota_mpp : 0;
+
+            $html = view('admin::mpp.modalapproval', compact('data', 'hrdName', 'existing_count', 'kuota_mpp'))->render();
             return response()->json(['success' => true, 'html' => $html]);
         } catch (\Exception $e) {
             return TsuErrorHandlerService::handleJson($e, '[TSU_MPP_DETAIL_FAIL]', 'Gagal memuat detail MPP.');

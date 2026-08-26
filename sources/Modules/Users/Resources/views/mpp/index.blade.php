@@ -20,6 +20,21 @@
 
     <section class="content">
         <div class="container-fluid">
+            
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="alert {{ ($kuota > 0 && $existingCount >= $kuota) ? 'alert-warning' : 'alert-info' }}">
+                        <h5><i class="icon fas fa-info-circle"></i> Info Kuota MPP Unit: {{ $unit ? $unit->nama_unit : '-' }}</h5>
+                        Saat ini terdapat <strong>{{ $existingCount }}</strong> karyawan aktif di unit Anda.
+                        @if($kuota > 0)
+                            Batas maksimum kuota yang ditetapkan SDM adalah <strong>{{ $kuota }}</strong> orang. 
+                            Sisa kuota yang bisa diajukan: <strong>{{ max(0, $kuota - $existingCount) }}</strong> orang.
+                        @else
+                            Batas maksimum kuota belum ditetapkan (Unlimited).
+                        @endif
+                    </div>
+                </div>
+            </div>
             <div class="card">
                 <div class="card-header">
                     <h3 class="card-title">Pengajuan MPP Saya</h3>

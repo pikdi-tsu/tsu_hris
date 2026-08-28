@@ -13,4 +13,9 @@ class DataAbsensi extends Authenticatable
     protected $table = 'data_absensi';
     protected $primaryKey = 'id';
     protected $guarded = [];
+
+    public function users()
+    {
+        return $this->hasOne(DataDosenTendik::class, 'pin_absensi', 'pin');
+    }
 }

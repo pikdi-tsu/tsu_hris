@@ -47,7 +47,8 @@
                                 <a href="{{ route('admin.absensi.index') }}" type="button" class="btn bg-gradient-primary">
                                     Upload Absensi
                                 </a>
-                                <a href="{{ route('admin.absensi.index') }}" type="button" class="btn bg-gradient-primary">
+                                <a href="{{ route('admin.riwayatabsensi.index') }}" type="button"
+                                    class="btn bg-gradient-primary">
                                     Riwayat Absensi
                                 </a>
                             </div>

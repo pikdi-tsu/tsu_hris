@@ -65,7 +65,10 @@ class SsoController extends Controller
         try {
             // Tukar Code jadi Token (Ke Homebase)
             // Note: hapus withoutVerifying() saat production (https)
-            $response = Http::withoutVerifying()->asForm()->post(config('app.tsu_homebase.url') . '/oauth/token', [
+            $response = Http::withoutVerifying()
+                ->withHeaders(['X-Sync-Secret' => config('app.pikdi.key.sync')])
+                ->asForm()
+                ->post(config('app.tsu_homebase.url') . '/oauth/token', [
                 'grant_type' => 'authorization_code',
                 'client_id' => config('app.oauth.authorization.id'),
                 'client_secret' => config('app.oauth.authorization.secret'),
@@ -88,6 +91,7 @@ class SsoController extends Controller
             // Ambil Data Profil User dari Homebase
             // Note: hapus withoutVerifying() saat production (https)
             $userResponse = Http::withoutVerifying()
+                ->withHeaders(['X-Sync-Secret' => config('app.pikdi.key.sync')])
                 ->withToken($accessToken)
                 ->acceptJson()
                 ->get(config('app.tsu_homebase.url') . '/api/v1/profile');
@@ -118,6 +122,16 @@ class SsoController extends Controller
                 // Prioritas Dosen
                 if (in_array('dosen', $roles, true) || in_array('tendik', $roles, true)) {
                     $profil = DataDosenTendik::query()->where('user_id', $user->id)->first();
+                    
+                    // SINKRONISASI STATUS AKTIF DARI HOMEBASE
+                    // Jika user berhasil login lewat SSO, berarti Homebase mengizinkan.
+                    // Paksa status lokal menjadi aktif jika sebelumnya non-aktif agar selaras.
+                    if ($profil && $profil->is_active == 0) {
+                        $profil->is_active = 1;
+                        $profil->save();
+                        Log::info("[HOMEBASE_SYNC_PULL] Status karyawan $user->name otomatis diaktifkan mengikuti Homebase.");
+                    }
+                    
                     $roleAktif = 'dosen';
                 } else {
                     $profil = DataMahasiswa::query()->where('user_id', $user->id)->first();
@@ -132,7 +146,12 @@ class SsoController extends Controller
                     ]);
                 }
 
-                return redirect()->route('admin.dashboard')
+                if ($user->isAdmin()) {
+                    return redirect()->route('admin.dashboard')
+                        ->with('success', 'Login Berhasil! Selamat Datang, ' . $user->name);
+                }
+
+                return redirect()->route('users.dashboard')
                     ->with('success', 'Login Berhasil! Selamat Datang, ' . $user->name);
             } catch (\Exception $e) {
                 Auth::logout();

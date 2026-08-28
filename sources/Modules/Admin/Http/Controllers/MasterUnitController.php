@@ -1,0 +1,146 @@
+<?php
+
+namespace Modules\Admin\Http\Controllers;
+
+use App\Http\Controllers\MiddlewareController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use App\Models\MasterUnit;
+use App\Models\MasterJabatanStruktural;
+use Yajra\DataTables\Facades\DataTables;
+use App\Services\TsuErrorHandlerService;
+use App\Traits\ApiResponseTrait;
+
+class MasterUnitController extends MiddlewareController
+{
+    use ApiResponseTrait;
+
+    public function __construct()
+    {
+        $this->registerPermissions('admin:master-unit');
+    }
+
+    public function index()
+    {
+        return view('admin::master-data.unit.index', ['title' => 'Master Data Unit']);
+    }
+
+    public function datatable()
+    {
+        $data = MasterUnit::with('kepalaJabatan')->latest();
+
+        return DataTables::of($data)
+            ->addIndexColumn()
+            ->addColumn('kepala_unit', function ($row) {
+                return $row->kepalaJabatan ? $row->kepalaJabatan->nama_jabatan : '-';
+            })
+            ->addColumn('action', function ($row) {
+                return $this->getActionButtons($row, 'admin:master-unit', [
+                    'use_modal'  => true,
+                    'edit_url' => route('admin.master-unit.edit', $row->id),
+                    'delete_url' => route('admin.master-unit.destroy', $row->id),
+                ]);
+            })
+            ->rawColumns(['action'])
+            ->make(true);
+    }
+
+    public function create()
+    {
+        $this->guard('create', 'admin:master-unit');
+        $jabatans = MasterJabatanStruktural::orderBy('nama_jabatan', 'asc')->get();
+        return view('admin::master-data.unit._modal', compact('jabatans'));
+    }
+
+    public function store(Request $request)
+    {
+        $this->guardStore($request->id, 'admin:master-unit');
+
+        $request->validate([
+            'nama_unit' => 'required|string|max:255',
+            'keterangan' => 'nullable|string',
+            'kepala_jabatan_id' => 'nullable|exists:master_jabatan_strukturals,id'
+        ]);
+
+        DB::beginTransaction();
+        try {
+            MasterUnit::create([
+                'nama_unit' => $request->nama_unit,
+                'keterangan' => $request->keterangan,
+                'kepala_jabatan_id' => $request->kepala_jabatan_id,
+            ]);
+
+            DB::commit();
+            return $this->sendSuccess('Master Unit berhasil ditambahkan.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return TsuErrorHandlerService::handleJson(
+                $e,
+                '[TSU_MASTER_UNIT_STORE]',
+                'Gagal menyimpan data master unit.',
+                'Gagal Create Master Unit.'
+            );
+        }
+    }
+
+    public function edit($id)
+    {
+        $this->guard('edit', 'admin:master-unit');
+        $unit = MasterUnit::findOrFail($id);
+        $jabatans = MasterJabatanStruktural::orderBy('nama_jabatan', 'asc')->get();
+        return view('admin::master-data.unit._modal', compact('unit', 'jabatans'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $this->guard('edit', 'admin:master-unit');
+        $unit = MasterUnit::findOrFail($id);
+
+        $request->validate([
+            'nama_unit' => 'required|string|max:255',
+            'keterangan' => 'nullable|string',
+            'kepala_jabatan_id' => 'nullable|exists:master_jabatan_strukturals,id'
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $unit->update([
+                'nama_unit' => $request->nama_unit,
+                'keterangan' => $request->keterangan,
+                'kepala_jabatan_id' => $request->kepala_jabatan_id,
+            ]);
+
+            DB::commit();
+            return $this->sendSuccess('Data Master Unit berhasil diperbarui!');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return TsuErrorHandlerService::handleJson(
+                $e,
+                '[TSU_MASTER_UNIT_UPDATE]',
+                'Gagal memperbarui data master unit.',
+                "Gagal Update Master Unit ID: $id."
+            );
+        }
+    }
+
+    public function destroy($id)
+    {
+        $this->guard('delete', 'admin:master-unit');
+        $unit = MasterUnit::findOrFail($id);
+
+        DB::beginTransaction();
+        try {
+            $unit->delete();
+            DB::commit();
+            return $this->sendSuccess('Data Master Unit berhasil dihapus.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return TsuErrorHandlerService::handleJson(
+                $e,
+                '[TSU_MASTER_UNIT_DELETE]',
+                'Gagal menghapus data karena kesalahan sistem atau data sedang digunakan.',
+                "Gagal Delete Unit ID: $id."
+            );
+        }
+    }
+}

@@ -15,10 +15,19 @@ class MenuSeeder extends Seeder
         // Dashboard (Menu Utama)
         MenuSidebar::query()->create([
             'name' => 'Dashboard',
-            'route' => 'dashboard',
+            'route' => 'admin.dashboard',
             'icon' => 'fas fa-tachometer-alt',
             'order' => -99,
             'permission_name' => '',
+        ]);
+
+        // Data Karyawan
+        MenuSidebar::query()->create([
+            'name' => 'Data Karyawan',
+            'route' => 'admin.data-karyawan.index',
+            'icon' => 'fas fa-address-book',
+            'order' => 0,
+            'permission_name' => 'admin:data-karyawan:view',
         ]);
 
         // System Management (Parent Menu)

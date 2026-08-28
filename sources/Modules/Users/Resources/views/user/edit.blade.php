@@ -105,18 +105,18 @@
                             </div>
 
                             {{-- Switch Status Aktif --}}
-                            {{--                            @if(auth()->id() !== $user->id)--}}
-                            {{--                                <div class="form-group mb-0">--}}
-                            {{--                                    <div class="custom-control custom-switch">--}}
-                            {{--                                        <input type="checkbox" class="custom-control-input" id="isactive" name="isactive"--}}
-                            {{--                                            {{ $user->isactive ? 'checked' : '' }}>--}}
-                            {{--                                        <label class="custom-control-label small font-weight-bold text-dark" for="isactive">--}}
-                            {{--                                            Status Akun Aktif--}}
-                            {{--                                        </label>--}}
-                            {{--                                    </div>--}}
-                            {{--                                    <small class="text-muted pl-4">Matikan untuk memblokir login user ini.</small>--}}
-                            {{--                                </div>--}}
-                            {{--                            @endif--}}
+{{--                            @if(auth()->id() !== $user->id)--}}
+{{--                                <div class="form-group mb-0">--}}
+{{--                                    <div class="custom-control custom-switch">--}}
+{{--                                        <input type="checkbox" class="custom-control-input" id="isactive" name="isactive"--}}
+{{--                                            {{ $user->isactive ? 'checked' : '' }}>--}}
+{{--                                        <label class="custom-control-label small font-weight-bold text-dark" for="isactive">--}}
+{{--                                            Status Akun Aktif--}}
+{{--                                        </label>--}}
+{{--                                    </div>--}}
+{{--                                    <small class="text-muted pl-4">Matikan untuk memblokir login user ini.</small>--}}
+{{--                                </div>--}}
+{{--                            @endif--}}
                         </div>
                     </div>
 

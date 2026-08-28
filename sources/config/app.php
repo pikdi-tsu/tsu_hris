@@ -22,7 +22,7 @@ return [
 
     // Main Apps
     'tsu_homebase' => [
-      'url' => env('HOMEBASE_URL'),
+        'url' => env('HOMEBASE_URL'),
     ],
 
     // Urutan menentukan prioritas pengecekan.
@@ -36,7 +36,7 @@ return [
     ],
 
     // Oauth Authorization Grant
-    'oauth' =>[
+    'oauth' => [
         'authorization' => [
             'id' => env('TSU_SSO_CLIENT_ID'),
             'secret' => env('TSU_SSO_CLIENT_SECRET'),
@@ -56,7 +56,8 @@ return [
         'password' => env('MODULE_FULL_NAME', 'tsu_template'),
         'key' => [
             'emergency' => env('PIKDI_EMERGENCY_SECRET', 'pikdiemergency@TSU25'),
-            'rescue' => env('PIKDI_RESCUE_SECRET')
+            'rescue' => env('PIKDI_RESCUE_SECRET'),
+            'sync' => env('PIKDI_SYNC_SECRET'),
         ],
     ],
 
@@ -68,6 +69,12 @@ return [
         'users' => $tableName ? $tableName . '_users' : 'users',
         'data_mahasiswas' => $tableName ? $tableName . '_data_mahasiswas' : 'data_mahasiswas',
         'data_dosen_tendiks' => $tableName ? $tableName . '_data_dosen_tendiks' : 'data_dosen_tendiks',
+        'master_jabatan_strukturals' => $tableName ? $tableName . '_master_jabatan_strukturals' : 'master_jabatan_strukturals',
+        'master_jabatan_fungsionals' => $tableName ? $tableName . '_master_jabatan_fungsionals' : 'master_jabatan_fungsionals',
+        'master_pangkat_golongans' => $tableName ? $tableName . '_master_pangkat_golongans' : 'master_pangkat_golongans',
+        'riwayat_jabatans' => $tableName ? $tableName . '_riwayat_jabatans' : 'riwayat_jabatans',
+        'karyawan_jabatan_fungsionals' => $tableName ? $tableName . '_karyawan_jabatan_fungsionals' : 'karyawan_jabatan_fungsionals',
+        'karyawan_jabatan_strukturals' => $tableName ? $tableName . '_karyawan_jabatan_strukturals' : 'karyawan_jabatan_strukturals',
         'menu_sidebars' => $tableName ? $tableName . '_menu_sidebars' : 'menu_sidebars',
         'roles' => $tableName ? $tableName . '_roles' : 'roles',
         'permissions' =>   $tableName ? $tableName . '_permissions' : 'permissions',
@@ -148,7 +155,7 @@ return [
     |
     */
 
-    'locale' => 'en',
+    'locale' => 'id',
 
     /*
     |--------------------------------------------------------------------------
@@ -239,7 +246,7 @@ return [
          */
         App\Providers\AppServiceProvider::class,
         App\Providers\AuthServiceProvider::class,
-        // App\Providers\BroadcastServiceProvider::class,
+        App\Providers\BroadcastServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,
 

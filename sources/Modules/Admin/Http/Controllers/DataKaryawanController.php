@@ -17,6 +17,9 @@ use Carbon\Carbon;
 use App\Models\KaryawanJabatanStruktural;
 use App\Models\KaryawanJabatanFungsional;
 use App\Models\MasterPangkatGolongan;
+use App\Models\CutiKaryawan;
+use App\Models\IzinKaryawan;
+use App\Models\LemburKaryawan;
 
 use App\Traits\ApiResponseTrait;
 
@@ -602,6 +605,22 @@ class DataKaryawanController extends MiddlewareController
                         'sk_jabatan' => 'Mutasi dari ' . $pegawaiLama->nama,
                         'is_active' => 'Y'
                     ]);
+                }
+
+                // Sinkronisasi Transaksi Pending (Pindahkan tugas persetujuan ke pejabat baru)
+                // Ini penting agar menu notifikasi (Cuti, Izin, Lembur) pindah dari pejabat lama ke baru.
+                if ($tipe == 'struktural') {
+                    CutiKaryawan::where('id_atasan', $pegawaiLama->id)
+                        ->where('statusatasan', 'waiting')
+                        ->update(['id_atasan' => $pegawaiBaru->id]);
+                        
+                    IzinKaryawan::where('id_atasan', $pegawaiLama->id)
+                        ->where('statusatasan', 'waiting')
+                        ->update(['id_atasan' => $pegawaiBaru->id]);
+                        
+                    LemburKaryawan::where('id_atasan', $pegawaiLama->id)
+                        ->where('statusatasan', 'waiting')
+                        ->update(['id_atasan' => $pegawaiBaru->id]);
                 }
             }
 

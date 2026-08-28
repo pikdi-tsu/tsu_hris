@@ -2,6 +2,7 @@
     data-success="{{ session('success') }}" 
     data-warning="{{ session('warning') }}" 
     data-error="{{ session('error') }}"
+    data-download-url="{{ session('download_url') }}"
     data-validation-errors="{{ json_encode($errors->all()) }}">
 </div>
 <script>
@@ -261,6 +262,14 @@
         let sessionSuccess = alertDataElement.getAttribute('data-success');
         let sessionWarning = alertDataElement.getAttribute('data-warning');
         let sessionError = alertDataElement.getAttribute('data-error');
+        let sessionDownloadUrl = alertDataElement.getAttribute('data-download-url');
+
+        // Auto Download Setup
+        if (sessionDownloadUrl) {
+            // Using window.location.href for file downloads prevents popup blockers
+            // from blocking the download, and keeps the user on the current page.
+            window.location.href = sessionDownloadUrl;
+        }
 
         // Sukses Setup
         if (sessionSuccess) {

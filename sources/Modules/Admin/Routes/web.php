@@ -14,6 +14,7 @@
 use Modules\Admin\Http\Controllers\DashboardController;
 use Modules\Admin\Http\Controllers\DataKaryawanController;
 use Modules\Admin\Http\Controllers\MasterHariLiburController;
+use Modules\Admin\Http\Controllers\StrukturOrganisasiController;
 use Modules\System\Http\Middleware\CheckAdminRole;
 use \Modules\Admin\Http\Controllers\MasterLemburController;
 use Modules\Admin\Http\Controllers\MasterJabatanController;
@@ -21,6 +22,8 @@ use Modules\Admin\Http\Controllers\RiwayatJabatanController;
 use Modules\Admin\Http\Controllers\RiwayatIzinCutiController;
 use Modules\Admin\Http\Controllers\AbsensiController;
 use Modules\Admin\Http\Controllers\RiwayatAbsensiController;
+use Modules\Admin\Http\Controllers\RiwayatLemburController;
+use Modules\Admin\Http\Controllers\AbsensiController;
 use Illuminate\Support\Facades\Route;
 use Modules\Admin\Http\Controllers\MasterStatusKaryawanController;
 use Modules\Admin\Http\Controllers\MasterUnitController;
@@ -175,6 +178,15 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
         });
     });
 
+    // --- ROUTE RIWAYAT LEMBUR MENU ---
+    Route::middleware(['permission:admin:riwayat-lembur:view'])->group(function () {
+        Route::prefix('riwayat-lembur')->name('riwayat-lembur.')->group(function () {
+            Route::get('/', [RiwayatLemburController::class, 'index'])->name('index');
+            Route::get('/json', [RiwayatLemburController::class, 'datatable'])->name('json');
+            Route::get('/export', [RiwayatLemburController::class, 'export'])->name('export');
+        });
+    });
+    
     // --- ROUTE ABSENSI ---
     Route::prefix('absensi')->name('absensi.')->group(function () {
         Route::get('/', [AbsensiController::class, 'index'])->name('index');
@@ -189,5 +201,27 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
         Route::post('/uploadexcel', [RiwayatAbsensiController::class, 'simpanexcel'])->name('uploadexcel');
         Route::get('/datatablesabsensi', [RiwayatAbsensiController::class, 'datatableabsensi'])->name('datatablesabsensi');
         Route::post('/updateperiode', [RiwayatAbsensiController::class, 'update'])->name('updateperiode');
+
+        // Route::post('/edit', [AbsensiController::class, 'edit'])->name('edit');
+        // Route::post('/detail', [AbsensiController::class, 'detail'])->name('detail');
+    });
+    // --- ROUTE MANPOWER PLANNING (MPP) ---
+    // Route::middleware(['permission:admin:mpp:view'])->group(function () { // Uncomment later when permission is added
+        Route::prefix('mpp')->name('mpp.')->group(function () {
+            Route::get('/', [\Modules\Admin\Http\Controllers\ManpowerPlanningController::class, 'index'])->name('index');
+            Route::post('/datatables', [\Modules\Admin\Http\Controllers\ManpowerPlanningController::class, 'datatables'])->name('datatables');
+            Route::post('/approve', [\Modules\Admin\Http\Controllers\ManpowerPlanningController::class, 'approve'])->name('approve');
+            Route::post('/detail', [\Modules\Admin\Http\Controllers\ManpowerPlanningController::class, 'detail'])->name('detail');
+        });
+    // });
+
+    // --- ROUTE STRUKTUR ORGANISASI ---
+    Route::prefix('struktur-organisasi')->name('struktur-organisasi.')->group(function () {
+        Route::get('/', [StrukturOrganisasiController::class, 'index'])->name('index');
+        Route::get('/core-units', [StrukturOrganisasiController::class, 'getCoreUnits'])->name('core-units');
+        Route::post('/unit-details', [StrukturOrganisasiController::class, 'getUnitDetails'])->name('unit-details');
+        Route::get('/all-units', [StrukturOrganisasiController::class, 'getAllUnitsForSelect'])->name('all-units');
+        Route::post('/move-unit', [StrukturOrganisasiController::class, 'moveUnit'])->name('move-unit');
+        Route::get('/full-tree-data', [StrukturOrganisasiController::class, 'getFullTreeData'])->name('full-tree-data');
     });
 });

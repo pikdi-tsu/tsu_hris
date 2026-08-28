@@ -49,16 +49,19 @@ class CheckNotification
                     ->count();
 
                 $notifcutihrd = CutiKaryawan::where('id_hrd', $getid->id)
+                    ->where('statusatasan', 'approved')
                     ->where('statushrd', 'waiting')
                     ->where('is_active', '1')
                     ->count();
 
                 $notifizinhrd = IzinKaryawan::where('id_hrd', $getid->id)
+                    ->where('statusatasan', 'approved')
                     ->where('statushrd', 'waiting')
                     ->where('is_active', '1')
                     ->count();
 
                 $notiflemburhrd = LemburKaryawan::where('id_hrd', $getid->id)
+                    ->where('statusatasan', 'approved')
                     ->where('statushrd', 'waiting')
                     ->where('is_active', '1')
                     ->count();

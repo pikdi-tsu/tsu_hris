@@ -26,8 +26,25 @@
             <textarea name="keterangan" class="form-control" rows="3" placeholder="Opsional">{{ $unit->keterangan ?? '' }}</textarea>
         </div>
         <div class="form-group">
+            <label>Kuota Pegawai / MPP</label>
+            <input type="number" name="kuota_mpp" class="form-control" min="0" value="{{ $unit->kuota_mpp ?? 0 }}">
+            <small class="text-muted">Batas maksimal jumlah pegawai yang diizinkan untuk unit ini.</small>
+        </div>
+        <div class="form-group">
+            <label>Unit Induk (Berada di Bawah Unit)</label>
+            <select name="parent_unit_id" class="form-control select2">
+                <option value="">-- Tidak Ada (Tingkat Tertinggi) --</option>
+                @foreach($parentUnits as $parent)
+                    <option value="{{ $parent->id }}" {{ (isset($unit) && $unit->parent_unit_id == $parent->id) ? 'selected' : '' }}>
+                        {{ $parent->nama_unit }}
+                    </option>
+                @endforeach
+            </select>
+            <small class="text-muted">Pilih unit tempat bernaungnya unit ini.</small>
+        </div>
+        <div class="form-group">
             <label>Jabatan Kepala Unit</label>
-            <select name="kepala_jabatan_id" class="form-control select2">
+            <select name="kepala_jabatan_id" class="form-control select2" id="kepala_jabatan_id">
                 <option value="">-- Pilih Jabatan --</option>
                 @foreach($jabatans as $jabatan)
                     <option value="{{ $jabatan->id }}" {{ (isset($unit) && $unit->kepala_jabatan_id == $jabatan->id) ? 'selected' : '' }}>
@@ -36,6 +53,12 @@
                 @endforeach
             </select>
             <small class="text-muted">Pilih jabatan struktural yang menjadi pimpinan di unit ini.</small>
+            @if (!$isEdit)
+            <div class="custom-control custom-checkbox mt-2">
+                <input type="checkbox" class="custom-control-input" id="auto_create_jabatan" name="auto_create_jabatan" value="1">
+                <label class="custom-control-label" for="auto_create_jabatan">Otomatis buatkan Jabatan "Kepala [Nama Unit]"</label>
+            </div>
+            @endif
         </div>
     </div>
     <div class="modal-footer">
@@ -43,3 +66,13 @@
         <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Simpan</button>
     </div>
 </form>
+
+<script>
+    $('#auto_create_jabatan').on('change', function() {
+        if ($(this).is(':checked')) {
+            $('#kepala_jabatan_id').val('').trigger('change').prop('disabled', true);
+        } else {
+            $('#kepala_jabatan_id').prop('disabled', false);
+        }
+    });
+</script>

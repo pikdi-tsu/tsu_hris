@@ -17,6 +17,7 @@ use App\Models\DataDosenTendik;
 use App\Models\KaryawanJabatanStruktural;
 use App\Traits\ApiResponseTrait;
 use App\Services\TsuErrorHandlerService;
+use App\Models\User;
 
 class IzinController extends Controller
 {
@@ -41,10 +42,38 @@ class IzinController extends Controller
         }
 
         $getmizin = MasterIzin::where('is_active', '1')->get();
-
         $profile = $this->getCurrentProfile();
 
-        $listKaryawan = KaryawanJabatanStruktural::with(['karyawan'])->get();
+        // Get list of SDM for dropdown selection
+        $listSdm = DataDosenTendik::whereNotNull('nama')
+                        ->where('tipe_karyawan', 'Tendik')
+                        ->where(function ($q) {
+                            $q->where('posisi', 'like', '%SDM%')
+                              ->orWhere('posisi', 'like', '%Sumber Daya Manusia%');
+                        })
+                        ->orderBy('nama', 'asc')
+                        ->get(['id', 'nama', 'nik']);
+
+        $isAtasan = false;
+        $namaAtasan = 'Belum/Tidak Ada Atasan (Silakan hubungi SDM)';
+        $atasanId = null;
+        if ($profile) {
+            $isKepala = KaryawanJabatanStruktural::where('data_dosen_tendik_id', $profile->id)
+                ->whereIn('is_active', [1, '1', 'Y', 'y'])->exists();
+            
+            if ($profile->unit_id) {
+                $unit = \App\Models\MasterUnit::find($profile->unit_id);
+                if ($unit) {
+                    $atasanId = $this->findAtasanId($unit, $profile->id);
+                    if ($atasanId) {
+                        $atasan = DataDosenTendik::find($atasanId);
+                        if ($atasan) {
+                            $namaAtasan = $atasan->nama;
+                        }
+                    }
+                }
+            }
+        }
 
         $getsaldo = SaldoCutiKaryawan::where('id_user', $profile->id)->where('is_active', '1')->first();
 
@@ -52,9 +81,10 @@ class IzinController extends Controller
             'title'     => 'Izin Karyawan',
             'menu'      => 'dashboard',
             'mizin'     => $getmizin,
-            'karyawans' => $listKaryawan,
+            'karyawans' => $listSdm,
             'profile'   => $profile,
-            'saldo'     => $getsaldo
+            'saldo'     => $getsaldo,
+            'namaAtasan' => $namaAtasan
         );
 
         return view('users::izin.index', $data);
@@ -68,7 +98,6 @@ class IzinController extends Controller
                 'tanggal1'  => 'required|date',
                 'tanggal2'  => 'required|date|after_or_equal:tanggal1',
                 'alasan'    => 'required',
-                'id_atasan' => 'required',
                 'id_hrd'    => 'required',
             ], [
                 // custom message
@@ -77,7 +106,6 @@ class IzinController extends Controller
                 'tanggal2.required' => 'Tanggal Selesai Tidak Boleh Kosong',
                 'tanggal2.after_or_equal' => 'Waktu Selesai harus setelah Waktu Mulai',
                 'alasan.required' => 'Alasan Tidak Boleh Kosong',
-                'id_atasan.required' => 'Atasan Tidak Boleh Kosong',
                 'id_hrd.required' => 'HRD Tidak Boleh Kosong',
             ]);
 
@@ -90,16 +118,30 @@ class IzinController extends Controller
                 return $this->sendError('Profil karyawan tidak ditemukan.');
             }
 
+            if (!$profile->unit_id) {
+                return $this->sendError('Unit Anda tidak ditemukan di sistem.');
+            }
+
+            $unit = \App\Models\MasterUnit::find($profile->unit_id);
+            if (!$unit) {
+                return $this->sendError('Unit Anda tidak ditemukan di sistem.');
+            }
+
+            $idatasan = $this->findAtasanId($unit, $profile->id);
+            if (!$idatasan) {
+                return $this->sendError('Unit Anda (atau Unit Induk) belum memiliki Kepala Unit. Silakan hubungi SDM.');
+            }
+
             $iduser = $profile->id;
             $jenisizin = $req->jenisizin;
             $tgl1 = $req->tanggal1;
             $tgl2 = $req->tanggal2;
             $alasan = $req->alasan;
-            $idatasan = $req->id_atasan;
             $idhrd = $req->id_hrd;
 
+            $izinId = null;
             if ($req->ketedit == 'no') {
-                $insert = IzinKaryawan::insert([
+                $izinId = IzinKaryawan::insertGetId([
                     'id_mizin'        => $jenisizin,
                     'id_user'         => $iduser,
                     'tanggalmulai'    => $tgl1,
@@ -114,7 +156,8 @@ class IzinController extends Controller
                     'created_by'      => $profile->nik ?? Auth::id()
                 ]);
             } else {
-                $insert = IzinKaryawan::where('id', $req->idedit)->where('is_active', '1')->update([
+                $izinId = $req->idedit;
+                IzinKaryawan::where('id', $izinId)->where('is_active', '1')->update([
                     'id_mizin'        => $jenisizin,
                     'id_user'         => $iduser,
                     'tanggalmulai'    => $tgl1,
@@ -128,6 +171,40 @@ class IzinController extends Controller
                     'updated_at'      => date("Y-m-d H:i:s"),
                     'updated_by'      => $profile->nik ?? Auth::id()
                 ]);
+            }
+
+            // Real-Time Notifications
+            if ($izinId) {
+                $izinCreated = IzinKaryawan::find($izinId);
+                
+                // Notify Atasan
+                if ($idatasan) {
+                    $atasanProfile = DataDosenTendik::find($idatasan);
+                    if ($atasanProfile && $atasanProfile->user_id) {
+                        $atasanUser = User::find($atasanProfile->user_id);
+                        if ($atasanUser) {
+                            $atasanUser->notify(new \App\Notifications\IzinDiajukanNotification(
+                                $izinCreated,
+                                'Pengajuan izin baru dari ' . ($profile->nama ?? 'Bawahan') . ' menunggu persetujuan Anda.'
+                            ));
+                        }
+                    }
+                }
+
+                // Notify HRD
+                if ($idhrd) {
+                    $hrdProfile = DataDosenTendik::find($idhrd);
+                    if ($hrdProfile && $hrdProfile->user_id) {
+                        $hrdUser = User::find($hrdProfile->user_id);
+                        if ($hrdUser) {
+                            $hrdUser->notify(new \App\Notifications\IzinDiajukanNotification(
+                                $izinCreated,
+                                'Ada pengajuan izin baru dari ' . ($profile->nama ?? 'Karyawan') . ' yang diajukan ke Atasan.',
+                                'hrd'
+                            ));
+                        }
+                    }
+                }
             }
 
             return $this->sendSuccess('Izin Berhasil Disimpan');
@@ -250,5 +327,35 @@ class IzinController extends Controller
         } catch (\Exception $e) {
             return TsuErrorHandlerService::handleJson($e, '[TSU_SS_IZIN_DTL]', 'Gagal memuat detail izin.');
         }
+    }
+
+    private function findAtasanId($unit, $currentUserId)
+    {
+        if (!$unit) return null;
+
+        $kepalaJabatanId = $unit->kepala_jabatan_id;
+        if ($kepalaJabatanId) {
+            $kepalas = KaryawanJabatanStruktural::where('jabatan_struktural_id', $kepalaJabatanId)
+                ->whereIn('is_active', [1, '1', 'Y', 'y'])
+                ->get();
+                
+            $kepala = null;
+            if ($kepalas->count() == 1) {
+                $kepala = $kepalas->first();
+            } elseif ($kepalas->count() > 1) {
+                $kepala = $kepalas->where('unit_id', $unit->id)->first() ?? $kepalas->first();
+            }
+                
+            if ($kepala && $kepala->data_dosen_tendik_id !== $currentUserId) {
+                return $kepala->data_dosen_tendik_id;
+            }
+        }
+
+        if ($unit->parent_unit_id) {
+            $parentUnit = \App\Models\MasterUnit::find($unit->parent_unit_id);
+            return $this->findAtasanId($parentUnit, $currentUserId);
+        }
+
+        return null;
     }
 }

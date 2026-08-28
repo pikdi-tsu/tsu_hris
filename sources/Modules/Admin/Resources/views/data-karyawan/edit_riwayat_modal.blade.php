@@ -1,4 +1,4 @@
-<form id="form-update-riwayat" action="{{ route('admin.data-karyawan.update-riwayat', $riwayat->id) }}" method="POST">
+<form id="form-update-riwayat" action="{{ route('admin.riwayat-jabatan.update', $riwayat->id) }}" method="POST">
     @csrf
     @method('PUT')
     

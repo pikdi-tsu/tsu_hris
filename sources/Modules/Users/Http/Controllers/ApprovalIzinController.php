@@ -17,6 +17,7 @@ use App\Models\SaldoCutiKaryawan;
 use App\Models\DataDosenTendik;
 use App\Traits\ApiResponseTrait;
 use App\Services\TsuErrorHandlerService;
+use App\Models\User;
 
 class ApprovalIzinController extends Controller
 {
@@ -177,12 +178,52 @@ class ApprovalIzinController extends Controller
                     'alasanatasan'       => $ketapproval,
                     'atasanapprovaldate' => date("Y-m-d H:i:s")
                 ]);
+
+                // Update memory variable for notification
+                $check->statusatasan = $approval;
+
+                if ($approval == 'approved') {
+                    // Real-Time Notification to HRD after Atasan approves
+                    if ($check->id_hrd) {
+                        $hrdProfile = DataDosenTendik::find($check->id_hrd);
+                        if ($hrdProfile && $hrdProfile->user_id) {
+                            $hrdUser = User::find($hrdProfile->user_id);
+                            if ($hrdUser) {
+                                $karyawanProfile = DataDosenTendik::find($check->id_user);
+                                $namaKaryawan = $karyawanProfile ? $karyawanProfile->nama : 'Karyawan';
+                                $hrdUser->notify(new \App\Notifications\IzinDiajukanNotification(
+                                    $check,
+                                    'Pengajuan izin dari ' . $namaKaryawan . ' telah disetujui Atasan dan menunggu persetujuan Anda.',
+                                    'hrd'
+                                ));
+                            }
+                        }
+                    }
+                }
             } else if ($checkhrd) {
                 $update = IzinKaryawan::where('id', $idizinkaryawan)->where('id_user', $iduserinput)->where('id_hrd', $check->id_hrd)->where('is_active', '1')->update([
                     'statushrd'       => $approval,
                     'alasanhrd'       => $ketapproval,
                     'hrdapprovaldate' => date("Y-m-d H:i:s")
                 ]);
+            }
+
+            // Real-Time Notification to Karyawan (Feedback)
+            $karyawanProfile = DataDosenTendik::find($check->id_user);
+            if ($karyawanProfile && $karyawanProfile->user_id) {
+                $karyawanUser = User::find($karyawanProfile->user_id);
+                if ($karyawanUser) {
+                    $statusText = $approval == 'approved' ? 'Disetujui' : 'Ditolak';
+                    $roleText = $checkatasan ? 'Atasan' : 'SDM';
+                    $iconClass = $approval == 'approved' ? 'fa-check-circle text-success' : 'fa-times-circle text-danger';
+                    $karyawanUser->notify(new \App\Notifications\PengajuanDiprosesNotification(
+                        "Pengajuan Izin Anda telah {$statusText} oleh {$roleText}.",
+                        'feedback',
+                        route('users.izin.index'),
+                        'Cek Riwayat',
+                        $iconClass
+                    ));
+                }
             }
 
             DB::commit();

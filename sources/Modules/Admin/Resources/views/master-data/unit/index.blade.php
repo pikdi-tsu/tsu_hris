@@ -19,6 +19,7 @@
                     <tr>
                         <th width="5%">No</th>
                         <th>Nama Unit</th>
+                        <th>Unit Induk</th>
                         <th>Keterangan</th>
                         <th>Kepala Unit</th>
                         <th width="15%">Aksi</th>
@@ -57,6 +58,12 @@
                     {
                         data: 'nama_unit',
                         name: 'nama_unit'
+                    },
+                    {
+                        data: 'unit_induk',
+                        name: 'unit_induk',
+                        orderable: false,
+                        searchable: false
                     },
                     {
                         data: 'keterangan',

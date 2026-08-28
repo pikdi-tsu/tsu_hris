@@ -263,6 +263,9 @@
                             <p class="mb-1 text-muted small">Kepala / Pimpinan:</p>
                             <h6 class="font-weight-bold mb-1">${unit.head_name}</h6>
                             <span class="badge badge-secondary">${unit.title}</span>
+                            <div class="mt-2 text-success small font-weight-bold">
+                                <i class="fas fa-users"></i> ${unit.employee_count} / ${unit.kuota_mpp > 0 ? unit.kuota_mpp : '∞'} Pegawai
+                            </div>
                         </div>
                         <div class="card-footer p-2 text-center bg-white border-top-0">
                             <button class="btn btn-sm btn-outline-primary w-100" onclick="event.stopPropagation(); showMoveUnitModal('${unit.id}', '${unit.name.replace(/'/g, "\\'")}')">
@@ -528,7 +531,7 @@
                                     <h6 style="margin: 0 0 5px 0; font-size: 14px; color: #007bff; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${d.data.name}">${d.data.name}</h6>
                                     <div style="font-size: 12px; color: #343a40; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${d.data.head_name}">${d.data.head_name}</div>
                                     <div style="font-size: 11px; color: #6c757d; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${d.data.title}">${d.data.title}</div>
-                                    <div style="font-size: 11px; color: #28a745; margin-top: 5px; font-weight: bold;"><i class="fas fa-users"></i> ${d.data.employee_count} Karyawan</div>
+                                    <div style="font-size: 11px; color: #28a745; margin-top: 5px; font-weight: bold;"><i class="fas fa-users"></i> ${d.data.employee_count} / ${d.data.kuota_mpp > 0 ? d.data.kuota_mpp : '∞'} Karyawan</div>
                                 </div>
                             </div>
                         `;

@@ -26,7 +26,12 @@
                     </div>
                     <div class="form-group">
                         <label>Jumlah Kebutuhan <span class="text-danger">*</span></label>
-                        <input type="number" name="jumlah_kebutuhan" class="form-control" min="1" value="1" required>
+                        <input type="number" name="jumlah_kebutuhan" class="form-control" min="1" 
+                               {{ ($kuota > 0) ? 'max=' . max(1, $kuota - $existingCount) : '' }} 
+                               value="1" required>
+                        @if($kuota > 0)
+                            <small class="text-muted">Maksimal yang bisa diajukan: {{ max(0, $kuota - $existingCount) }} orang.</small>
+                        @endif
                     </div>
                     <div class="form-group">
                         <label>Tipe Pengajuan <span class="text-danger">*</span></label>

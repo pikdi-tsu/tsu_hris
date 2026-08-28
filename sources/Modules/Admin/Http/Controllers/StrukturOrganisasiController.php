@@ -38,16 +38,24 @@ class StrukturOrganisasiController extends MiddlewareController
                     ->orderBy('nama_unit', 'asc')
                     ->get();
                     
-        $data = $units->map(function($unit) {
+        $employeeCounts = DataDosenTendik::select('unit_id', \Illuminate\Support\Facades\DB::raw('count(*) as total'))
+                            ->groupBy('unit_id')
+                            ->pluck('total', 'unit_id')
+                            ->toArray();
+
+        $data = $units->map(function($unit) use ($employeeCounts) {
             $kepala = $this->getKepalaUnitInfo($unit);
             $hasChildren = MasterUnit::where('parent_unit_id', $unit->id)->exists();
+            $employeeCount = $employeeCounts[$unit->id] ?? 0;
             
             return [
                 'id' => $unit->id,
                 'name' => $unit->nama_unit,
                 'title' => $kepala ? $kepala['jabatan'] : 'Belum Ada Kepala',
                 'head_name' => $kepala ? $kepala['nama'] : '-',
-                'has_children' => $hasChildren
+                'has_children' => $hasChildren,
+                'employee_count' => $employeeCount,
+                'kuota_mpp' => $unit->kuota_mpp ?? 0
             ];
         });
 
@@ -66,16 +74,24 @@ class StrukturOrganisasiController extends MiddlewareController
                         ->orderBy('nama_unit', 'asc')
                         ->get();
                         
-        $subUnitsData = $subUnits->map(function($unit) {
+        $employeeCounts = DataDosenTendik::select('unit_id', \Illuminate\Support\Facades\DB::raw('count(*) as total'))
+                            ->groupBy('unit_id')
+                            ->pluck('total', 'unit_id')
+                            ->toArray();
+
+        $subUnitsData = $subUnits->map(function($unit) use ($employeeCounts) {
             $kepala = $this->getKepalaUnitInfo($unit);
             $hasChildren = MasterUnit::where('parent_unit_id', $unit->id)->exists();
+            $employeeCount = $employeeCounts[$unit->id] ?? 0;
             
             return [
                 'id' => $unit->id,
                 'name' => $unit->nama_unit,
                 'title' => $kepala ? $kepala['jabatan'] : 'Belum Ada Kepala',
                 'head_name' => $kepala ? $kepala['nama'] : '-',
-                'has_children' => $hasChildren
+                'has_children' => $hasChildren,
+                'employee_count' => $employeeCount,
+                'kuota_mpp' => $unit->kuota_mpp ?? 0
             ];
         });
 
@@ -191,6 +207,7 @@ class StrukturOrganisasiController extends MiddlewareController
                 'head_name' => $kepala ? $kepala['nama'] : 'Kosong',
                 'title' => $kepala ? $kepala['jabatan'] : 'Belum Ada Kepala',
                 'employee_count' => $employeeCount,
+                'kuota_mpp' => $unit->kuota_mpp ?? 0,
                 'image_url' => $imageUrl
             ];
         }

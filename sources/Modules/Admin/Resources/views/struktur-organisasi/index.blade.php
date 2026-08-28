@@ -263,6 +263,9 @@
                             <p class="mb-1 text-muted small">Kepala / Pimpinan:</p>
                             <h6 class="font-weight-bold mb-1">${unit.head_name}</h6>
                             <span class="badge badge-secondary">${unit.title}</span>
+                            <div class="mt-2 text-success small font-weight-bold">
+                                <i class="fas fa-users"></i> ${unit.employee_count} / ${unit.kuota_mpp > 0 ? unit.kuota_mpp : '∞'} Pegawai
+                            </div>
                         </div>
                         <div class="card-footer p-2 text-center bg-white border-top-0">
                             <button class="btn btn-sm btn-outline-primary w-100" onclick="event.stopPropagation(); showMoveUnitModal('${unit.id}', '${unit.name.replace(/'/g, "\\'")}')">

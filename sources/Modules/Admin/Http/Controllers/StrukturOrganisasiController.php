@@ -121,10 +121,43 @@ class StrukturOrganisasiController extends MiddlewareController
             ];
         });
 
+        // 3. Inject Kepala Unit at the top
+        $unit = MasterUnit::find($unitId);
+        $finalEmployeesData = [];
+        $kepalaId = null;
+
+        if ($unit && $unit->kepala_jabatan_id) {
+            $kjsKepala = KaryawanJabatanStruktural::with(['karyawan.user', 'masterStruktural'])
+                ->where('jabatan_struktural_id', $unit->kepala_jabatan_id)
+                ->whereIn('is_active', [1, '1', 'Y', 'y'])
+                ->first();
+                
+            if ($kjsKepala && $kjsKepala->karyawan) {
+                $kepalaId = $kjsKepala->karyawan->id;
+                $finalEmployeesData[] = [
+                    'id' => $kjsKepala->karyawan->id,
+                    'nama' => $kjsKepala->karyawan->nama,
+                    'tipe' => $kjsKepala->karyawan->tipe_karyawan,
+                    'posisi_harian' => $kjsKepala->karyawan->posisi,
+                    'jabatan_struktural' => $kjsKepala->masterStruktural ? $kjsKepala->masterStruktural->nama_jabatan : 'Kepala Unit',
+                    'image_url' => $kjsKepala->karyawan->user ? $kjsKepala->karyawan->user->profile_photo_url : null,
+                    'is_head' => true
+                ];
+            }
+        }
+
+        // Append the rest of the employees, skipping if already added as Kepala
+        foreach ($employeesData as $empData) {
+            if ($kepalaId && $empData['id'] == $kepalaId) {
+                continue; // Skip duplicate
+            }
+            $finalEmployeesData[] = $empData;
+        }
+
         return response()->json([
             'success' => true, 
             'sub_units' => $subUnitsData,
-            'employees' => $employeesData
+            'employees' => $finalEmployeesData
         ]);
     }
 

@@ -132,12 +132,30 @@
             var form = $(this).closest('form');
             var name = $(this).data('name');
             var action = $(this).data('action'); // Bakal otomatis baca 'aktifkan' atau 'nonaktifkan' dari tombol
+            var hasSso = $(this).data('has-sso');
 
             // Setting dinamis berdasarkan tombol apa yang diklik
             var titleTxt = action === 'aktifkan' ? 'Aktifkan Karyawan?' : 'Nonaktifkan Pegawai?';
-            var htmlTxt  = action === 'aktifkan'
-                ? "Anda akan mengaktifkan kembali status pegawai: <b>" + name + "</b>.<br><small class='text-success'>Karyawan akan kembali aktif di sistem HRIS.</small>"
-                : "Anda akan menonaktifkan status pegawai: <b>" + name + "</b>.<br><small class='text-warning'>Data tidak dihapus, namun akun SSO akan diputus.</small>";
+            
+            var htmlTxt = "";
+            if (action === 'aktifkan') {
+                if (hasSso === 'no') {
+                    htmlTxt = "Anda akan mengaktifkan kembali status pegawai: <b>" + name + "</b>.<br><br>" +
+                              "<div class='alert alert-info p-2' style='border-left: 4px solid #17a2b8; text-align: left;'>" +
+                              "<b>ℹ️ INFO:</b><br><small>Karyawan ini belum memiliki akun SSO yang tertaut (Belum pernah login).<br>Pengaktifan ini <b>HANYA BERLAKU DI SISTEM HRIS LOKAL</b>.</small></div>";
+                } else {
+                    htmlTxt = "Anda akan mengaktifkan kembali status pegawai: <b>" + name + "</b>.<br><small class='text-success'>Karyawan akan kembali aktif di HRIS dan SSO Homebase.</small>";
+                }
+            } else {
+                if (hasSso === 'no') {
+                    htmlTxt = "Anda akan menonaktifkan status pegawai: <b>" + name + "</b>.<br><br>" +
+                              "<div class='alert alert-warning p-2' style='border-left: 4px solid #f39c12; text-align: left;'>" +
+                              "<b>⚠️ PERHATIAN:</b><br><small>Karyawan ini belum memiliki akun SSO yang tertaut (Belum pernah login).<br>Penonaktifan ini <b>HANYA BERLAKU DI SISTEM HRIS LOKAL</b>.</small></div>";
+                } else {
+                    htmlTxt = "Anda akan menonaktifkan status pegawai: <b>" + name + "</b>.<br><small class='text-warning'>Data tidak dihapus, namun akun SSO akan diputus.</small>";
+                }
+            }
+
             var iconBtn  = action === 'aktifkan' ? '<i class="fas fa-user-check"></i> Ya, Aktifkan!' : '<i class="fas fa-user-slash"></i> Ya, Nonaktifkan!';
             var colorBtn = action === 'aktifkan' ? '#28a745' : '#d33'; // Hijau untuk aktif, Merah untuk nonaktif
 

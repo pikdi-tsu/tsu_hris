@@ -79,12 +79,7 @@ class ApprovalIzinController extends Controller
                 return $data->masterIzin ? $data->masterIzin->jenisizin : '-';
             })
             ->addColumn('jumlah', function ($data) {
-                $start = Carbon::parse($data->tanggalmulai);
-                $end   = Carbon::parse($data->tanggalselesai);
-
-                $jumlahHari = $start->diffInDays($end) + 1;
-
-                return $jumlahHari;
+                return IzinKaryawan::hitungHariEfektif($data->tanggalmulai, $data->tanggalselesai);
             })
             ->addColumn('keterangan', function ($data) {
                 return $data->keterangan;
@@ -126,7 +121,7 @@ class ApprovalIzinController extends Controller
                 $tanggal = $mulai->translatedFormat('d M Y') . ' - ' . $selesai->translatedFormat('d M Y');
             }
 
-            $jumlahHari = $mulai->diffInDays($selesai) + 1;
+            $jumlahHari = IzinKaryawan::hitungHariEfektif($getdata->tanggalmulai, $getdata->tanggalselesai);
 
             $form = view('users::approvalizin.modaldetail', ['data' => $getdata, 'profile' => $profile, 'jmlhari' => $jumlahHari, 'tanggal' => $tanggal]);
             return $form->render();

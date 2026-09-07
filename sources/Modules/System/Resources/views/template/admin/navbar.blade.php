@@ -19,12 +19,12 @@
             $notifizinhrd = session('notifizinhrd');
             $notiflemburatasan = session('notiflemburatasan');
             $notiflemburhrd = session('notiflemburhrd');
-            
-            $dbNotifs = Auth::user()->notifications()->latest()->take(5)->get();
-            $dbNotifSystemOnly = Auth::user()->unreadNotifications()->where('type', 'NOT LIKE', '%DiajukanNotification%')->count();
-            $dbNotifCount = Auth::user()->unreadNotifications()->count();
-            
-            $all = $notifcutiatasan + $notifizinatasan + $notifcutihrd + $notifizinhrd + $notiflemburatasan + $notiflemburhrd + $dbNotifSystemOnly;
+            $notifpayroll = session('notifpayroll', 0);
+            $notifpayroll_url = session('notifpayroll_url', route('admin.payroll.index'));
+            $notifhonorarium = session('notifhonorarium', 0);
+            $notifhonorarium_url = session('notifhonorarium_url', route('admin.honorarium.index'));
+
+            $all = $notifcutiatasan + $notifizinatasan + $notifcutihrd + $notifizinhrd + $notiflemburatasan + $notiflemburhrd + $notifpayroll + $notifhonorarium;
         @endphp
         <!-- Notifications Dropdown Menu -->
         <li class="nav-item dropdown">
@@ -33,7 +33,7 @@
                 <span class="badge badge-danger navbar-badge" id="global-notif-badge" {!! $all > 0 ? '' : 'style="display:none;"' !!}>{{ $all }}</span>
             </a>
             <div class="dropdown-menu dropdown-menu-lg dropdown-menu-right" id="dropdown-notif-lonceng" style="max-height: 350px; overflow-y: auto; overflow-x: hidden;">
-                
+
                 <span class="dropdown-item dropdown-header font-weight-bold bg-light" id="global-notif-header" {!! $all > 0 ? '' : 'style="display:none;"' !!}>
                     <span id="global-notif-text">{{ $all }}</span> Pengajuan Menunggu Persetujuan
                 </span>
@@ -42,7 +42,23 @@
                     <i class="fas fa-check-circle mb-2" style="font-size: 1.5rem;"></i><br>
                     Tidak ada notifikasi baru
                 </a>
-                
+
+                {{-- Item Persetujuan Payroll --}}
+                <div class="dropdown-divider" id="payroll-divider" {!! $notifpayroll > 0 ? '' : 'style="display:none;"' !!}></div>
+                <a href="{{ $notifpayroll_url }}" class="dropdown-item" id="payroll-item" {!! $notifpayroll > 0 ? '' : 'style="display:none;"' !!}>
+                    <i class="fas fa-file-invoice-dollar mr-2 text-success"></i>
+                    <span class="badge badge-success float-right" id="badge-notif-payroll">{{ $notifpayroll }}</span>
+                    Persetujuan Payroll
+                </a>
+
+                {{-- Item Persetujuan Honorarium Dosen --}}
+                <div class="dropdown-divider" id="honorarium-divider" {!! $notifhonorarium > 0 ? '' : 'style="display:none;"' !!}></div>
+                <a href="{{ $notifhonorarium_url }}" class="dropdown-item" id="honorarium-item" {!! $notifhonorarium > 0 ? '' : 'style="display:none;"' !!}>
+                    <i class="fas fa-graduation-cap mr-2 text-primary"></i>
+                    <span class="badge badge-primary float-right" id="badge-notif-honorarium">{{ $notifhonorarium }}</span>
+                    Persetujuan Honorarium
+                </a>
+
                 <div class="dropdown-divider" id="cuti-atasan-divider" {!! $notifcutiatasan > 0 ? '' : 'style="display:none;"' !!}></div>
                 <a href="{{ route('users.indexapprovalcuti') }}" class="dropdown-item" id="cuti-atasan-item" {!! $notifcutiatasan > 0 ? '' : 'style="display:none;"' !!}>
                     <i class="fas fa-umbrella-beach mr-2 text-warning"></i>
@@ -50,11 +66,11 @@
                     Persetujuan Cuti
                 </a>
 
-                <div class="dropdown-divider" id="cuti-hrd-divider" {!! $notifcutihrd > 0 ? '' : 'style="display:none;"' !!}></div>
-                <a href="{{ route('users.indexapprovalcuti') }}" class="dropdown-item" id="cuti-hrd-item" {!! $notifcutihrd > 0 ? '' : 'style="display:none;"' !!}>
-                    <i class="fas fa-umbrella-beach mr-2 text-warning"></i>
-                    <span class="badge badge-warning float-right" id="badge-notif-cuti-hrd">{{ $notifcutihrd }}</span>
-                    Persetujuan Cuti (SDM)
+                {{-- KONDISI 2: CONTOH KALAU ADA ISI (Disimpan dulu sbg komentar buat contekan) --}}
+                {{--
+                <a href="#" class="dropdown-item">
+                    <i class="fas fa-file-signature mr-2"></i> KRS Disetujui
+                    <span class="float-right text-muted text-sm">3 mins</span>
                 </a>
 
                 <div class="dropdown-divider" id="izin-atasan-divider" {!! $notifizinatasan > 0 ? '' : 'style="display:none;"' !!}></div>
@@ -84,51 +100,6 @@
                     <span class="badge badge-primary float-right" id="badge-notif-lembur-hrd">{{ $notiflemburhrd }}</span>
                     Persetujuan Lembur (SDM)
                 </a>
-
-                @if($dbNotifs->count() > 0)
-                    <div class="dropdown-divider inbox-divider"></div>
-                    <span class="dropdown-item dropdown-header font-weight-bold bg-light text-left" id="inbox-header">
-                        <i class="fas fa-inbox mr-1"></i> Kotak Masuk (<span id="inbox-count">{{ $dbNotifCount }}</span> Baru)
-                    </span>
-                    @foreach($dbNotifs as $notif)
-                        @php
-                            $isUnread = is_null($notif->read_at);
-                            $bgColor = $isUnread ? 'bg-white' : 'bg-light';
-                            $textColor = $isUnread ? 'text-dark font-weight-bold' : 'text-muted';
-                            $data = $notif->data;
-                            $icon = 'fas fa-bell text-secondary';
-                            
-                            if (isset($data['statusatasan'])) {
-                                if ($data['statusatasan'] == 'export-ready') $icon = 'fas fa-file-excel text-success';
-                                if ($data['statusatasan'] == 'export-failed') $icon = 'fas fa-exclamation-triangle text-danger';
-                            }
-                        @endphp
-                        <a href="{{ route('users.notifications.read', $notif->id) }}" class="dropdown-item {{ $bgColor }} border-bottom db-notif-item" style="white-space: normal;">
-                            <div class="media">
-                                <i class="{{ $icon }} mr-3 mt-1" style="font-size: 1.2rem;"></i>
-                                <div class="media-body">
-                                    <p class="text-sm {{ $textColor }} mb-1">
-                                        @if($isUnread)
-                                            <i class="fas fa-circle text-primary mr-1" style="font-size: 0.4rem; vertical-align: middle;"></i>
-                                        @endif
-                                        {{ Str::limit($data['message'] ?? 'Ada notifikasi baru', 60) }}
-                                    </p>
-                                    @if(isset($data['download_url']))
-                                        <span class="badge badge-success mt-1"><i class="fas fa-download"></i> File Siap</span>
-                                    @elseif(isset($data['error_detail']))
-                                        <span class="badge badge-danger mt-1">Gagal</span>
-                                    @endif
-                                    <p class="text-xs text-muted mb-0 mt-1">
-                                        <i class="far fa-clock mr-1"></i> {{ $notif->created_at->diffForHumans() }}
-                                    </p>
-                                </div>
-                            </div>
-                        </a>
-                    @endforeach
-                @endif
-
-                <div class="dropdown-divider"></div>
-                <a href="{{ route('users.notifications.index') }}" class="dropdown-item dropdown-footer text-center">Lihat Semua Notifikasi</a>
             </div>
         </li>
 

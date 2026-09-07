@@ -20,6 +20,7 @@ class DataDosenTendik extends Authenticatable
 
     protected $casts = [
         'tgl_lahir' => 'date',
+        'dapat_uang_transport' => 'boolean',
     ];
 
     public function getTable()
@@ -36,6 +37,16 @@ class DataDosenTendik extends Authenticatable
     public function unit()
     {
         return $this->belongsTo(MasterUnit::class, 'unit_id');
+    }
+
+    public function shift()
+    {
+        return $this->belongsTo(MasterShift::class, 'master_shift_id');
+    }
+
+    public function pikets()
+    {
+        return $this->hasMany(DataJadwalPiket::class, 'data_dosen_tendik_id');
     }
 
     /**
@@ -70,7 +81,6 @@ class DataDosenTendik extends Authenticatable
             get: function (mixed $value, array $attributes) {
                 $depan = !empty($attributes['gelar_depan']) ? trim($attributes['gelar_depan']) . ' ' : '';
                 $belakang = !empty($attributes['gelar_belakang']) ? ', ' . trim($attributes['gelar_belakang']) : '';
-                
                 return $depan . $attributes['nama'] . $belakang;
             },
         );
@@ -137,9 +147,9 @@ class DataDosenTendik extends Authenticatable
                 'label' => 'Jabatan & Pangkat',
                 'fields' => [
                     // Note: Jabatan Struktural & Fungsional sekarang di-*manage* melalui tombol khusus (Aksi > Kelola Struktural / Kelola Fungsional)
-                    
+
                     // Pangkat / Golongan sekarang dikelola berbarengan dengan Jabatan Fungsional
-                    
+
                     // Note: Jabatan Fungsional sekarang di-*manage* melalui tombol khusus (Aksi > Kelola Fungsional)
                 ]
             ],
@@ -153,7 +163,24 @@ class DataDosenTendik extends Authenticatable
                     ['name' => 'scan_npwp', 'label' => 'Link Scan NPWP (URL)', 'type' => 'text', 'col_size' => 12],
                     ['name' => 'scan_ijazah', 'label' => 'Link Scan Ijazah (URL)', 'type' => 'text', 'col_size' => 12],
                 ]
+            ],
+
+            // TAB 5: PAYROLL & REKENING
+            'tab_payroll' => [
+                'label' => 'Rekening & Payroll',
+                'fields' => [
+                    ['name' => 'nama_bank', 'label' => 'Nama Bank Payroll', 'type' => 'text', 'col_size' => 4, 'placeholder' => 'Contoh: Bank Mandiri'],
+                    ['name' => 'no_rekening', 'label' => 'Nomor Rekening', 'type' => 'text', 'col_size' => 4, 'placeholder' => 'Contoh: 1380026963186'],
+                    ['name' => 'atas_nama_rekening', 'label' => 'Atas Nama Rekening', 'type' => 'text', 'col_size' => 4, 'placeholder' => 'Nama sesuai buku tabungan'],
+                    ['name' => 'persen_gaji_pokok', 'label' => 'Persentase Gaji Pokok (%)', 'type' => 'select', 'col_size' => 4, 'options' => [100 => '100% (Gaji Penuh)', 80 => '80% (Masa Percobaan/Kontrak Tertentu)']],
+                    ['name' => 'dapat_uang_transport', 'label' => 'Menerima Uang Transport Presensi', 'type' => 'checkbox', 'col_size' => 8, 'default' => 1, 'help_text' => 'Centang jika pegawai berhak menerima uang transport kehadiran presensi (sesuai tarif di Master Komponen Presensi).'],
+                ]
             ]
         ];
+    }
+
+    public function payrollHistories()
+    {
+        return $this->hasMany(PayrollKaryawan::class, 'data_dosen_tendik_id', 'id');
     }
 }

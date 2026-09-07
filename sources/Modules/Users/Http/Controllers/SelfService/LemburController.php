@@ -29,7 +29,7 @@ class LemburController extends MiddlewareController
     public function __construct()
     {
         $this->middleware('auth');
-        // $this->registerPermissions('users:lembur');
+        $this->registerPermissions('users:lembur');
     }
 
     /**
@@ -47,7 +47,7 @@ class LemburController extends MiddlewareController
         }
 
         $profile = $this->getCurrentProfile();
-        
+
         $mlembur = MasterLembur::where('is_active', '1')->get();
 
         // Get list of SDM for dropdown selection
@@ -65,7 +65,7 @@ class LemburController extends MiddlewareController
         $namaAtasan = 'Belum/Tidak Ada Atasan (Silakan hubungi SDM)';
         if ($profile) {
             $isSdm = ($profile->tipe_karyawan == 'Tendik' && (stripos($profile->posisi, 'SDM') !== false || stripos($profile->posisi, 'Sumber Daya Manusia') !== false));
-            
+
             $isKepala = KaryawanJabatanStruktural::where('data_dosen_tendik_id', $profile->id)
                 ->whereIn('is_active', [1, '1', 'Y', 'y'])->exists();
             $isAtasan = $isKepala || LemburKaryawan::where('id_atasan', $profile->id)->exists();
@@ -169,7 +169,7 @@ class LemburController extends MiddlewareController
                 $file->storeAs('public/lembur/bukti', $filename);
                 $dataLembur['bukti_kegiatan'] = $filename;
             }
-                
+
             DB::transaction(function () use ($dataLembur, &$lemburCreated) {
                 $lemburCreated = LemburKaryawan::create($dataLembur);
             });
@@ -207,9 +207,9 @@ class LemburController extends MiddlewareController
 
         } catch (\Exception $e) {
             return TsuErrorHandlerService::handleJson(
-                $e, 
-                '[TSU_LEMBUR_STORE_FAIL]', 
-                'Gagal menyimpan data pengajuan lembur.', 
+                $e,
+                '[TSU_LEMBUR_STORE_FAIL]',
+                'Gagal menyimpan data pengajuan lembur.',
                 'Lembur Store.'
             );
         }
@@ -320,9 +320,9 @@ class LemburController extends MiddlewareController
 
         } catch (\Exception $e) {
             return TsuErrorHandlerService::handleJson(
-                $e, 
-                '[TSU_LEMBUR_UPD_FAIL]', 
-                'Gagal menyimpan perubahan pengajuan lembur.', 
+                $e,
+                '[TSU_LEMBUR_UPD_FAIL]',
+                'Gagal menyimpan perubahan pengajuan lembur.',
                 "Lembur Update ID: $id."
             );
         }
@@ -387,7 +387,7 @@ class LemburController extends MiddlewareController
                 ]);
 
                 $detailBtn = '<button type="button" data-url="' . route('users.lembur.show', encrypt($row->id)) . '" class="btn btn-info btn-sm btn-detail ml-1" title="Info Detail"><i class="fas fa-info-circle"></i></button>';
-                
+
                 $tarikBtn = '';
                 if ($canTarik) {
                     $tarikBtn = '<button type="button" data-url="' . route('users.lembur.tarik', encrypt($row->id)) . '" class="btn btn-warning btn-sm btn-tarik ml-1" title="Tarik Pengajuan"><i class="fas fa-undo"></i></button>';
@@ -428,9 +428,9 @@ class LemburController extends MiddlewareController
 
         } catch (\Exception $e) {
             return TsuErrorHandlerService::handleJson(
-                $e, 
-                '[TSU_LEMBUR_TARIK_FAIL]', 
-                'Gagal menarik pengajuan lembur.', 
+                $e,
+                '[TSU_LEMBUR_TARIK_FAIL]',
+                'Gagal menarik pengajuan lembur.',
                 "Lembur Tarik ID: $id."
             );
         }
@@ -448,7 +448,7 @@ class LemburController extends MiddlewareController
                 ->where('id_user', $profile->id)
                 ->where('is_active', '1')
                 ->first();
-                
+
             if (!$getdata) {
                 throw new \Exception("Data tidak ditemukan");
             }
@@ -456,14 +456,14 @@ class LemburController extends MiddlewareController
             if ($getdata->statusatasan != 'draft' || $getdata->statushrd != 'draft') {
                 throw new \Exception("Pengajuan hanya bisa diedit jika berstatus Draft.");
             }
-                
+
             $getdata->encrypted_id = $id;
             return $this->sendSuccess('Berhasil memuat data.', $getdata);
         } catch (\Exception $e) {
             return TsuErrorHandlerService::handleJson(
-                $e, 
-                '[TSU_LEMBUR_EDIT_FAIL]', 
-                'Gagal mengambil data pengajuan lembur.', 
+                $e,
+                '[TSU_LEMBUR_EDIT_FAIL]',
+                'Gagal mengambil data pengajuan lembur.',
                 "Lembur Edit Data ID: $id."
             );
         }
@@ -481,7 +481,7 @@ class LemburController extends MiddlewareController
                 ->where('id', $myid)
                 ->where('is_active', '1')
                 ->first();
-                
+
             if (!$getdata) {
                 throw new \Exception("Data tidak ditemukan");
             }
@@ -493,17 +493,17 @@ class LemburController extends MiddlewareController
             $durasi = round($mulai->floatDiffInHours($selesai), 1);
 
             $form = view('users::lembur.modaldetail', [
-                'data' => $getdata, 
-                'durasi' => $durasi, 
+                'data' => $getdata,
+                'durasi' => $durasi,
                 'waktu' => $waktu
             ]);
-            
+
             return $form->render();
         } catch (\Exception $e) {
             return TsuErrorHandlerService::handleJson(
-                $e, 
-                '[TSU_LEMBUR_SHOW_FAIL]', 
-                'Gagal memuat detail pengajuan lembur.', 
+                $e,
+                '[TSU_LEMBUR_SHOW_FAIL]',
+                'Gagal memuat detail pengajuan lembur.',
                 "Lembur Detail ID: $id."
             );
         }
@@ -539,9 +539,9 @@ class LemburController extends MiddlewareController
             return $this->sendSuccess('Data pengajuan berhasil dibatalkan/dihapus');
         } catch (\Exception $e) {
             return TsuErrorHandlerService::handleJson(
-                $e, 
-                '[TSU_LEMBUR_DEL_FAIL]', 
-                $e->getMessage() === "Tidak bisa menghapus pengajuan yang sudah diproses." || $e->getMessage() === "Data tidak ditemukan" ? $e->getMessage() : 'Gagal menghapus/membatalkan pengajuan lembur.', 
+                $e,
+                '[TSU_LEMBUR_DEL_FAIL]',
+                $e->getMessage() === "Tidak bisa menghapus pengajuan yang sudah diproses." || $e->getMessage() === "Data tidak ditemukan" ? $e->getMessage() : 'Gagal menghapus/membatalkan pengajuan lembur.',
                 "Lembur Delete ID: $id."
             );
         }
@@ -560,7 +560,7 @@ class LemburController extends MiddlewareController
                     $q->where('id_atasan', $profileId)
                         ->where('statusatasan', 'waiting');
                 });
-                
+
                 $query->orWhere(function ($q) use ($profileId) {
                     $q->where('id_hrd', $profileId)
                         ->where('statushrd', 'waiting');
@@ -599,10 +599,10 @@ class LemburController extends MiddlewareController
             })
             ->addColumn('action', function ($row) use ($profileId) {
                 $detailBtn = '<button type="button" data-url="' . route('users.lembur.show', encrypt($row->id)) . '" class="btn btn-info btn-sm btn-detail" title="Info Detail"><i class="fas fa-info-circle"></i></button>';
-                
+
                 $approveBtn = '';
                 $rejectBtn = '';
-                
+
                 $isAtasan = $row->id_atasan == $profileId;
                 $isHrd = $row->id_hrd == $profileId;
 
@@ -623,16 +623,16 @@ class LemburController extends MiddlewareController
     public function detailPekerjaan(Request $request, $id)
     {
         $this->guard('view', 'users:lembur');
-        
+
         $karyawan = LemburKaryawan::find($id);
-        
+
         if ($karyawan) {
             return response()->json([
                 'success' => true,
                 'data' => $karyawan->keterangan
             ]);
         }
-        
+
         return response()->json([
             'success' => false,
             'message' => 'Data tidak ditemukan'
@@ -648,14 +648,14 @@ class LemburController extends MiddlewareController
             $kepalas = KaryawanJabatanStruktural::where('jabatan_struktural_id', $kepalaJabatanId)
                 ->whereIn('is_active', [1, '1', 'Y', 'y'])
                 ->get();
-                
+
             $kepala = null;
             if ($kepalas->count() == 1) {
                 $kepala = $kepalas->first();
             } elseif ($kepalas->count() > 1) {
                 $kepala = $kepalas->where('unit_id', $unit->id)->first() ?? $kepalas->first();
             }
-                
+
             if ($kepala && $kepala->data_dosen_tendik_id !== $currentUserId) {
                 return $kepala->data_dosen_tendik_id;
             }
@@ -705,7 +705,7 @@ class LemburController extends MiddlewareController
                         if ($hrdUser) {
                             $karyawanProfile = DataDosenTendik::find($lembur->id_user);
                             $namaKaryawan = $karyawanProfile ? $karyawanProfile->nama : 'Karyawan';
-                            
+
                             $hrdUser->notify(new LemburDiajukanNotification(
                                 $lembur,
                                 'Pengajuan lembur dari ' . $namaKaryawan . ' telah disetujui Atasan dan menunggu persetujuan Anda.',
@@ -714,7 +714,7 @@ class LemburController extends MiddlewareController
                         }
                     }
                 }
-                
+
                 // Feedback to Karyawan
                 $karyawanProfile = DataDosenTendik::find($lembur->id_user);
                 if ($karyawanProfile && $karyawanProfile->user_id) {
@@ -734,7 +734,7 @@ class LemburController extends MiddlewareController
                     $lembur->statushrd = 'approved';
                     $lembur->save();
                 });
-                
+
                 // Feedback to Karyawan
                 $karyawanProfile = DataDosenTendik::find($lembur->id_user);
                 if ($karyawanProfile && $karyawanProfile->user_id) {
@@ -757,9 +757,9 @@ class LemburController extends MiddlewareController
 
         } catch (\Exception $e) {
             return TsuErrorHandlerService::handleJson(
-                $e, 
-                '[TSU_LEMBUR_APP_FAIL]', 
-                $e->getMessage() === "Data tidak ditemukan atau Anda bukan atasan/SDM untuk pengajuan ini." || $e->getMessage() === "Status pengajuan tidak valid untuk disetujui oleh Anda saat ini. (Menunggu persetujuan Atasan)" ? $e->getMessage() : 'Gagal menyetujui pengajuan lembur.', 
+                $e,
+                '[TSU_LEMBUR_APP_FAIL]',
+                $e->getMessage() === "Data tidak ditemukan atau Anda bukan atasan/SDM untuk pengajuan ini." || $e->getMessage() === "Status pengajuan tidak valid untuk disetujui oleh Anda saat ini. (Menunggu persetujuan Atasan)" ? $e->getMessage() : 'Gagal menyetujui pengajuan lembur.',
                 "Lembur Approve ID: $id."
             );
         }
@@ -794,7 +794,7 @@ class LemburController extends MiddlewareController
                     $lembur->statushrd = 'rejected';
                     $lembur->save();
                 });
-                
+
                 // Feedback to Karyawan
                 $karyawanProfile = DataDosenTendik::find($lembur->id_user);
                 if ($karyawanProfile && $karyawanProfile->user_id) {
@@ -814,7 +814,7 @@ class LemburController extends MiddlewareController
                     $lembur->statushrd = 'rejected';
                     $lembur->save();
                 });
-                
+
                 // Feedback to Karyawan
                 $karyawanProfile = DataDosenTendik::find($lembur->id_user);
                 if ($karyawanProfile && $karyawanProfile->user_id) {
@@ -837,9 +837,9 @@ class LemburController extends MiddlewareController
 
         } catch (\Exception $e) {
             return TsuErrorHandlerService::handleJson(
-                $e, 
-                '[TSU_LEMBUR_REJ_FAIL]', 
-                $e->getMessage() === "Data tidak ditemukan atau Anda bukan atasan/SDM untuk pengajuan ini." || $e->getMessage() === "Status pengajuan tidak valid untuk ditolak oleh Anda saat ini. (Menunggu persetujuan Atasan)" ? $e->getMessage() : 'Gagal menolak pengajuan lembur.', 
+                $e,
+                '[TSU_LEMBUR_REJ_FAIL]',
+                $e->getMessage() === "Data tidak ditemukan atau Anda bukan atasan/SDM untuk pengajuan ini." || $e->getMessage() === "Status pengajuan tidak valid untuk ditolak oleh Anda saat ini. (Menunggu persetujuan Atasan)" ? $e->getMessage() : 'Gagal menolak pengajuan lembur.',
                 "Lembur Reject ID: $id."
             );
         }

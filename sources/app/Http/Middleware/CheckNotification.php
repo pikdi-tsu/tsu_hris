@@ -11,6 +11,7 @@ use App\Models\CutiKaryawan;
 use App\Models\IzinKaryawan;
 use App\Models\LemburKaryawan;
 use App\Models\DataDosenTendik;
+use App\Models\PayrollPeriod;
 
 class CheckNotification
 {
@@ -66,22 +67,63 @@ class CheckNotification
                     ->where('is_active', '1')
                     ->count();
 
+                // Query Helper Approval Pending
+                $basePendingQuery = function($type) use ($getid) {
+                    return PayrollPeriod::where('tipe', $type)
+                        ->where(function ($q) use ($getid) {
+                            $q->where(function ($sub) use ($getid) {
+                                $sub->where('validator_1_id', $getid->id)
+                                    ->where('status', 'pending_val_1');
+                            })->orWhere(function ($sub) use ($getid) {
+                                $sub->where('validator_2_id', $getid->id)
+                                    ->where('status', 'pending_val_2');
+                            })->orWhere(function ($sub) use ($getid) {
+                                $sub->where('approval_id', $getid->id)
+                                    ->where('status', 'pending_approval');
+                            });
+                        })->latest()->get();
+                };
+
+                // 1. Notifikasi Khusus Payroll
+                $pendingPayrolls = $basePendingQuery('payroll');
+                $notifpayroll = $pendingPayrolls->count();
+                $firstPayroll = $pendingPayrolls->first();
+                $notifpayroll_url = $firstPayroll
+                    ? route('admin.payroll.show', $firstPayroll->id)
+                    : route('admin.payroll.index');
+
+                // 2. Notifikasi Khusus Honorarium Dosen
+                $pendingHonorariums = $basePendingQuery('honorarium');
+                $notifhonorarium = $pendingHonorariums->count();
+                $firstHonorarium = $pendingHonorariums->first();
+                $notifhonorarium_url = $firstHonorarium
+                    ? route('admin.honorarium.show', $firstHonorarium->id)
+                    : route('admin.honorarium.index');
+
                 session([
-                    'notifcutiatasan' => $notifcutiatasan,
-                    'notifcutihrd'    => $notifcutihrd,
-                    'notifizinatasan' => $notifizinatasan,
-                    'notifizinhrd'    => $notifizinhrd,
-                    'notiflemburatasan' => $notiflemburatasan,
-                    'notiflemburhrd'  => $notiflemburhrd
+                    'notifcutiatasan'    => $notifcutiatasan,
+                    'notifcutihrd'       => $notifcutihrd,
+                    'notifizinatasan'    => $notifizinatasan,
+                    'notifizinhrd'       => $notifizinhrd,
+                    'notiflemburatasan'  => $notiflemburatasan,
+                    'notiflemburhrd'     => $notiflemburhrd,
+                    'notifpayroll'       => $notifpayroll,
+                    'notifpayroll_url'   => $notifpayroll_url,
+                    'notifhonorarium'    => $notifhonorarium,
+                    'notifhonorarium_url'=> $notifhonorarium_url,
                 ]);
             } else {
                 session([
-                    'notifcutiatasan' => 0,
-                    'notifcutihrd'    => 0,
-                    'notifizinatasan' => 0,
-                    'notifizinhrd'    => 0,
-                    'notiflemburatasan' => 0,
-                    'notiflemburhrd'  => 0
+                    'notifcutiatasan'    => 0,
+                    'notifcutihrd'       => 0,
+                    'notifizinatasan'    => 0,
+                    'notifizinhrd'       => 0,
+                    'notiflemburatasan'  => 0,
+                    'notiflemburhrd'     => 0,
+                    'notifpayroll'       => 0,
+                    'notifpayroll_url'   => route('admin.payroll.index'),
+                    'notifhonorarium'    => 0,
+                    'notifhonorarium_url'=> route('admin.honorarium.index'),
                 ]);
             }
         }

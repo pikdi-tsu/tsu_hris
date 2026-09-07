@@ -13,7 +13,7 @@
             <div class="form-group">
                 <label class="col-sm-12 control-label">Tanggal</label>
                 <div class="col-sm-12">
-                    <input type="text" class="form-control" value="{{ $tanggal }}" readonly>
+                    <input type="text" class="form-control" value="{{ $tanggal }} ({{ $jmlhari }} Hari Kerja Efektif)" readonly>
                 </div>
             </div>
         </div>

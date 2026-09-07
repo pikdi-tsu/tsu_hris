@@ -16,13 +16,37 @@
         if (!$user->hasRole(['super admin', 'super admin hris', 'admin', 'admin hris'])) {
             $profile = \App\Models\DataDosenTendik::where('user_id', $user->id)->first();
             if (!$profile) return;
-            
+
             $jabatanStrukturalIds = \App\Models\KaryawanJabatanStruktural::where('data_dosen_tendik_id', $profile->id)
                 ->where('is_active', 'Y')
                 ->pluck('jabatan_struktural_id');
 
             $isAtasan = \App\Models\MasterUnit::whereIn('kepala_jabatan_id', $jabatanStrukturalIds)->exists();
             if (!$isAtasan) {
+                return;
+            }
+        }
+    }
+
+    // CUSTOM LOGIC: Hide Approval Cuti & Approval Izin from non-atasan / non-HRD
+    if (in_array($menu->route, ['users.indexapprovalcuti', 'users.indexapprovalizin'])) {
+        $user = auth()->user();
+        if (!$user->hasRole(['super admin', 'super admin hris', 'admin', 'admin hris'])) {
+            $profile = \App\Models\DataDosenTendik::where('user_id', $user->id)->first();
+            if (!$profile) return;
+
+            $isHrd = str_contains(strtoupper($profile->posisi ?? ''), 'SDM') || str_contains(strtoupper($profile->posisi ?? ''), 'SUMBER DAYA MANUSIA');
+
+            $jabatanStrukturalIds = \App\Models\KaryawanJabatanStruktural::where('data_dosen_tendik_id', $profile->id)
+                ->whereIn('is_active', [1, '1', 'Y', 'y'])
+                ->pluck('jabatan_struktural_id');
+
+            $isAtasan = \App\Models\MasterUnit::whereIn('kepala_jabatan_id', $jabatanStrukturalIds)->exists();
+
+            $hasAssignedApproval = \App\Models\CutiKaryawan::where('id_atasan', $profile->id)->orWhere('id_hrd', $profile->id)->exists()
+                || \App\Models\IzinKaryawan::where('id_atasan', $profile->id)->orWhere('id_hrd', $profile->id)->exists();
+
+            if (!$isHrd && !$isAtasan && !$hasAssignedApproval) {
                 return;
             }
         }
@@ -63,17 +87,6 @@
     }
 @endphp
 
-@php
-    $badgeCount = 0;
-    if ($menu->route === 'users.indexapprovalcuti') {
-        $badgeCount = session('notifcutiatasan', 0) + session('notifcutihrd', 0);
-    } elseif ($menu->route === 'users.indexapprovalizin') {
-        $badgeCount = session('notifizinatasan', 0) + session('notifizinhrd', 0);
-    } elseif ($menu->route === 'users.lembur.index') {
-        $badgeCount = session('notiflemburatasan', 0) + session('notiflemburhrd', 0);
-    }
-@endphp
-
 <li class="nav-item {{ $hasChildren && $isActive ? 'menu-open' : '' }}">
 
     <a href="{{ $href }}"
@@ -81,9 +94,8 @@
        style="padding-left: {{ $paddingLeft }}rem !important; display: flex; align-items: center;">
         <i class="nav-indicator {{ $indicator }} mr-2"></i>
         <i class="nav-icon {{ $mainIcon }} mr-2"></i>
-        <p class="mb-0" style="flex: 1;" id="sidebar-menu-{{ str_replace('.', '-', $menu->route ?? 'folder') }}">
+        <p class="mb-0" style="flex: 1;">
             {{ $menu->name }}
-            <span class="badge badge-danger right" id="sidebar-badge-{{ str_replace('.', '-', $menu->route ?? 'folder') }}" {!! $badgeCount > 0 ? '' : 'style="display:none;"' !!}>{{ $badgeCount }}</span>
         </p>
     </a>
 

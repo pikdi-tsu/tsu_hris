@@ -64,19 +64,19 @@ class MasterJabatanController extends MiddlewareController
         $this->guardStore($request->id, 'admin:master-jabatan');
 
         $request->validate([
-            'nama_jabatan' => 'required|string|max:255',
-            'periode_jabatan' => 'nullable|integer|min:1',
-            'keterangan' => 'nullable|string',
-            'is_unit_specific' => 'required|in:Y,N'
+            'nama_jabatan'      => 'required|string|max:255',
+            'periode_jabatan'   => 'nullable|integer|min:1',
+            'keterangan'        => 'nullable|string',
+            'is_unit_specific'  => 'required|in:Y,N'
         ]);
 
         DB::beginTransaction();
         try {
             MasterJabatanStruktural::create([
-                'nama_jabatan' => $request->nama_jabatan,
-                'periode_jabatan' => $request->periode_jabatan,
-                'keterangan' => $request->keterangan,
-                'is_unit_specific' => $request->is_unit_specific,
+                'nama_jabatan'      => $request->nama_jabatan,
+                'periode_jabatan'   => $request->periode_jabatan,
+                'keterangan'        => $request->keterangan,
+                'is_unit_specific'  => $request->is_unit_specific,
             ]);
 
             DB::commit();
@@ -105,19 +105,19 @@ class MasterJabatanController extends MiddlewareController
         $struktural = MasterJabatanStruktural::findOrFail($id);
 
         $request->validate([
-            'nama_jabatan' => 'required|string|max:255',
-            'periode_jabatan' => 'nullable|integer|min:1',
-            'keterangan' => 'nullable|string',
-            'is_unit_specific' => 'required|in:Y,N'
+            'nama_jabatan'      => 'required|string|max:255',
+            'periode_jabatan'   => 'nullable|integer|min:1',
+            'keterangan'        => 'nullable|string',
+            'is_unit_specific'  => 'required|in:Y,N'
         ]);
 
         DB::beginTransaction();
         try {
             $struktural->update([
-                'nama_jabatan' => $request->nama_jabatan,
-                'periode_jabatan' => $request->periode_jabatan,
-                'keterangan' => $request->keterangan,
-                'is_unit_specific' => $request->is_unit_specific,
+                'nama_jabatan'      => $request->nama_jabatan,
+                'periode_jabatan'   => $request->periode_jabatan,
+                'keterangan'        => $request->keterangan,
+                'is_unit_specific'  => $request->is_unit_specific,
             ]);
 
             DB::commit();
@@ -196,17 +196,17 @@ class MasterJabatanController extends MiddlewareController
         $this->guardStore($request->id, 'admin:master-jabatan');
 
         $request->validate([
-            'nama_jabatan' => 'required|string|max:255',
-            'periode_jabatan' => 'nullable|integer|min:1',
-            'keterangan' => 'nullable|string'
+            'nama_jabatan'      => 'required|string|max:255',
+            'periode_jabatan'   => 'nullable|integer|min:1',
+            'keterangan'        => 'nullable|string'
         ]);
 
         DB::beginTransaction();
         try {
             MasterJabatanFungsional::create([
-                'nama_jabatan' => $request->nama_jabatan,
-                'periode_jabatan' => $request->periode_jabatan,
-                'keterangan' => $request->keterangan,
+                'nama_jabatan'      => $request->nama_jabatan,
+                'periode_jabatan'   => $request->periode_jabatan,
+                'keterangan'        => $request->keterangan,
             ]);
 
             DB::commit();
@@ -235,17 +235,17 @@ class MasterJabatanController extends MiddlewareController
         $fungsional = MasterJabatanFungsional::findOrFail($id);
 
         $request->validate([
-            'nama_jabatan' => 'required|string|max:255',
-            'periode_jabatan' => 'nullable|integer|min:1',
-            'keterangan' => 'nullable|string'
+            'nama_jabatan'      => 'required|string|max:255',
+            'periode_jabatan'   => 'nullable|integer|min:1',
+            'keterangan'        => 'nullable|string'
         ]);
 
         DB::beginTransaction();
         try {
             $fungsional->update([
-                'nama_jabatan' => $request->nama_jabatan,
-                'periode_jabatan' => $request->periode_jabatan,
-                'keterangan' => $request->keterangan,
+                'nama_jabatan'      => $request->nama_jabatan,
+                'periode_jabatan'   => $request->periode_jabatan,
+                'keterangan'        => $request->keterangan,
             ]);
 
             DB::commit();

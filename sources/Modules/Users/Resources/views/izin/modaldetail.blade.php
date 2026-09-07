@@ -13,7 +13,7 @@
             <div class="form-group">
                 <label class="col-sm-12 control-label">Tanggal</label>
                 <div class="col-sm-12">
-                    <input type="text" class="form-control" value="{{ $tanggal }}" readonly>
+                    <input type="text" class="form-control" value="{{ $tanggal }} ({{ $jmlhari }} Hari Kerja Efektif)" readonly>
                 </div>
             </div>
         </div>
@@ -21,9 +21,9 @@
     <div class="row">
         <div class="col-md-6">
             <div class="form-group">
-                <label class="col-sm-12 control-label">Jenis Cuti</label>
+                <label class="col-sm-12 control-label">Jenis Izin</label>
                 <div class="col-sm-12">
-                    <input type="text" class="form-control" value="{{ $data->masterCuti->jeniscuti }}" readonly>
+                    <input type="text" class="form-control" value="{{ $data->masterIzin->jenisizin ?? '-' }}" readonly>
                 </div>
             </div>
         </div>

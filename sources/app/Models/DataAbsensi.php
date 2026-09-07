@@ -14,8 +14,18 @@ class DataAbsensi extends Authenticatable
     protected $primaryKey = 'id';
     protected $guarded = [];
 
+    protected $casts = [
+        'akumulasi_validasi' => 'decimal:1',
+        'durasi_menit' => 'integer',
+    ];
+
     public function users()
     {
         return $this->hasOne(DataDosenTendik::class, 'pin_absensi', 'pin');
+    }
+
+    public function shift()
+    {
+        return $this->belongsTo(MasterShift::class, 'master_shift_id');
     }
 }

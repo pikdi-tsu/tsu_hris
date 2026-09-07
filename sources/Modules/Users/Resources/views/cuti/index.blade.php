@@ -102,14 +102,14 @@
                                             <label class="col-sm-2 col-form-label">NIK</label>
                                             <div class="col-sm-8">
                                                 <input type="text" class="form-control" placeholder="NIK"
-                                                    value="{{ $profile->nik }}" readonly>
+                                                    value="{{ $profile->nik ?? (Auth::user()->nik ?? '-') }}" readonly>
                                             </div>
                                         </div>
                                         <div class="row mb-2">
                                             <label class="col-sm-2 col-form-label">Nama</label>
                                             <div class="col-sm-8">
                                                 <input type="text" class="form-control" placeholder="Nama"
-                                                    value="{{ $profile->nama }}" readonly>
+                                                    value="{{ $profile->nama ?? Auth::user()->name }}" readonly>
                                             </div>
                                         </div>
                                         <div class="row mb-2">

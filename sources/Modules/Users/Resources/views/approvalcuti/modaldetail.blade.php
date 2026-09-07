@@ -15,7 +15,7 @@
             <div class="form-group">
                 <label class="col-sm-12 control-label">Tanggal</label>
                 <div class="col-sm-12">
-                    <input type="text" class="form-control" value="{{ $tanggal }}" readonly>
+                    <input type="text" class="form-control" value="{{ $tanggal }} ({{ $jmlhari }} Hari Kerja Efektif)" readonly>
                 </div>
             </div>
         </div>
@@ -81,8 +81,10 @@
                 <div class="col-sm-12">
                     @if ($data->statushrd == 'approved')
                         <h5><span class="badge badge-success">Approved</span></h5>
-                    @elseif($data->statushrd == 'approved')
-                        <h5><span class="badge badge-danger">Rejected</span></h5>
+                    @elseif($data->statushrd == 'rejected')
+                        <h5><span class="badge badge-danger" data-toggle="popover" data-trigger="click" data-html="true"
+                                title="Rejected Note" data-placement="top" data-content="{!! $data->alasanhrd !!}"
+                                style="cursor:pointer">Rejected</span></h5>
                     @else
                         <h5><span class="badge badge-warning">Waiting</span></h5>
                     @endif

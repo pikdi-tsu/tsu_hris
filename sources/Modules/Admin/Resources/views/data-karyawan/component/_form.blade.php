@@ -79,8 +79,22 @@
                                         @endif
                                     </select>
                                     {{-- Kalau di-disable, nilainya nggak ke-submit, jadi kita akalin pakai hidden input --}}
-                                    @if($isReadonly)
-                                        <input type="hidden" name="{{ $field['name'] }}" value="{{ $value }}">
+                                @elseif($field['type'] === 'checkbox')
+                                    <div class="custom-control custom-switch mt-1">
+                                        <input type="hidden" name="{{ $field['name'] }}" value="0">
+                                        <input type="checkbox"
+                                               class="custom-control-input"
+                                               id="{{ $field['name'] }}"
+                                               name="{{ $field['name'] }}"
+                                               value="1"
+                                               {{ ($value == 1 || $value === true || (!$isEdit && ($field['default'] ?? 1) == 1)) ? 'checked' : '' }}
+                                               {{ $isReadonly ? 'disabled' : '' }}>
+                                        <label class="custom-control-label font-weight-bold text-dark" for="{{ $field['name'] }}">
+                                            Ya, Aktifkan Uang Transport Presensi
+                                        </label>
+                                    </div>
+                                    @if(isset($field['help_text']))
+                                        <small class="text-muted d-block mt-1">{{ $field['help_text'] }}</small>
                                     @endif
                                 @else
                                     @php
@@ -129,8 +143,8 @@
                                     <div class="card-body text-center">
                                         <h6 class="font-weight-bold text-dark mb-3"><i class="fas fa-sitemap text-primary mr-1"></i> Jabatan Struktural</h6>
                                         <p class="small text-muted mb-3">Kelola riwayat, penugasan, dan pelepasan Jabatan Struktural.</p>
-                                        <button type="button" 
-                                                class="btn btn-outline-primary btn-sm btn-block btn-modal font-weight-bold" 
+                                        <button type="button"
+                                                class="btn btn-outline-primary btn-sm btn-block btn-modal font-weight-bold"
                                                 data-url="{{ route('admin.data-karyawan.kelola-struktural', $karyawan->id) }}">
                                             <i class="fas fa-edit mr-1"></i> Kelola Struktural
                                         </button>
@@ -142,8 +156,8 @@
                                     <div class="card-body text-center">
                                         <h6 class="font-weight-bold text-dark mb-3"><i class="fas fa-medal text-info mr-1"></i> Jabatan Fungsional & Pangkat</h6>
                                         <p class="small text-muted mb-3">Kelola riwayat, penugasan fungsional beserta kepangkatannya.</p>
-                                        <button type="button" 
-                                                class="btn btn-outline-info btn-sm btn-block btn-modal font-weight-bold" 
+                                        <button type="button"
+                                                class="btn btn-outline-info btn-sm btn-block btn-modal font-weight-bold"
                                                 data-url="{{ route('admin.data-karyawan.kelola-fungsional', $karyawan->id) }}">
                                             <i class="fas fa-edit mr-1"></i> Kelola Fungsional
                                         </button>

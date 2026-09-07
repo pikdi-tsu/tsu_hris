@@ -11,7 +11,7 @@
 |
 */
 
-use Modules\Admin\Http\Controllers\DashboardController;
+use Modules\Users\Http\Controllers\SelfService\DashboardController as UserDashboardController;
 use Modules\Admin\Http\Controllers\DataKaryawanController;
 use Modules\Admin\Http\Controllers\MasterHariLiburController;
 use Modules\Admin\Http\Controllers\StrukturOrganisasiController;
@@ -20,7 +20,6 @@ use \Modules\Admin\Http\Controllers\MasterLemburController;
 use Modules\Admin\Http\Controllers\MasterJabatanController;
 use Modules\Admin\Http\Controllers\RiwayatJabatanController;
 use Modules\Admin\Http\Controllers\RiwayatIzinCutiController;
-use Modules\Admin\Http\Controllers\AbsensiController;
 use Modules\Admin\Http\Controllers\RiwayatAbsensiController;
 use Modules\Admin\Http\Controllers\RiwayatLemburController;
 use Illuminate\Support\Facades\Route;
@@ -28,10 +27,18 @@ use Modules\Admin\Http\Controllers\MasterStatusKaryawanController;
 use Modules\Admin\Http\Controllers\MasterUnitController;
 use Modules\Admin\Http\Controllers\MasterCutiController;
 use Modules\Admin\Http\Controllers\MasterIzinController;
+use Modules\Admin\Http\Controllers\MasterShiftController;
+use Modules\Admin\Http\Controllers\MasterKomponenPresensiController;
+use Modules\Admin\Http\Controllers\MasterGajiPokokController;
+use Modules\Admin\Http\Controllers\MasterTarifHonorariumController;
+use Modules\Admin\Http\Controllers\MasterTunjanganController;
+use Modules\Admin\Http\Controllers\RekapAbsensiController;
+use Modules\Admin\Http\Controllers\JadwalPiketController;
+use Modules\Admin\Http\Controllers\PayrollController;
+use Modules\Admin\Http\Controllers\HonorariumController;
 
-// Aktifkan CheckAdminRole::class di middleware jika ada dashboard users sendiri
 Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
 
     // --- ROUTE DATA KARYAWAN ---
     Route::middleware(['permission:admin:data-karyawan:view'])->group(function () {
@@ -136,6 +143,36 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
         });
     });
 
+    // --- ROUTE MASTER TUNJANGAN PEGAWAI (STRUKTURAL, FUNGSIONAL, KELUARGA) ---
+    Route::middleware(['permission:admin:master-tunjangan:view'])->group(function () {
+        Route::prefix('master-tunjangan')->name('master-tunjangan.')->group(function () {
+            Route::get('/', [MasterTunjanganController::class, 'index'])->name('index');
+
+            // Struktural (CRUD)
+            Route::prefix('struktural')->name('struktural.')->group(function () {
+                Route::get('/json', [MasterTunjanganController::class, 'datatableStruktural'])->name('json');
+                Route::get('/create', [MasterTunjanganController::class, 'createStruktural'])->name('create');
+                Route::post('/store', [MasterTunjanganController::class, 'storeStruktural'])->name('store');
+                Route::get('/{id}/edit', [MasterTunjanganController::class, 'editStruktural'])->name('edit');
+                Route::put('/{id}', [MasterTunjanganController::class, 'updateStruktural'])->name('update');
+                Route::delete('/{id}', [MasterTunjanganController::class, 'destroyStruktural'])->name('destroy');
+            });
+
+            // Fungsional (CRUD)
+            Route::prefix('fungsional')->name('fungsional.')->group(function () {
+                Route::get('/json', [MasterTunjanganController::class, 'datatableFungsional'])->name('json');
+                Route::get('/create', [MasterTunjanganController::class, 'createFungsional'])->name('create');
+                Route::post('/store', [MasterTunjanganController::class, 'storeFungsional'])->name('store');
+                Route::get('/{id}/edit', [MasterTunjanganController::class, 'editFungsional'])->name('edit');
+                Route::put('/{id}', [MasterTunjanganController::class, 'updateFungsional'])->name('update');
+                Route::delete('/{id}', [MasterTunjanganController::class, 'destroyFungsional'])->name('destroy');
+            });
+
+            // Keluarga & Anak
+            Route::post('/keluarga/update', [MasterTunjanganController::class, 'updateKeluarga'])->name('keluarga.update');
+        });
+    });
+
     // --- ROUTE MASTER CUTI ---
     Route::middleware(['permission:admin:master-cuti:view'])->group(function () {
         Route::prefix('master-cuti')->name('master-cuti.')->group(function () {
@@ -168,6 +205,38 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
         });
     });
 
+    // --- ROUTE MASTER SHIFT & JAM KERJA ---
+    Route::middleware(['permission:admin:master-shift:view'])->group(function () {
+        Route::prefix('master-shift')->name('master-shift.')->group(function () {
+            Route::get('/json', [MasterShiftController::class, 'datatable'])->name('json');
+            Route::resource('/', MasterShiftController::class)->parameters(['' => 'id'])->except(['show']);
+        });
+    });
+
+    // --- ROUTE MASTER TARIF / KOMPONEN PRESENSI ---
+    Route::middleware(['permission:admin:master-komponen-presensi:view'])->group(function () {
+        Route::prefix('master-komponen-presensi')->name('master-komponen-presensi.')->group(function () {
+            Route::get('/json', [MasterKomponenPresensiController::class, 'datatable'])->name('json');
+            Route::resource('/', MasterKomponenPresensiController::class)->parameters(['' => 'id'])->except(['show']);
+        });
+    });
+
+    // --- ROUTE MASTER GAJI POKOK ---
+    Route::middleware(['permission:admin:master-gaji-pokok:view'])->group(function () {
+        Route::prefix('master-gaji-pokok')->name('master-gaji-pokok.')->group(function () {
+            Route::get('/json', [MasterGajiPokokController::class, 'datatable'])->name('json');
+            Route::resource('/', MasterGajiPokokController::class)->parameters(['' => 'id'])->except(['show']);
+        });
+    });
+
+    // --- ROUTE MASTER TARIF HONORARIUM DOSEN ---
+    Route::middleware(['permission:admin:master-tarif-honorarium:view'])->group(function () {
+        Route::prefix('master-tarif-honorarium')->name('master-tarif-honorarium.')->group(function () {
+            Route::get('/json', [MasterTarifHonorariumController::class, 'datatable'])->name('json');
+            Route::resource('/', MasterTarifHonorariumController::class)->parameters(['' => 'id'])->except(['show']);
+        });
+    });
+
     // --- ROUTE RIWAYAT IZIN CUTI MENU ---
     Route::middleware(['permission:admin:riwayat-izincuti:view'])->group(function () {
         Route::prefix('riwayat-izincuti')->name('riwayat-izincuti.')->group(function () {
@@ -185,34 +254,58 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
             Route::get('/export', [RiwayatLemburController::class, 'export'])->name('export');
         });
     });
-    
-    // --- ROUTE ABSENSI ---
-    Route::prefix('absensi')->name('absensi.')->group(function () {
-        Route::get('/', [AbsensiController::class, 'index'])->name('index');
-        Route::post('/uploadexcel', [AbsensiController::class, 'simpanexcel'])->name('uploadexcel');
-        Route::get('/datatablesabsensi', [AbsensiController::class, 'datatableabsensi'])->name('datatablesabsensi');
-        Route::post('/updateperiode', [AbsensiController::class, 'update'])->name('updateperiode');
+
+    // --- ROUTE UPLOAD ABSENSI ---
+    Route::middleware(['permission:admin:absensi:view'])->group(function () {
+        Route::prefix('absensi')->name('absensi.')->group(function () {
+            Route::get('/', [AbsensiController::class, 'index'])->name('index');
+            Route::post('/previewexcel', [AbsensiController::class, 'previewexcel'])->name('previewexcel');
+            Route::post('/uploadexcel', [AbsensiController::class, 'simpanexcel'])->name('uploadexcel');
+            Route::get('/downloadslip/{pin}', [AbsensiController::class, 'downloadslip'])->name('downloadslip');
+        });
     });
 
-    // --- ROUTE RIWAYAT ABSENSI ---
-    Route::prefix('riwayatabsensi')->name('riwayatabsensi.')->group(function () {
-        Route::get('/', [RiwayatAbsensiController::class, 'index'])->name('index');
-        Route::post('/uploadexcel', [RiwayatAbsensiController::class, 'simpanexcel'])->name('uploadexcel');
-        Route::get('/datatablesabsensi', [RiwayatAbsensiController::class, 'datatableabsensi'])->name('datatablesabsensi');
-        Route::post('/updateperiode', [RiwayatAbsensiController::class, 'update'])->name('updateperiode');
-
-        // Route::post('/edit', [AbsensiController::class, 'edit'])->name('edit');
-        // Route::post('/detail', [AbsensiController::class, 'detail'])->name('detail');
+    // --- ROUTE REKAP ABSENSI (DATA BASELINE PRESENSI) ---
+    Route::middleware(['permission:admin:rekap-absensi:view'])->group(function () {
+        Route::prefix('rekap-absensi')->name('rekap-absensi.')->group(function () {
+            Route::get('/', [RekapAbsensiController::class, 'index'])->name('index');
+            Route::get('/json', [RekapAbsensiController::class, 'datatable'])->name('json');
+            Route::post('/detail', [RekapAbsensiController::class, 'detail'])->name('detail');
+            Route::post('/kalkulasiulang', [RekapAbsensiController::class, 'kalkulasiulang'])->name('kalkulasiulang');
+            Route::get('/exportrekap', [RekapAbsensiController::class, 'exportrekap'])->name('exportrekap');
+            Route::get('/downloadallslip', [RekapAbsensiController::class, 'downloadallslip'])->name('downloadallslip');
+            Route::get('/downloadslip/{pin}', [RekapAbsensiController::class, 'downloadslip'])->name('downloadslip');
+            Route::post('/updateperiode', [RekapAbsensiController::class, 'updateperiode'])->name('updateperiode');
+            Route::post('/update-daily', [RekapAbsensiController::class, 'updateDailyAttendance'])->name('update-daily');
+        });
     });
+
+    // --- ROUTE RIWAYAT ABSENSI (PAYROLL TRANSPORT) ---
+    Route::middleware(['permission:admin:riwayat-absensi:view'])->group(function () {
+        Route::prefix('riwayatabsensi')->name('riwayatabsensi.')->group(function () {
+            Route::get('/', [RiwayatAbsensiController::class, 'index'])->name('index');
+            Route::get('/datatablesabsensi', [RiwayatAbsensiController::class, 'datatableabsensi'])->name('datatablesabsensi');
+            Route::post('/detail', [RiwayatAbsensiController::class, 'detail'])->name('detail');
+        });
+    });
+
+    // --- ROUTE JADWAL PIKET SABTU ---
+    Route::middleware(['permission:admin:jadwal-piket:view'])->group(function () {
+        Route::prefix('jadwal-piket')->name('jadwal-piket.')->group(function () {
+            Route::get('/json', [JadwalPiketController::class, 'datatable'])->name('json');
+            Route::resource('/', JadwalPiketController::class)->parameters(['' => 'id'])->except(['show']);
+        });
+    });
+
     // --- ROUTE MANPOWER PLANNING (MPP) ---
-    // Route::middleware(['permission:admin:mpp:view'])->group(function () { // Uncomment later when permission is added
+    Route::middleware(['permission:admin:mpp:view'])->group(function () {
         Route::prefix('mpp')->name('mpp.')->group(function () {
             Route::get('/', [\Modules\Admin\Http\Controllers\ManpowerPlanningController::class, 'index'])->name('index');
             Route::post('/datatables', [\Modules\Admin\Http\Controllers\ManpowerPlanningController::class, 'datatables'])->name('datatables');
             Route::post('/approve', [\Modules\Admin\Http\Controllers\ManpowerPlanningController::class, 'approve'])->name('approve');
             Route::post('/detail', [\Modules\Admin\Http\Controllers\ManpowerPlanningController::class, 'detail'])->name('detail');
         });
-    // });
+    });
 
     // --- ROUTE STRUKTUR ORGANISASI ---
     Route::prefix('struktur-organisasi')->name('struktur-organisasi.')->group(function () {
@@ -222,5 +315,56 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
         Route::get('/all-units', [StrukturOrganisasiController::class, 'getAllUnitsForSelect'])->name('all-units');
         Route::post('/move-unit', [StrukturOrganisasiController::class, 'moveUnit'])->name('move-unit');
         Route::get('/full-tree-data', [StrukturOrganisasiController::class, 'getFullTreeData'])->name('full-tree-data');
+    });
+
+    // --- ROUTE PAYROLL KARYAWAN ---
+    Route::middleware(['permission:admin:payroll:view'])->group(function () {
+        Route::prefix('payroll')->name('payroll.')->group(function () {
+            Route::get('/', [PayrollController::class, 'index'])->name('index');
+            Route::post('/store', [PayrollController::class, 'store'])->name('store');
+            Route::get('/show/{id}', [PayrollController::class, 'show'])->name('show');
+            Route::get('/datatable/{id}', [PayrollController::class, 'datatable'])->name('datatable');
+            Route::get('/karyawan/{id}', [PayrollController::class, 'getKaryawanData'])->name('karyawan.data');
+            Route::post('/update-karyawan/{id}', [PayrollController::class, 'updateKaryawan'])->name('update-karyawan');
+            Route::post('/recalculate/{id}', [PayrollController::class, 'recalculate'])->name('recalculate');
+            Route::post('/submit-approval/{id}', [PayrollController::class, 'submitApproval'])->name('submit-approval');
+            Route::post('/approve-step/{id}', [PayrollController::class, 'approveStep'])->name('approve-step');
+            Route::post('/reject-step/{id}', [PayrollController::class, 'rejectStep'])->name('reject-step');
+            Route::post('/update-approvers/{id}', [PayrollController::class, 'updateApprovers'])->name('update-approvers');
+            Route::get('/approval-history/{id}', [PayrollController::class, 'approvalHistory'])->name('approval-history');
+            Route::post('/lock/{id}', [PayrollController::class, 'lock'])->name('lock');
+            Route::post('/unlock/{id}', [PayrollController::class, 'unlock'])->name('unlock');
+            Route::delete('/destroy/{id}', [PayrollController::class, 'destroy'])->name('destroy');
+            Route::get('/export-excel/{id}', [PayrollController::class, 'exportExcel'])->name('export-excel');
+            Route::get('/export-bank/{id}', [PayrollController::class, 'exportBank'])->name('export-bank');
+            Route::get('/slip-pdf/{karyawanId}', [PayrollController::class, 'slipPdf'])->name('slip-pdf');
+            Route::get('/download-all-slip/{id}', [PayrollController::class, 'downloadAllSlip'])->name('download-all-slip');
+        });
+    });
+
+    // --- ROUTE HONORARIUM DOSEN ---
+    Route::middleware(['permission:admin:honorarium:view'])->group(function () {
+        Route::prefix('honorarium')->name('honorarium.')->group(function () {
+            Route::get('/', [HonorariumController::class, 'index'])->name('index');
+            Route::get('/json', [HonorariumController::class, 'datatable'])->name('json');
+            Route::get('/create', [HonorariumController::class, 'create'])->name('create');
+            Route::post('/store', [HonorariumController::class, 'store'])->name('store');
+            Route::get('/show/{id}', [HonorariumController::class, 'show'])->name('show');
+            Route::get('/karyawan-json/{id}', [HonorariumController::class, 'datatableKaryawan'])->name('karyawan-json');
+            Route::get('/dosen-tarif/{dosenId}', [HonorariumController::class, 'getDosenTarif'])->name('dosen-tarif');
+            Route::post('/store-dosen/{periodId}', [HonorariumController::class, 'storeDosen'])->name('store-dosen');
+            Route::delete('/delete-dosen/{id}', [HonorariumController::class, 'deleteDosen'])->name('delete-dosen');
+            Route::get('/data/{id}', [HonorariumController::class, 'getHonorariumData'])->name('data');
+            Route::post('/update-data/{id}', [HonorariumController::class, 'updateHonorariumData'])->name('update-data');
+            Route::post('/submit-approval/{id}', [HonorariumController::class, 'submitApproval'])->name('submit-approval');
+            Route::post('/approve-step/{id}', [HonorariumController::class, 'approveStep'])->name('approve-step');
+            Route::post('/reject-step/{id}', [HonorariumController::class, 'rejectStep'])->name('reject-step');
+            Route::post('/unlock/{id}', [HonorariumController::class, 'unlock'])->name('unlock');
+            Route::delete('/destroy/{id}', [HonorariumController::class, 'destroy'])->name('destroy');
+            Route::get('/export-excel/{id}', [HonorariumController::class, 'exportExcel'])->name('export-excel');
+            Route::get('/export-bank/{id}', [HonorariumController::class, 'exportBank'])->name('export-bank');
+            Route::get('/slip-pdf/{id}', [HonorariumController::class, 'slipPdf'])->name('slip-pdf');
+            Route::get('/download-all-slip/{id}', [HonorariumController::class, 'downloadAllSlip'])->name('download-all-slip');
+        });
     });
 });

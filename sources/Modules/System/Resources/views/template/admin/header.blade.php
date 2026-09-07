@@ -43,8 +43,13 @@
 
     @yield('link_href')
     @yield('css')
+    <style>
+        .content-wrapper {
+            min-height: calc(100vh - 114px) !important;
+        }
+    </style>
 </head>
-<body class="hold-transition sidebar-mini layout-fixed layout-navbar-fixed">
+<body class="hold-transition sidebar-mini layout-fixed layout-navbar-fixed layout-footer-fixed">
 <div class="wrapper">
     @include('system::template/admin/sidebar')
     @include('system::template/admin/navbar')

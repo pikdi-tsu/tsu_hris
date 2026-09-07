@@ -31,7 +31,25 @@ class IzinController extends Controller
 
     private function getCurrentProfile()
     {
-        return DataDosenTendik::where('user_id', Auth::id())->first();
+        $user = Auth::user();
+        if (!$user) {
+            return null;
+        }
+
+        $profile = DataDosenTendik::where('user_id', $user->id)->first();
+
+        // Fallback: Jika belum tertaut user_id, cari berdasarkan nama atau NIK
+        if (!$profile) {
+            $profile = DataDosenTendik::where('nama', $user->name)
+                ->orWhere('nik', $user->name)
+                ->first();
+
+            if ($profile && empty($profile->user_id)) {
+                $profile->update(['user_id' => $user->id]);
+            }
+        }
+
+        return $profile;
     }
 
     public function index()
@@ -60,7 +78,7 @@ class IzinController extends Controller
         if ($profile) {
             $isKepala = KaryawanJabatanStruktural::where('data_dosen_tendik_id', $profile->id)
                 ->whereIn('is_active', [1, '1', 'Y', 'y'])->exists();
-            
+
             if ($profile->unit_id) {
                 $unit = \App\Models\MasterUnit::find($profile->unit_id);
                 if ($unit) {
@@ -75,7 +93,7 @@ class IzinController extends Controller
             }
         }
 
-        $getsaldo = SaldoCutiKaryawan::where('id_user', $profile->id)->where('is_active', '1')->first();
+        $getsaldo = $profile ? SaldoCutiKaryawan::where('id_user', $profile->id)->where('is_active', '1')->first() : null;
 
         $data = array(
             'title'     => 'Izin Karyawan',
@@ -139,6 +157,11 @@ class IzinController extends Controller
             $alasan = $req->alasan;
             $idhrd = $req->id_hrd;
 
+            $jumlahHari = IzinKaryawan::hitungHariEfektif($tgl1, $tgl2);
+            if ($jumlahHari <= 0) {
+                return $this->sendError('Gagal mengajukan: Rentang tanggal yang dipilih tidak memuat hari kerja efektif (semua tanggal merupakan akhir pekan atau hari libur nasional).');
+            }
+
             $izinId = null;
             if ($req->ketedit == 'no') {
                 $izinId = IzinKaryawan::insertGetId([
@@ -176,7 +199,7 @@ class IzinController extends Controller
             // Real-Time Notifications
             if ($izinId) {
                 $izinCreated = IzinKaryawan::find($izinId);
-                
+
                 // Notify Atasan
                 if ($idatasan) {
                     $atasanProfile = DataDosenTendik::find($idatasan);
@@ -238,13 +261,7 @@ class IzinController extends Controller
                 return $formatTanggal;
             })
             ->addColumn('jumlah', function ($data) {
-                $start = Carbon::parse($data->tanggalmulai);
-                $end   = Carbon::parse($data->tanggalselesai);
-
-                $jumlahHari = $start->diffInDays($end) + 1;
-
-                return $jumlahHari;
-                // return $data->kode_booking ?? '';
+                return IzinKaryawan::hitungHariEfektif($data->tanggalmulai, $data->tanggalselesai);
             })
             ->addColumn('statusatasan', function ($data) {
                 if ($data->statusatasan == 'approved') {
@@ -320,7 +337,7 @@ class IzinController extends Controller
                 $tanggal = $mulai->translatedFormat('d M Y') . ' - ' . $selesai->translatedFormat('d M Y');
             }
 
-            $jumlahHari = $mulai->diffInDays($selesai) + 1;
+            $jumlahHari = IzinKaryawan::hitungHariEfektif($getdata->tanggalmulai, $getdata->tanggalselesai);
 
             $form = view('users::izin.modaldetail', ['data' => $getdata, 'profile' => $profile, 'jmlhari' => $jumlahHari, 'tanggal' => $tanggal]);
             return $form->render();
@@ -338,14 +355,14 @@ class IzinController extends Controller
             $kepalas = KaryawanJabatanStruktural::where('jabatan_struktural_id', $kepalaJabatanId)
                 ->whereIn('is_active', [1, '1', 'Y', 'y'])
                 ->get();
-                
+
             $kepala = null;
             if ($kepalas->count() == 1) {
                 $kepala = $kepalas->first();
             } elseif ($kepalas->count() > 1) {
                 $kepala = $kepalas->where('unit_id', $unit->id)->first() ?? $kepalas->first();
             }
-                
+
             if ($kepala && $kepala->data_dosen_tendik_id !== $currentUserId) {
                 return $kepala->data_dosen_tendik_id;
             }

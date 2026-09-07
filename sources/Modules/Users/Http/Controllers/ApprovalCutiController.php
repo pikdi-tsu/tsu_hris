@@ -78,12 +78,7 @@ class ApprovalCutiController extends Controller
                 return $data->masterCuti ? $data->masterCuti->jeniscuti : '-';
             })
             ->addColumn('jumlah', function ($data) {
-                $start = Carbon::parse($data->tanggalmulai);
-                $end   = Carbon::parse($data->tanggalselesai);
-
-                $jumlahHari = $start->diffInDays($end) + 1;
-
-                return $jumlahHari;
+                return CutiKaryawan::hitungHariEfektif($data->tanggalmulai, $data->tanggalselesai);
             })
             ->addColumn('keterangan', function ($data) {
                 return $data->keterangan;
@@ -124,7 +119,7 @@ class ApprovalCutiController extends Controller
                 $tanggal = $mulai->translatedFormat('d M Y') . ' - ' . $selesai->translatedFormat('d M Y');
             }
 
-            $jumlahHari = $mulai->diffInDays($selesai) + 1;
+            $jumlahHari = CutiKaryawan::hitungHariEfektif($getdata->tanggalmulai, $getdata->tanggalselesai);
 
             $form = view('users::approvalcuti.modaldetail', ['data' => $getdata, 'profile' => $profile, 'jmlhari' => $jumlahHari, 'tanggal' => $tanggal]);
             return $form->render();
@@ -170,10 +165,7 @@ class ApprovalCutiController extends Controller
             $checkatasan = $check->id_atasan == $iduserlogin;
             $checkhrd = $check->id_hrd == $iduserlogin;
 
-            $start = Carbon::parse($check->tanggalmulai);
-            $end   = Carbon::parse($check->tanggalselesai);
-
-            $jumlahHari = $start->diffInDays($end) + 1;
+            $jumlahHari = CutiKaryawan::hitungHariEfektif($check->tanggalmulai, $check->tanggalselesai);
 
             if ($checkatasan) {
                 $update = CutiKaryawan::where('id', $idcutikaryawan)->where('id_user', $iduserinput)->where('id_atasan', $check->id_atasan)->where('is_active', '1')->update([
@@ -185,46 +177,61 @@ class ApprovalCutiController extends Controller
                 // Update memory variable for notification
                 $check->statusatasan = $approval;
 
+                // Option A: DO NOT deduct balance here!
+                // Only send Real-Time Notification to HRD after Atasan approves
+                if ($approval == 'approved' && $check->id_hrd) {
+                    $hrdProfile = DataDosenTendik::find($check->id_hrd);
+                    if ($hrdProfile && $hrdProfile->user_id) {
+                        $hrdUser = User::find($hrdProfile->user_id);
+                        if ($hrdUser) {
+                            $karyawanProfile = DataDosenTendik::find($check->id_user);
+                            $namaKaryawan = $karyawanProfile ? $karyawanProfile->nama : 'Karyawan';
+                            $hrdUser->notify(new \App\Notifications\CutiDiajukanNotification(
+                                $check,
+                                'Pengajuan cuti dari ' . $namaKaryawan . ' telah disetujui Atasan dan menunggu persetujuan Anda.',
+                                'hrd'
+                            ));
+                        }
+                    }
+                }
+            } else if ($checkhrd) {
+                // Option A: Cuti dipotong KETIKA HRD MENYETUJUI
                 if ($approval == 'approved') {
                     $checksaldo = SaldoCutiKaryawan::lockForUpdate()->where('id_user', $iduserinput)->where('is_active', '1')->first();
-                    
+
                     if (!$checksaldo) {
                         DB::rollback();
                         return $this->sendError('Gagal menyetujui: Karyawan belum memiliki data Saldo Cuti aktif. Silakan hubungi SDM untuk mengatur saldo.');
                     }
 
+                    if ($checksaldo->sisa < $jumlahHari) {
+                        DB::rollback();
+                        return $this->sendError('Gagal menyetujui: Sisa saldo cuti karyawan (' . $checksaldo->sisa . ' hari) tidak mencukupi untuk jumlah cuti ini (' . $jumlahHari . ' hari kerja).');
+                    }
+
                     $saldoterpakai = $checksaldo->terpakai + $jumlahHari;
                     $saldosisa = $checksaldo->sisa - $jumlahHari;
-                    $update2 = SaldoCutiKaryawan::where('id_user', $iduserinput)->where('is_active', '1')->update([
+                    SaldoCutiKaryawan::where('id_user', $iduserinput)->where('is_active', '1')->update([
                         'terpakai'    => $saldoterpakai,
                         'sisa'        => $saldosisa,
                         'updated_at'  => date("Y-m-d H:i:s"),
                         'updated_by'  => $profile->nik ?? Auth::id()
                     ]);
 
-                    // Real-Time Notification to HRD after Atasan approves
-                    if ($check->id_hrd) {
-                        $hrdProfile = DataDosenTendik::find($check->id_hrd);
-                        if ($hrdProfile && $hrdProfile->user_id) {
-                            $hrdUser = User::find($hrdProfile->user_id);
-                            if ($hrdUser) {
-                                $karyawanProfile = DataDosenTendik::find($check->id_user);
-                                $namaKaryawan = $karyawanProfile ? $karyawanProfile->nama : 'Karyawan';
-                                $hrdUser->notify(new \App\Notifications\CutiDiajukanNotification(
-                                    $check,
-                                    'Pengajuan cuti dari ' . $namaKaryawan . ' telah disetujui Atasan dan menunggu persetujuan Anda.',
-                                    'hrd'
-                                ));
-                            }
-                        }
-                    }
+                    $update = CutiKaryawan::where('id', $idcutikaryawan)->where('id_user', $iduserinput)->where('id_hrd', $check->id_hrd)->where('is_active', '1')->update([
+                        'statushrd'       => $approval,
+                        'alasanhrd'       => $ketapproval,
+                        'hrdapprovaldate' => date("Y-m-d H:i:s"),
+                        'sisacuti'        => $saldosisa
+                    ]);
+                } else {
+                    // HRD Rejected: Saldo never deducted, so no refund needed!
+                    $update = CutiKaryawan::where('id', $idcutikaryawan)->where('id_user', $iduserinput)->where('id_hrd', $check->id_hrd)->where('is_active', '1')->update([
+                        'statushrd'       => $approval,
+                        'alasanhrd'       => $ketapproval,
+                        'hrdapprovaldate' => date("Y-m-d H:i:s")
+                    ]);
                 }
-            } else if ($checkhrd) {
-                $update = CutiKaryawan::where('id', $idcutikaryawan)->where('id_user', $iduserinput)->where('id_hrd', $check->id_hrd)->where('is_active', '1')->update([
-                    'statushrd'       => $approval,
-                    'alasanhrd'       => $ketapproval,
-                    'hrdapprovaldate' => date("Y-m-d H:i:s")
-                ]);
             }
 
             // Real-Time Notification to Karyawan (Feedback)

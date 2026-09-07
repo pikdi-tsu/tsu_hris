@@ -37,7 +37,25 @@ class CutiController extends Controller
 
     private function getCurrentProfile()
     {
-        return DataDosenTendik::where('user_id', Auth::id())->first();
+        $user = Auth::user();
+        if (!$user) {
+            return null;
+        }
+
+        $profile = DataDosenTendik::where('user_id', $user->id)->first();
+
+        // Fallback: Jika belum tertaut user_id, cari berdasarkan nama atau NIK
+        if (!$profile) {
+            $profile = DataDosenTendik::where('nama', $user->name)
+                ->orWhere('nik', $user->name)
+                ->first();
+
+            if ($profile && empty($profile->user_id)) {
+                $profile->update(['user_id' => $user->id]);
+            }
+        }
+
+        return $profile;
     }
 
     public function index()
@@ -66,7 +84,7 @@ class CutiController extends Controller
         if ($profile) {
             $isKepala = KaryawanJabatanStruktural::where('data_dosen_tendik_id', $profile->id)
                 ->whereIn('is_active', [1, '1', 'Y', 'y'])->exists();
-            
+
             if ($profile->unit_id) {
                 $unit = MasterUnit::find($profile->unit_id);
                 if ($unit) {
@@ -81,7 +99,7 @@ class CutiController extends Controller
             }
         }
 
-        $getsaldo = SaldoCutiKaryawan::where('id_user', $profile->id)->where('is_active', '1')->first();
+        $getsaldo = $profile ? SaldoCutiKaryawan::where('id_user', $profile->id)->where('is_active', '1')->first() : null;
 
         $data = array(
             'title'     => 'Cuti Karyawan',
@@ -145,22 +163,36 @@ class CutiController extends Controller
             $alasan = $req->alasan;
             $idhrd = $req->id_hrd;
 
-            // Validasi Saldo Cuti
-            $start = Carbon::parse($tgl1);
-            $end = Carbon::parse($tgl2);
-            $jumlahHari = $start->diffInDays($end) + 1;
+            // Validasi Hari Kerja Efektif & Saldo Cuti
+            $jumlahHari = CutiKaryawan::hitungHariEfektif($tgl1, $tgl2);
+            if ($jumlahHari <= 0) {
+                return $this->sendError('Gagal mengajukan: Rentang tanggal yang dipilih tidak memuat hari kerja efektif (semua tanggal merupakan akhir pekan atau hari libur nasional).');
+            }
 
             $checksaldo = SaldoCutiKaryawan::where('id_user', $iduser)->where('is_active', '1')->first();
-            
+
             if (!$checksaldo) {
                 return $this->sendError('Gagal mengajukan: Anda belum memiliki data Saldo Cuti aktif. Silakan hubungi SDM untuk mengatur saldo cuti Anda terlebih dahulu.');
             }
 
-            // Jika form edit, kita perlu memperhitungkan cuti ini (tidak menghabiskan saldo ganda)
-            // Namun karena approval mengurangi saldo nanti, saat pengajuan (waiting) saldo belum terpotong.
-            // Kita harus menghitung total hari cuti "waiting" lain jika diperlukan, tapi minimal cek sisa saat ini:
-            if ($checksaldo->sisa < $jumlahHari) {
-                return $this->sendError('Gagal mengajukan: Sisa saldo cuti Anda (' . $checksaldo->sisa . ' hari) tidak mencukupi untuk pengajuan ini (' . $jumlahHari . ' hari).');
+            // Hitung pengajuan cuti berstatus waiting (belum di-reject) milik karyawan ini
+            $pendingCutiList = CutiKaryawan::where('id_user', $iduser)
+                ->where('is_active', '1')
+                ->where('statushrd', 'waiting')
+                ->where('statusatasan', '!=', 'rejected')
+                ->when($req->ketedit != 'no' && $req->idedit, function ($q) use ($req) {
+                    $q->where('id', '!=', $req->idedit);
+                })
+                ->get();
+
+            $totalPendingHari = 0;
+            foreach ($pendingCutiList as $pCuti) {
+                $totalPendingHari += CutiKaryawan::hitungHariEfektif($pCuti->tanggalmulai, $pCuti->tanggalselesai);
+            }
+
+            $sisaTersedia = $checksaldo->sisa - $totalPendingHari;
+            if ($sisaTersedia < $jumlahHari) {
+                return $this->sendError('Gagal mengajukan: Sisa saldo cuti Anda tidak mencukupi. Sisa saldo saat ini: ' . $checksaldo->sisa . ' hari, pengajuan lain yang menunggu persetujuan: ' . $totalPendingHari . ' hari, kuota tersedia: ' . max(0, $sisaTersedia) . ' hari, sedangkan pengajuan ini membutuhkan: ' . $jumlahHari . ' hari kerja.');
             }
 
             $cutiId = null;
@@ -200,7 +232,7 @@ class CutiController extends Controller
             // Real-Time Notifications
             if ($cutiId) {
                 $cutiCreated = CutiKaryawan::find($cutiId);
-                
+
                 // Notify Atasan
                 if ($idatasan) {
                     $atasanProfile = DataDosenTendik::find($idatasan);
@@ -262,13 +294,7 @@ class CutiController extends Controller
                 return $formatTanggal;
             })
             ->addColumn('jumlah', function ($data) {
-                $start = Carbon::parse($data->tanggalmulai);
-                $end   = Carbon::parse($data->tanggalselesai);
-
-                $jumlahHari = $start->diffInDays($end) + 1;
-
-                return $jumlahHari;
-                // return $data->kode_booking ?? '';
+                return CutiKaryawan::hitungHariEfektif($data->tanggalmulai, $data->tanggalselesai);
             })
             ->addColumn('statusatasan', function ($data) {
                 if ($data->statusatasan == 'approved') {
@@ -344,7 +370,7 @@ class CutiController extends Controller
                 $tanggal = $mulai->translatedFormat('d M Y') . ' - ' . $selesai->translatedFormat('d M Y');
             }
 
-            $jumlahHari = $mulai->diffInDays($selesai) + 1;
+            $jumlahHari = CutiKaryawan::hitungHariEfektif($getdata->tanggalmulai, $getdata->tanggalselesai);
 
             $form = view('users::cuti.modaldetail', ['data' => $getdata, 'profile' => $profile, 'jmlhari' => $jumlahHari, 'tanggal' => $tanggal]);
             return $form->render();

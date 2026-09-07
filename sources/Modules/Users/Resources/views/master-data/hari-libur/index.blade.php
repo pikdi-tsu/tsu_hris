@@ -42,15 +42,6 @@
 
                 eventClick: function(info) {
                     info.jsEvent.preventDefault();
-<<<<<<< Updated upstream
-                    Swal.fire({
-                        title: info.event.title,
-                        html: `Tanggal: <b>${info.event.start.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</b>`,
-                        icon: 'info',
-                        confirmButtonText: 'Tutup',
-                        confirmButtonColor: '#3085d6'
-                    });
-=======
                     var props = info.event.extendedProps || {};
                     var tglFormatted = info.event.start ? info.event.start.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : '-';
 
@@ -103,7 +94,6 @@
                             confirmButtonColor: '#dc3545'
                         });
                     }
->>>>>>> Stashed changes
                 }
             });
 
@@ -114,11 +104,6 @@
 
 @section('css')
     <style>
-<<<<<<< Updated upstream
-        .fc-event { cursor: pointer; border-radius: 4px; padding: 2px 4px; font-weight: 500; }
-        .fc-day-sun, .fc-day-sat { background-color: #fcfcfc; }
-        .fc-day-today { background-color: #e8f4f8 !important; }
-=======
         .fc-event {
             cursor: pointer;
             border-radius: 4px;
@@ -152,6 +137,5 @@
             border-radius: 6px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
         }
->>>>>>> Stashed changes
     </style>
 @endsection

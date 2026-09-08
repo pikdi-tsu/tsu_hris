@@ -66,11 +66,11 @@
                     Persetujuan Cuti
                 </a>
 
-                {{-- KONDISI 2: CONTOH KALAU ADA ISI (Disimpan dulu sbg komentar buat contekan) --}}
-                {{--
-                <a href="#" class="dropdown-item">
-                    <i class="fas fa-file-signature mr-2"></i> KRS Disetujui
-                    <span class="float-right text-muted text-sm">3 mins</span>
+                <div class="dropdown-divider" id="cuti-hrd-divider" {!! $notifcutihrd > 0 ? '' : 'style="display:none;"' !!}></div>
+                <a href="{{ route('users.indexapprovalcuti') }}" class="dropdown-item" id="cuti-hrd-item" {!! $notifcutihrd > 0 ? '' : 'style="display:none;"' !!}>
+                    <i class="fas fa-umbrella-beach mr-2 text-warning"></i>
+                    <span class="badge badge-warning float-right" id="badge-notif-cuti-hrd">{{ $notifcutihrd }}</span>
+                    Persetujuan Cuti (SDM)
                 </a>
 
                 <div class="dropdown-divider" id="izin-atasan-divider" {!! $notifizinatasan > 0 ? '' : 'style="display:none;"' !!}></div>
@@ -103,31 +103,35 @@
             </div>
         </li>
 
-        <li class="dropdown user user-menu" style="margin-top: 8px;">
-            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
-                {{-- <img src="{{ asset('public/assets/dist/img/user2-160x160.jpg') }}" class="user-image" alt="User Image"> --}}
-                <i class="fas fa-user-cog"></i>
-                {{-- <span class="hidden-xs">Hi, {{Auth::user()->name}}</span> --}}
+        <li class="nav-item dropdown user-menu">
+            <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown">
+                <img src="{{ Auth::user()->profile_photo_url }}"
+                    style="width: 28px; height: 28px; object-fit: cover; margin-top: -3px;"
+                    class="user-image img-circle elevation-1" alt="User Image">
+                <span class="d-none d-md-inline ml-1 font-weight-bold text-dark">{{ Auth::user()->name }}</span>
             </a>
-            <ul class="dropdown-menu">
+            <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
                 <!-- User image -->
-                <li class="user-header">
+                <li class="user-header bg-primary">
                     <img src="{{ Auth::user()->profile_photo_url }}"
-                        style="width: 100px; height: 100px; object-fit: cover; border: 2px solid #adb5bd;"
-                        class="img-circle" alt="User Image">
-                    <p>
-                        {{ Auth::user()->name }}
-                        <small> </small>
+                        style="width: 90px; height: 90px; object-fit: cover; border: 3px solid rgba(255,255,255,0.8);"
+                        class="img-circle elevation-2" alt="User Image">
+                    <p class="mt-2 text-white">
+                        <strong class="d-block">{{ Auth::user()->name }}</strong>
+                        <small class="text-white-50">{{ Auth::user()->email }}</small>
                     </p>
                 </li>
                 <!-- Menu Footer-->
-                <li class="user-footer">
-                    <form action="{{ route('logout') }}" method="POST" id="form-logout">
+                <li class="user-footer d-flex justify-content-between align-items-center bg-light">
+                    <a href="{{ route('users.profile.index') }}" class="btn btn-default btn-flat border">
+                        <i class="fas fa-user-cog mr-1 text-primary"></i> Profile & Password
+                    </a>
+                    <form action="{{ route('logout') }}" method="POST" id="form-logout" class="d-inline mb-0">
                         @csrf
+                        <button type="submit" class="btn btn-danger btn-flat">
+                            <i class="fas fa-sign-out-alt mr-1"></i> Sign out
+                        </button>
                     </form>
-                    <a href="{{ route('users.profile.index') }}" class="btn btn-primary">Profile</a>
-                    <button type="submit" class="btn btn-danger float-right" form="form-logout"
-                        style="background-color: red;">Sign out</button>
                 </li>
             </ul>
         </li>

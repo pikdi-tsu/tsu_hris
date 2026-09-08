@@ -70,7 +70,19 @@ class UserSyncService
                 $user->name             = $userData['name'];
                 $user->email            = $userData['email'];
                 $user->username         = $userData['username'] ?? $user->username;
-                $user->avatar_url       = $userData['profile_photo_url'] ?? null;
+                
+                if (array_key_exists('profile_photo_url', $userData)) {
+                    if (empty($userData['profile_photo_url'])) {
+                        $user->avatar_url = null;
+                    } else {
+                        if (str_starts_with($userData['profile_photo_url'], 'http')) {
+                            $user->avatar_url = $userData['profile_photo_url'];
+                        } else {
+                            $user->avatar_url = rtrim(config('app.tsu_homebase.url'), '/') . '/storage/' . $userData['profile_photo_url'];
+                        }
+                    }
+                }
+
                 $user->isactive         = $userData['isactive'] ?? true;
 
                 // Cek perubahan atribut

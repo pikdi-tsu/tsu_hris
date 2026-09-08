@@ -42,7 +42,8 @@ class UserController extends MiddlewareController
             ->addColumn('avatar', function($row){
                 // Avatar Otomatis dari Inisial Nama
                 $url = $row->profile_photo_url;
-                return '<img src="'.$url.'" class="img-circle elevation-2" style="width: 35px; height: 35px;" alt="User Image">';
+                $fallback = 'https://ui-avatars.com/api/?name=' . urlencode($row->name) . '&color=FFFFFF&background=2d394a';
+                return '<img src="'.$url.'" onerror="this.onerror=null;this.src=\''.$fallback.'\';" class="img-circle elevation-2" style="width: 35px; height: 35px;" alt="User Image">';
             })
             ->editColumn('roles', function ($row) {
                 if ($row->roles->isEmpty()) {
@@ -123,9 +124,11 @@ class UserController extends MiddlewareController
 
             // TARIK DATA USER (Pakai Bearer Token)
             $apiUrl = $homebaseUrl . '/api/v1/users/sync';
-            $stats = ['processed' => 0, 'updated' => 0, 'uptodate' => 0, 'failed' => 0];
+            $stats = ['processed' => 0, 'updated' => 0, 'uptodate' => 0, 'failed' => 0, 'skipped' => 0];
+            $skippedEmails = [];
+            $failedEmails = [];
 
-            User::query()->whereNotNull('email')->chunk(50, function ($users) use ($apiUrl, $accessToken, $syncer, &$stats) {
+            User::query()->whereNotNull('email')->chunk(50, function ($users) use ($apiUrl, $accessToken, $syncer, &$stats, &$skippedEmails, &$failedEmails) {
                 $emailList = $users->pluck('email')->toArray();
                 try {
                     $response = Http::withoutVerifying()->withToken($accessToken)->withHeaders(['Accept' => 'application/json', 'X-Sync-Secret' => config('app.pikdi.key.sync')])->timeout(30)->post($apiUrl, ['emails' => $emailList]);
@@ -133,6 +136,7 @@ class UserController extends MiddlewareController
                     if ($response->successful()) {
                         $usersData = $response->json()['data'] ?? [];
                         foreach ($usersData as $userData) {
+                            $email = $userData['email'] ?? 'Unknown';
                             try {
                                 $result = $syncer->handle($userData, null, true);
                                 $stats['processed']++;
@@ -142,8 +146,14 @@ class UserController extends MiddlewareController
                                     $stats['uptodate']++;
                                 }
                             } catch (\Exception $e) {
-                                $stats['failed']++;
-                                Log::error("[TSU_USER_SKIP] Gagal proses user: " . ($userData['email'] ?? 'Unknown'), ['error_msg' => $e->getMessage(), 'file' => $e->getFile(), 'line' => $e->getLine()]);
+                                if (str_contains($e->getMessage(), '[TSU_DENIED_ACCESS]')) {
+                                    $stats['skipped']++;
+                                    $skippedEmails[] = $email;
+                                } else {
+                                    $stats['failed']++;
+                                    $failedEmails[] = $email;
+                                    Log::error("[TSU_USER_FAIL] Gagal proses user: " . $email, ['error_msg' => $e->getMessage()]);
+                                }
                             }
                         }
                     } else {
@@ -161,7 +171,30 @@ class UserController extends MiddlewareController
                 throw new \Exception("[TSU_SYNC_ZERO] Sinkronisasi gagal total. Tidak ada data yang berhasil diambil.");
             }
 
-            // LAPORAN
+            // Generate File Report if there are skips or fails
+            $errorDetail = null;
+            if ($stats['skipped'] > 0 || $stats['failed'] > 0) {
+                $errorDetail = "";
+                if ($stats['skipped'] > 0) {
+                    $errorDetail .= "Dilewati (Bukan Dosen/Tendik): " . implode(', ', $skippedEmails) . ". ";
+                }
+                if ($stats['failed'] > 0) {
+                    $errorDetail .= "Gagal Diproses: " . implode(', ', $failedEmails) . ".";
+                }
+            }
+
+            // Kirim Notifikasi ke User yang menekan tombol
+            $pesanNotif = "Sync Selesai. Total: {$stats['processed']}, Diperbarui: {$stats['updated']}.";
+            if ($stats['skipped'] > 0 || $stats['failed'] > 0) {
+                $pesanNotif .= " Terdapat " . ($stats['skipped'] + $stats['failed']) . " peringatan/kegagalan.";
+            }
+            try {
+                auth()->user()->notify(new \App\Notifications\LaporanSyncUserNotification($pesanNotif, $errorDetail));
+            } catch (\Exception $e) {
+                \Illuminate\Support\Facades\Log::warning('Gagal mengirim notifikasi real-time: ' . $e->getMessage());
+            }
+
+            // LAPORAN TOAST
             $msg = "<h6 class='font-weight-bold mb-2'>Laporan Sinkronisasi User</h6>";
             $msg .= "<ul class='mb-0 pl-3' style='list-style-type: disc;'>";
             $msg .= "<li>Total user diperiksa: <b>{$stats['processed']}</b></li>";
@@ -170,6 +203,9 @@ class UserController extends MiddlewareController
             }
             if ($stats['uptodate'] > 0) {
                 $msg .= "<li>Data up to date: {$stats['uptodate']} user</li>";
+            }
+            if ($stats['skipped'] > 0) {
+                $msg .= "<li class='text-warning font-weight-bold'>Dilewati (Bukan Dosen/Tendik): {$stats['skipped']} user</li>";
             }
             if ($stats['failed'] > 0) {
                 $msg .= "<li class='text-danger font-weight-bold'>Gagal diproses: {$stats['failed']} user (Cek Log)</li>";

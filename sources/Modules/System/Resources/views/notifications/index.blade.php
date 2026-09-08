@@ -114,7 +114,7 @@
                                             <div class="text-sm text-muted">
                                                 {{ $data['message'] ?? 'Ada notifikasi sistem baru.' }}
                                                 @if(isset($data['error_detail']))
-                                                    <br><span class="text-danger"><i class="fas fa-times-circle"></i> {{ $data['error_detail'] }}</span>
+                                                    <br><span class="text-danger"><i class="fas fa-exclamation-circle"></i> Terdapat data gagal/dilewati.</span>
                                                 @endif
                                             </div>
                                         </td>
@@ -122,7 +122,7 @@
                                             <span class="text-muted text-sm d-block mb-2"><i class="far fa-clock"></i> {{ $notif->created_at->format('d M Y, H:i') }}</span>
                                             
                                             <div class="btn-group">
-                                                @if(isset($data['action_url']))
+                                                @if(isset($data['action_url']) && $data['action_url'] !== route('users.notifications.index'))
                                                     <a href="{{ route('users.notifications.read', $notif->id) }}" class="btn btn-sm btn-primary" title="{{ $data['action_text'] ?? 'Proses' }}">
                                                         <i class="fas fa-arrow-right"></i> {{ $data['action_text'] ?? 'Proses' }}
                                                     </a>
@@ -130,6 +130,12 @@
                                                     <a href="{{ $data['download_url'] }}" target="_blank" class="btn btn-sm btn-success" title="Download">
                                                         <i class="fas fa-download"></i> Download
                                                     </a>
+                                                @endif
+                                                
+                                                @if(isset($data['error_detail']))
+                                                    <button type="button" class="btn btn-sm btn-danger btn-detail-error" data-detail="{{ $data['error_detail'] }}" title="Lihat Detail Error">
+                                                        <i class="fas fa-eye"></i> Detail
+                                                    </button>
                                                 @endif
                                                 
                                                 @if($isUnread)
@@ -178,9 +184,27 @@
     </section>
 @endsection
 
-@section('scripts')
+@section('script')
     <script>
         $(document).ready(function() {
+            $(document).on('click', '.btn-detail-error', function(e) {
+                e.preventDefault();
+                let detail = String($(this).data('detail') || '');
+                
+                // Format agar lebih rapi (ganti koma dengan enter/bullet)
+                let formattedDetail = detail.replace(/: /g, ':<br>&bull; ')
+                                            .replace(/, /g, '<br>&bull; ')
+                                            .replace(/\. /g, '.<br><br>');
+                
+                Swal.fire({
+                    title: 'Detail Peringatan',
+                    html: '<div style="max-height: 300px; overflow-y: auto; text-align: left; line-height: 1.8;" class="text-sm p-3 bg-light border rounded">' + formattedDetail + '</div>',
+                    icon: 'warning',
+                    confirmButtonColor: '#3085d6',
+                    confirmButtonText: 'Tutup'
+                });
+            });
+
             $('.btn-backup-clear').on('click', function(e) {
                 e.preventDefault();
                 let url = $(this).attr('href');

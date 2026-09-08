@@ -95,23 +95,11 @@ class RoleController extends MiddlewareController
                 }
             })
             ->addColumn('action', function ($row) {
-                // Inisiasi protected roles
-                $superAdminLokal = 'super admin ' . config('app.module.name');
-                $adminLokal = 'admin ' . config('app.module.name');
-                $isSuperAdmin = in_array($row->name, ['super admin', $superAdminLokal], true);
-                $isProtectedRoles = in_array($row->name, ['super admin', $superAdminLokal, $adminLokal], true);
-
-                // Cek Flag Database
-                $isLocked = $isProtectedRoles  || $row->is_identity;
-
-                if ($isSuperAdmin) {
-                    return '<div class="text-center"><span class="badge badge-success"><i class="fas fa-crown"></i> Full Access</span></div>';
-                }
-
                 return $this->getActionButtons($row, 'system:role', [
                     'edit_url'   => route('system.role.edit', $row->id),
                     'use_modal'  => true,
-                    'can_delete' => $isLocked ? false : null,
+                    'can_edit'   => true,
+                    'can_delete' => true,
                     'delete_url' => route('system.role.destroy', $row->id),
                 ]);
             })
@@ -299,21 +287,18 @@ class RoleController extends MiddlewareController
         $isLocked = $role->is_identity;
 
         // Validasi
-        $rules = ['permissions' => 'array'];
-
-        if (!$isLocked) {
-            $rules['name'] = 'required|string|max:50|unique:'.config('app.table.roles').',name,' . $id;
-        }
+        $rules = [
+            'name'        => 'required|string|max:50|unique:'.config('app.table.roles').',name,' . $id,
+            'permissions' => 'array'
+        ];
 
         $request->validate($rules);
 
         try {
-            DB::transaction(function () use ($request, $role, $isLocked) {
+            DB::transaction(function () use ($request, $role) {
                 // Update Nama Role
-                if (!$isLocked) {
-                    $role->name = strtolower($request->name);
-                    $role->save();
-                }
+                $role->name = strtolower($request->name);
+                $role->save();
 
                 // Sync Permissions
                 $role->syncPermissions($request->permissions ?? []);
@@ -342,22 +327,10 @@ class RoleController extends MiddlewareController
         try {
             $role = Role::findOrFail($id);
 
-            if (in_array($role->name, ['super admin', 'super admin ' . config('app.module.name')], true)) {
-                return back()->with('error', '[SYS_ERR] Super Admin tidak boleh dihapus.');
-            }
-
-            if ($role->name === 'admin ' . config('app.module.name')) {
-                return back()->with('error', '[TSU_PROTECTED] Role admin lokal tidak dapat dihapus dari sistem lokal.');
-            }
-
-            if ($role->is_identity) {
-                return back()->with('error', '[TSU_PROTECTED] Role Global (Homebase) tidak dapat dihapus dari sistem lokal.');
-            }
-
             $role->delete();
             app()[PermissionRegistrar::class]->forgetCachedPermissions();
 
-            return back()->with('success', 'Role Lokal berhasil dihapus.');
+            return back()->with('success', 'Role berhasil dihapus.');
         } catch (\Exception $e) {
             return TsuErrorHandlerService::handleHtml($e, '[TSU_ROLE_DELETE_FAIL]', 'Gagal menghapus role.', "Gagal Hapus Role ID: $id.");
         }

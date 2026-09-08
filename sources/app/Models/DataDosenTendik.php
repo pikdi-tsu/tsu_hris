@@ -20,6 +20,7 @@ class DataDosenTendik extends Authenticatable
 
     protected $casts = [
         'tgl_lahir' => 'date',
+        'tgl_bergabung' => 'date',
         'dapat_uang_transport' => 'boolean',
     ];
 
@@ -75,15 +76,40 @@ class DataDosenTendik extends Authenticatable
         return $this->hasMany(RiwayatJabatan::class, 'data_dosen_tendik_id');
     }
 
-    protected function namaLengkap(): Attribute
+    public function saldosCuti()
     {
-        return Attribute::make(
-            get: function (mixed $value, array $attributes) {
-                $depan = !empty($attributes['gelar_depan']) ? trim($attributes['gelar_depan']) . ' ' : '';
-                $belakang = !empty($attributes['gelar_belakang']) ? ', ' . trim($attributes['gelar_belakang']) : '';
-                return $depan . $attributes['nama'] . $belakang;
-            },
-        );
+        return $this->hasMany(SaldoCutiKaryawan::class, 'id_user', 'id');
+    }
+
+    public function saldoCutiAktif()
+    {
+        return $this->hasOne(SaldoCutiKaryawan::class, 'id_user', 'id')->where('is_active', '1');
+    }
+
+    public function getMasaKerjaAttribute()
+    {
+        if (!$this->tgl_bergabung) {
+            return '-';
+        }
+        $start = \Carbon\Carbon::parse($this->tgl_bergabung);
+        $diff = $start->diff(\Carbon\Carbon::now());
+        if ($diff->y > 0) {
+            return "{$diff->y} thn {$diff->m} bln";
+        }
+        return "{$diff->m} bln {$diff->d} hr";
+    }
+
+    public function getMasaKerjaTahunAttribute()
+    {
+        if (!$this->tgl_bergabung) {
+            return 0;
+        }
+        return \Carbon\Carbon::parse($this->tgl_bergabung)->diffInYears(now());
+    }
+
+    public function getIsBerhakCutiTahunanAttribute()
+    {
+        return $this->masa_kerja_tahun >= 2;
     }
 
     public static function getFormConfig()
@@ -109,6 +135,7 @@ class DataDosenTendik extends Authenticatable
 
                     ['name' => 'keilmuan_inti', 'label' => 'Keilmuan Inti', 'type' => 'text', 'col_size' => 6],
                     ['name' => 'status_karyawan_id', 'label' => 'Status Karyawan', 'type' => 'select', 'options' => \App\Models\MasterStatusKaryawan::pluck('nama_status', 'id')->toArray(), 'col_size' => 6],
+                    ['name' => 'tgl_bergabung', 'label' => 'Tanggal Bergabung / TMT Masuk', 'type' => 'date', 'col_size' => 6, 'help_text' => 'Digunakan sebagai acuan perhitungan masa kerja dan hak cuti tahunan (minimal 2 tahun).'],
                     ['name' => 'pin_absensi', 'label' => 'PIN Absensi', 'type' => 'text', 'col_size' => 6],
                 ]
             ],

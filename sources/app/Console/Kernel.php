@@ -24,7 +24,17 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule)
     {
-        // $schedule->command('inspire')->hourly();
+        // Otomatisasi Reset Saldo Cuti Lama (Opsi A: Hangus per 31 Des 23:59)
+        $schedule->command('cuti:proses-saldo-tahunan --reset-only')
+            ->yearlyOn(12, 31, '23:59')
+            ->name('reset-saldo-cuti-tahunan')
+            ->withoutOverlapping();
+
+        // Otomatisasi Alokasi Saldo Cuti Baru (12 Hari untuk Masa Kerja >= 2 Thn per 1 Jan 00:01)
+        $schedule->command('cuti:proses-saldo-tahunan')
+            ->yearlyOn(1, 1, '00:01')
+            ->name('generate-saldo-cuti-tahunan')
+            ->withoutOverlapping();
     }
 
     /**

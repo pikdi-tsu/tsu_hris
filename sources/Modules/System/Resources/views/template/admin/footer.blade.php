@@ -209,36 +209,38 @@
                     }
                     
                     // 3. Show SweetAlert2 Toast (Pause on Hover)
-                    let toastTitle = notification.message || 'Pemberitahuan Baru';
-                    if (notification.download_url) {
-                        toastTitle += ' <br><a href="' + notification.download_url + '" class="btn btn-sm btn-success mt-2" target="_blank"><i class="fas fa-download mr-1"></i> Download Sekarang</a>';
-                        if (typeof window.exportTimeout !== 'undefined') {
-                            clearTimeout(window.exportTimeout);
+                    if (notification.is_silent !== true) {
+                        let toastTitle = notification.message || 'Pemberitahuan Baru';
+                        if (notification.download_url) {
+                            toastTitle += ' <br><a href="' + notification.download_url + '" class="btn btn-sm btn-success mt-2" target="_blank"><i class="fas fa-download mr-1"></i> Download Sekarang</a>';
+                            if (typeof window.exportTimeout !== 'undefined') {
+                                clearTimeout(window.exportTimeout);
+                            }
                         }
-                    }
-                    if (notification.error_detail) {
-                        toastTitle += '<br><small class="text-danger mt-1 d-block">' + notification.error_detail + '</small>';
-                        if (typeof window.exportTimeout !== 'undefined') {
-                            clearTimeout(window.exportTimeout);
+                        if (notification.error_detail) {
+                            toastTitle += '<br><small class="text-danger mt-1 d-block">' + notification.error_detail + '</small>';
+                            if (typeof window.exportTimeout !== 'undefined') {
+                                clearTimeout(window.exportTimeout);
+                            }
                         }
-                    }
 
-                    const Toast = Swal.mixin({
-                        toast: true,
-                        position: 'top-end',
-                        showConfirmButton: false,
-                        timer: notification.download_url || notification.error_detail ? 10000 : 5000,
-                        timerProgressBar: true,
-                        didOpen: (toast) => {
-                            toast.addEventListener('mouseenter', Swal.stopTimer)
-                            toast.addEventListener('mouseleave', Swal.resumeTimer)
-                        }
-                    });
+                        const Toast = Swal.mixin({
+                            toast: true,
+                            position: 'top-end',
+                            showConfirmButton: false,
+                            timer: notification.download_url || notification.error_detail ? 10000 : 5000,
+                            timerProgressBar: true,
+                            didOpen: (toast) => {
+                                toast.addEventListener('mouseenter', Swal.stopTimer)
+                                toast.addEventListener('mouseleave', Swal.resumeTimer)
+                            }
+                        });
 
-                    Toast.fire({
-                        icon: notification.error_detail ? 'error' : (notification.download_url ? 'success' : 'info'),
-                        title: toastTitle
-                    });
+                        Toast.fire({
+                            icon: notification.error_detail ? 'error' : (notification.download_url ? 'success' : 'info'),
+                            title: toastTitle
+                        });
+                    }
 
                     // 4. Universal DataTables & Tab Badge Reloader (Pencegahan Cross-Contamination)
                     let currentUrl = window.location.href;

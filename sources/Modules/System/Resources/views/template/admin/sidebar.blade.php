@@ -58,6 +58,7 @@
         <div class="user-panel mt-3 pb-3 mb-3 d-flex align-items-center">
             <div class="image">
                 <img src="{{ Auth::user()->profile_photo_url }}"
+                     onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&color=FFFFFF&background=2d394a';"
                      class="img-circle elevation-2"
                      style="width: 2.1rem; height: 2.1rem; object-fit: cover;"
                      alt="User Image">

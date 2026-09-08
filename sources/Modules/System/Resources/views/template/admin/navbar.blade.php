@@ -24,7 +24,10 @@
             $notifhonorarium = session('notifhonorarium', 0);
             $notifhonorarium_url = session('notifhonorarium_url', route('admin.honorarium.index'));
 
-            $all = $notifcutiatasan + $notifizinatasan + $notifcutihrd + $notifizinhrd + $notiflemburatasan + $notiflemburhrd + $notifpayroll + $notifhonorarium;
+            $dbUnreadNotifs = auth()->user()->unreadNotifications()->take(5)->get();
+            $dbUnreadCount = auth()->user()->unreadNotifications()->count();
+
+            $all = $notifcutiatasan + $notifizinatasan + $notifcutihrd + $notifizinhrd + $notiflemburatasan + $notiflemburhrd + $notifpayroll + $notifhonorarium + $dbUnreadCount;
         @endphp
         <!-- Notifications Dropdown Menu -->
         <li class="nav-item dropdown">
@@ -73,6 +76,14 @@
                     Persetujuan Cuti (SDM)
                 </a>
 
+                {{-- KONDISI 2: CONTOH KALAU ADA ISI (Disimpan dulu sbg komentar buat contekan) --}}
+                {{--
+                <a href="#" class="dropdown-item">
+                    <i class="fas fa-file-signature mr-2"></i> KRS Disetujui
+                    <span class="float-right text-muted text-sm">3 mins</span>
+                </a>
+                --}}
+
                 <div class="dropdown-divider" id="izin-atasan-divider" {!! $notifizinatasan > 0 ? '' : 'style="display:none;"' !!}></div>
                 <a href="{{ route('users.indexapprovalizin') }}" class="dropdown-item" id="izin-atasan-item" {!! $notifizinatasan > 0 ? '' : 'style="display:none;"' !!}>
                     <i class="fas fa-file-medical-alt mr-2 text-info"></i>
@@ -100,6 +111,37 @@
                     <span class="badge badge-primary float-right" id="badge-notif-lembur-hrd">{{ $notiflemburhrd }}</span>
                     Persetujuan Lembur (SDM)
                 </a>
+
+                @foreach($dbUnreadNotifs as $notif)
+                    @php
+                        $data = $notif->data;
+                        $icon = $data['icon'] ?? 'fas fa-bell text-secondary';
+                        $title = $data['title'] ?? 'Pemberitahuan';
+                        $url = isset($data['action_url']) && $data['action_url'] !== '#' && $data['action_url'] !== null 
+                               ? $data['action_url'] 
+                               : route('users.notifications.read', $notif->id);
+                    @endphp
+                    <div class="dropdown-divider"></div>
+                    <a href="{{ $url }}" class="dropdown-item db-notif-item" title="{{ $data['message'] ?? '' }}" style="white-space: normal;">
+                        <div class="media">
+                            <i class="{{ $icon }} mr-3 mt-1" style="font-size: 1.2rem;"></i>
+                            <div class="media-body">
+                                <p class="text-sm text-dark mb-1">
+                                    {{ \Illuminate\Support\Str::limit($title, 40) }}
+                                </p>
+                                @if(isset($data['action_text']) || isset($data['error_detail']))
+                                    <span class="badge badge-primary mt-1"><i class="fas fa-hand-pointer"></i> Klik ke Kotak Masuk</span>
+                                @endif
+                                <p class="text-xs text-muted mb-0 mt-1">
+                                    <i class="far fa-clock mr-1"></i> {{ $notif->created_at->diffForHumans() }}
+                                </p>
+                            </div>
+                        </div>
+                    </a>
+                @endforeach
+
+                <div class="dropdown-divider"></div>
+                <a href="{{ route('users.notifications.index') }}" class="dropdown-item dropdown-footer text-center">Lihat Semua Notifikasi</a>
             </div>
         </li>
 
@@ -114,11 +156,12 @@
                 <!-- User image -->
                 <li class="user-header bg-primary">
                     <img src="{{ Auth::user()->profile_photo_url }}"
-                        style="width: 90px; height: 90px; object-fit: cover; border: 3px solid rgba(255,255,255,0.8);"
-                        class="img-circle elevation-2" alt="User Image">
-                    <p class="mt-2 text-white">
-                        <strong class="d-block">{{ Auth::user()->name }}</strong>
-                        <small class="text-white-50">{{ Auth::user()->email }}</small>
+                        onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&color=FFFFFF&background=2d394a';"
+                        style="width: 100px; height: 100px; object-fit: cover; border: 2px solid #adb5bd;"
+                        class="img-circle" alt="User Image">
+                    <p>
+                        {{ Auth::user()->name }}
+                        <small> </small>
                     </p>
                 </li>
                 <!-- Menu Footer-->

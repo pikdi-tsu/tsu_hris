@@ -191,7 +191,7 @@ class DataKaryawanController extends MiddlewareController
                     $btnToggle = '
                         <form action="'.$aktifkanUrl.'" method="POST" style="display:inline-block; margin: 0;" class="mx-1">
                             <input type="hidden" name="_token" value="'.$token.'">
-                            <button type="button" class="btn btn-sm btn-success btn-toggle-status" data-action="aktifkan" data-name="'. htmlspecialchars($row->nama) .'" title="Aktifkan Karyawan">
+                            <button type="button" class="btn btn-sm btn-success btn-toggle-status" data-action="aktifkan" data-name="'. htmlspecialchars($row->nama) .'" data-has-sso="'.($row->user_id ? 'yes' : 'no').'" title="Aktifkan Karyawan">
                                 <i class="fas fa-user-check"></i>
                             </button>
                         </form>
@@ -202,7 +202,7 @@ class DataKaryawanController extends MiddlewareController
                     $btnToggle = '
                         <form action="'.$deleteUrl.'" method="POST" style="display:inline-block; margin: 0;" class="mx-1">
                             <input type="hidden" name="_token" value="'.$token.'">
-                            <input type="hidden" name="_method" value="DELETE"> <button type="button" class="btn btn-sm btn-danger btn-toggle-status" data-action="nonaktifkan" data-name="'. htmlspecialchars($row->nama) .'" title="Nonaktifkan Karyawan">
+                            <input type="hidden" name="_method" value="DELETE"> <button type="button" class="btn btn-sm btn-danger btn-toggle-status" data-action="nonaktifkan" data-name="'. htmlspecialchars($row->nama) .'" data-has-sso="'.($row->user_id ? 'yes' : 'no').'" title="Nonaktifkan Karyawan">
                                 <i class="fas fa-user-slash"></i>
                             </button>
                         </form>

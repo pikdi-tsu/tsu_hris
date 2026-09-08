@@ -81,6 +81,17 @@ class DataDosenTendik extends Authenticatable
         return $this->hasMany(SaldoCutiKaryawan::class, 'id_user', 'id');
     }
 
+    protected function namaLengkap(): Attribute
+    {
+        return Attribute::make(
+            get: function (mixed $value, array $attributes) {
+                $depan = !empty($attributes['gelar_depan']) ? trim($attributes['gelar_depan']) . ' ' : '';
+                $belakang = !empty($attributes['gelar_belakang']) ? ', ' . trim($attributes['gelar_belakang']) : '';
+                return $depan . $attributes['nama'] . $belakang;
+            },
+        );
+    }
+    
     public function saldoCutiAktif()
     {
         return $this->hasOne(SaldoCutiKaryawan::class, 'id_user', 'id')->where('is_active', '1');

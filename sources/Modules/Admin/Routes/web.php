@@ -36,6 +36,7 @@ use Modules\Admin\Http\Controllers\RekapAbsensiController;
 use Modules\Admin\Http\Controllers\JadwalPiketController;
 use Modules\Admin\Http\Controllers\PayrollController;
 use Modules\Admin\Http\Controllers\HonorariumController;
+use Modules\Admin\Http\Controllers\SaldoCutiController;
 
 Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
     Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
@@ -243,6 +244,22 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
             Route::get('/', [RiwayatIzinCutiController::class, 'index'])->name('index');
             Route::get('/jsonizin', [RiwayatIzinCutiController::class, 'datatableizin'])->name('jsonizin');
             Route::get('/jsoncuti', [RiwayatIzinCutiController::class, 'datatablecuti'])->name('jsoncuti');
+        });
+    });
+
+    // --- ROUTE MANAJEMEN SALDO CUTI MENU ---
+    Route::middleware(['permission:admin:saldo-cuti:view'])->group(function () {
+        Route::prefix('saldo-cuti')->name('saldo-cuti.')->group(function () {
+            Route::get('/', [SaldoCutiController::class, 'index'])->name('index');
+            Route::get('/json', [SaldoCutiController::class, 'datatable'])->name('json');
+            Route::get('/generate-modal', [SaldoCutiController::class, 'generateModal'])->name('generate-modal');
+            Route::post('/generate', [SaldoCutiController::class, 'processGenerate'])->name('generate');
+            Route::get('/create', [SaldoCutiController::class, 'create'])->name('create');
+            Route::post('/', [SaldoCutiController::class, 'store'])->name('store');
+            Route::get('/{id}/edit', [SaldoCutiController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [SaldoCutiController::class, 'update'])->name('update');
+            Route::delete('/{id}', [SaldoCutiController::class, 'destroy'])->name('destroy');
+            Route::get('/{id}/riwayat', [SaldoCutiController::class, 'riwayatModal'])->name('riwayat');
         });
     });
 

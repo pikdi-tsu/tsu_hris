@@ -28,8 +28,10 @@ Route::prefix('users')->name('users.')->middleware(['auth'])->group(function () 
 
     // User
     Route::middleware(['permission:users:user:view'])->group(function() {
-        Route::get('/json', [UserController::class, 'datatable'])->name('json');
-        Route::post('/sync', [UserController::class, 'sync'])->name('sync'); // Route Sync
+        Route::get('users/json', [UserController::class, 'datatable'])->name('user.json');
+        Route::get('user/json', [UserController::class, 'datatable'])->name('json'); // Alias users.json
+        Route::post('user/sync', [UserController::class, 'sync'])->name('user.sync'); // Route Sync
+        Route::post('users/sync', [UserController::class, 'sync'])->name('sync'); // Alias Route Sync
         Route::resource('user', UserController::class);
     });
 

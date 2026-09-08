@@ -23,6 +23,7 @@ use Modules\Admin\Http\Controllers\RiwayatIzinCutiController;
 use Modules\Admin\Http\Controllers\RiwayatAbsensiController;
 use Modules\Admin\Http\Controllers\RiwayatLemburController;
 use Illuminate\Support\Facades\Route;
+use Modules\Admin\Http\Controllers\AbsensiController;
 use Modules\Admin\Http\Controllers\MasterStatusKaryawanController;
 use Modules\Admin\Http\Controllers\MasterUnitController;
 use Modules\Admin\Http\Controllers\MasterCutiController;

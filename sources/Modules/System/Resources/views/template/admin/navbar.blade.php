@@ -152,28 +152,30 @@
                     class="user-image img-circle elevation-1" alt="User Image">
                 <span class="d-none d-md-inline ml-1 font-weight-bold text-dark">{{ Auth::user()->name }}</span>
             </a>
-            <ul class="dropdown-menu dropdown-menu-lg dropdown-menu-right">
-                <!-- User image -->
-                <li class="user-header bg-primary">
+            <ul class="dropdown-menu dropdown-menu-right shadow border-0" style="min-width: 260px; border-radius: 0.5rem; padding: 0; overflow: hidden;">
+                <li class="p-3 bg-light border-bottom text-center">
                     <img src="{{ Auth::user()->profile_photo_url }}"
                         onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->name) }}&color=FFFFFF&background=2d394a';"
-                        style="width: 100px; height: 100px; object-fit: cover; border: 2px solid #adb5bd;"
-                        class="img-circle" alt="User Image">
-                    <p>
-                        {{ Auth::user()->name }}
-                        <small> </small>
-                    </p>
+                        style="width: 70px; height: 70px; object-fit: cover;"
+                        class="img-circle shadow-sm mb-2" alt="User Image">
+                    <div class="font-weight-bold text-dark mb-0" style="line-height: 1.3; white-space: normal; word-wrap: break-word;">{{ Auth::user()->name }}</div>
+                    <div class="text-muted text-sm mt-1">{{ Auth::user()->email ?? 'Administrator' }}</div>
                 </li>
-                <!-- Menu Footer-->
-                <li class="user-footer d-flex justify-content-between align-items-center bg-light">
-                    <a href="{{ route('users.profile.index') }}" class="btn btn-default btn-flat border">
-                        <i class="fas fa-user-cog mr-1 text-primary"></i> Profile & Password
+                
+                <li>
+                    <a href="{{ route('users.profile.index') }}" class="dropdown-item py-2 text-dark">
+                        <i class="fas fa-user-cog mr-2 text-primary" style="width: 20px; text-align: center;"></i> Pengaturan Profil
                     </a>
-                    <form action="{{ route('logout') }}" method="POST" id="form-logout" class="d-inline mb-0">
+                </li>
+                
+                <div class="dropdown-divider my-0"></div>
+                
+                <li>
+                    <a href="#" class="dropdown-item py-2 text-danger bg-white" onclick="event.preventDefault(); document.getElementById('form-logout').submit();">
+                        <i class="fas fa-sign-out-alt mr-2" style="width: 20px; text-align: center;"></i> Keluar
+                    </a>
+                    <form action="{{ route('logout') }}" method="POST" id="form-logout" class="d-none">
                         @csrf
-                        <button type="submit" class="btn btn-danger btn-flat">
-                            <i class="fas fa-sign-out-alt mr-1"></i> Sign out
-                        </button>
                     </form>
                 </li>
             </ul>

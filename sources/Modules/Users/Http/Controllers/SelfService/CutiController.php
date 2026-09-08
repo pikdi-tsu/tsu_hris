@@ -98,8 +98,11 @@ class CutiController extends Controller
                 }
             }
         }
-
+        $saldoService = app(\App\Services\SaldoCutiService::class);
         $getsaldo = $profile ? SaldoCutiKaryawan::where('id_user', $profile->id)->where('is_active', '1')->first() : null;
+        if ($profile && !$getsaldo) {
+            $getsaldo = $saldoService->ensureSaldoKaryawan($profile);
+        }
 
         $data = array(
             'title'     => 'Cuti Karyawan',
@@ -170,9 +173,12 @@ class CutiController extends Controller
             }
 
             $checksaldo = SaldoCutiKaryawan::where('id_user', $iduser)->where('is_active', '1')->first();
+            if (!$checksaldo && $profile) {
+                $checksaldo = app(\App\Services\SaldoCutiService::class)->ensureSaldoKaryawan($profile);
+            }
 
             if (!$checksaldo) {
-                return $this->sendError('Gagal mengajukan: Anda belum memiliki data Saldo Cuti aktif. Silakan hubungi SDM untuk mengatur saldo cuti Anda terlebih dahulu.');
+                return $this->sendError('Gagal mengajukan: Anda belum memiliki data Saldo Cuti aktif karena masa kerja belum mencapai 2 tahun. Silakan hubungi SDM untuk konfirmasi kebijakan lebih lanjut.');
             }
 
             // Hitung pengajuan cuti berstatus waiting (belum di-reject) milik karyawan ini

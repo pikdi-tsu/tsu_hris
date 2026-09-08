@@ -93,6 +93,13 @@
                                 </div>
                             </div>
 
+                            @if(!$saldo)
+                                <div class="alert alert-info border-0 shadow-sm mt-3 mb-0">
+                                    <i class="fas fa-info-circle mr-1"></i>
+                                    <strong>Informasi Hak Cuti:</strong> Anda belum memiliki saldo cuti tahunan aktif. Berdasarkan ketentuan, cuti tahunan reguler dialokasikan untuk pegawai dengan masa kerja minimal 2 tahun. Silakan hubungi bagian SDM/HRD untuk konsultasi lebih lanjut.
+                                </div>
+                            @endif
+
                             <form>
                                 <input type="hidden" id="idedit">
                                 <input type="hidden" id="ketedit" value="no">

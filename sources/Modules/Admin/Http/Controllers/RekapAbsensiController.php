@@ -111,6 +111,26 @@ class RekapAbsensiController extends MiddlewareController
         $startDate = $dateRange['start'];
         $endDate = $dateRange['end'];
 
+        // Jika belum ada data absensi yang di-upload pada rentang ini, kembalikan tabel kosong
+        $bulan = $request->input('periode_bulan');
+        $tahun = $request->input('periode_tahun');
+        $hasAbsensiQuery = DataAbsensi::query();
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $hasAbsensiQuery->whereBetween('tanggal_absen', [$startDate, $endDate]);
+        } elseif (!empty($bulan) && !empty($tahun)) {
+            $hasAbsensiQuery->where(function($q) use ($bulan, $tahun, $startDate, $endDate) {
+                $q->where(function($sub) use ($bulan, $tahun) {
+                    $sub->where('periode_bulan', $bulan)->where('periode_tahun', $tahun);
+                })->orWhereBetween('tanggal_absen', [$startDate, $endDate]);
+            });
+        } else {
+            $hasAbsensiQuery->whereBetween('tanggal_absen', [$startDate, $endDate]);
+        }
+
+        if (!$hasAbsensiQuery->exists()) {
+            return DataTables::of(collect([]))->make(true);
+        }
+
         // Ambil data karyawan yang memiliki PIN dan presensi pada periode ini (atau semua karyawan aktif)
         $karyawans = DataDosenTendik::with(['unit', 'jabatanFungsionals.masterFungsional', 'jabatanStrukturals.masterStruktural', 'shift'])
             ->whereNotNull('pin_absensi')

@@ -56,7 +56,7 @@ class BreadcrumbService
         // Users module sections
         'cuti'                   => 'Cuti Karyawan',
         'izin'                   => 'Izin Karyawan',
-        'lembur'                 => 'Lembur',
+        'lembur'                 => 'Lembur Karyawan',
         'approvalcuti'           => 'Approval Cuti',
         'approvalizin'           => 'Approval Izin',
         'profile'                => 'Profil',

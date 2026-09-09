@@ -31,12 +31,13 @@ class TsuPageHeader extends Component
     public function __construct(
         string $title = '',
         string $icon = 'fas fa-circle',
-        bool $breadcrumb = true
+        bool $breadcrumb = true,
+        ?array $breadcrumbItems = null
     ) {
         $this->title = $title;
         $this->icon = $icon;
         $this->showBreadcrumb = $breadcrumb;
-        $this->breadcrumbItems = $breadcrumb ? BreadcrumbService::generate() : [];
+        $this->breadcrumbItems = $breadcrumbItems ?? ($breadcrumb ? BreadcrumbService::generate() : []);
     }
 
     public function render()

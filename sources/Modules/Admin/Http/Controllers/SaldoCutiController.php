@@ -14,6 +14,7 @@ use App\Models\DataDosenTendik;
 use App\Models\SaldoCutiKaryawan;
 use App\Models\MasterUnit;
 use App\Models\CutiKaryawan;
+use Modules\System\Models\MenuSidebar;
 
 class SaldoCutiController extends MiddlewareController
 {
@@ -61,8 +62,13 @@ class SaldoCutiController extends MiddlewareController
         $totalTerpakai = $saldosInYear->where('is_active', '1')->sum('terpakai');
         $totalSisa = $saldosInYear->where('is_active', '1')->sum('sisa');
 
+        $menuData = MenuSidebar::where('route', 'admin.saldo-cuti.index')->first();
+        $menuIcon = $menuData->icon ?? 'fas fa-calendar-check';
+        $title = $menuData->name ?? 'Saldo Cuti Karyawan';
+
         return view('admin::saldo-cuti.index', [
-            'title' => 'Manajemen Saldo Cuti Karyawan',
+            'title' => $title,
+            'menuIcon' => $menuIcon,
             'selectedYear' => $selectedYear,
             'availableYears' => $availableYears,
             'units' => $units,
@@ -143,11 +149,11 @@ class SaldoCutiController extends MiddlewareController
                 </div>';
             })
             ->addColumn('jatah_badge', function ($row) {
-                return '<span class="badge badge-secondary py-2 px-3 font-weight-bold" style="font-size: 0.9rem;">' . $row->jatah . ' Hari</span>';
+                return '<span class="badge badge-secondary py-1 px-2 font-weight-bold" style="font-size: 0.82rem; border-radius: 6px;">' . $row->jatah . ' Hari</span>';
             })
             ->addColumn('terpakai_badge', function ($row) {
                 $color = $row->terpakai > 0 ? 'text-primary' : 'text-muted';
-                return '<span class="font-weight-bold ' . $color . '" style="font-size: 0.95rem;">' . $row->terpakai . ' Hari</span>';
+                return '<span class="font-weight-bold ' . $color . '" style="font-size: 0.88rem;">' . $row->terpakai . ' Hari</span>';
             })
             ->addColumn('sisa_badge', function ($row) {
                 if ($row->sisa <= 0) {
@@ -157,29 +163,29 @@ class SaldoCutiController extends MiddlewareController
                 } else {
                     $badge = 'badge-success';
                 }
-                return '<span class="badge ' . $badge . ' py-2 px-3 font-weight-bold" style="font-size: 0.95rem;">' . $row->sisa . ' Hari</span>';
+                return '<span class="badge ' . $badge . ' py-1 px-2 font-weight-bold" style="font-size: 0.85rem; border-radius: 6px;">' . $row->sisa . ' Hari</span>';
             })
             ->addColumn('status_badge', function ($row) {
                 if ($row->is_active == '1') {
-                    return '<span class="badge badge-success"><i class="fas fa-check-circle mr-1"></i> Aktif</span>';
+                    return '<span class="badge badge-success" style="padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.78rem;"><i class="fas fa-check-circle mr-1"></i>Aktif</span>';
                 }
-                return '<span class="badge badge-secondary"><i class="fas fa-times-circle mr-1"></i> Expired</span>';
+                return '<span class="badge badge-secondary" style="padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.78rem;"><i class="fas fa-times-circle mr-1"></i>Expired</span>';
             })
             ->addColumn('action', function ($row) {
-                $btnRiwayat = '<button type="button" class="btn btn-sm btn-info btn-riwayat mr-1" data-id="' . $row->id . '" title="Lihat Pemakaian Cuti">
+                $btnRiwayat = '<button type="button" class="btn btn-sm btn-info btn-riwayat mr-1" data-id="' . $row->id . '" title="Lihat Pemakaian Cuti" style="border-radius: 6px; font-size: 0.78rem; padding: 0.25rem 0.55rem;">
                     <i class="fas fa-history"></i>
                 </button>';
 
                 $btnEdit = '';
                 if (auth()->user()->can('admin:saldo-cuti:edit')) {
-                    $btnEdit = '<button type="button" class="btn btn-sm btn-warning btn-edit-saldo mr-1" data-id="' . $row->id . '" title="Edit Penyesuaian Saldo">
+                    $btnEdit = '<button type="button" class="btn btn-sm btn-warning btn-edit-saldo mr-1" data-id="' . $row->id . '" title="Edit Penyesuaian Saldo" style="border-radius: 6px; font-size: 0.78rem; padding: 0.25rem 0.55rem;">
                         <i class="fas fa-edit"></i>
                     </button>';
                 }
 
                 $btnDelete = '';
                 if (auth()->user()->can('admin:saldo-cuti:delete')) {
-                    $btnDelete = '<button type="button" class="btn btn-sm btn-danger btn-delete-saldo" data-id="' . $row->id . '" title="Hapus Saldo">
+                    $btnDelete = '<button type="button" class="btn btn-sm btn-danger btn-delete-saldo" data-id="' . $row->id . '" title="Hapus Saldo" style="border-radius: 6px; font-size: 0.78rem; padding: 0.25rem 0.55rem;">
                         <i class="fas fa-trash"></i>
                     </button>';
                 }

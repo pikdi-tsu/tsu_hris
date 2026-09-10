@@ -180,7 +180,34 @@ class DataDosenTendik extends Authenticatable
                 ]
             ],
 
-            // TAB 3: KEPANGKATAN
+            // TAB 3: PENDIDIKAN & GELAR
+            'tab_pendidikan' => [
+                'label' => 'Pendidikan & Gelar',
+                'fields' => [
+                    ['name' => 'pendidikan_terakhir', 'label' => 'Jenjang Pendidikan Terakhir', 'type' => 'select', 'col_size' => 12, 'options' => [
+                        'S3' => 'S3 (Doktor / Ph.D)',
+                        'S2' => 'S2 (Magister / Master)',
+                        'S1' => 'S1 (Sarjana)',
+                        'D4' => 'D4 (Sarjana Terapan)',
+                        'D3' => 'D3 (Diploma Tiga)',
+                        'SMA/SMK' => 'SMA / SMK / Sederajat'
+                    ]],
+
+                    // S1
+                    ['name' => 'gelar_s1', 'label' => 'Gelar Sarjana (S1)', 'type' => 'text', 'col_size' => 4, 'placeholder' => 'Contoh: S.Kom, S.Sn, S.Pd, S.Si, S.E.'],
+                    ['name' => 'pendidikan_s1', 'label' => 'Jurusan & Perguruan Tinggi (S1)', 'type' => 'text', 'col_size' => 8, 'placeholder' => 'Contoh: Teknik Informatika - Institut Teknologi Sepuluh Nopember'],
+
+                    // S2
+                    ['name' => 'gelar_s2', 'label' => 'Gelar Magister (S2)', 'type' => 'text', 'col_size' => 4, 'placeholder' => 'Contoh: M.Kom, M.Hum, M.Sn, M.Cs, M.Pd, M.M.'],
+                    ['name' => 'pendidikan_s2', 'label' => 'Jurusan & Perguruan Tinggi (S2)', 'type' => 'text', 'col_size' => 8, 'placeholder' => 'Contoh: Ilmu Komputer - Universitas Gadjah Mada'],
+
+                    // S3
+                    ['name' => 'gelar_s3', 'label' => 'Gelar Doktor (S3)', 'type' => 'text', 'col_size' => 4, 'placeholder' => 'Contoh: Dr., Ph.D'],
+                    ['name' => 'pendidikan_s3', 'label' => 'Jurusan & Perguruan Tinggi (S3)', 'type' => 'text', 'col_size' => 8, 'placeholder' => 'Contoh: Computer Science - National Taiwan University of Science and Technology'],
+                ]
+            ],
+
+            // TAB 4: KEPANGKATAN
             'tab_kepangkatan' => [
                 'label' => 'Jabatan & Pangkat',
                 'fields' => [

@@ -117,7 +117,7 @@ class StrukturOrganisasiController extends MiddlewareController
                 'tipe' => $emp->tipe_karyawan,
                 'posisi_harian' => $emp->posisi,
                 'jabatan_struktural' => $role && $role->masterStruktural ? $role->masterStruktural->nama_jabatan : 'Staf/Anggota',
-                'image_url' => $emp->user ? $emp->user->profile_photo_url : null
+                'image_url' => $emp->user ? $this->getValidAvatarUrl($emp->user) : null
             ];
         });
 
@@ -140,7 +140,7 @@ class StrukturOrganisasiController extends MiddlewareController
                     'tipe' => $kjsKepala->karyawan->tipe_karyawan,
                     'posisi_harian' => $kjsKepala->karyawan->posisi,
                     'jabatan_struktural' => $kjsKepala->masterStruktural ? $kjsKepala->masterStruktural->nama_jabatan : 'Kepala Unit',
-                    'image_url' => $kjsKepala->karyawan->user ? $kjsKepala->karyawan->user->profile_photo_url : null,
+                    'image_url' => ($kjsKepala->karyawan && $kjsKepala->karyawan->user) ? $this->getValidAvatarUrl($kjsKepala->karyawan->user) : null,
                     'is_head' => true
                 ];
             }
@@ -267,10 +267,10 @@ class StrukturOrganisasiController extends MiddlewareController
                 'name' => $emp->nama,
                 'head_name' => '', // unused
                 'title' => $jabatanStr,
-                'posisi' => $emp->posisi_harian ?: '-',
+                'posisi' => $emp->posisi ?: '-',
                 'tipe_karyawan' => $emp->tipe_karyawan,
                 'employee_count' => 0,
-                'image_url' => $emp->user ? $emp->user->profile_photo_url : null
+                'image_url' => $this->getValidAvatarUrl($emp->user)
             ];
         }
 
@@ -291,7 +291,54 @@ class StrukturOrganisasiController extends MiddlewareController
         return [
             'jabatan' => $jabatan ? $jabatan->nama_jabatan : 'Jabatan Tidak Diketahui',
             'nama' => $kjs && $kjs->karyawan ? $kjs->karyawan->nama : 'Kosong',
-            'image_url' => $kjs && $kjs->karyawan && $kjs->karyawan->user ? $kjs->karyawan->user->profile_photo_url : null
+            'image_url' => $kjs && $kjs->karyawan ? $this->getValidAvatarUrl($kjs->karyawan->user) : null
         ];
+    }
+
+    public function avatarProxy(Request $request)
+    {
+        $url = $request->query('url');
+        if (!$url || !filter_var($url, FILTER_VALIDATE_URL)) {
+            abort(400);
+        }
+
+        $host = parse_url($url, PHP_URL_HOST);
+        $allowedHosts = ['homebase.tsu.ac.id'];
+        if (!in_array($host, $allowedHosts)) {
+            abort(403);
+        }
+
+        try {
+            $response = \Illuminate\Support\Facades\Http::withoutVerifying()->timeout(6)->get($url);
+            if ($response->successful()) {
+                return response($response->body(), 200, [
+                    'Content-Type' => $response->header('Content-Type') ?: 'image/jpeg',
+                    'Cache-Control' => 'public, max-age=86400',
+                    'Access-Control-Allow-Origin' => '*',
+                ]);
+            }
+        } catch (\Exception $e) {
+            // ignore
+        }
+
+        abort(404);
+    }
+
+    private function getValidAvatarUrl($user)
+    {
+        if (!$user || empty($user->avatar_url)) {
+            return null;
+        }
+        $url = $user->avatar_url;
+        if (str_contains($url, 'ui-avatars.com')) {
+            return null;
+        }
+        if (str_contains($url, 'homebase.tsu.ac.id')) {
+            return route('admin.struktur-organisasi.avatar-proxy', ['url' => $url]);
+        }
+        if (str_starts_with($url, 'http://') || str_starts_with($url, 'https://')) {
+            return $url;
+        }
+        return asset('public/storage/' . $url);
     }
 }

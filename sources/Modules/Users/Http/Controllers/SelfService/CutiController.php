@@ -289,51 +289,51 @@ class CutiController extends Controller
         return DataTables::of($data)
             ->addIndexColumn()
             ->addColumn('jeniscuti', function ($data) {
-                return $data->masterCuti ? $data->masterCuti->jeniscuti : '-';
+                return '<span class="font-weight-bold" style="color:var(--tsu-primary-dark);">' . ($data->masterCuti ? e($data->masterCuti->jeniscuti) : '-') . '</span>';
             })
             ->addColumn('tanggalmulai', function ($data) {
-                $formatTanggal = Carbon::parse($data->tanggalmulai)->format('d F Y');
-                return $formatTanggal;
+                return '<span class="text-nowrap"><i class="far fa-calendar-alt text-muted mr-1"></i>' . Carbon::parse($data->tanggalmulai)->translatedFormat('d M Y') . '</span>';
             })
             ->addColumn('tanggalselesai', function ($data) {
-                $formatTanggal = Carbon::parse($data->tanggalselesai)->format('d F Y');
-                return $formatTanggal;
+                return '<span class="text-nowrap"><i class="far fa-calendar-check text-muted mr-1"></i>' . Carbon::parse($data->tanggalselesai)->translatedFormat('d M Y') . '</span>';
             })
             ->addColumn('jumlah', function ($data) {
-                return CutiKaryawan::hitungHariEfektif($data->tanggalmulai, $data->tanggalselesai);
+                $jml = CutiKaryawan::hitungHariEfektif($data->tanggalmulai, $data->tanggalselesai);
+                return '<span class="badge px-2 py-1 font-weight-bold" style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;font-size:0.8rem;">' . $jml . ' Hari</span>';
             })
             ->addColumn('statusatasan', function ($data) {
                 if ($data->statusatasan == 'approved') {
-                    $stat = '<span class="badge badge-success">Approved</span>';
+                    $stat = '<span class="badge px-2 py-1" style="background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;font-size:0.78rem;font-weight:600;"><i class="fas fa-check-circle mr-1"></i> Disetujui</span>';
                 } elseif ($data->statusatasan == 'rejected') {
-                    $stat = '<span class="badge badge-danger">Rejected</span>';
+                    $stat = '<span class="badge px-2 py-1" style="background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;font-size:0.78rem;font-weight:600;"><i class="fas fa-times-circle mr-1"></i> Ditolak</span>';
                 } else {
-                    $stat = '<span class="badge badge-warning">Waiting</span>';
+                    $stat = '<span class="badge px-2 py-1" style="background:#fef3c7;color:#b45309;border:1px solid #fde68a;font-size:0.78rem;font-weight:600;"><i class="fas fa-hourglass-half mr-1"></i> Menunggu</span>';
                 }
 
                 return $stat;
             })
             ->addColumn('statushrd', function ($data) {
                 if ($data->statushrd == 'approved') {
-                    $stat = '<span class="badge badge-success">Approved</span>';
+                    $stat = '<span class="badge px-2 py-1" style="background:#dcfce7;color:#15803d;border:1px solid #bbf7d0;font-size:0.78rem;font-weight:600;"><i class="fas fa-check-circle mr-1"></i> Disetujui</span>';
                 } elseif ($data->statushrd == 'rejected') {
-                    $stat = '<span class="badge badge-danger">Rejected</span>';
+                    $stat = '<span class="badge px-2 py-1" style="background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;font-size:0.78rem;font-weight:600;"><i class="fas fa-times-circle mr-1"></i> Ditolak</span>';
                 } else {
-                    $stat = '<span class="badge badge-warning">Waiting</span>';
+                    $stat = '<span class="badge px-2 py-1" style="background:#fef3c7;color:#b45309;border:1px solid #fde68a;font-size:0.78rem;font-weight:600;"><i class="fas fa-hourglass-half mr-1"></i> Menunggu</span>';
                 }
 
                 return $stat;
             })
             ->addColumn('action', function ($data) {
-                $button = '';
-                if ($data->statusatasan != 'waiting' || $data->statushrd != 'waiting') {
-                    $button .= '<a href="#" data-id="' . encrypt($data->id) . '" id="btndetail" class="ml-2" title="Info Detail"><i class="fa fa-info-circle fa-md text-primary"></i></a></center>';
-                } else {
-                    $button .= '<center><a href="#" data-id="' . encrypt($data->id) . '" id="btnedit" title="Proses Edit"><i class="fa fa-edit fa-md text-primary"></i></a>';
+                $encId = encrypt($data->id);
+                $button = '<div class="d-inline-flex align-items-center" style="gap:0.35rem;">';
+                if ($data->statusatasan == 'waiting' && $data->statushrd == 'waiting') {
+                    $button .= '<button type="button" data-id="' . $encId . '" id="btnedit" class="btn btn-xs btn-outline-primary" style="padding:0.25rem 0.6rem;font-size:0.78rem;border-radius:var(--tsu-radius);font-weight:600;" title="Edit Pengajuan"><i class="fas fa-edit mr-1"></i> Edit</button>';
                 }
+                $button .= '<button type="button" data-id="' . $encId . '" id="btndetail" class="btn btn-xs btn-outline-info" style="padding:0.25rem 0.6rem;font-size:0.78rem;border-radius:var(--tsu-radius);font-weight:600;" title="Lihat Detail"><i class="fas fa-eye mr-1"></i> Detail</button>';
+                $button .= '</div>';
                 return $button;
             })
-            ->rawColumns(['statusatasan', 'statushrd', 'action'])
+            ->rawColumns(['jeniscuti', 'tanggalmulai', 'tanggalselesai', 'jumlah', 'statusatasan', 'statushrd', 'action'])
             ->make(true);
     }
 

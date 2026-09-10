@@ -299,6 +299,124 @@
         flex-direction: column;
         justify-content: space-between;
     }
+
+    /* Card Header Unit Section Reset & Back Button */
+    #card-unit-section .card-header::after {
+        display: none !important;
+    }
+    .tsu-btn-back {
+        background: #ffffff;
+        color: var(--tsu-primary);
+        border: 1.5px solid var(--tsu-primary-light);
+        font-weight: 600;
+        font-size: 0.82rem;
+        border-radius: var(--tsu-radius);
+        padding: 0.35rem 0.85rem;
+        transition: all 0.2s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+    }
+    .tsu-btn-back:hover {
+        background: var(--tsu-primary);
+        color: #ffffff;
+        border-color: var(--tsu-primary);
+        box-shadow: var(--tsu-shadow-sm);
+    }
+    .tsu-btn-profile-row:hover {
+        background: var(--tsu-primary) !important;
+        color: #ffffff !important;
+        border-color: var(--tsu-primary) !important;
+        box-shadow: var(--tsu-shadow-sm);
+    }
+
+    /* SweetAlert2 Title & Close Button Alignment Fix */
+    .swal2-popup {
+        border-radius: var(--tsu-radius-lg, 14px) !important;
+        position: relative !important;
+    }
+    .swal2-popup .swal2-title {
+        position: relative !important;
+        padding-top: 1.25rem !important;
+        padding-bottom: 0.5rem !important;
+        padding-left: 3.75rem !important;
+        padding-right: 3.75rem !important;
+        margin: 0 !important;
+        font-size: 1.25rem !important;
+        font-weight: 700 !important;
+        color: var(--tsu-primary-dark) !important;
+        line-height: 1.45 !important;
+        text-align: center !important;
+        word-break: break-word !important;
+    }
+    .swal2-popup .swal2-close {
+        position: absolute !important;
+        top: 14px !important;
+        right: 14px !important;
+        width: 36px !important;
+        height: 36px !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        border-radius: 8px !important;
+        background: #f1f5f9 !important;
+        border: 1px solid #cbd5e1 !important;
+        color: #64748b !important;
+        font-size: 22px !important;
+        font-family: inherit !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        transition: all 0.2s ease !important;
+        cursor: pointer !important;
+        box-shadow: none !important;
+        outline: none !important;
+        z-index: 10 !important;
+    }
+    .swal2-popup .swal2-close:hover {
+        background: #fee2e2 !important;
+        color: #ef4444 !important;
+        border-color: #fca5a5 !important;
+        transform: scale(1.05) !important;
+    }
+    .swal2-popup .swal2-close:focus {
+        box-shadow: none !important;
+        outline: none !important;
+    }
+
+    /* Modal HTML Container & Badge Wrapping Rules */
+    .swal2-html-container {
+        overflow-x: hidden !important;
+    }
+    .swal2-popup .badge,
+    .tsu-badge-jabatan {
+        white-space: normal !important;
+        word-break: break-word !important;
+        line-height: 1.4 !important;
+        max-width: 100% !important;
+    }
+    .tsu-badge-jabatan {
+        display: inline-block !important;
+        text-align: left !important;
+        padding: 0.35rem 0.65rem !important;
+        font-size: 0.82rem !important;
+        font-weight: 600 !important;
+        border-radius: 6px !important;
+    }
+
+    @media (max-width: 576px) {
+        .swal2-popup .swal2-title {
+            padding-left: 2.75rem !important;
+            padding-right: 2.75rem !important;
+            font-size: 1.1rem !important;
+        }
+        .swal2-popup .swal2-close {
+            top: 10px !important;
+            right: 10px !important;
+            width: 30px !important;
+            height: 30px !important;
+            font-size: 18px !important;
+        }
+    }
 </style>
 
 {{-- TSU Page Header --}}
@@ -334,13 +452,13 @@
         <!-- Section: Unit List (Cards) -->
         <div class="card card-primary card-outline tsu-card" id="card-unit-section">
             <div class="card-header d-flex align-items-center justify-content-between">
-                <h3 class="card-title font-weight-bold">
+                <h3 class="card-title font-weight-bold mb-0">
                     <i class="fas fa-building mr-2" style="color:var(--tsu-primary);"></i>
                     <span id="current-unit-title">Tiga Serangkai Universitas (Unit Utama)</span>
                 </h3>
-                <div class="card-tools">
-                    <button type="button" class="btn btn-sm btn-outline-secondary" id="btn-reset" style="display: none;" onclick="loadCoreUnits()">
-                        <i class="fas fa-arrow-left mr-1"></i> Kembali ke Awal
+                <div class="card-tools ml-auto">
+                    <button type="button" class="btn btn-sm tsu-btn-back" id="btn-reset" style="display: none;" onclick="loadCoreUnits()">
+                        <i class="fas fa-arrow-left"></i> Kembali ke Awal
                     </button>
                 </div>
             </div>
@@ -365,10 +483,11 @@
                         <thead style="background:var(--tsu-primary-faint);">
                             <tr style="font-size:.78rem;font-weight:700;color:var(--tsu-primary-dark);text-transform:uppercase;letter-spacing:.04em;">
                                 <th width="5%" class="text-center">No</th>
-                                <th width="30%">Nama Lengkap</th>
-                                <th width="25%">Jabatan Struktural</th>
-                                <th width="20%">Posisi Harian</th>
-                                <th width="20%" class="text-center">Tipe Karyawan</th>
+                                <th width="35%">Pegawai / Profil</th>
+                                <th width="23%">Jabatan Struktural</th>
+                                <th width="18%">Posisi Harian</th>
+                                <th width="11%" class="text-center">Tipe</th>
+                                <th width="8%" class="text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="employee-tbody">
@@ -437,8 +556,46 @@
 
         // Export Bagan
         $('#btn-export-img').click(function() {
-            if(chart) {
-                chart.exportImg({full: true});
+            if(!chart) return;
+            var btn = $(this);
+            var origText = btn.html();
+            btn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm mr-1" role="status"></span> Menyiapkan bagan...');
+
+            try {
+                // 1. Simpan durasi transisi D3 dan nonaktifkan animasi (duration = 0)
+                // Ini mencegah race condition saat interpolasi path 'd' kurva penghubung
+                const origDuration = chart.duration();
+                chart.duration(0);
+                chart.fit(); // Fit seluruh struktur secara instan & presisi
+
+                // 2. Berikan jeda kecil untuk repaint DOM sebelum serialisasi SVG canvas
+                setTimeout(function() {
+                    btn.html('<span class="spinner-border spinner-border-sm mr-1" role="status"></span> Mengunduh...');
+                    chart.exportImg({
+                        full: false, // Sudah di-fit instan dengan duration(0)
+                        scale: 3,
+                        backgroundColor: '#ffffff',
+                        onLoad: function() {
+                            chart.duration(origDuration);
+                            btn.prop('disabled', false).html(origText);
+                        }
+                    });
+                }, 150);
+
+                // Fallback timeout pengaman tombol
+                setTimeout(function() {
+                    chart.duration(origDuration);
+                    btn.prop('disabled', false).html(origText);
+                }, 5000);
+            } catch (err) {
+                console.error("Export Bagan Error:", err);
+                btn.prop('disabled', false).html(origText);
+                Swal.fire({
+                    title: 'Gagal Mengunduh',
+                    text: 'Terjadi kesalahan saat mengekspor gambar bagan.',
+                    icon: 'error',
+                    confirmButtonColor: 'var(--tsu-primary)'
+                });
             }
         });
     });
@@ -525,7 +682,7 @@
         $('#emp-unit-name').text(unitName);
         
         $('#unit-container').html(getSkeletonCards(3));
-        $('#employee-tbody').html('<tr><td colspan="5" class="text-center py-3"><div class="spinner-border spinner-border-sm mr-1" style="color:var(--tsu-primary);"></div> Memuat data karyawan...</td></tr>');
+        $('#employee-tbody').html('<tr><td colspan="6" class="text-center py-3"><div class="spinner-border spinner-border-sm mr-1" style="color:var(--tsu-primary);"></div> Memuat data karyawan...</td></tr>');
         $('#employee-section').show();
 
         $.ajax({
@@ -603,9 +760,10 @@
     }
 
     function renderEmployees(employees) {
+        window.currentUnitEmployees = employees;
         let html = '';
         if (employees.length === 0) {
-            html = '<tr><td colspan="5" class="text-center py-4 text-muted"><i class="fas fa-user-slash fa-2x mb-2 d-block" style="color:var(--tsu-primary-light);"></i>Tidak ada karyawan yang terdaftar langsung di unit ini.</td></tr>';
+            html = '<tr><td colspan="6" class="text-center py-4 text-muted"><i class="fas fa-user-slash fa-2x mb-2 d-block" style="color:var(--tsu-primary-light);"></i>Tidak ada karyawan yang terdaftar langsung di unit ini.</td></tr>';
         } else {
             employees.forEach(function(emp, index) {
                 let badgeClass = emp.jabatan_struktural !== 'Staf/Anggota' 
@@ -621,18 +779,95 @@
                         ? '<span class="badge" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;"><i class="fas fa-user-tie mr-1"></i> Tendik</span>'
                         : `<span class="badge badge-light border">${emp.tipe}</span>`);
 
+                let avatarHtml = emp.image_url 
+                    ? `<img src="${emp.image_url}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='flex';"><div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;"><i class="fas fa-user" style="color:var(--tsu-primary);font-size:15px;"></i></div>` 
+                    : `<i class="fas fa-user" style="color:var(--tsu-primary);font-size:15px;"></i>`;
+
                 html += `
                     <tr>
-                        <td class="text-center font-weight-bold text-muted">${index + 1}</td>
-                        <td class="font-weight-bold" style="color:var(--tsu-primary-dark);">${emp.nama}</td>
-                        <td><span class="${badgeClass}" style="${badgeStyle}">${emp.jabatan_struktural}</span></td>
-                        <td style="font-size:0.85rem;">${emp.posisi_harian || '-'}</td>
-                        <td class="text-center">${tipeBadge}</td>
+                        <td class="text-center font-weight-bold text-muted align-middle">${index + 1}</td>
+                        <td class="align-middle">
+                            <div class="d-flex align-items-center" style="cursor:pointer;" onclick="showEmployeeModalByIndex(${index})" title="Klik untuk melihat profil lengkap">
+                                <div class="mr-3" style="width: 42px; height: 42px; border-radius: 50%; background: var(--tsu-primary-faint); border: 1.5px solid var(--tsu-primary-light); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; box-shadow: 0 2px 5px rgba(9,75,84,0.1);">
+                                    ${avatarHtml}
+                                </div>
+                                <div>
+                                    <div class="font-weight-bold" style="color:var(--tsu-primary-dark); font-size: 0.92rem; line-height: 1.3;">
+                                        ${emp.nama}
+                                        ${emp.is_head ? `<span class="badge ml-1" style="background:linear-gradient(135deg, #f59e0b, #d97706); color:#fff; font-size:0.68rem; font-weight:700;"><i class="fas fa-crown mr-1"></i>Pimpinan</span>` : ''}
+                                    </div>
+                                    <small class="text-muted d-block" style="font-size:0.75rem;"><i class="far fa-id-badge mr-1"></i>${emp.posisi_harian || 'Staf'}</small>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="align-middle"><span class="${badgeClass} tsu-badge-jabatan" style="${badgeStyle}">${emp.jabatan_struktural}</span></td>
+                        <td class="align-middle" style="font-size:0.85rem;">${emp.posisi_harian || '-'}</td>
+                        <td class="text-center align-middle">${tipeBadge}</td>
+                        <td class="text-center align-middle">
+                            <button type="button" class="btn btn-sm btn-outline-primary tsu-btn-profile-row" style="padding: 0.25rem 0.65rem; font-size: 0.76rem; border-color: var(--tsu-primary-light); color: var(--tsu-primary); border-radius: var(--tsu-radius); font-weight: 600;" onclick="showEmployeeModalByIndex(${index})" title="Lihat Profil">
+                                <i class="fas fa-id-card mr-1"></i> Profil
+                            </button>
+                        </td>
                     </tr>
                 `;
             });
         }
         $('#employee-tbody').html(html);
+    }
+
+    function showEmployeeModalByIndex(index) {
+        if (!window.currentUnitEmployees || !window.currentUnitEmployees[index]) return;
+        let emp = window.currentUnitEmployees[index];
+        
+        let avatarModal = emp.image_url 
+            ? `<img src="${emp.image_url}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='flex';"><div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;"><i class="fas fa-user"></i></div>` 
+            : `<i class="fas fa-user"></i>`;
+
+        let tipeBadge = emp.tipe === 'Dosen'
+            ? '<span class="badge px-3 py-1 mb-2" style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;font-size:0.82rem;"><i class="fas fa-graduation-cap mr-1"></i> Dosen</span>'
+            : (emp.tipe === 'Tendik'
+                ? '<span class="badge px-3 py-1 mb-2" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;font-size:0.82rem;"><i class="fas fa-user-tie mr-1"></i> Tenaga Kependidikan</span>'
+                : `<span class="badge badge-light border px-3 py-1 mb-2">${emp.tipe}</span>`);
+
+        let isStruktural = emp.jabatan_struktural && emp.jabatan_struktural !== 'Staf/Anggota' && emp.jabatan_struktural !== '-';
+        let jabatanBadge = isStruktural
+            ? `<span class="badge text-white tsu-badge-jabatan" style="background:linear-gradient(135deg,var(--tsu-primary-dark),var(--tsu-primary));">${emp.jabatan_struktural}</span>`
+            : `<span class="badge badge-light border tsu-badge-jabatan" style="color:#475569;background:#ffffff;border-color:#cbd5e1!important;">${emp.jabatan_struktural || 'Staf/Anggota'}</span>`;
+
+        Swal.fire({
+            title: '<i class="fas fa-id-card mr-1" style="color:var(--tsu-primary);"></i> Profil Karyawan',
+            html: `
+                <div class="text-center mt-2">
+                    <div style="width: 96px; height: 96px; border-radius: 50%; background-color: var(--tsu-primary-faint); margin: 0 auto 12px auto; display: flex; align-items: center; justify-content: center; border: 3px solid var(--tsu-primary-light); color: var(--tsu-primary); font-size: 42px; overflow: hidden; box-shadow: 0 4px 12px rgba(9,75,84,0.12);">
+                        ${avatarModal}
+                    </div>
+                    <h5 class="font-weight-bold mb-1" style="color:var(--tsu-primary-dark); font-size: 1.15rem;">${emp.nama}</h5>
+                    ${tipeBadge}
+                    
+                    <div class="text-left p-3 rounded border mt-2" style="background:#f8fafc; border-color:#e2e8f0!important;">
+                        <div class="mb-2 pb-2" style="border-bottom: 1px dashed #cbd5e1;">
+                            <div class="text-muted small font-weight-bold mb-1" style="letter-spacing: 0.3px;">
+                                <i class="fas fa-sitemap mr-1" style="color:var(--tsu-primary);"></i> JABATAN STRUKTURAL
+                            </div>
+                            <div class="mt-1">
+                                ${jabatanBadge}
+                            </div>
+                        </div>
+                        <div>
+                            <div class="text-muted small font-weight-bold mb-1" style="letter-spacing: 0.3px;">
+                                <i class="fas fa-briefcase mr-1" style="color:var(--tsu-primary);"></i> POSISI HARIAN
+                            </div>
+                            <div class="font-weight-bold" style="color:#1e293b; font-size:0.92rem;">
+                                ${emp.posisi_harian || '-'}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `,
+            showCloseButton: true,
+            showConfirmButton: false,
+            width: '450px'
+        });
     }
 
     function navigateToHistory(index) {
@@ -770,6 +1005,15 @@
                     .childrenMargin((d) => 50)
                     .compactMarginBetween((d) => 15)
                     .compactMarginPair((d) => 80)
+                    .linkUpdate(function(d, i, arr) {
+                        d3.select(this)
+                            .attr("stroke", d => d.data._upToTheRootHighlighted ? '#1d7a87' : '#cbd5e1')
+                            .attr("stroke-width", d => d.data._upToTheRootHighlighted ? 2.5 : 1.5);
+                        if (d.data._upToTheRootHighlighted) {
+                            d3.select(this).raise();
+                        }
+                    })
+                    .imageName('Struktur_Organisasi_TSU')
                     .onNodeClick(d => {
                         let unitId = typeof d === 'string' ? d : (d.data ? d.data.id : d);
                         if (unitId === 'root-tsu') return;
@@ -779,19 +1023,44 @@
                         if (unitNode) {
                             if (unitNode.type === 'employee') {
                                 // Tampilkan modal biodata ringkas karyawan
+                                let treeTipeBadge = unitNode.tipe_karyawan === 'Dosen'
+                                    ? '<span class="badge px-3 py-1 mb-2" style="background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;font-size:0.82rem;"><i class="fas fa-graduation-cap mr-1"></i> Dosen</span>'
+                                    : (unitNode.tipe_karyawan === 'Tendik'
+                                        ? '<span class="badge px-3 py-1 mb-2" style="background:#fef3c7;color:#92400e;border:1px solid #fde68a;font-size:0.82rem;"><i class="fas fa-user-tie mr-1"></i> Tenaga Kependidikan</span>'
+                                        : `<span class="badge badge-light border px-3 py-1 mb-2">${unitNode.tipe_karyawan || '-'}</span>`);
+
+                                let isTreeStruktural = unitNode.title && unitNode.title !== 'Staf/Anggota' && unitNode.title !== '-';
+                                let treeJabatanBadge = isTreeStruktural
+                                    ? `<span class="badge text-white tsu-badge-jabatan" style="background:linear-gradient(135deg,var(--tsu-primary-dark),var(--tsu-primary));">${unitNode.title}</span>`
+                                    : `<span class="badge badge-light border tsu-badge-jabatan" style="color:#475569;background:#ffffff;border-color:#cbd5e1!important;">${unitNode.title || 'Staf/Anggota'}</span>`;
+
                                 Swal.fire({
-                                    title: '<i class="fas fa-id-card" style="color:var(--tsu-primary);"></i> Profil Karyawan',
+                                    title: '<i class="fas fa-id-card mr-1" style="color:var(--tsu-primary);"></i> Profil Karyawan',
                                     html: `
-                                        <div class="text-center mt-3">
-                                            <div style="width: 100px; height: 100px; border-radius: 50%; background-color: var(--tsu-primary-faint); margin: 0 auto 15px auto; display: flex; align-items: center; justify-content: center; border: 3px solid var(--tsu-primary-light); color: var(--tsu-primary); font-size: 45px; overflow: hidden;">
-                                                ${unitNode.image_url ? `<img src="${unitNode.image_url}" style="width:100%;height:100%;object-fit:cover;">` : `<i class="fas fa-user"></i>`}
+                                        <div class="text-center mt-2">
+                                            <div style="width: 96px; height: 96px; border-radius: 50%; background-color: var(--tsu-primary-faint); margin: 0 auto 12px auto; display: flex; align-items: center; justify-content: center; border: 3px solid var(--tsu-primary-light); color: var(--tsu-primary); font-size: 42px; overflow: hidden; box-shadow: 0 4px 12px rgba(9,75,84,0.12);">
+                                                ${unitNode.image_url ? `<img src="${unitNode.image_url}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='flex';"><div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;"><i class="fas fa-user"></i></div>` : `<i class="fas fa-user"></i>`}
                                             </div>
-                                            <h5 class="font-weight-bold mb-1" style="color:var(--tsu-primary-dark);">${unitNode.name}</h5>
-                                            <span class="badge badge-light border mb-3">${unitNode.tipe_karyawan}</span>
+                                            <h5 class="font-weight-bold mb-1" style="color:var(--tsu-primary-dark); font-size: 1.15rem;">${unitNode.name}</h5>
+                                            ${treeTipeBadge}
                                             
-                                            <div class="text-left bg-light p-3 rounded border">
-                                                <p class="mb-2"><b><i class="fas fa-sitemap text-muted"></i> Jabatan / Status:</b><br><span class="badge text-white mt-1" style="background:linear-gradient(135deg,var(--tsu-primary-dark),var(--tsu-primary));">${unitNode.title}</span></p>
-                                                <p class="mb-0"><b><i class="fas fa-briefcase text-muted"></i> Posisi Harian:</b><br>${unitNode.posisi}</p>
+                                            <div class="text-left p-3 rounded border mt-2" style="background:#f8fafc; border-color:#e2e8f0!important;">
+                                                <div class="mb-2 pb-2" style="border-bottom: 1px dashed #cbd5e1;">
+                                                    <div class="text-muted small font-weight-bold mb-1" style="letter-spacing: 0.3px;">
+                                                        <i class="fas fa-sitemap mr-1" style="color:var(--tsu-primary);"></i> JABATAN STRUKTURAL / STATUS
+                                                    </div>
+                                                    <div class="mt-1">
+                                                        ${treeJabatanBadge}
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <div class="text-muted small font-weight-bold mb-1" style="letter-spacing: 0.3px;">
+                                                        <i class="fas fa-briefcase mr-1" style="color:var(--tsu-primary);"></i> POSISI HARIAN
+                                                    </div>
+                                                    <div class="font-weight-bold" style="color:#1e293b; font-size:0.92rem;">
+                                                        ${unitNode.posisi || '-'}
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     `,
@@ -822,13 +1091,27 @@
                                         if(res.employees.length === 0) {
                                             empHtml = '<p class="text-muted text-center mt-3"><i>Tidak ada karyawan di unit ini.</i></p>';
                                         } else {
-                                            empHtml = '<div class="table-responsive mt-3" style="max-height: 300px; overflow-y: auto;"><table class="table table-sm table-hover text-left" style="font-size: 14px;"><thead style="background:var(--tsu-primary-faint);"><tr><th>Nama Karyawan</th><th>Jabatan / Posisi</th></tr></thead><tbody>';
+                                            empHtml = '<div class="table-responsive mt-3" style="max-height: 300px; overflow-y: auto;"><table class="table table-sm table-hover text-left" style="font-size: 14px;"><thead style="background:var(--tsu-primary-faint);"><tr><th>Pegawai / Profil</th><th>Jabatan / Posisi</th></tr></thead><tbody>';
                                             res.employees.forEach(function(emp) {
-                                                let badgeClass = emp.jabatan_struktural !== 'Staf/Anggota' ? 'badge text-white' : 'badge badge-light border';
+                                                let badgeClass = emp.jabatan_struktural !== 'Staf/Anggota' ? 'badge text-white tsu-badge-jabatan' : 'badge badge-light border tsu-badge-jabatan';
                                                 let badgeStyle = emp.jabatan_struktural !== 'Staf/Anggota' ? 'background:linear-gradient(135deg,var(--tsu-primary-dark),var(--tsu-primary));' : '';
+                                                let avatarThumb = emp.image_url 
+                                                    ? `<img src="${emp.image_url}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:1.5px solid var(--tsu-primary-light);" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='flex';"><div style="display:none;width:34px;height:34px;align-items:center;justify-content:center;"><i class="fas fa-user" style="color:var(--tsu-primary);font-size:14px;"></i></div>`
+                                                    : `<i class="fas fa-user" style="color:var(--tsu-primary);font-size:14px;"></i>`;
+
                                                 empHtml += `<tr>
-                                                    <td><span class="font-weight-bold" style="color:var(--tsu-primary-dark);">${emp.nama}</span><br><small class="text-muted">${emp.tipe}</small></td>
-                                                    <td><span class="${badgeClass} mb-1" style="${badgeStyle}">${emp.jabatan_struktural}</span><br><small class="text-muted">${emp.posisi_harian || '-'}</small></td>
+                                                    <td class="align-middle">
+                                                        <div class="d-flex align-items-center">
+                                                            <div class="mr-2" style="width:34px;height:34px;border-radius:50%;background:var(--tsu-primary-faint);display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;border:1.5px solid var(--tsu-primary-light);">
+                                                                ${avatarThumb}
+                                                            </div>
+                                                            <div>
+                                                                <span class="font-weight-bold" style="color:var(--tsu-primary-dark);">${emp.nama}</span>
+                                                                <br><small class="text-muted">${emp.tipe}</small>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td class="align-middle"><span class="${badgeClass} mb-1" style="${badgeStyle}">${emp.jabatan_struktural}</span><br><small class="text-muted">${emp.posisi_harian || '-'}</small></td>
                                                 </tr>`;
                                             });
                                             empHtml += '</tbody></table></div>';
@@ -839,7 +1122,7 @@
                                             html: `
                                                 <div class="text-left">
                                                     <div class="p-3 rounded border" style="background:var(--tsu-primary-faint);border-color:var(--tsu-primary-light)!important;">
-                                                        <p class="mb-1"><b><i class="fas fa-user-tie mr-1" style="color:var(--tsu-primary);"></i> Kepala / Pimpinan:</b><br>${unitNode.head_name} <span class="badge text-white ml-1" style="background:var(--tsu-primary);">${unitNode.title}</span></p>
+                                                        <p class="mb-1"><b><i class="fas fa-user-tie mr-1" style="color:var(--tsu-primary);"></i> Kepala / Pimpinan:</b><br>${unitNode.head_name} <span class="badge text-white ml-1 tsu-badge-jabatan" style="background:var(--tsu-primary);">${unitNode.title}</span></p>
                                                         <p class="mb-0 mt-2"><b><i class="fas fa-users mr-1" style="color:var(--tsu-primary);"></i> Total Karyawan:</b> ${res.employees.length} Orang</p>
                                                     </div>
                                                     <h6 class="font-weight-bold mt-4 mb-2" style="color:var(--tsu-primary-dark);">Daftar Karyawan:</h6>
@@ -872,10 +1155,14 @@
                     })
                     .nodeContent(function(d, i, arr, state) {
                         if (d.data.type === 'employee') {
+                            let userIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="20" height="20" fill="#1d7a87"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>`;
                             return `
-                                <div style="background-color: #ffffff; border: 1.5px solid var(--tsu-primary-light, #d0eef2); border-radius: 8px; width: ${d.width}px; height: ${d.height}px; padding: 10px; display: flex; align-items: center; box-shadow: 0 2px 6px rgba(9,75,84,0.08);">
-                                    <div style="min-width: 40px; height: 40px; border-radius: 50%; background-color: #f1fbfc; display: flex; align-items: center; justify-content: center; margin-right: 12px; border: 1.5px solid #d0eef2; color: #1d7a87; font-size: 16px; overflow: hidden;">
-                                        ${d.data.image_url ? `<img src="${d.data.image_url}" style="width:100%;height:100%;object-fit:cover;">` : `<i class="fas fa-user"></i>`}
+                                <div style="background-color: #ffffff; border: 1.5px solid #d0eef2; border-radius: 8px; width: ${d.width}px; height: ${d.height}px; padding: 10px; display: flex; align-items: center; box-shadow: 0 2px 6px rgba(9,75,84,0.08);">
+                                    <div style="min-width: 40px; height: 40px; border-radius: 50%; background-color: #f1fbfc; display: flex; align-items: center; justify-content: center; margin-right: 12px; border: 1.5px solid #d0eef2; overflow: hidden;">
+                                        ${d.data.image_url ? `
+                                            <img src="${d.data.image_url}" style="width:100%;height:100%;object-fit:cover;" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='flex';">
+                                            <div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;">${userIconSvg}</div>
+                                        ` : userIconSvg}
                                     </div>
                                     <div style="flex: 1; overflow: hidden;">
                                         <h6 style="margin: 0 0 3px 0; font-size: 12px; color: #094b54; font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${d.data.name}">${d.data.name}</h6>
@@ -887,10 +1174,21 @@
                         }
 
                         // Tampilan untuk Unit Node
+                        let leaderIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="22" height="22" fill="#ffffff"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4zm0 2.5l1.5 3.5h-3l1.5-3.5z"/></svg>`;
+                        let isRoot = d.data.id === 'root-tsu';
+                        let rootLogoFallback = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="26" height="26" fill="#094b54"><path d="M12 2L1 7l11 5 9-4.09V17h2V7L12 2zm0 13.5l-7-3.18v4.56l7 3.18 7-3.18v-4.56l-7 3.18z"/></svg>`;
+                        let avatarBg = isRoot ? '#ffffff' : 'linear-gradient(135deg, #094b54, #1d7a87)';
+                        let avatarBorder = isRoot ? 'border: 2px solid var(--tsu-primary-light); padding: 4px;' : '';
+                        let fallbackContent = isRoot ? rootLogoFallback : leaderIconSvg;
+                        let imgFit = isRoot ? 'contain' : 'cover';
+
                         return `
-                            <div style="background-color: #ffffff; border-top: 4px solid #1d7a87; border: 1.5px solid #d0eef2; border-top: 4px solid #1d7a87; border-radius: 10px; width: ${d.width}px; height: ${d.height}px; padding: 15px; display: flex; align-items: center; box-shadow: 0 4px 12px rgba(9,75,84,0.1);">
-                                <div style="min-width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, #094b54, #1d7a87); display: flex; align-items: center; justify-content: center; margin-right: 14px; color: #ffffff; font-size: 22px; overflow: hidden; box-shadow: 0 2px 6px rgba(9,75,84,0.2);">
-                                    ${d.data.image_url && d.data.head_name !== 'Kosong' ? `<img src="${d.data.image_url}" style="width:100%;height:100%;object-fit:cover;">` : `<i class="fas fa-user-tie"></i>`}
+                            <div style="background-color: #ffffff; border: 1.5px solid #d0eef2; border-top: 4px solid ${isRoot ? '#f8c12a' : '#1d7a87'}; border-radius: 10px; width: ${d.width}px; height: ${d.height}px; padding: 15px; display: flex; align-items: center; box-shadow: 0 4px 12px rgba(9,75,84,0.1);">
+                                <div style="min-width: 52px; height: 52px; border-radius: 50%; background: ${avatarBg}; display: flex; align-items: center; justify-content: center; margin-right: 14px; overflow: hidden; box-shadow: 0 2px 6px rgba(9,75,84,0.2); ${avatarBorder}">
+                                    ${d.data.image_url && (isRoot || d.data.head_name !== 'Kosong') ? `
+                                        <img src="${d.data.image_url}" style="width:100%;height:100%;object-fit:${imgFit};" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='flex';">
+                                        <div style="display:none;width:100%;height:100%;align-items:center;justify-content:center;">${fallbackContent}</div>
+                                    ` : fallbackContent}
                                 </div>
                                 <div style="flex: 1; overflow: hidden;">
                                     <h6 style="margin: 0 0 4px 0; font-size: 13.5px; color: #094b54; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${d.data.name}">${d.data.name}</h6>
@@ -903,6 +1201,42 @@
                     })
                     .render()
                     .fit();
+
+                // Safe toDataURL override: avoids CORS / 404 image errors permanently blocking exportImg
+                chart.toDataURL = function(url, callback) {
+                    if (!url || url.startsWith('data:')) {
+                        callback(url || '');
+                        return;
+                    }
+                    var xhr = new XMLHttpRequest();
+                    xhr.onload = function() {
+                        if (xhr.status >= 200 && xhr.status < 300) {
+                            var reader = new FileReader();
+                            reader.onloadend = function() {
+                                callback(reader.result);
+                            };
+                            reader.readAsDataURL(xhr.response);
+                        } else {
+                            callback('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"></svg>');
+                        }
+                    };
+                    xhr.onerror = function() {
+                        console.warn('CORS/Network bypass during export:', url);
+                        callback('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"></svg>');
+                    };
+                    xhr.ontimeout = function() {
+                        console.warn('Timeout bypass during export:', url);
+                        callback('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"></svg>');
+                    };
+                    try {
+                        xhr.open('GET', url);
+                        xhr.responseType = 'blob';
+                        xhr.timeout = 4000;
+                        xhr.send();
+                    } catch(e) {
+                        callback('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"></svg>');
+                    }
+                };
             }
         }).catch(function(error) {
             console.error("D3 Org Chart Error:", error);

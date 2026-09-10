@@ -1690,3 +1690,96 @@ label.form-label {
     box-shadow: 0 0 0 3px rgba(29, 122, 135, 0.3) !important;
 }
 
+.swal2-popup {
+    border-radius: var(--tsu-radius-lg, 14px) !important;
+    position: relative !important;
+}
+
+.swal2-popup .swal2-title {
+    position: relative !important;
+    padding-top: 1.25rem !important;
+    padding-bottom: 0.5rem !important;
+    padding-left: 3.75rem !important;
+    padding-right: 3.75rem !important;
+    margin: 0 !important;
+    font-size: 1.25rem !important;
+    font-weight: 700 !important;
+    color: var(--tsu-primary-dark) !important;
+    line-height: 1.45 !important;
+    text-align: center !important;
+    word-break: break-word !important;
+}
+
+.swal2-popup .swal2-close {
+    position: absolute !important;
+    top: 14px !important;
+    right: 14px !important;
+    width: 36px !important;
+    height: 36px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border-radius: 8px !important;
+    background: #f1f5f9 !important;
+    border: 1px solid #cbd5e1 !important;
+    color: #64748b !important;
+    font-size: 22px !important;
+    font-family: inherit !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transition: all 0.2s ease !important;
+    cursor: pointer !important;
+    box-shadow: none !important;
+    outline: none !important;
+    z-index: 10 !important;
+}
+
+.swal2-popup .swal2-close:hover {
+    background: #fee2e2 !important;
+    color: #ef4444 !important;
+    border-color: #fca5a5 !important;
+    transform: scale(1.05) !important;
+}
+
+.swal2-popup .swal2-close:focus {
+    box-shadow: none !important;
+    outline: none !important;
+}
+
+@media (max-width: 576px) {
+    .swal2-popup .swal2-title {
+        padding-left: 2.75rem !important;
+        padding-right: 2.75rem !important;
+        font-size: 1.1rem !important;
+    }
+    .swal2-popup .swal2-close {
+        top: 10px !important;
+        right: 10px !important;
+        width: 30px !important;
+        height: 30px !important;
+        font-size: 18px !important;
+    }
+}
+
+/* Modal HTML Container & Badge Wrapping Rules */
+.swal2-html-container {
+    overflow-x: hidden !important;
+}
+.swal2-popup .badge,
+.tsu-badge-jabatan {
+    white-space: normal !important;
+    word-break: break-word !important;
+    line-height: 1.4 !important;
+    max-width: 100% !important;
+}
+.tsu-badge-jabatan {
+    display: inline-block !important;
+    text-align: left !important;
+    padding: 0.35rem 0.65rem !important;
+    font-size: 0.82rem !important;
+    font-weight: 600 !important;
+    border-radius: 6px !important;
+}
+
+
+

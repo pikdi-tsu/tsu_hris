@@ -18,6 +18,8 @@ use App\Models\User;
 use App\Traits\ApiResponseTrait;
 use App\Services\OrgStructureService;
 
+use Modules\System\Models\MenuSidebar;
+
 class MppController extends Controller
 {
     use ApiResponseTrait;
@@ -55,15 +57,17 @@ class MppController extends Controller
         $profile = $this->getCurrentProfile();
         $this->checkIsAtasan($profile);
         
-        $jabatans = [];
         $jabatans = MasterJabatanStruktural::orderBy('nama_jabatan', 'asc')->get();
         $unit = \App\Models\MasterUnit::find($profile->unit_id);
         $kuota = $unit ? $unit->kuota_mpp : 0;
         $existingCount = $unit ? \App\Models\DataDosenTendik::where('unit_id', $unit->id)->count() : 0;
-        $title = 'Manpower Planning (MPP)';
+        
+        $menuData = MenuSidebar::where('route', 'users.mpp.index')->first();
+        $menuIcon = $menuData->icon ?? 'fas fa-users-cog';
+        $title = $menuData->name ?? 'MPP Kebutuhan SDM';
         $menu = 'dashboard';
         
-        return view('users::mpp.index', compact('jabatans', 'profile', 'title', 'menu', 'unit', 'kuota', 'existingCount'));
+        return view('users::mpp.index', compact('jabatans', 'profile', 'title', 'menu', 'unit', 'kuota', 'existingCount', 'menuIcon'));
     }
 
     public function datatables(Request $request)
@@ -79,24 +83,32 @@ class MppController extends Controller
         return DataTables::of($query)
             ->addIndexColumn()
             ->addColumn('jabatan', function ($row) {
-                return $row->jabatan ? $row->jabatan->nama_jabatan : '-';
+                $jabatan = $row->jabatan ? e($row->jabatan->nama_jabatan) : '-';
+                $tipe = $row->tipe_pengajuan ? '<br><small class="text-muted"><i class="fas fa-tag mr-1" style="color:var(--tsu-primary,#094b54);"></i>' . e($row->tipe_pengajuan) . '</small>' : '';
+                return $jabatan . $tipe;
             })
             ->addColumn('tanggal', function ($row) {
-                return Carbon::parse($row->created_at)->translatedFormat('d F Y');
+                return Carbon::parse($row->created_at)->translatedFormat('d M Y');
+            })
+            ->editColumn('jumlah_kebutuhan', function ($row) {
+                return '<strong>' . $row->jumlah_kebutuhan . '</strong> <span class="text-muted" style="font-size:.82rem;">Orang</span>';
             })
             ->addColumn('status', function ($row) {
-                if ($row->status == 'waiting') return '<span class="badge badge-warning">Menunggu SDM</span>';
-                if ($row->status == 'approved') return '<span class="badge badge-success">Disetujui</span>';
-                if ($row->status == 'rejected') return '<span class="badge badge-danger">Ditolak</span>';
+                if ($row->status == 'waiting') {
+                    return '<span class="badge badge-warning" style="font-weight:600;padding:.38rem .7rem;border-radius:6px;font-size:.78rem;"><i class="fas fa-clock mr-1"></i>Menunggu SDM</span>';
+                }
+                if ($row->status == 'approved') {
+                    return '<span class="badge badge-success" style="font-weight:600;padding:.38rem .7rem;border-radius:6px;font-size:.78rem;"><i class="fas fa-check-circle mr-1"></i>Disetujui</span>';
+                }
+                if ($row->status == 'rejected') {
+                    return '<span class="badge badge-danger" style="font-weight:600;padding:.38rem .7rem;border-radius:6px;font-size:.78rem;"><i class="fas fa-times-circle mr-1"></i>Ditolak</span>';
+                }
                 return '-';
             })
             ->addColumn('action', function ($row) {
-                $btn = '<div class="btn-group">';
-                $btn .= '<button type="button" class="btn btn-sm btn-info" onclick="detail(\'' . $row->id . '\')" title="Detail/Catatan"><i class="fas fa-eye"></i></button>';
-                $btn .= '</div>';
-                return $btn;
+                return '<button type="button" class="btn btn-sm tsu-btn-view" onclick="detail(\'' . $row->id . '\')" title="Lihat Detail & Catatan"><i class="fas fa-eye mr-1"></i>Detail</button>';
             })
-            ->rawColumns(['status', 'action'])
+            ->rawColumns(['jabatan', 'jumlah_kebutuhan', 'status', 'action'])
             ->make(true);
     }
 

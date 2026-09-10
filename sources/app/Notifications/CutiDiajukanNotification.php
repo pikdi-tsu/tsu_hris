@@ -25,8 +25,8 @@ class CutiDiajukanNotification extends TsuRealtimeNotification
 
         parent::__construct(
             $message,
-            'indexapprovalcuti', // module
-            route('users.indexapprovalcuti'), // action_url
+            'approval-cuti', // module
+            route('users.approval-cuti.index'), // action_url
             $action_text, // action_text
             'Pengajuan Cuti', // title
             'fas fa-umbrella-beach text-warning', // icon

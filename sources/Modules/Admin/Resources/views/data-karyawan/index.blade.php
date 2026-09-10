@@ -1,36 +1,48 @@
 @extends('system::template.admin.header')
 
 @section('content')
-    <div class="card card-primary card-outline">
-        <div class="card-header d-flex align-items-center">
-            <h3 class="card-title mr-4">Data Dosen & Tendik</h3>
+    {{-- TSU Page Header --}}
+    <x-tsu-page-header
+        title="Data Dosen & Tendik"
+        :icon="$menuIcon ?? 'fas fa-users'"
+        :breadcrumb="true"
+    >
+        <x-slot name="actions">
+            @can('admin:data-karyawan:create')
+            <button type="button"
+                class="btn tsu-btn-create btn-sm btn-modal"
+                data-url="{{ route('admin.data-karyawan.create') }}"
+                title="Tambah Pegawai">
+                <i class="fas fa-plus mr-1"></i> Tambah Pegawai
+            </button>
+            @endcan
+        </x-slot>
+    </x-tsu-page-header>
 
-            <div class="d-flex gap-2 ml-auto">
-
-                <button type="button" class="btn btn-success btn-modal btn-sm" data-url="{{ route('admin.data-karyawan.create') }}" title="Tambah Pegawai">
-                    <i class="fas fa-plus"></i> Tambah Pegawai
-                </button>
+    {{-- Main Content --}}
+    <section class="content">
+        <div class="container-fluid">
+            <div class="card card-primary card-outline">
+                <div class="card-body p-0">
+                    <table id="table-karyawan" class="table table-bordered table-striped w-100">
+                        <thead>
+                        <tr>
+                            <th width="5%" class="text-center">No</th>
+                            <th width="20%">Nama Lengkap & Kontak</th>
+                            <th width="15%">Identitas</th>
+                            <th width="20%">Homebase & Posisi</th>
+                            <th width="20%">Jabatan Struktural/Fungsional</th>
+                            <th width="10%">Status</th>
+                            <th width="10%" class="text-center">Aksi</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
-
-        <div class="card-body">
-            <table id="table-karyawan" class="table table-bordered table-striped w-100">
-                <thead>
-                <tr>
-                    <th width="5%" class="text-center">No</th>
-                    <th width="20%">Nama Lengkap & Kontak</th>
-                    <th width="15%">Identitas</th>
-                    <th width="20%">Homebase & Posisi</th>
-                    <th width="20%">Jabatan Struktural/Fungsional</th>
-                    <th width="10%">Status</th>
-                    <th width="10%" class="text-center">Aksi</th>
-                </tr>
-                </thead>
-                <tbody>
-                </tbody>
-            </table>
-        </div>
-    </div>
+    </section>
 
     {{-- MODAL EDIT CONTAINER --}}
     <div class="modal fade" id="modal-edit" tabindex="-1" role="dialog">

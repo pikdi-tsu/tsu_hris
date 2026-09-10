@@ -28,8 +28,8 @@
         }
     }
 
-    // CUSTOM LOGIC: Hide Approval Cuti & Approval Izin from non-atasan / non-HRD
-    if (in_array($menu->route, ['users.indexapprovalcuti', 'users.indexapprovalizin'])) {
+    // CUSTOM LOGIC: Hide Approval Cuti, Approval Izin & Approval Lembur from non-atasan / non-HRD
+    if (in_array($menu->route, ['users.approval-cuti.index', 'users.approval-izin.index', 'users.approval-lembur.index', 'users.indexapprovalcuti', 'users.indexapprovalizin', 'users.indexapprovallembur'])) {
         $user = auth()->user();
         if (!$user->hasRole(['super admin', 'super admin hris', 'admin', 'admin hris'])) {
             $profile = \App\Models\DataDosenTendik::where('user_id', $user->id)->first();
@@ -44,7 +44,8 @@
             $isAtasan = \App\Models\MasterUnit::whereIn('kepala_jabatan_id', $jabatanStrukturalIds)->exists();
 
             $hasAssignedApproval = \App\Models\CutiKaryawan::where('id_atasan', $profile->id)->orWhere('id_hrd', $profile->id)->exists()
-                || \App\Models\IzinKaryawan::where('id_atasan', $profile->id)->orWhere('id_hrd', $profile->id)->exists();
+                || \App\Models\IzinKaryawan::where('id_atasan', $profile->id)->orWhere('id_hrd', $profile->id)->exists()
+                || \App\Models\LemburKaryawan::where('id_atasan', $profile->id)->orWhere('id_hrd', $profile->id)->exists();
 
             if (!$isHrd && !$isAtasan && !$hasAssignedApproval) {
                 return;

@@ -8,6 +8,7 @@ use App\Models\MasterUnit;
 use App\Models\MasterJabatanStruktural;
 use App\Models\DataDosenTendik;
 use App\Models\KaryawanJabatanStruktural;
+use Modules\System\Models\MenuSidebar;
 
 class StrukturOrganisasiController extends MiddlewareController
 {
@@ -19,13 +20,11 @@ class StrukturOrganisasiController extends MiddlewareController
 
     public function index()
     {
-        // View requires admin:struktur-organisasi:view
-        // For development, we bypass the guard if the permission is not yet seeded, but ideally it should be guarded.
-        // $this->guard('view', 'admin:struktur-organisasi');
-
+        $menuData = MenuSidebar::where('route', 'admin.struktur-organisasi.index')->first();
         $title = 'Struktur Organisasi';
         $menu = 'struktur_organisasi';
-        return view('admin::struktur-organisasi.index', compact('title', 'menu'));
+        $menuIcon = $menuData->icon ?? 'fas fa-sitemap';
+        return view('admin::struktur-organisasi.index', compact('title', 'menu', 'menuIcon'));
     }
 
     /**

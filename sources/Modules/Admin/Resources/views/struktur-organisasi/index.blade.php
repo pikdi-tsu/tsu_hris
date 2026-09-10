@@ -422,7 +422,7 @@
 {{-- TSU Page Header --}}
 <x-tsu-page-header
     title="Struktur Organisasi"
-    icon="fas fa-sitemap"
+    :icon="$menuIcon ?? 'fas fa-sitemap'"
     :breadcrumb="true"
 >
     <x-slot name="actions">

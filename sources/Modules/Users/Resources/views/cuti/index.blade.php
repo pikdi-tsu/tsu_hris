@@ -214,7 +214,7 @@
     {{-- TSU Page Header --}}
     <x-tsu-page-header
         title="Cuti Karyawan"
-        icon="fas fa-calendar-alt"
+        :icon="$menuIcon ?? 'fas fa-calendar-minus'"
         :breadcrumb="true"
     />
 

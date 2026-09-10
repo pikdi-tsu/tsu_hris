@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Storage;
 use Yajra\Datatables\Datatables;
 use Carbon\Carbon;
 use App\Services\TsuErrorHandlerService;
+use Modules\System\Models\MenuSidebar;
 
 use App\Models\MasterLembur;
 use App\Models\LemburKaryawan;
@@ -83,6 +84,7 @@ class LemburController extends MiddlewareController
             }
         }
 
+        $menuData = MenuSidebar::where('route', 'users.lembur.index')->first();
         $data = [
             'title'   => 'Lembur Karyawan',
             'menu'    => 'dashboard',
@@ -91,7 +93,8 @@ class LemburController extends MiddlewareController
             'karyawans' => $listSdm,
             'isAtasan'  => $isAtasan,
             'isSdm'     => $isSdm,
-            'namaAtasan' => $namaAtasan
+            'namaAtasan' => $namaAtasan,
+            'menuIcon'  => $menuData->icon ?? 'fas fa-clock',
         ];
 
         return view('users::lembur.index', $data);

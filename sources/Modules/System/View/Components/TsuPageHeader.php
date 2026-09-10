@@ -3,7 +3,9 @@
 namespace Modules\System\View\Components;
 
 use Illuminate\View\Component;
+use Modules\System\Models\MenuSidebar;
 use Modules\System\Services\BreadcrumbService;
+use Illuminate\Support\Facades\Route;
 
 /**
  * TSU Page Header Component
@@ -30,12 +32,20 @@ class TsuPageHeader extends Component
 
     public function __construct(
         string $title = '',
-        string $icon = 'fas fa-circle',
+        ?string $icon = null,
         bool $breadcrumb = true,
         ?array $breadcrumbItems = null
     ) {
         $this->title = $title;
-        $this->icon = $icon;
+
+        if (empty($icon) || $icon === 'fas fa-circle') {
+            $routeName = Route::currentRouteName() ?: (request()->route() ? request()->route()->getName() : null);
+            $sidebarIcon = $routeName ? MenuSidebar::where('route', $routeName)->value('icon') : null;
+            $this->icon = $sidebarIcon ?: ($icon ?: 'fas fa-circle');
+        } else {
+            $this->icon = $icon;
+        }
+
         $this->showBreadcrumb = $breadcrumb;
         $this->breadcrumbItems = $breadcrumbItems ?? ($breadcrumb ? BreadcrumbService::generate() : []);
     }

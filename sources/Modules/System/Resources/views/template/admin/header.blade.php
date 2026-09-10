@@ -42,7 +42,7 @@
     <link rel="stylesheet" href="{{ asset('public/assets/plugins/jquery-ui/jquery-ui.css') }}">
 
     {{-- TSU Global Design System --}}
-    <link rel="stylesheet" href="{{ asset('public/assetsku/css/tsu-theme.css') }}">
+    <link rel="stylesheet" href="{{ asset('public/assetsku/css/tsu-theme.css') }}?v={{ @filemtime(base_path('../public/assetsku/css/tsu-theme.css')) ?: '2.0' }}">
     @yield('link_href')
     @yield('css')
     <style>

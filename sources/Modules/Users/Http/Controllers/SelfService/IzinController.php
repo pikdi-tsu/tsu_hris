@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Yajra\Datatables\Datatables;
+use Modules\System\Models\MenuSidebar;
 
 use App\Models\IzinKaryawan;
 use App\Models\MasterIzin;
@@ -95,6 +96,7 @@ class IzinController extends Controller
 
         $getsaldo = $profile ? SaldoCutiKaryawan::where('id_user', $profile->id)->where('is_active', '1')->first() : null;
 
+        $menuData = MenuSidebar::where('route', 'users.izin.index')->first();
         $data = array(
             'title'     => 'Izin Karyawan',
             'menu'      => 'dashboard',
@@ -102,7 +104,8 @@ class IzinController extends Controller
             'karyawans' => $listSdm,
             'profile'   => $profile,
             'saldo'     => $getsaldo,
-            'namaAtasan' => $namaAtasan
+            'namaAtasan' => $namaAtasan,
+            'menuIcon'  => $menuData->icon ?? 'fas fa-id-badge',
         );
 
         return view('users::izin.index', $data);
@@ -265,32 +268,38 @@ class IzinController extends Controller
             })
             ->addColumn('statusatasan', function ($data) {
                 if ($data->statusatasan == 'approved') {
-                    $stat = '<span class="badge badge-success">Approved</span>';
+                    $stat = '<span style="display:inline-flex;align-items:center;gap:.25rem;padding:.22rem .65rem;border-radius:20px;font-size:.72rem;font-weight:600;background:#dcfce7;color:#166534;"><i class="fas fa-check-circle" style="font-size:.62rem;"></i> Disetujui</span>';
                 } elseif ($data->statusatasan == 'rejected') {
-                    $stat = '<span class="badge badge-danger">Rejected</span>';
+                    $stat = '<span style="display:inline-flex;align-items:center;gap:.25rem;padding:.22rem .65rem;border-radius:20px;font-size:.72rem;font-weight:600;background:#fee2e2;color:#991b1b;"><i class="fas fa-times-circle" style="font-size:.62rem;"></i> Ditolak</span>';
                 } else {
-                    $stat = '<span class="badge badge-warning">Waiting</span>';
+                    $stat = '<span style="display:inline-flex;align-items:center;gap:.25rem;padding:.22rem .65rem;border-radius:20px;font-size:.72rem;font-weight:600;background:#fef9c3;color:#854d0e;"><i class="fas fa-hourglass-half" style="font-size:.62rem;"></i> Menunggu</span>';
                 }
-
                 return $stat;
             })
             ->addColumn('statushrd', function ($data) {
                 if ($data->statushrd == 'approved') {
-                    $stat = '<span class="badge badge-success">Approved</span>';
+                    $stat = '<span style="display:inline-flex;align-items:center;gap:.25rem;padding:.22rem .65rem;border-radius:20px;font-size:.72rem;font-weight:600;background:#dcfce7;color:#166534;"><i class="fas fa-check-circle" style="font-size:.62rem;"></i> Disetujui</span>';
                 } elseif ($data->statushrd == 'rejected') {
-                    $stat = '<span class="badge badge-danger">Rejected</span>';
+                    $stat = '<span style="display:inline-flex;align-items:center;gap:.25rem;padding:.22rem .65rem;border-radius:20px;font-size:.72rem;font-weight:600;background:#fee2e2;color:#991b1b;"><i class="fas fa-times-circle" style="font-size:.62rem;"></i> Ditolak</span>';
                 } else {
-                    $stat = '<span class="badge badge-warning">Waiting</span>';
+                    $stat = '<span style="display:inline-flex;align-items:center;gap:.25rem;padding:.22rem .65rem;border-radius:20px;font-size:.72rem;font-weight:600;background:#fef9c3;color:#854d0e;"><i class="fas fa-hourglass-half" style="font-size:.62rem;"></i> Menunggu</span>';
                 }
-
                 return $stat;
             })
             ->addColumn('action', function ($data) {
-                $button = '';
+                $encId = encrypt($data->id);
                 if ($data->statusatasan != 'waiting' || $data->statushrd != 'waiting') {
-                    $button .= '<a href="#" data-id="' . encrypt($data->id) . '" id="btndetail" class="ml-2" title="Info Detail"><i class="fa fa-info-circle fa-md text-primary"></i></a></center>';
+                    $button = '<div style="display:flex;justify-content:center;">'
+                        . '<a href="#" data-id="' . $encId . '" id="btndetail" title="Lihat Detail" '
+                        . 'style="width:30px;height:30px;border-radius:8px;background:#f0fdf4;color:#166534;display:inline-flex;align-items:center;justify-content:center;font-size:.8rem;transition:all .15s;">'
+                        . '<i class="fas fa-eye"></i></a>'
+                        . '</div>';
                 } else {
-                    $button .= '<center><a href="#" data-id="' . encrypt($data->id) . '" id="btnedit" title="Proses Edit"><i class="fa fa-edit fa-md text-primary"></i></a>';
+                    $button = '<div style="display:flex;justify-content:center;">'
+                        . '<a href="#" data-id="' . $encId . '" id="btnedit" title="Edit Pengajuan" '
+                        . 'style="width:30px;height:30px;border-radius:8px;background:#e0f2fe;color:#0369a1;display:inline-flex;align-items:center;justify-content:center;font-size:.8rem;transition:all .15s;">'
+                        . '<i class="fas fa-edit"></i></a>'
+                        . '</div>';
                 }
                 return $button;
             })

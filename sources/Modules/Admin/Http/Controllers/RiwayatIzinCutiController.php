@@ -13,6 +13,8 @@ use App\Models\DataDosenTendik;
 use App\Models\MasterCuti;
 use App\Models\CutiKaryawan;
 use App\Models\IzinKaryawan;
+use Modules\System\Models\MenuSidebar;
+use Illuminate\Support\Str;
 
 class RiwayatIzinCutiController extends MiddlewareController
 {
@@ -28,7 +30,40 @@ class RiwayatIzinCutiController extends MiddlewareController
 
     public function index()
     {
-        return view('admin::riwayat-izincuti.index', ['title' => 'Data Riwayat Izin & Cuti']);
+        $menuData = MenuSidebar::where('route', 'admin.riwayat-izincuti.index')->first();
+        return view('admin::riwayat-izincuti.index', [
+            'title'    => 'Data Riwayat Izin & Cuti',
+            'menuIcon' => $menuData->icon ?? 'fas fa-history',
+        ]);
+    }
+
+    /**
+     * Helper untuk memformat badge status approval atasan / SDM
+     */
+    private function formatApprovalBadge($status, $approver, $alasan = null): string
+    {
+        $approverName = $approver ? htmlspecialchars($approver->nama) : '-';
+
+        if ($status === 'approved') {
+            $badge = '<span style="display:inline-flex;align-items:center;gap:.3rem;padding:.22rem .65rem;border-radius:20px;font-size:.72rem;font-weight:600;background:#dcfce7;color:#166534;"><i class="fas fa-check-circle" style="font-size:.65rem;"></i> Disetujui</span>';
+        } elseif ($status === 'rejected') {
+            $badge = '<span style="display:inline-flex;align-items:center;gap:.3rem;padding:.22rem .65rem;border-radius:20px;font-size:.72rem;font-weight:600;background:#fee2e2;color:#991b1b;"><i class="fas fa-times-circle" style="font-size:.65rem;"></i> Ditolak</span>';
+        } else {
+            $badge = '<span style="display:inline-flex;align-items:center;gap:.3rem;padding:.22rem .65rem;border-radius:20px;font-size:.72rem;font-weight:600;background:#fef9c3;color:#854d0e;"><i class="fas fa-hourglass-half" style="font-size:.65rem;"></i> Menunggu</span>';
+        }
+
+        $html = '<div class="d-flex flex-column align-items-start" style="gap:.25rem;">';
+        $html .= $badge;
+        if ($approverName !== '-') {
+            $html .= '<div style="font-size:.74rem;color:#64748b;display:inline-flex;align-items:center;gap:.25rem;"><i class="fas fa-user-check" style="font-size:.65rem;color:#094b54;"></i> ' . $approverName . '</div>';
+        }
+        if ($status === 'rejected' && !empty($alasan)) {
+            $cleanAlasan = htmlspecialchars(strip_tags($alasan));
+            $html .= '<div style="font-size:.72rem;color:#b91c1c;background:#fff1f2;padding:.15rem .45rem;border-radius:4px;border:1px solid #fecdd3;max-width:200px;white-space:normal;line-height:1.2;" title="' . $cleanAlasan . '"><i class="fas fa-exclamation-circle mr-1"></i>' . Str::limit($cleanAlasan, 45) . '</div>';
+        }
+        $html .= '</div>';
+
+        return $html;
     }
 
     public function datatablecuti()
@@ -40,63 +75,48 @@ class RiwayatIzinCutiController extends MiddlewareController
         return DataTables::of($data)
             ->addIndexColumn()
             ->addColumn('nama', function ($data) {
-                return $data->user ? $data->user->nama : '-';
+                if (!$data->user) {
+                    return '<span class="text-muted">-</span>';
+                }
+                $nama = htmlspecialchars($data->user->nama);
+                $nik = htmlspecialchars($data->user->nik ?? '-');
+                return '<div class="d-flex flex-column" style="gap:.15rem;">'
+                     . '<span style="font-weight:700;color:#0f172a;font-size:.85rem;">' . $nama . '</span>'
+                     . '<span style="font-size:.74rem;color:#64748b;"><i class="fas fa-id-badge mr-1" style="color:#094b54;"></i>' . $nik . '</span>'
+                     . '</div>';
             })
             ->addColumn('jeniscuti', function ($data) {
-                return $data->masterCuti ? $data->masterCuti->jeniscuti : '-';
+                $jenis = $data->masterCuti ? htmlspecialchars($data->masterCuti->jeniscuti) : '-';
+                return '<span style="display:inline-flex;align-items:center;gap:.3rem;padding:.22rem .6rem;border-radius:6px;font-size:.75rem;font-weight:600;background:#e0f2fe;color:#0369a1;border:1px solid #bae6fd;">'
+                     . '<i class="fas fa-calendar-check" style="font-size:.65rem;"></i> ' . $jenis . '</span>';
             })
             ->addColumn('tanggalcuti', function ($data) {
                 $mulai = Carbon::parse($data->tanggalmulai);
                 $selesai = Carbon::parse($data->tanggalselesai);
 
                 if ($mulai->format('Y-m') == $selesai->format('Y-m')) {
-                    // bulan & tahun sama
                     $tanggal = $mulai->translatedFormat('d') . '–' . $selesai->translatedFormat('d M Y');
                 } else {
-                    // bulan atau tahun beda
                     $tanggal = $mulai->translatedFormat('d M Y') . ' - ' . $selesai->translatedFormat('d M Y');
                 }
 
-                return $tanggal;
+                $hari = CutiKaryawan::hitungHariEfektif($data->tanggalmulai, $data->tanggalselesai);
+                $hariText = $hari > 0 ? (' <span class="badge badge-light" style="font-size:.72rem;color:#094b54;background:#e6f4f6;border:1px solid #b2dfdb;">' . $hari . ' hari</span>') : '';
+
+                return '<div style="font-size:.82rem;font-weight:600;color:#1e293b;white-space:nowrap;"><i class="far fa-calendar-alt mr-1" style="color:#094b54;"></i>' . $tanggal . $hariText . '</div>';
             })
             ->addColumn('keterangan', function ($data) {
-                return $data->keterangan;
+                $ket = $data->keterangan ? htmlspecialchars($data->keterangan) : '-';
+                return '<div style="max-width:240px;font-size:.8rem;color:#475569;line-height:1.35;white-space:normal;" title="' . $ket . '">'
+                     . Str::limit($ket, 70) . '</div>';
             })
             ->addColumn('approvalatasan', function ($data) {
-                if ($data->statusatasan == 'approved') {
-                    $stat = '<span class="badge badge-success">Approved</span>';
-                } elseif ($data->statusatasan == 'rejected') {
-                    $stat = '<span class="badge badge-danger">Rejected</span>';
-                } else {
-                    $stat = '<span class="badge badge-warning">Waiting</span>';
-                }
-
-                return $data->atasan->nama . ' ' . $stat . ' ' . $data->alasanatasan;
+                return $this->formatApprovalBadge($data->statusatasan, $data->atasan, $data->alasanatasan);
             })
             ->addColumn('approvalsdm', function ($data) {
-                if ($data->statushrd == 'approved') {
-                    $stat = '<span class="badge badge-success">Approved</span>';
-                } elseif ($data->statushrd == 'rejected') {
-                    $stat = '<span class="badge badge-danger">Rejected</span>';
-                } else {
-                    $stat = '<span class="badge badge-warning">Waiting</span>';
-                }
-
-                return $data->hrd->nama . ' ' . $stat . ' ' . $data->alasanhrd;
+                return $this->formatApprovalBadge($data->statushrd, $data->hrd, $data->alasanhrd);
             })
-            // ->addColumn('is_active', function ($row) {
-            //     if ($row->is_active === '1') return '<span class="badge badge-success"><i class="fas fa-check-circle"></i> Aktif</span>';
-            //     return '<span class="badge badge-secondary"><i class="fas fa-times-circle"></i> Non-Aktif</span>';
-            // })
-            // ->addColumn('action', function ($row) {
-            //     return $this->getActionButtons($row, 'admin:master-cuti', [
-            //         'use_modal'  => true,
-            //         'edit_url' => route('admin.master-cuti.edit', $row->id),
-            //         'can_delete' => true,
-            //         'delete_url' => route('admin.master-cuti.destroy', $row->id),
-            //     ]);
-            // })
-            ->rawColumns(['approvalatasan', 'approvalsdm'])
+            ->rawColumns(['nama', 'jeniscuti', 'tanggalcuti', 'keterangan', 'approvalatasan', 'approvalsdm'])
             ->make(true);
     }
 
@@ -109,63 +129,48 @@ class RiwayatIzinCutiController extends MiddlewareController
         return DataTables::of($data)
             ->addIndexColumn()
             ->addColumn('nama', function ($data) {
-                return $data->user ? $data->user->nama : '-';
+                if (!$data->user) {
+                    return '<span class="text-muted">-</span>';
+                }
+                $nama = htmlspecialchars($data->user->nama);
+                $nik = htmlspecialchars($data->user->nik ?? '-');
+                return '<div class="d-flex flex-column" style="gap:.15rem;">'
+                     . '<span style="font-weight:700;color:#0f172a;font-size:.85rem;">' . $nama . '</span>'
+                     . '<span style="font-size:.74rem;color:#64748b;"><i class="fas fa-id-badge mr-1" style="color:#094b54;"></i>' . $nik . '</span>'
+                     . '</div>';
             })
             ->addColumn('jenisizin', function ($data) {
-                return $data->masterIzin ? $data->masterIzin->jenisizin : '-';
+                $jenis = $data->masterIzin ? htmlspecialchars($data->masterIzin->jenisizin) : '-';
+                return '<span style="display:inline-flex;align-items:center;gap:.3rem;padding:.22rem .6rem;border-radius:6px;font-size:.75rem;font-weight:600;background:#e0e7ff;color:#4338ca;border:1px solid #c7d2fe;">'
+                     . '<i class="fas fa-tag" style="font-size:.65rem;"></i> ' . $jenis . '</span>';
             })
             ->addColumn('tanggalizin', function ($data) {
                 $mulai = Carbon::parse($data->tanggalmulai);
                 $selesai = Carbon::parse($data->tanggalselesai);
 
                 if ($mulai->format('Y-m') == $selesai->format('Y-m')) {
-                    // bulan & tahun sama
                     $tanggal = $mulai->translatedFormat('d') . '–' . $selesai->translatedFormat('d M Y');
                 } else {
-                    // bulan atau tahun beda
                     $tanggal = $mulai->translatedFormat('d M Y') . ' - ' . $selesai->translatedFormat('d M Y');
                 }
 
-                return $tanggal;
+                $hari = IzinKaryawan::hitungHariEfektif($data->tanggalmulai, $data->tanggalselesai);
+                $hariText = $hari > 0 ? (' <span class="badge badge-light" style="font-size:.72rem;color:#094b54;background:#e6f4f6;border:1px solid #b2dfdb;">' . $hari . ' hari</span>') : '';
+
+                return '<div style="font-size:.82rem;font-weight:600;color:#1e293b;white-space:nowrap;"><i class="far fa-calendar-alt mr-1" style="color:#094b54;"></i>' . $tanggal . $hariText . '</div>';
             })
             ->addColumn('keterangan', function ($data) {
-                return $data->keterangan;
+                $ket = $data->keterangan ? htmlspecialchars($data->keterangan) : '-';
+                return '<div style="max-width:240px;font-size:.8rem;color:#475569;line-height:1.35;white-space:normal;" title="' . $ket . '">'
+                     . Str::limit($ket, 70) . '</div>';
             })
             ->addColumn('approvalatasan', function ($data) {
-                if ($data->statusatasan == 'approved') {
-                    $stat = '<span class="badge badge-success">Approved</span>';
-                } elseif ($data->statusatasan == 'rejected') {
-                    $stat = '<span class="badge badge-danger">Rejected</span>';
-                } else {
-                    $stat = '<span class="badge badge-warning">Waiting</span>';
-                }
-
-                return $data->atasan->nama . ' ' . $stat . ' ' . $data->alasanatasan;
+                return $this->formatApprovalBadge($data->statusatasan, $data->atasan, $data->alasanatasan);
             })
             ->addColumn('approvalsdm', function ($data) {
-                if ($data->statushrd == 'approved') {
-                    $stat = '<span class="badge badge-success">Approved</span>';
-                } elseif ($data->statushrd == 'rejected') {
-                    $stat = '<span class="badge badge-danger">Rejected</span>';
-                } else {
-                    $stat = '<span class="badge badge-warning">Waiting</span>';
-                }
-
-                return $data->hrd->nama . ' ' . $stat . ' ' . $data->alasanhrd;
+                return $this->formatApprovalBadge($data->statushrd, $data->hrd, $data->alasanhrd);
             })
-            // ->addColumn('is_active', function ($row) {
-            //     if ($row->is_active === '1') return '<span class="badge badge-success"><i class="fas fa-check-circle"></i> Aktif</span>';
-            //     return '<span class="badge badge-secondary"><i class="fas fa-times-circle"></i> Non-Aktif</span>';
-            // })
-            // ->addColumn('action', function ($row) {
-            //     return $this->getActionButtons($row, 'admin:master-cuti', [
-            //         'use_modal'  => true,
-            //         'edit_url' => route('admin.master-cuti.edit', $row->id),
-            //         'can_delete' => true,
-            //         'delete_url' => route('admin.master-cuti.destroy', $row->id),
-            //     ]);
-            // })
-            ->rawColumns(['approvalatasan', 'approvalsdm'])
+            ->rawColumns(['nama', 'jenisizin', 'tanggalizin', 'keterangan', 'approvalatasan', 'approvalsdm'])
             ->make(true);
     }
 

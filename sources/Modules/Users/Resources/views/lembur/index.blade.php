@@ -38,7 +38,7 @@
     {{-- TSU Page Header --}}
     <x-tsu-page-header
         title="Lembur Karyawan"
-        icon="fas fa-clock"
+        :icon="$menuIcon ?? 'fas fa-clock'"
         :breadcrumb="true"
     />
 

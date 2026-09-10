@@ -4,7 +4,7 @@
     {{-- TSU Page Header --}}
     <x-tsu-page-header
         title="Data Dosen & Tendik"
-        icon="fas fa-users"
+        :icon="$menuIcon ?? 'fas fa-users'"
         :breadcrumb="true"
     >
         <x-slot name="actions">

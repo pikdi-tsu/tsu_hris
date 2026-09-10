@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Session;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Yajra\Datatables\Datatables;
+use Modules\System\Models\MenuSidebar;
 
 use App\Models\MasterCuti;
 use App\Models\CutiKaryawan;
@@ -104,6 +105,7 @@ class CutiController extends Controller
             $getsaldo = $saldoService->ensureSaldoKaryawan($profile);
         }
 
+        $menuData = MenuSidebar::where('route', 'users.cuti.index')->first();
         $data = array(
             'title'     => 'Cuti Karyawan',
             'menu'      => 'dashboard',
@@ -111,7 +113,8 @@ class CutiController extends Controller
             'karyawans' => $listSdm,
             'profile'   => $profile,
             'saldo'     => $getsaldo,
-            'namaAtasan' => $namaAtasan
+            'namaAtasan' => $namaAtasan,
+            'menuIcon'  => $menuData->icon ?? 'fas fa-calendar-minus',
         );
 
         return view('users::cuti.index', $data);

@@ -3,7 +3,7 @@
     Props: $title, $icon, $showBreadcrumb, $breadcrumbItems
     Slots: $actions (optional — action buttons di kanan)
 --}}
-<div class="content-header tsu-page-header">
+<div class="content-header tsu-page-header mb-4" style="margin-bottom: 1.5rem !important;">
     <div class="container-fluid">
         <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
             {{-- Kiri: Judul + Breadcrumb --}}

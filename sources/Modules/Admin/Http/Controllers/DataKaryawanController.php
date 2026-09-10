@@ -18,6 +18,7 @@ use App\Models\KaryawanJabatanStruktural;
 use App\Models\KaryawanJabatanFungsional;
 use App\Models\MasterPangkatGolongan;
 use App\Models\CutiKaryawan;
+use Modules\System\Models\MenuSidebar;
 use App\Models\IzinKaryawan;
 use App\Models\LemburKaryawan;
 
@@ -37,7 +38,11 @@ class DataKaryawanController extends MiddlewareController
      */
     public function index()
     {
-        return view('admin::data-karyawan.index', ['title' => 'Data Dosen & Tendik']);
+        $menuData = MenuSidebar::where('route', 'admin.data-karyawan.index')->first();
+        return view('admin::data-karyawan.index', [
+            'title'    => 'Data Dosen & Tendik',
+            'menuIcon' => $menuData->icon ?? 'fas fa-users',
+        ]);
     }
 
     /**

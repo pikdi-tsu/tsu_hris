@@ -25,140 +25,143 @@
 @endsection
 
 @section('content')
-    <div class="content-header">
-        <div class="container-fluid">
-            <div class="row mb-2">
-                <div class="col-sm-6">
-                    <h1 class="m-0 text-dark">Profil Pengguna</h1>
-                </div>
-                <div class="col-sm-6">
-                    <ol class="breadcrumb float-sm-right">
-                        <li class="breadcrumb-item"><a href="{{ route('admin.dashboard') }}">Dashboard</a></li>
-                        <li class="breadcrumb-item active">Profil Saya</li>
-                    </ol>
-                </div>
-            </div>
-        </div>
-    </div>
+
+    <x-tsu-page-header
+        title="Profil Pengguna"
+        icon="fas fa-user-circle"
+        :breadcrumb="true"
+    />
 
     <section class="content">
         <div class="container-fluid">
+
+            {{-- Banner Pengumuman Full-Width Tipis (Hemat Ruang Vertikal) --}}
+            <div class="tsu-callout tsu-callout--info tsu-callout--banner mb-3">
+                <div class="tsu-callout__icon">
+                    <i class="fas fa-bullhorn"></i>
+                </div>
+                <div class="flex-grow-1">
+                    <strong class="font-weight-bold mr-1" style="color: var(--tsu-primary-dark);">Pengumuman:</strong>
+                    <span style="color: #475569;">Pastikan data profil Anda selalu diperbarui. Demi keamanan, ganti password Anda secara berkala minimal 3 bulan sekali.</span>
+                </div>
+            </div>
+
             <div class="row">
 
                 {{-- === KOLOM KIRI: IDENTITAS === --}}
                 <div class="col-md-4">
-                    <div class="card card-primary card-outline">
-                        <div class="card-body box-profile">
-                            <div class="text-center mb-3">
-                                {{-- Menampilkan Foto Profil --}}
-                                <img class="profile-user-img img-fluid img-circle shadow-sm"
-                                     style="width: 140px; height: 140px; object-fit: cover; border: 3px solid #fff;"
+
+                    {{-- Profile Identity Card --}}
+                    <div class="card card-primary card-outline tsu-profile-card mb-3">
+
+                        {{-- Avatar Header —gradient teal banner --}}
+                        <div class="tsu-profile-card__header"></div>
+
+                        <div class="card-body pt-0">
+                            {{-- Avatar Wrap (overlapping banner with natural flow) --}}
+                            <div class="tsu-profile-card__avatar-wrap">
+                                <img class="tsu-profile-card__avatar profile-user-img"
                                      src="{{ $user->profile_photo_url }}"
-                                     alt="User profile picture">
+                                     onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&color=FFFFFF&background=094b54';"
+                                     alt="Foto Profil">
                             </div>
 
                             {{-- Nama & Role --}}
-                            <h3 class="profile-username text-center font-weight-bold">{{ $user->name }}</h3>
-                            <p class="text-muted text-center mb-4">
-                                @if($formattedRoles)
-                                    @foreach($formattedRoles as $role)
-                                        <span class="badge {{ $role['class'] }}">{{ $role['label'] }}</span>
-                                    @endforeach
-                                @else
-                                    <span class="badge badge-secondary">User (No Role)</span>
-                                @endif
-                            </p>
+                            <div class="text-center mb-3">
+                                <h5 class="font-weight-bold mb-1 tsu-profile-card__name">{{ $user->name }}</h5>
+                                <div class="d-flex flex-wrap justify-content-center gap-1">
+                                    @if($formattedRoles)
+                                        @foreach($formattedRoles as $role)
+                                            <span class="tsu-profile-card__role-badge">{{ $role['label'] }}</span>
+                                        @endforeach
+                                    @else
+                                        <span class="tsu-profile-card__role-badge tsu-profile-card__role-badge--muted">User</span>
+                                    @endif
+                                </div>
+                            </div>
 
-                            {{-- List Info Detail --}}
-                            <ul class="list-group list-group-unbordered mb-3">
-                                <li class="list-group-item">
-                                    <i class="fas fa-envelope mr-2 text-primary"></i> <b>Email</b>
-                                    <span class="float-right text-muted">{{ $user->email }}</span>
+                            {{-- Info List --}}
+                            <ul class="tsu-profile-info-list">
+                                <li class="tsu-profile-info-list__item">
+                                    <span class="tsu-profile-info-list__icon" style="background:#e0f2fe; color:#0891b2;">
+                                        <i class="fas fa-envelope"></i>
+                                    </span>
+                                    <div class="tsu-profile-info-list__content">
+                                        <div class="tsu-profile-info-list__label">Email</div>
+                                        <div class="tsu-profile-info-list__value">{{ $user->email }}</div>
+                                    </div>
                                 </li>
-
-                                {{-- LOGIC NIM/NIK (Sudah diatur Controller) --}}
-                                <li class="list-group-item">
-                                    <i class="fas fa-id-card mr-2 text-info"></i> <b>{{ $identityLabel }}</b>
-                                    <span class="float-right text-muted">{{ $identityValue }}</span>
+                                <li class="tsu-profile-info-list__item">
+                                    <span class="tsu-profile-info-list__icon" style="background:#d0eef2; color:#1d7a87;">
+                                        <i class="fas fa-id-card"></i>
+                                    </span>
+                                    <div class="tsu-profile-info-list__content">
+                                        <div class="tsu-profile-info-list__label">{{ $identityLabel }}</div>
+                                        <div class="tsu-profile-info-list__value">{{ $identityValue }}</div>
+                                    </div>
                                 </li>
-
-                                <li class="list-group-item">
-                                    <i class="fas fa-building mr-2 text-success"></i> <b>Unit Kerja</b>
-                                    <span class="float-right text-muted">{{ $unitKerja }}</span>
+                                <li class="tsu-profile-info-list__item">
+                                    <span class="tsu-profile-info-list__icon" style="background:#dcfce7; color:#16a34a;">
+                                        <i class="fas fa-building"></i>
+                                    </span>
+                                    <div class="tsu-profile-info-list__content">
+                                        <div class="tsu-profile-info-list__label">Unit Kerja</div>
+                                        <div class="tsu-profile-info-list__value">{{ $unitKerja }}</div>
+                                    </div>
                                 </li>
-
-                                <li class="list-group-item">
-                                    <i class="fas fa-calendar-alt mr-2 text-warning"></i> <b>Bergabung</b>
-                                    <span class="float-right text-muted">{{ $user->created_at->format('d M Y') }}</span>
+                                <li class="tsu-profile-info-list__item">
+                                    <span class="tsu-profile-info-list__icon" style="background:#fef3c7; color:#d97706;">
+                                        <i class="fas fa-calendar-alt"></i>
+                                    </span>
+                                    <div class="tsu-profile-info-list__content">
+                                        <div class="tsu-profile-info-list__label">Bergabung</div>
+                                        <div class="tsu-profile-info-list__value">{{ $user->created_at->format('d M Y') }}</div>
+                                    </div>
                                 </li>
                             </ul>
 
-                            {{-- Tombol Status (Hiasan) --}}
-                            <div class="text-center">
-                                <button class="btn {{ $accountStatus['class'] }} btn-block disabled" style="cursor: default; opacity: 1;">
+                            {{-- Status Badge --}}
+                            <div class="mt-3">
+                                <div class="tsu-profile-card__status {{ ($accountStatus['isActive'] ?? true) ? 'tsu-profile-card__status--active' : 'tsu-profile-card__status--inactive' }}">
                                     <i class="fas {{ $accountStatus['icon'] }} mr-1"></i> {{ $accountStatus['text'] }}
-                                </button>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    {{-- Card Tambahan (Opsional: Quote atau Statistik Kerja) --}}
-                    <div class="card card-primary">
-                        <div class="card-header">
-                            <h3 class="card-title"><i class="fas fa-bullhorn mr-1"></i> Pengumuman</h3>
-                        </div>
-                        <div class="card-body">
-                            <p class="text-muted">
-                                Pastikan data profil Anda selalu diperbarui. Demi keamanan, ganti password Anda secara berkala minimal 3 bulan sekali.
-                            </p>
-                        </div>
-                    </div>
                 </div>
 
                 {{-- === KOLOM KANAN: SETTINGS === --}}
                 <div class="col-md-8">
 
-                    {{-- Alert Messages --}}
+                    {{-- Flash Messages --}}
                     @if(session('success'))
-                        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-                            <div class="d-flex align-items-center">
-                                <i class="icon fas fa-check-circle fa-2x mr-3"></i>
-                                <div>
-                                    <h5 class="mb-0">Berhasil!</h5>
-                                    <small>{{ session('success') }}</small>
-                                </div>
-                            </div>
-                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
+                        <div class="alert alert-success alert-dismissible fade show mb-3">
+                            <i class="fas fa-check-circle mr-2"></i>
+                            <strong>Berhasil!</strong> {{ session('success') }}
+                            <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
                         </div>
                     @endif
-
                     @if(session('error'))
-                        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
-                            <div class="d-flex align-items-center">
-                                <i class="icon fas fa-ban fa-2x mr-3"></i>
-                                <div>
-                                    <h5 class="mb-0">Gagal!</h5>
-                                    <small>{{ session('error') }}</small>
-                                </div>
-                            </div>
-                            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                            </button>
+                        <div class="alert alert-danger alert-dismissible fade show mb-3">
+                            <i class="fas fa-exclamation-circle mr-2"></i>
+                            <strong>Gagal!</strong> {{ session('error') }}
+                            <button type="button" class="close" data-dismiss="alert"><span>&times;</span></button>
                         </div>
                     @endif
 
-                    <div class="card shadow-sm">
-                        <div class="card-header p-2 border-bottom-0">
-                            <ul class="nav nav-pills">
+                    <div class="card card-primary card-outline">
+
+                        {{-- Tab Nav --}}
+                        <div class="card-header p-0">
+                            <ul class="nav tsu-notif-tabs">
                                 <li class="nav-item">
-                                    <a class="nav-link active" href="#foto_profil" data-toggle="tab">
+                                    <a class="tsu-notif-tab active" href="#foto_profil" data-toggle="tab" id="tab-foto">
                                         <i class="fas fa-camera mr-1"></i> Foto Profil
                                     </a>
                                 </li>
                                 <li class="nav-item">
-                                    <a class="nav-link" href="#security" data-toggle="tab">
+                                    <a class="tsu-notif-tab" href="#security" data-toggle="tab" id="tab-security">
                                         <i class="fas fa-lock mr-1"></i> Keamanan
                                     </a>
                                 </li>
@@ -170,17 +173,21 @@
 
                                 {{-- TAB 1: UPDATE FOTO --}}
                                 <div class="active tab-pane" id="foto_profil">
-                                    <form action="{{route('users.profile.save.change-profile')}}" class="form-horizontal" method="POST" id="form-profile" enctype="multipart/form-data">
+                                    <form action="{{ route('users.profile.save.change-profile') }}" class="form-horizontal" method="POST" id="form-profile" enctype="multipart/form-data">
                                         @csrf
 
-                                        <div class="callout callout-info">
-                                            <h5><i class="fas fa-info"></i> Info Upload</h5>
-                                            <p>Gunakan foto formal dengan rasio 1:1 (Kotak). Format: JPG/PNG. Maksimal 2MB.</p>
+                                        {{-- Info callout TSU-styled --}}
+                                        <div class="tsu-callout tsu-callout--info mb-4">
+                                            <div class="tsu-callout__icon"><i class="fas fa-info"></i></div>
+                                            <div>
+                                                <div class="tsu-callout__title">Info Upload</div>
+                                                <div class="tsu-callout__text">Gunakan foto formal dengan rasio 1:1 (Kotak). Format: JPG/PNG. Maksimal 2MB.</div>
+                                            </div>
                                         </div>
 
-                                        {{-- AREA 1: INPUT FILE (Muncul di Awal) --}}
+                                        {{-- AREA 1: INPUT FILE --}}
                                         <div id="upload-area" class="form-group row align-items-center" style="{{ $hasPhoto ? 'display: none;' : '' }}">
-                                            <label for="photoprofile" class="col-sm-3 col-form-label">Pilih Foto Baru</label>
+                                            <label for="photoprofile" class="col-sm-3 col-form-label tsu-form-label">Pilih Foto Baru</label>
                                             <div class="col-sm-9">
                                                 <div class="custom-file">
                                                     <input type="file" class="custom-file-input" id="photoprofile" name="photoprofile" accept=".jpg, .jpeg, .png">
@@ -191,21 +198,21 @@
 
                                         {{-- AREA 2: PREVIEW HASIL CROP --}}
                                         <div id="preview-area" class="form-group row align-items-center" style="{{ $hasPhoto ? '' : 'display: none;' }}">
-                                            <label class="col-sm-3 col-form-label">Foto Profil</label>
+                                            <label class="col-sm-3 col-form-label tsu-form-label">Foto Profil</label>
                                             <div class="col-sm-9">
                                                 <div class="d-flex align-items-center">
-                                                    {{-- Gambar pakai Accessor URL --}}
                                                     <img id="result-preview-img"
                                                          src="{{ $user->profile_photo_url }}"
+                                                         onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ urlencode($user->name) }}&color=FFFFFF&background=094b54';"
                                                          class="img-circle border shadow-sm mr-3"
-                                                         style="width: 100px; height: 100px; object-fit: cover;" alt="Preview Foto Profil">
-
+                                                         style="width: 80px; height: 80px; object-fit: cover; border-color: var(--tsu-primary-light) !important;"
+                                                         alt="Preview Foto Profil">
                                                     <div>
-                                                        <button type="button" class="btn btn-warning btn-sm mr-1" onclick="$('#photoprofile').click()">
-                                                            <i class="fas fa-camera"></i> Ganti Foto
+                                                        <button type="button" class="btn btn-sm tsu-btn-edit mr-1" onclick="$('#photoprofile').click()">
+                                                            <i class="fas fa-camera mr-1"></i> Ganti Foto
                                                         </button>
-                                                        <button type="button" class="btn btn-danger btn-sm" id="btn-cancel-crop" style="display: none;">
-                                                            <i class="fas fa-undo"></i> Batal
+                                                        <button type="button" class="btn btn-sm tsu-btn-delete" id="btn-cancel-crop" style="display: none;">
+                                                            <i class="fas fa-undo mr-1"></i> Batal
                                                         </button>
                                                     </div>
                                                 </div>
@@ -215,7 +222,7 @@
                                             </div>
                                         </div>
 
-                                        {{-- CHECKBOX CONFIRMATION --}}
+                                        {{-- Checkbox Konfirmasi --}}
                                         <div class="form-group row">
                                             <div class="offset-sm-3 col-sm-9">
                                                 <div class="custom-control custom-checkbox">
@@ -227,7 +234,7 @@
 
                                         <div class="form-group row mt-4">
                                             <div class="offset-sm-3 col-sm-9">
-                                                <button type="submit" id="btn-submit" class="btn btn-primary" disabled>
+                                                <button type="submit" id="btn-submit" class="btn tsu-btn-create" disabled>
                                                     <i class="fas fa-save mr-1"></i> Simpan Perubahan
                                                 </button>
                                             </div>
@@ -241,9 +248,17 @@
                                         @csrf
                                         @method('PUT')
 
-                                        {{-- 1. PASSWORD LAMA --}}
+                                        {{-- Info callout Keamanan --}}
+                                        <div class="tsu-callout tsu-callout--info mb-4">
+                                            <div class="tsu-callout__icon"><i class="fas fa-shield-alt"></i></div>
+                                            <div>
+                                                <div class="tsu-callout__title">Keamanan Password</div>
+                                                <div class="tsu-callout__text">Gunakan minimal 8 karakter dengan kombinasi huruf, angka, dan simbol untuk keamanan akun yang maksimal.</div>
+                                            </div>
+                                        </div>
+
                                         <div class="form-group row">
-                                            <label for="current_password" class="col-sm-3 col-form-label">Password Lama</label>
+                                            <label for="current_password" class="col-sm-3 col-form-label tsu-form-label">Password Lama</label>
                                             <div class="col-sm-9">
                                                 <div class="input-group">
                                                     <input type="password" class="form-control @error('current_password') is-invalid @enderror"
@@ -260,9 +275,8 @@
                                             </div>
                                         </div>
 
-                                        {{-- 2. PASSWORD BARU (Name diganti jadi 'password' biar match dengan controller) --}}
                                         <div class="form-group row">
-                                            <label for="password" class="col-sm-3 col-form-label">Password Baru</label>
+                                            <label for="password" class="col-sm-3 col-form-label tsu-form-label">Password Baru</label>
                                             <div class="col-sm-9">
                                                 <div class="input-group">
                                                     <input type="password" class="form-control @error('password') is-invalid @enderror"
@@ -279,9 +293,8 @@
                                             </div>
                                         </div>
 
-                                        {{-- 3. KONFIRMASI PASSWORD --}}
                                         <div class="form-group row">
-                                            <label for="password_confirmation" class="col-sm-3 col-form-label">Ulangi Password</label>
+                                            <label for="password_confirmation" class="col-sm-3 col-form-label tsu-form-label">Ulangi Password</label>
                                             <div class="col-sm-9">
                                                 <div class="input-group">
                                                     <input type="password" class="form-control"
@@ -297,7 +310,7 @@
 
                                         <div class="form-group row mt-4">
                                             <div class="offset-sm-3 col-sm-9">
-                                                <button type="submit" class="btn btn-danger">
+                                                <button type="submit" class="btn tsu-btn-create">
                                                     <i class="fas fa-key mr-1"></i> Update Password
                                                 </button>
                                             </div>
@@ -309,11 +322,12 @@
                         </div>
                     </div>
                 </div>
+
             </div>
         </div>
     </section>
 
-    {{-- Modal Cropper --}}
+    {{-- Modal Cropper (tidak diubah) --}}
     <div class="modal fade" id="modal-cropper" tabindex="-1" role="dialog" aria-hidden="true" data-backdrop="static">
         <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
             <div class="modal-content">
@@ -324,15 +338,13 @@
                     </button>
                 </div>
                 <div class="modal-body p-0">
-                    {{-- Container Gambar --}}
                     <div class="img-container">
-                        {{-- Pastikan img ini kosong src-nya saat awal, dan ID-nya benar --}}
                         <img id="image-preview" src="">
                     </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                    <button type="button" class="btn btn-primary" id="btn-crop">
+                    <button type="button" class="btn tsu-btn-create" id="btn-crop">
                         <i class="fas fa-crop-alt mr-1"></i> Potong & Terapkan
                     </button>
                 </div>

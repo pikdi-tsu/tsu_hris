@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Modules\Users\Http\Controllers\ApprovalCutiController;
 use Modules\Users\Http\Controllers\ApprovalIzinController;
+use Modules\Users\Http\Controllers\ApprovalLemburController;
 use Modules\Users\Http\Controllers\MahasiswaController;
 use Modules\Users\Http\Controllers\PegawaiController;
 use Modules\Users\Http\Controllers\SelfService\CutiController;
@@ -62,9 +63,6 @@ Route::prefix('users')->name('users.')->middleware(['auth'])->group(function () 
     Route::middleware(['permission:users:lembur:view'])->group(function() {
         Route::prefix('lembur')->name('lembur.')->group(function () {
             Route::get('/json', [LemburController::class, 'datatable'])->name('json');
-            Route::get('/approval/json', [LemburController::class, 'datatableApproval'])->name('approval.json');
-            Route::post('/{id}/approve', [LemburController::class, 'approve'])->name('approve');
-            Route::post('/{id}/reject', [LemburController::class, 'reject'])->name('reject');
             Route::get('/', [LemburController::class, 'index'])->name('index');
             Route::post('/', [LemburController::class, 'store'])->name('store');
             Route::post('/{id}/tarik', [LemburController::class, 'tarik'])->name('tarik');
@@ -82,17 +80,34 @@ Route::prefix('users')->name('users.')->middleware(['auth'])->group(function () 
         Route::put('/profile/password', [UserProfileController::class, 'updatePassword'])->name('update-password');
     });
 
-    //Approval Cuti
-    Route::get('/indexapprovalcuti', [ApprovalCutiController::class, 'index'])->name('indexapprovalcuti');
-    Route::post('/datatablesapproval', [ApprovalCutiController::class, 'datatables'])->name('datatablesapproval');
-    Route::post('/approvaldetail', [ApprovalCutiController::class, 'detail'])->name('approvaldetail');
-    Route::post('/simpanapproval', [ApprovalCutiController::class, 'simpan'])->name('simpanapproval');
+    // Approval Cuti
+    Route::prefix('approval-cuti')->name('approval-cuti.')->group(function () {
+        Route::get('/', [ApprovalCutiController::class, 'index'])->name('index');
+        Route::post('/datatables', [ApprovalCutiController::class, 'datatables'])->name('datatables');
+        Route::post('/detail', [ApprovalCutiController::class, 'detail'])->name('detail');
+        Route::post('/simpan', [ApprovalCutiController::class, 'simpan'])->name('simpan');
+    });
 
-    //Approval Izin
-    Route::get('/indexapprovalizin', [ApprovalIzinController::class, 'index'])->name('indexapprovalizin');
-    Route::post('/datatablesapprovalizin', [ApprovalIzinController::class, 'datatables'])->name('datatablesapprovalizin');
-    Route::post('/approvalizindetail', [ApprovalIzinController::class, 'detail'])->name('approvalizindetail');
-    Route::post('/simpanapprovalizin', [ApprovalIzinController::class, 'simpan'])->name('simpanapprovalizin');
+    // Approval Izin
+    Route::prefix('approval-izin')->name('approval-izin.')->group(function () {
+        Route::get('/', [ApprovalIzinController::class, 'index'])->name('index');
+        Route::post('/datatables', [ApprovalIzinController::class, 'datatables'])->name('datatables');
+        Route::post('/detail', [ApprovalIzinController::class, 'detail'])->name('detail');
+        Route::post('/simpan', [ApprovalIzinController::class, 'simpan'])->name('simpan');
+    });
+
+    // Approval Lembur
+    Route::prefix('approval-lembur')->name('approval-lembur.')->group(function () {
+        Route::get('/', [ApprovalLemburController::class, 'index'])->name('index');
+        Route::post('/datatables', [ApprovalLemburController::class, 'datatables'])->name('datatables');
+        Route::post('/detail', [ApprovalLemburController::class, 'detail'])->name('detail');
+        Route::post('/simpan', [ApprovalLemburController::class, 'simpan'])->name('simpan');
+    });
+
+    // Legacy Route Fallbacks (Deprecated)
+    Route::get('/indexapprovalcuti', fn() => redirect()->route('users.approval-cuti.index'))->name('indexapprovalcuti');
+    Route::get('/indexapprovalizin', fn() => redirect()->route('users.approval-izin.index'))->name('indexapprovalizin');
+    Route::get('/indexapprovallembur', fn() => redirect()->route('users.approval-lembur.index'))->name('indexapprovallembur');
 
     // MPP (Manpower Planning)
     Route::prefix('mpp')->name('mpp.')->group(function () {

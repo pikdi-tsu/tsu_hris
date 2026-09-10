@@ -335,6 +335,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
         Route::get('/all-units', [StrukturOrganisasiController::class, 'getAllUnitsForSelect'])->name('all-units');
         Route::post('/move-unit', [StrukturOrganisasiController::class, 'moveUnit'])->name('move-unit');
         Route::get('/full-tree-data', [StrukturOrganisasiController::class, 'getFullTreeData'])->name('full-tree-data');
+        Route::get('/avatar-proxy', [StrukturOrganisasiController::class, 'avatarProxy'])->name('avatar-proxy');
     });
 
     // --- ROUTE PAYROLL KARYAWAN ---

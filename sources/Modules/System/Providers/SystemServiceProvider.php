@@ -5,6 +5,8 @@ namespace Modules\System\Providers;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use Modules\System\View\Components\Layouts\Sidebar;
+use Modules\System\View\Components\TsuPageHeader;
+use Modules\System\View\Components\TsuStatCard;
 
 // use Illuminate\Database\Eloquent\Factory;
 
@@ -39,6 +41,9 @@ class SystemServiceProvider extends ServiceProvider
         $this->loadMigrationsFrom(__DIR__ . '/../Database/Migrations');
         Blade::component('layouts.sidebar', Sidebar::class);
         Blade::component('system::components.sidebar-item', 'sidebar-item');
+        // TSU Design System Components
+        Blade::component('tsu-page-header', TsuPageHeader::class);
+        Blade::component('tsu-stat-card', TsuStatCard::class);
     }
 
     /**

@@ -35,14 +35,16 @@ class ApprovalCutiController extends Controller
 
     public function index()
     {
-
         if (Session::has('tmp')) {
             Session::forget('tmp');
         }
 
+        $menuIcon = \Modules\System\Models\MenuSidebar::where('route', 'users.approval-cuti.index')->value('icon') ?? 'fas fa-calendar-check';
+
         $data = array(
             'title'     => 'Approval Cuti Karyawan',
             'menu'      => 'dashboard',
+            'menuIcon'  => $menuIcon,
         );
 
         return view('users::approvalcuti.index', $data);
@@ -50,12 +52,21 @@ class ApprovalCutiController extends Controller
 
     public function datatables()
     {
+        $user = Auth::user();
+        $isAdmin = $user->hasRole(['super admin', 'super admin hris', 'admin', 'admin hris']);
         $profile = $this->getCurrentProfile();
         $profileId = $profile ? $profile->id : null;
 
-        $data = CutiKaryawan::with(['masterCuti', 'user', 'atasan', 'hrd'])
-            ->where('is_active', '1')
-            ->where(function ($query) use ($profileId) {
+        $query = CutiKaryawan::with(['masterCuti', 'user', 'atasan', 'hrd'])
+            ->where('is_active', '1');
+
+        if ($isAdmin) {
+            $query->where(function ($q) {
+                $q->where('statusatasan', 'waiting')
+                  ->orWhere('statushrd', 'waiting');
+            });
+        } else {
+            $query->where(function ($query) use ($profileId) {
                 $query->where(function ($q) use ($profileId) {
                     $q->where('id_atasan', $profileId)
                         ->where('statusatasan', 'waiting');
@@ -65,9 +76,10 @@ class ApprovalCutiController extends Controller
                     $q->where('id_hrd', $profileId)
                         ->where('statushrd', 'waiting');
                 });
-            })
-            ->orderByDesc('created_at')
-            ->get();
+            });
+        }
+
+        $data = $query->orderByDesc('created_at')->get();
 
         return DataTables::of($data)
             ->addIndexColumn()
@@ -83,14 +95,20 @@ class ApprovalCutiController extends Controller
             ->addColumn('keterangan', function ($data) {
                 return $data->keterangan;
             })
-            ->addColumn('action', function ($data) use ($profileId) {
-                $button = '';
-                if ($data->id_hrd == $profileId && $data->statusatasan != 'waiting') {
-                    $button .= '<center><a href="#" data-id="' . encrypt($data->id) . '" id="btnapproval" title="Proses Approval"><i class="fa fa-angle-double-right fa-md text-primary"></i></a>';
+            ->addColumn('action', function ($data) use ($profileId, $isAdmin) {
+                $canApprove = false;
+                if ($isAdmin) {
+                    $canApprove = true;
+                } elseif ($data->id_hrd == $profileId && $data->statusatasan != 'waiting') {
+                    $canApprove = true;
                 } elseif ($data->id_atasan == $profileId) {
-                    $button .= '<center><a href="#" data-id="' . encrypt($data->id) . '" id="btnapproval" title="Proses Approval"><i class="fa fa-angle-double-right fa-md text-primary"></i></a>';
+                    $canApprove = true;
                 }
-                return $button;
+
+                if ($canApprove) {
+                    return '<center><a href="#" data-id="' . encrypt($data->id) . '" id="btnapproval" title="Proses Approval"><i class="fa fa-angle-double-right fa-md text-primary"></i></a></center>';
+                }
+                return '';
             })
             ->make(true);
     }
@@ -162,8 +180,10 @@ class ApprovalCutiController extends Controller
                 ->where('is_active', '1')
                 ->first();
 
-            $checkatasan = $check->id_atasan == $iduserlogin;
-            $checkhrd = $check->id_hrd == $iduserlogin;
+            $user = Auth::user();
+            $isAdmin = $user->hasRole(['super admin', 'super admin hris', 'admin', 'admin hris']);
+            $checkatasan = ($iduserlogin && $check->id_atasan == $iduserlogin) || ($isAdmin && $check->statusatasan == 'waiting');
+            $checkhrd = ($iduserlogin && $check->id_hrd == $iduserlogin) || ($isAdmin && $check->statusatasan == 'approved' && $check->statushrd == 'waiting');
 
             $jumlahHari = CutiKaryawan::hitungHariEfektif($check->tanggalmulai, $check->tanggalselesai);
 

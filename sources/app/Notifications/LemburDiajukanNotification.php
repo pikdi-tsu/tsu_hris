@@ -25,11 +25,11 @@ class LemburDiajukanNotification extends TsuRealtimeNotification
 
         parent::__construct(
             $message,
-            'lembur', // module
-            route('users.lembur.index') . '#content-persetujuan-bawahan', // action_url
+            'approval-lembur', // module
+            route('users.approval-lembur.index'), // action_url
             $action_text, // action_text
             'Pengajuan Lembur', // title
-            'fas fa-clock text-info', // icon
+            'fas fa-business-time text-teal', // icon
             $is_silent, // is_silent
             ['id_lembur' => $lembur->id, 'role' => $role, 'statusatasan' => $lembur->statusatasan, 'jenis' => 'lembur'] // options (jenis kept for backward compatibility if needed)
         );

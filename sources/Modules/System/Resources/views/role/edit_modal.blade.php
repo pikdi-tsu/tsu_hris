@@ -3,12 +3,12 @@
     @method('PUT')
 
     {{-- HEADER --}}
-    <div class="modal-header bg-purple text-white">
-        <h5 class="modal-title font-weight-bold">
-            <i class="fas fa-user-shield mr-1"></i> Edit Role: <b>{{ $role->name }}</b>
+    <div class="modal-header" style="background: linear-gradient(135deg, #094b54 0%, #0c6170 100%); color: #ffffff; padding: 1.15rem 1.5rem;">
+        <h5 class="modal-title font-weight-bold d-flex align-items-center" style="font-size: 1.1rem; letter-spacing: -0.01em;">
+            <i class="fas fa-user-shield mr-2" style="font-size: 1.2rem; opacity: 0.9;"></i> Edit Role: <b class="ml-1 text-warning">{{ $role->name }}</b>
         </h5>
-        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="opacity: 0.85; outline: none; text-shadow: none;">
+            <span aria-hidden="true" style="font-size: 1.5rem;">&times;</span>
         </button>
     </div>
 
@@ -160,8 +160,8 @@
             <i class="fas fa-info-circle text-primary mr-1"></i> Tanda ceklis hijau (<i class="fas fa-check-circle text-success"></i>) menandakan grup memiliki akses aktif.
         </div>
         <div>
-            <button type="button" class="btn btn-secondary font-weight-bold mr-2" data-dismiss="modal">Batal</button>
-            <button type="submit" class="btn btn-warning shadow-sm px-4 font-weight-bold">
+            <button type="button" class="btn btn-sm btn-outline-secondary font-weight-bold mr-2" data-dismiss="modal" style="border-radius: 8px;">Batal</button>
+            <button type="submit" class="btn btn-sm px-4 font-weight-bold" style="background: linear-gradient(135deg, #094b54 0%, #0c6170 100%); color: #ffffff; border: none; border-radius: 8px; box-shadow: 0 2px 6px rgba(9, 75, 84, 0.2);">
                 <i class="fas fa-save mr-1"></i> Simpan Perubahan
             </button>
         </div>
@@ -170,15 +170,15 @@
 
 <style>
     .bg-purple {
-        background-color: #6f42c1 !important;
+        background-color: var(--tsu-primary, #094b54) !important;
     }
 
     .border-purple {
-        border-color: #6f42c1 !important;
+        border-color: var(--tsu-primary, #094b54) !important;
     }
 
     .bg-purple-light {
-        background-color: #f8f4fc;
+        background-color: #f0fdf4;
     }
 
     .nav-pills .nav-link {
@@ -193,7 +193,7 @@
     }
 
     .nav-pills .nav-link.active {
-        background-color: #6f42c1; /* Purple */
+        background-color: var(--tsu-primary, #094b54);
         color: #fff !important;
     }
 
@@ -227,8 +227,8 @@
     }
 
     .permission-card:hover {
-        background-color: #f8f9fa;
-        border-color: #6f42c1 !important;
+        background-color: #f8fafc;
+        border-color: var(--tsu-primary, #094b54) !important;
     }
 
     /* Scrollbar */

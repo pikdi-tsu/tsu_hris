@@ -23,29 +23,47 @@ class RoleController extends MiddlewareController
 
     public function index()
     {
-        return view('system::role.index', [
-            'title' => 'Manajemen Hak Akses Role'
-        ]);
+        $this->guard('view', 'system:role');
+
+        $stats = [
+            'total_roles' => Role::count(),
+            'total_permissions' => Permission::count(),
+            'core_roles' => Role::where('is_identity', 0)->where(function($q) {
+                $q->where('name', 'like', '%admin%')->orWhereIn('name', ['dosen', 'tendik', 'mahasiswa']);
+            })->count(),
+            'assigned_users' => \App\Models\User::has('roles')->count(),
+        ];
+
+        $title = 'Role Matrix';
+        $menu = 'role';
+        $menuIcon = \Modules\System\Models\MenuSidebar::where('route', 'system.role.index')->value('icon') ?? 'fas fa-user-shield';
+
+        return view('system::role.index', compact('stats', 'title', 'menu', 'menuIcon'));
     }
 
     // JSON Datatable
     public function datatable()
     {
+        $this->guard('view', 'system:role');
+
         $data = Role::query()->withCount('permissions')->orderBy('name', 'asc');
 
         return DataTables::of($data)
             ->addIndexColumn()
+            ->editColumn('name', function($row) {
+                return '<div class="d-flex align-items-center"><span class="font-weight-600 text-dark" style="font-size: 0.88rem;"><i class="fas fa-shield-alt mr-2" style="color: var(--tsu-primary, #094b54);"></i>' . e($row->name) . '</span></div>';
+            })
             ->addColumn('permissions_count', function($row){
                 $moduleName = 'super admin ' . config('app.module.name');
                 if (in_array($row->name, ['super admin', $moduleName], true)) {
-                    return '<span class="badge badge-success p-2 shadow-sm"><i class="fas fa-crown mr-1"></i> Full Access</span>';
+                    return '<span class="badge" style="background:#dcfce7; color:#15803d; border:1px solid #bbf7d0; font-weight:700; padding:0.35rem 0.75rem; border-radius:6px;"><i class="fas fa-crown mr-1"></i> Full Access</span>';
                 }
-                return '<span class="badge badge-info">'.$row->permissions_count.' Izin</span>';
+                return '<span class="badge badge-light border font-weight-bold text-dark" style="padding:0.35rem 0.75rem; border-radius:6px; font-size:0.83rem;"><i class="fas fa-key text-info mr-1"></i>'.$row->permissions_count.' Izin</span>';
             })
             ->addColumn('is_identity_badge', function ($row) {
                 // Cek Global Role (Homebase)
                 if ($row->is_identity) {
-                    return '<span class="badge badge-info p-2"><i class="fas fa-globe"></i> Global (Homebase)</span>';
+                    return '<span class="badge font-weight-600" style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; padding:0.35rem 0.75rem; border-radius:6px;"><i class="fas fa-globe mr-1"></i> Global (Homebase)</span>';
                 }
 
                 // Cek Lokal Inti
@@ -56,13 +74,13 @@ class RoleController extends MiddlewareController
 
                 // Render Badge Lokal
                 if ($isCore) {
-                    return '<span class="badge badge-warning p-2 text-dark shadow-sm" title="Role Bawaan Sistem (Protected)">
+                    return '<span class="badge font-weight-600" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a; padding:0.35rem 0.75rem; border-radius:6px;" title="Role Bawaan Sistem (Protected)">
                                 <i class="fas fa-lock mr-1"></i> Lokal Inti '. $moduleName .'
                             </span>';
                 }
 
-                return '<span class="badge badge-secondary p-2" title="Role Buatan Sendiri">
-                            <i class="fas fa-user-tag mr-1"></i> Lokal '. $moduleName .'
+                return '<span class="badge badge-light border text-secondary font-weight-600" style="padding:0.35rem 0.75rem; border-radius:6px;" title="Role Buatan Sendiri">
+                            <i class="fas fa-user-tag mr-1 text-primary"></i> Lokal '. $moduleName .'
                         </span>';
             })
             ->filterColumn('is_identity_badge', function($query, $keyword) {
@@ -103,7 +121,7 @@ class RoleController extends MiddlewareController
                     'delete_url' => route('system.role.destroy', $row->id),
                 ]);
             })
-            ->rawColumns(['permissions_count', 'is_identity_badge', 'action'])
+            ->rawColumns(['name', 'permissions_count', 'is_identity_badge', 'action'])
             ->make(true);
     }
 

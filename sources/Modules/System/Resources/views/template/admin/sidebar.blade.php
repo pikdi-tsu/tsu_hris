@@ -19,21 +19,20 @@
     }
 
     /* Menu Open */
-    .nav-item.menu-open > .nav-link {
+    .nav-sidebar .nav-item.menu-open > .nav-link {
         color: yellow !important;
-
-        .nav-indicator.fa-chevron-right {
-            transform: rotate(90deg);
-            color: yellow;
-        }
+    }
+    .nav-sidebar .nav-item.menu-open > .nav-link .nav-indicator.fa-chevron-right {
+        transform: rotate(90deg);
+        color: yellow;
     }
 
-    /* Active State */
-    .nav-link.active {
+    /* Active State for Sidebar */
+    .nav-sidebar .nav-link.active {
         background-color: teal !important;
         color: yellow !important;
     }
-    .nav-link.active > .nav-indicator {
+    .nav-sidebar .nav-link.active > .nav-indicator {
         color: yellow !important;
         opacity: 1;
     }

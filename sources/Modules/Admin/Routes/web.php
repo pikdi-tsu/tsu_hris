@@ -38,6 +38,8 @@ use Modules\Admin\Http\Controllers\JadwalPiketController;
 use Modules\Admin\Http\Controllers\PayrollController;
 use Modules\Admin\Http\Controllers\HonorariumController;
 use Modules\Admin\Http\Controllers\SaldoCutiController;
+use Modules\Admin\Http\Controllers\PengembanganSdmController;
+use Modules\Admin\Http\Controllers\MasterPengembanganSdmController;
 
 Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
     Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
@@ -384,5 +386,41 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
             Route::get('/slip-pdf/{id}', [HonorariumController::class, 'slipPdf'])->name('slip-pdf');
             Route::get('/download-all-slip/{id}', [HonorariumController::class, 'downloadAllSlip'])->name('download-all-slip');
         });
+    });
+
+    // --- ROUTE PENGEMBANGAN SDM ---
+    Route::middleware(['permission:admin:pengembangan-sdm:view'])->group(function () {
+        Route::prefix('pengembangan-sdm')->name('pengembangan-sdm.')->group(function () {
+            Route::get('/dashboard', [PengembanganSdmController::class, 'dashboard'])->name('dashboard');
+            Route::get('/dosen', [PengembanganSdmController::class, 'dosen'])->name('dosen');
+            Route::get('/tendik', [PengembanganSdmController::class, 'tendik'])->name('tendik');
+            Route::get('/pensiun', [PengembanganSdmController::class, 'pensiun'])->name('pensiun');
+            
+            // Actions
+            Route::post('/update-timeline', [PengembanganSdmController::class, 'updateTimeline'])->name('update-timeline');
+            Route::post('/update-lokasi', [PengembanganSdmController::class, 'updateLokasi'])->name('update-lokasi');
+            Route::post('/toggle-sertifikasi', [PengembanganSdmController::class, 'toggleSertifikasi'])->name('toggle-sertifikasi');
+            Route::post('/add-dosen-baru', [PengembanganSdmController::class, 'addDosenBaru'])->name('add-dosen-baru');
+            Route::delete('/delete-peserta/{id}', [PengembanganSdmController::class, 'deletePeserta'])->name('delete-peserta');
+            Route::post('/reimport-excel', [PengembanganSdmController::class, 'reimportExcel'])->name('reimport-excel');
+        });
+
+        // Master Bidang Keilmuan
+        Route::prefix('master-bidang-keilmuan')->name('master-bidang-keilmuan.')
+            ->middleware(['permission:admin:pengembangan-sdm:master'])
+            ->group(function () {
+                Route::get('/', [MasterPengembanganSdmController::class, 'bidangIndex'])->name('index');
+                Route::post('/store', [MasterPengembanganSdmController::class, 'bidangStore'])->name('store');
+                Route::delete('/destroy/{id}', [MasterPengembanganSdmController::class, 'bidangDestroy'])->name('destroy');
+            });
+
+        // Master Sertifikasi
+        Route::prefix('master-sertifikasi')->name('master-sertifikasi.')
+            ->middleware(['permission:admin:pengembangan-sdm:master'])
+            ->group(function () {
+                Route::get('/', [MasterPengembanganSdmController::class, 'sertifikasiIndex'])->name('index');
+                Route::post('/store', [MasterPengembanganSdmController::class, 'sertifikasiStore'])->name('store');
+                Route::delete('/destroy/{id}', [MasterPengembanganSdmController::class, 'sertifikasiDestroy'])->name('destroy');
+            });
     });
 });

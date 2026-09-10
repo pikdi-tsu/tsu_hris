@@ -407,7 +407,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
 
         // Master Bidang Keilmuan
         Route::prefix('master-bidang-keilmuan')->name('master-bidang-keilmuan.')
-            ->middleware(['permission:admin:pengembangan-sdm:master'])
+            ->middleware(['permission:admin:master-bidang-keilmuan:view'])
             ->group(function () {
                 Route::get('/', [MasterPengembanganSdmController::class, 'bidangIndex'])->name('index');
                 Route::post('/store', [MasterPengembanganSdmController::class, 'bidangStore'])->name('store');
@@ -416,11 +416,22 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
 
         // Master Sertifikasi
         Route::prefix('master-sertifikasi')->name('master-sertifikasi.')
-            ->middleware(['permission:admin:pengembangan-sdm:master'])
+            ->middleware(['permission:admin:master-sertifikasi:view'])
             ->group(function () {
                 Route::get('/', [MasterPengembanganSdmController::class, 'sertifikasiIndex'])->name('index');
                 Route::post('/store', [MasterPengembanganSdmController::class, 'sertifikasiStore'])->name('store');
                 Route::delete('/destroy/{id}', [MasterPengembanganSdmController::class, 'sertifikasiDestroy'])->name('destroy');
+            });
+
+        // Master Periode Renstra Pengembangan SDM
+        Route::prefix('master-periode-pengembangan')->name('master-periode-pengembangan.')
+            ->middleware(['permission:admin:master-periode-pengembangan:view'])
+            ->group(function () {
+                Route::get('/', [MasterPengembanganSdmController::class, 'periodeIndex'])->name('index');
+                Route::post('/store', [MasterPengembanganSdmController::class, 'periodeStore'])->name('store');
+                Route::post('/update/{id}', [MasterPengembanganSdmController::class, 'periodeUpdate'])->name('update');
+                Route::post('/set-active/{id}', [MasterPengembanganSdmController::class, 'periodeSetActive'])->name('set-active');
+                Route::delete('/destroy/{id}', [MasterPengembanganSdmController::class, 'periodeDestroy'])->name('destroy');
             });
     });
 });

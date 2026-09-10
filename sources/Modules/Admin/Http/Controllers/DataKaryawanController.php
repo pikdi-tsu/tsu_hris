@@ -26,7 +26,7 @@ use App\Traits\ApiResponseTrait;
 class DataKaryawanController extends MiddlewareController
 {
     use ApiResponseTrait;
-    
+
     public function __construct()
     {
         $this->registerPermissions('admin:data-karyawan');
@@ -162,12 +162,12 @@ class DataKaryawanController extends MiddlewareController
                 return $tipeKaryawanBadge . $htmlUnit . $htmlPosisi;
             })
             ->addColumn('status_karyawan', function($row) {
-                $statusBadge = ($row->is_active == 1) 
-                    ? '<span class="badge badge-success mb-1">AKTIF</span>' 
+                $statusBadge = ($row->is_active == 1)
+                    ? '<span class="badge badge-success mb-1">AKTIF</span>'
                     : '<span class="badge badge-danger mb-1">NON-AKTIF</span>';
-                
+
                 $tipeBadge = '<span class="badge badge-info">' . ($row->statusKaryawan ? $row->statusKaryawan->nama_status : 'Belum Diatur') . '</span>';
-                
+
                 return $statusBadge . '<br>' . $tipeBadge;
             })
             ->addColumn('aksi', function ($row) {
@@ -270,7 +270,7 @@ class DataKaryawanController extends MiddlewareController
         $this->guard('create', 'admin:data-karyawan');
 
         $formConfig = DataDosenTendik::getFormConfig();
-        
+
         // Hapus tab jabatan pada saat tambah data baru
         unset($formConfig['tab_kepangkatan']);
 
@@ -307,10 +307,10 @@ class DataKaryawanController extends MiddlewareController
             return back()->with('new_karyawan_id', $newKaryawan->id);
         } catch (\Exception $e) {
             return TsuErrorHandlerService::handleHtml(
-                $e, 
-                '[TSU_KARYAWAN_STORE_FAIL]', 
-                'Gagal menyimpan data karyawan baru.', 
-                'Gagal Create Karyawan.', 
+                $e,
+                '[TSU_KARYAWAN_STORE_FAIL]',
+                'Gagal menyimpan data karyawan baru.',
+                'Gagal Create Karyawan.',
                 $request
             );
         }
@@ -358,10 +358,10 @@ class DataKaryawanController extends MiddlewareController
             return back()->with('success', 'Data karyawan berhasil diperbarui!');
         } catch (\Exception $e) {
             return TsuErrorHandlerService::handleHtml(
-                $e, 
-                '[TSU_KARYAWAN_UPD_FAIL]', 
-                'Gagal menyimpan perubahan data karyawan.', 
-                "Gagal Update Karyawan ID: $id.", 
+                $e,
+                '[TSU_KARYAWAN_UPD_FAIL]',
+                'Gagal menyimpan perubahan data karyawan.',
+                "Gagal Update Karyawan ID: $id.",
                 $request
             );
         }
@@ -372,12 +372,12 @@ class DataKaryawanController extends MiddlewareController
      */
     public function destroy($id)
     {
-        $this->guard('delete', 'admin:karyawan');
+        $this->guard('delete', 'admin:data-karyawan');
         $karyawan = DataDosenTendik::with('user')->findOrFail($id);
 
         try {
             DB::beginTransaction();
-            
+
             // Sync dengan Homebase jika user tertaut
             $ssoId = $karyawan->user->sso_id ?? null;
             if ($ssoId) {
@@ -394,9 +394,9 @@ class DataKaryawanController extends MiddlewareController
         } catch (\Exception $e) {
             DB::rollBack();
             return TsuErrorHandlerService::handleHtml(
-                $e, 
-                '[TSU_KARYAWAN_DEL_FAIL]', 
-                'Gagal menonaktifkan data karyawan karena gangguan sinkronisasi.', 
+                $e,
+                '[TSU_KARYAWAN_DEL_FAIL]',
+                'Gagal menonaktifkan data karyawan karena gangguan sinkronisasi.',
                 "Gagal Nonaktifkan ID: $id."
             );
         }
@@ -428,9 +428,9 @@ class DataKaryawanController extends MiddlewareController
         } catch (\Exception $e) {
             DB::rollBack();
             return TsuErrorHandlerService::handleHtml(
-                $e, 
-                '[TSU_KARYAWAN_ACT_FAIL]', 
-                'Gagal mengaktifkan kembali data karyawan karena gangguan sinkronisasi.', 
+                $e,
+                '[TSU_KARYAWAN_ACT_FAIL]',
+                'Gagal mengaktifkan kembali data karyawan karena gangguan sinkronisasi.',
                 "Gagal Aktifkan ID: $id."
             );
         }
@@ -442,7 +442,7 @@ class DataKaryawanController extends MiddlewareController
     public function mutasiModal($id)
     {
         $this->guard('edit', 'admin:data-karyawan');
-        
+
         $karyawan = DataDosenTendik::with([
             'jabatanStrukturals' => function($q) {
                 $q->where('is_active', 'Y')->with('masterStruktural');
@@ -451,12 +451,12 @@ class DataKaryawanController extends MiddlewareController
                 $q->where('is_active', 'Y')->with('masterFungsional');
             }
         ])->findOrFail($id);
-        
+
         $listKaryawan = DataDosenTendik::where('is_active', 1)
             ->where('id', '!=', $id)
             ->orderBy('nama', 'asc')
             ->get();
-            
+
         $listStruktural = MasterJabatanStruktural::orderBy('nama_jabatan', 'asc')->get();
         $listFungsional = MasterJabatanFungsional::orderBy('nama_jabatan', 'asc')->get();
 
@@ -471,7 +471,7 @@ class DataKaryawanController extends MiddlewareController
     public function storeMutasi(Request $request, $id)
     {
         $this->guard('edit', 'admin:data-karyawan');
-        
+
         $request->validate([
             'tipe_jabatan' => 'required|in:struktural,fungsional',
             'opsi_pengganti' => 'nullable|in:lanjutkan,periode_baru',
@@ -479,12 +479,12 @@ class DataKaryawanController extends MiddlewareController
         ]);
 
         $pegawaiLama = DataDosenTendik::findOrFail($id);
-        
+
         DB::beginTransaction();
         try {
             $tipe = $request->tipe_jabatan;
             $tglSekarang = Carbon::now();
-            
+
             // Riwayat data array
             $riwayatData = [
                 'data_dosen_tendik_id' => $pegawaiLama->id,
@@ -498,7 +498,7 @@ class DataKaryawanController extends MiddlewareController
                 if (!$strukturalLamaId) {
                     throw new \Exception("Pilih jabatan struktural yang akan dimutasi.");
                 }
-                
+
                 $jabatanStrPivot = KaryawanJabatanStruktural::find($strukturalLamaId);
                 if (!$jabatanStrPivot || $jabatanStrPivot->data_dosen_tendik_id != $pegawaiLama->id) {
                     throw new \Exception("Data jabatan struktural tidak valid.");
@@ -506,18 +506,18 @@ class DataKaryawanController extends MiddlewareController
 
                 $tglMulai = Carbon::parse($jabatanStrPivot->tgl_mulai);
                 $lamaBulan = $tglMulai->diffInMonths($tglSekarang);
-                
+
                 $riwayatData['jabatan_struktural_id'] = $jabatanStrPivot->jabatan_struktural_id;
                 $riwayatData['unit_id'] = $jabatanStrPivot->unit_id;
                 $riwayatData['tgl_mulai'] = $jabatanStrPivot->tgl_mulai;
                 $riwayatData['lama_menjabat_bulan'] = $lamaBulan;
-                
+
                 // Nonaktifkan jabatan lama
                 $jabatanStrPivot->update([
                     'is_active' => 'N',
                     'tgl_akhir' => $tglSekarang->format('Y-m-d')
                 ]);
-                
+
                 $jabBaruLama = $request->jabatan_baru_pegawai_lama ?: null;
                 if ($jabBaruLama) {
                     KaryawanJabatanStruktural::create([
@@ -532,7 +532,7 @@ class DataKaryawanController extends MiddlewareController
                 if (!$fungsionalLamaId) {
                     throw new \Exception("Pilih jabatan fungsional yang akan dimutasi.");
                 }
-                
+
                 $jabatanFungPivot = KaryawanJabatanFungsional::find($fungsionalLamaId);
                 if (!$jabatanFungPivot || $jabatanFungPivot->data_dosen_tendik_id != $pegawaiLama->id) {
                     throw new \Exception("Data jabatan fungsional tidak valid.");
@@ -540,17 +540,17 @@ class DataKaryawanController extends MiddlewareController
 
                 $tglMulai = Carbon::parse($jabatanFungPivot->tgl_mulai);
                 $lamaBulan = $tglMulai->diffInMonths($tglSekarang);
-                
+
                 $riwayatData['jabatan_fungsional_id'] = $jabatanFungPivot->jabatan_fungsional_id;
                 $riwayatData['tgl_mulai'] = $jabatanFungPivot->tgl_mulai;
                 $riwayatData['lama_menjabat_bulan'] = $lamaBulan;
-                
+
                 // Nonaktifkan jabatan lama
                 $jabatanFungPivot->update([
                     'is_active' => 'N',
                     'tgl_akhir' => $tglSekarang->format('Y-m-d')
                 ]);
-                
+
                 // Jika diberi jabatan baru
                 $jabBaruLamaId = $request->jabatan_baru_pegawai_lama ?: null;
                 if ($jabBaruLamaId) {
@@ -568,18 +568,18 @@ class DataKaryawanController extends MiddlewareController
 
             if ($request->pegawai_pengganti_id) {
                 $pegawaiBaru = DataDosenTendik::findOrFail($request->pegawai_pengganti_id);
-                
+
                 if ($tipe == 'struktural') {
                     $master = MasterJabatanStruktural::find($riwayatData['jabatan_struktural_id']);
                     $lamaMasterBulan = $master->periode_jabatan ?? 0;
-                    
+
                     if ($request->opsi_pengganti == 'lanjutkan') {
                         $sisaBulan = max(0, $lamaMasterBulan - $lamaBulan);
                         $tglAkhir = $tglSekarang->copy()->addMonths($sisaBulan);
                     } else {
                         $tglAkhir = $tglSekarang->copy()->addMonths($lamaMasterBulan);
                     }
-                    
+
                     KaryawanJabatanStruktural::create([
                         'data_dosen_tendik_id' => $pegawaiBaru->id,
                         'jabatan_struktural_id' => $riwayatData['jabatan_struktural_id'],
@@ -590,14 +590,14 @@ class DataKaryawanController extends MiddlewareController
                 } else {
                     $master = MasterJabatanFungsional::find($riwayatData['jabatan_fungsional_id']);
                     $lamaMasterBulan = $master->periode_jabatan ?? 0;
-                    
+
                     if ($request->opsi_pengganti == 'lanjutkan') {
                         $sisaBulan = max(0, $lamaMasterBulan - $lamaBulan);
                         $tglAkhir = $tglSekarang->copy()->addMonths($sisaBulan);
                     } else {
                         $tglAkhir = $tglSekarang->copy()->addMonths($lamaMasterBulan);
                     }
-                    
+
                     KaryawanJabatanFungsional::create([
                         'data_dosen_tendik_id' => $pegawaiBaru->id,
                         'jabatan_fungsional_id' => $riwayatData['jabatan_fungsional_id'],
@@ -613,11 +613,11 @@ class DataKaryawanController extends MiddlewareController
                     CutiKaryawan::where('id_atasan', $pegawaiLama->id)
                         ->where('statusatasan', 'waiting')
                         ->update(['id_atasan' => $pegawaiBaru->id]);
-                        
+
                     IzinKaryawan::where('id_atasan', $pegawaiLama->id)
                         ->where('statusatasan', 'waiting')
                         ->update(['id_atasan' => $pegawaiBaru->id]);
-                        
+
                     LemburKaryawan::where('id_atasan', $pegawaiLama->id)
                         ->where('statusatasan', 'waiting')
                         ->update(['id_atasan' => $pegawaiBaru->id]);
@@ -629,9 +629,9 @@ class DataKaryawanController extends MiddlewareController
         } catch (\Exception $e) {
             DB::rollBack();
             return TsuErrorHandlerService::handleJson(
-                $e, 
-                '[TSU_MUTASI_FAIL]', 
-                'Gagal memproses mutasi jabatan: ' . $e->getMessage(), 
+                $e,
+                '[TSU_MUTASI_FAIL]',
+                'Gagal memproses mutasi jabatan: ' . $e->getMessage(),
                 "Gagal Mutasi ID: $id."
             );
         }
@@ -644,13 +644,13 @@ class DataKaryawanController extends MiddlewareController
     {
         $this->guard('edit', 'admin:data-karyawan');
         $karyawan = DataDosenTendik::findOrFail($id);
-        
+
         $fungsionals = KaryawanJabatanFungsional::where('data_dosen_tendik_id', $id)
             ->where('is_active', 'Y')
             ->with('masterFungsional')
             ->orderBy('tgl_mulai', 'desc')
             ->get();
-            
+
         $masterFungsional = MasterJabatanFungsional::orderBy('nama_jabatan', 'asc')->get();
         $masterPangkat = MasterPangkatGolongan::orderBy('nama_pangkat_golongan', 'asc')->get();
 
@@ -683,7 +683,7 @@ class DataKaryawanController extends MiddlewareController
                 'sk_jabatan' => $request->sk_jabatan,
                 'is_active' => 'Y'
             ]);
-            
+
             // Return JSON for AJAX modal refresh
             return $this->sendSuccess('Jabatan fungsional berhasil ditambahkan.', [
                 'html' => view('admin::data-karyawan._fungsional_list', [
@@ -701,13 +701,13 @@ class DataKaryawanController extends MiddlewareController
         try {
             $fung = KaryawanJabatanFungsional::findOrFail($fungsional_id);
             $karyawanId = $fung->data_dosen_tendik_id;
-            
+
             // Soft delete/deactivate instead of hard delete
             $fung->update([
                 'is_active' => 'N',
                 'tgl_akhir' => Carbon::now()->format('Y-m-d')
             ]);
-            
+
             return $this->sendSuccess('Jabatan fungsional berhasil dihapus/dinonaktifkan.', [
                 'html' => view('admin::data-karyawan._fungsional_list', [
                     'fungsionals' => KaryawanJabatanFungsional::where('data_dosen_tendik_id', $karyawanId)->where('is_active', 'Y')->with('masterFungsional')->orderBy('tgl_mulai', 'desc')->get()
@@ -725,13 +725,13 @@ class DataKaryawanController extends MiddlewareController
     {
         $this->guard('edit', 'admin:data-karyawan');
         $karyawan = DataDosenTendik::findOrFail($id);
-        
+
         $strukturals = KaryawanJabatanStruktural::where('data_dosen_tendik_id', $id)
             ->where('is_active', 'Y')
             ->with(['masterStruktural', 'unit'])
             ->orderBy('tgl_mulai', 'desc')
             ->get();
-            
+
         $masterStruktural = MasterJabatanStruktural::orderBy('nama_jabatan', 'asc')->get();
         $masterUnit = \App\Models\MasterUnit::orderBy('nama_unit', 'asc')->get();
 
@@ -766,7 +766,7 @@ class DataKaryawanController extends MiddlewareController
                 'tgl_akhir' => $tglAkhir,
                 'is_active' => 'Y'
             ]);
-            
+
             return $this->sendSuccess('Jabatan struktural berhasil ditambahkan.', [
                 'html' => view('admin::data-karyawan._struktural_list', [
                     'strukturals' => KaryawanJabatanStruktural::where('data_dosen_tendik_id', $id)->where('is_active', 'Y')->with(['masterStruktural', 'unit'])->orderBy('tgl_mulai', 'desc')->get()
@@ -783,12 +783,12 @@ class DataKaryawanController extends MiddlewareController
         try {
             $str = KaryawanJabatanStruktural::findOrFail($struktural_id);
             $karyawanId = $str->data_dosen_tendik_id;
-            
+
             $str->update([
                 'is_active' => 'N',
                 'tgl_akhir' => Carbon::now()->format('Y-m-d')
             ]);
-            
+
             return $this->sendSuccess('Jabatan struktural berhasil dilepas.', [
                 'html' => view('admin::data-karyawan._struktural_list', [
                     'strukturals' => KaryawanJabatanStruktural::where('data_dosen_tendik_id', $karyawanId)->where('is_active', 'Y')->with(['masterStruktural', 'unit'])->orderBy('tgl_mulai', 'desc')->get()
@@ -806,26 +806,26 @@ class DataKaryawanController extends MiddlewareController
     {
         $this->guard('view', 'admin:data-karyawan');
         $karyawan = DataDosenTendik::findOrFail($id);
-        
+
         $riwayats = RiwayatJabatan::with(['jabatanStruktural', 'jabatanFungsional', 'pangkatGolongan', 'unit'])
             ->where('data_dosen_tendik_id', $id)
             ->orderBy('tgl_selesai', 'desc')
             ->orderBy('created_at', 'desc')
             ->get();
-            
+
         return view('admin::data-karyawan.riwayat_modal', compact('karyawan', 'riwayats'));
     }
     public function exportRiwayatExcel($id)
     {
         $this->guard('view', 'admin:data-karyawan');
-        
+
         $count = RiwayatJabatan::where('data_dosen_tendik_id', $id)->count();
         if ($count === 0) {
             return response('<script>alert("Gagal: Pegawai ini belum memiliki catatan riwayat jabatan untuk diekspor!"); window.close();</script>');
         }
 
         $karyawan = DataDosenTendik::findOrFail($id);
-        
+
         $fileName = 'Riwayat_Jabatan_' . str_replace(' ', '_', $karyawan->nama) . '_' . date('Ymd_His') . '.xlsx';
         return \Maatwebsite\Excel\Facades\Excel::download(new \App\Exports\RiwayatJabatanExport($id), $fileName);
     }

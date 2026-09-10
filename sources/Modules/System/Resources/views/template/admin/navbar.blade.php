@@ -91,7 +91,7 @@
                     </a>
 
                     {{-- Item: Cuti Atasan --}}
-                    <a href="{{ route('users.indexapprovalcuti') }}" class="tsu-notif-item" id="cuti-atasan-item" {!! $notifcutiatasan > 0 ? '' : 'style="display:none;"' !!}>
+                    <a href="{{ route('users.approval-cuti.index') }}" class="tsu-notif-item" id="cuti-atasan-item" {!! $notifcutiatasan > 0 ? '' : 'style="display:none;"' !!}>
                         <span class="tsu-notif-item__icon" style="background:#fef3c7; color:#d97706;">
                             <i class="fas fa-umbrella-beach"></i>
                         </span>
@@ -103,7 +103,7 @@
                     </a>
 
                     {{-- Item: Cuti HRD --}}
-                    <a href="{{ route('users.indexapprovalcuti') }}" class="tsu-notif-item" id="cuti-hrd-item" {!! $notifcutihrd > 0 ? '' : 'style="display:none;"' !!}>
+                    <a href="{{ route('users.approval-cuti.index') }}" class="tsu-notif-item" id="cuti-hrd-item" {!! $notifcutihrd > 0 ? '' : 'style="display:none;"' !!}>
                         <span class="tsu-notif-item__icon" style="background:#fef3c7; color:#d97706;">
                             <i class="fas fa-umbrella-beach"></i>
                         </span>
@@ -115,7 +115,7 @@
                     </a>
 
                     {{-- Item: Izin Atasan --}}
-                    <a href="{{ route('users.indexapprovalizin') }}" class="tsu-notif-item" id="izin-atasan-item" {!! $notifizinatasan > 0 ? '' : 'style="display:none;"' !!}>
+                    <a href="{{ route('users.approval-izin.index') }}" class="tsu-notif-item" id="izin-atasan-item" {!! $notifizinatasan > 0 ? '' : 'style="display:none;"' !!}>
                         <span class="tsu-notif-item__icon" style="background:#e0f2fe; color:#0891b2;">
                             <i class="fas fa-file-medical-alt"></i>
                         </span>
@@ -127,7 +127,7 @@
                     </a>
 
                     {{-- Item: Izin HRD --}}
-                    <a href="{{ route('users.indexapprovalizin') }}" class="tsu-notif-item" id="izin-hrd-item" {!! $notifizinhrd > 0 ? '' : 'style="display:none;"' !!}>
+                    <a href="{{ route('users.approval-izin.index') }}" class="tsu-notif-item" id="izin-hrd-item" {!! $notifizinhrd > 0 ? '' : 'style="display:none;"' !!}>
                         <span class="tsu-notif-item__icon" style="background:#e0f2fe; color:#0891b2;">
                             <i class="fas fa-file-medical-alt"></i>
                         </span>
@@ -139,7 +139,7 @@
                     </a>
 
                     {{-- Item: Lembur Atasan --}}
-                    <a href="{{ route('users.lembur.index') }}#content-persetujuan-bawahan" class="tsu-notif-item" id="lembur-atasan-item" {!! $notiflemburatasan > 0 ? '' : 'style="display:none;"' !!}>
+                    <a href="{{ route('users.approval-lembur.index') }}" class="tsu-notif-item" id="lembur-atasan-item" {!! $notiflemburatasan > 0 ? '' : 'style="display:none;"' !!}>
                         <span class="tsu-notif-item__icon" style="background:#d0eef2; color:#1d7a87;">
                             <i class="fas fa-business-time"></i>
                         </span>
@@ -151,7 +151,7 @@
                     </a>
 
                     {{-- Item: Lembur HRD --}}
-                    <a href="{{ route('users.lembur.index') }}#content-persetujuan-bawahan" class="tsu-notif-item" id="lembur-hrd-item" {!! $notiflemburhrd > 0 ? '' : 'style="display:none;"' !!}>
+                    <a href="{{ route('users.approval-lembur.index') }}" class="tsu-notif-item" id="lembur-hrd-item" {!! $notiflemburhrd > 0 ? '' : 'style="display:none;"' !!}>
                         <span class="tsu-notif-item__icon" style="background:#d0eef2; color:#1d7a87;">
                             <i class="fas fa-business-time"></i>
                         </span>

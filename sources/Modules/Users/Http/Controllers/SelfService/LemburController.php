@@ -61,24 +61,15 @@ class LemburController extends MiddlewareController
                         ->orderBy('nama', 'asc')
                         ->get(['id', 'nama', 'nik']);
 
-        $isAtasan = false;
-        $isSdm = false;
         $namaAtasan = 'Belum/Tidak Ada Atasan (Silakan hubungi SDM)';
-        if ($profile) {
-            $isSdm = ($profile->tipe_karyawan == 'Tendik' && (stripos($profile->posisi, 'SDM') !== false || stripos($profile->posisi, 'Sumber Daya Manusia') !== false));
-
-            $isKepala = KaryawanJabatanStruktural::where('data_dosen_tendik_id', $profile->id)
-                ->whereIn('is_active', [1, '1', 'Y', 'y'])->exists();
-            $isAtasan = $isKepala || LemburKaryawan::where('id_atasan', $profile->id)->exists();
-            if ($profile->unit_id) {
-                $unit = MasterUnit::find($profile->unit_id);
-                if ($unit) {
-                    $id_atasan = $this->findAtasanId($unit, $profile->id);
-                    if ($id_atasan) {
-                        $atasan = DataDosenTendik::find($id_atasan);
-                        if ($atasan) {
-                            $namaAtasan = $atasan->nama;
-                        }
+        if ($profile && $profile->unit_id) {
+            $unit = MasterUnit::find($profile->unit_id);
+            if ($unit) {
+                $id_atasan = $this->findAtasanId($unit, $profile->id);
+                if ($id_atasan) {
+                    $atasan = DataDosenTendik::find($id_atasan);
+                    if ($atasan) {
+                        $namaAtasan = $atasan->nama;
                     }
                 }
             }
@@ -86,15 +77,13 @@ class LemburController extends MiddlewareController
 
         $menuData = MenuSidebar::where('route', 'users.lembur.index')->first();
         $data = [
-            'title'   => 'Lembur Karyawan',
-            'menu'    => 'dashboard',
-            'mlembur' => $mlembur,
-            'profile' => $profile,
-            'karyawans' => $listSdm,
-            'isAtasan'  => $isAtasan,
-            'isSdm'     => $isSdm,
+            'title'      => 'Lembur Karyawan',
+            'menu'       => 'dashboard',
+            'mlembur'    => $mlembur,
+            'profile'    => $profile,
+            'karyawans'  => $listSdm,
             'namaAtasan' => $namaAtasan,
-            'menuIcon'  => $menuData->icon ?? 'fas fa-clock',
+            'menuIcon'   => $menuData->icon ?? 'fas fa-clock',
         ];
 
         return view('users::lembur.index', $data);
@@ -550,98 +539,6 @@ class LemburController extends MiddlewareController
         }
     }
 
-    public function datatableApproval()
-    {
-        // $this->guard('view', 'users:lembur');
-
-        $profile = $this->getCurrentProfile();
-        $profileId = $profile ? $profile->id : null;
-
-        $data = LemburKaryawan::with(['masterLembur', 'user'])
-            ->where(function ($query) use ($profileId) {
-                $query->where(function ($q) use ($profileId) {
-                    $q->where('id_atasan', $profileId)
-                        ->where('statusatasan', 'waiting');
-                });
-
-                $query->orWhere(function ($q) use ($profileId) {
-                    $q->where('id_hrd', $profileId)
-                        ->where('statushrd', 'waiting');
-                });
-            })
-            ->where('is_active', '1')
-            ->orderByDesc('created_at')
-            ->get();
-
-        return DataTables::of($data)
-            ->addIndexColumn()
-            ->addColumn('pengaju', function ($row) {
-                return $row->user ? $row->user->nama : '-';
-            })
-            ->addColumn('jenislembur', function ($row) {
-                return $row->masterLembur ? $row->masterLembur->jenislembur : '-';
-            })
-            ->addColumn('waktu', function ($row) {
-                $mulai = Carbon::parse($row->tanggalmulai)->format('d M Y H:i');
-                $selesai = Carbon::parse($row->tanggalselesai)->format('d M Y H:i');
-                return $mulai . ' - ' . $selesai;
-            })
-            ->addColumn('durasi', function ($row) {
-                $start = Carbon::parse($row->tanggalmulai);
-                $end   = Carbon::parse($row->tanggalselesai);
-                $diffInHours = $start->floatDiffInHours($end);
-                return round($diffInHours, 1) . ' Jam';
-            })
-            ->addColumn('status', function ($row) {
-                if ($row->statusatasan == 'draft') return '<span class="badge badge-secondary">Draft</span>';
-                if ($row->statusatasan == 'waiting') return '<span class="badge badge-warning">Menunggu Atasan</span>';
-                if ($row->statusatasan == 'approved' && $row->statushrd == 'waiting') return '<span class="badge badge-info">Menunggu SDM</span>';
-                if ($row->statusatasan == 'approved' && $row->statushrd == 'approved') return '<span class="badge badge-success">Disetujui</span>';
-                if ($row->statusatasan == 'rejected' || $row->statushrd == 'rejected') return '<span class="badge badge-danger">Ditolak</span>';
-                return '-';
-            })
-            ->addColumn('action', function ($row) use ($profileId) {
-                $detailBtn = '<button type="button" data-url="' . route('users.lembur.show', encrypt($row->id)) . '" class="btn btn-info btn-sm btn-detail" title="Info Detail"><i class="fas fa-info-circle"></i></button>';
-
-                $approveBtn = '';
-                $rejectBtn = '';
-
-                $isAtasan = $row->id_atasan == $profileId;
-                $isHrd = $row->id_hrd == $profileId;
-
-                $canApproveAsAtasan = $isAtasan && $row->statusatasan == 'waiting';
-                $canApproveAsHrd = $isHrd && $row->statusatasan == 'approved' && $row->statushrd == 'waiting';
-
-                if ($canApproveAsAtasan || $canApproveAsHrd) {
-                    $approveBtn = '<button type="button" data-id="' . encrypt($row->id) . '" class="btn btn-success btn-sm btn-approve ml-1" title="Setujui"><i class="fas fa-check"></i></button>';
-                    $rejectBtn = '<button type="button" data-id="' . encrypt($row->id) . '" class="btn btn-danger btn-sm btn-reject ml-1" title="Tolak"><i class="fas fa-times"></i></button>';
-                }
-
-                return '<div class="btn-group" role="group">' . $detailBtn . $approveBtn . $rejectBtn . '</div>';
-            })
-            ->rawColumns(['status', 'action'])
-            ->make(true);
-    }
-
-    public function detailPekerjaan(Request $request, $id)
-    {
-        $this->guard('view', 'users:lembur');
-
-        $karyawan = LemburKaryawan::find($id);
-
-        if ($karyawan) {
-            return response()->json([
-                'success' => true,
-                'data' => $karyawan->keterangan
-            ]);
-        }
-
-        return response()->json([
-            'success' => false,
-            'message' => 'Data tidak ditemukan'
-        ], 404);
-    }
-
     private function findAtasanId($unit, $currentUserId)
     {
         if (!$unit) return null;
@@ -670,181 +567,5 @@ class LemburController extends MiddlewareController
         }
 
         return null;
-    }
-
-    public function approve(Request $request, $id)
-    {
-        // $this->guard('edit', 'users:lembur');
-
-        try {
-            $myid = decrypt($id);
-            $profile = $this->getCurrentProfile();
-
-            $lembur = LemburKaryawan::where('id', $myid)
-                ->where(function($q) use ($profile) {
-                    $q->where('id_atasan', $profile->id)
-                      ->orWhere('id_hrd', $profile->id);
-                })
-                ->first();
-
-            if (!$lembur) {
-                throw new \Exception("Data tidak ditemukan atau Anda bukan atasan/SDM untuk pengajuan ini.");
-            }
-
-            $isAtasan = $lembur->id_atasan == $profile->id;
-            $isHrd = $lembur->id_hrd == $profile->id;
-
-            if ($isAtasan && $lembur->statusatasan == 'waiting') {
-                DB::transaction(function () use ($lembur) {
-                    $lembur->statusatasan = 'approved';
-                    $lembur->save();
-                });
-
-                // Notify HRD
-                if ($lembur->id_hrd) {
-                    $hrdProfile = DataDosenTendik::find($lembur->id_hrd);
-                    if ($hrdProfile && $hrdProfile->user_id) {
-                        $hrdUser = User::find($hrdProfile->user_id);
-                        if ($hrdUser) {
-                            $karyawanProfile = DataDosenTendik::find($lembur->id_user);
-                            $namaKaryawan = $karyawanProfile ? $karyawanProfile->nama : 'Karyawan';
-
-                            $hrdUser->notify(new LemburDiajukanNotification(
-                                $lembur,
-                                'Pengajuan lembur dari ' . $namaKaryawan . ' telah disetujui Atasan dan menunggu persetujuan Anda.',
-                                'hrd'
-                            ));
-                        }
-                    }
-                }
-
-                // Feedback to Karyawan
-                $karyawanProfile = DataDosenTendik::find($lembur->id_user);
-                if ($karyawanProfile && $karyawanProfile->user_id) {
-                    $karyawanUser = User::find($karyawanProfile->user_id);
-                    if ($karyawanUser) {
-                        $karyawanUser->notify(new \App\Notifications\PengajuanDiprosesNotification(
-                            "Pengajuan Lembur Anda telah Disetujui oleh Atasan.",
-                            'feedback',
-                            route('users.lembur.index'),
-                            'Cek Riwayat',
-                            'fa-check-circle text-success'
-                        ));
-                    }
-                }
-            } else if ($isHrd && $lembur->statusatasan == 'approved' && $lembur->statushrd == 'waiting') {
-                DB::transaction(function () use ($lembur) {
-                    $lembur->statushrd = 'approved';
-                    $lembur->save();
-                });
-
-                // Feedback to Karyawan
-                $karyawanProfile = DataDosenTendik::find($lembur->id_user);
-                if ($karyawanProfile && $karyawanProfile->user_id) {
-                    $karyawanUser = User::find($karyawanProfile->user_id);
-                    if ($karyawanUser) {
-                        $karyawanUser->notify(new \App\Notifications\PengajuanDiprosesNotification(
-                            "Pengajuan Lembur Anda telah Disetujui oleh SDM.",
-                            'feedback',
-                            route('users.lembur.index'),
-                            'Cek Riwayat',
-                            'fa-check-circle text-success'
-                        ));
-                    }
-                }
-            } else {
-                throw new \Exception("Status pengajuan tidak valid untuk disetujui oleh Anda saat ini. (Menunggu persetujuan Atasan)");
-            }
-
-            return $this->sendSuccess('Pengajuan lembur berhasil disetujui.');
-
-        } catch (\Exception $e) {
-            return TsuErrorHandlerService::handleJson(
-                $e,
-                '[TSU_LEMBUR_APP_FAIL]',
-                $e->getMessage() === "Data tidak ditemukan atau Anda bukan atasan/SDM untuk pengajuan ini." || $e->getMessage() === "Status pengajuan tidak valid untuk disetujui oleh Anda saat ini. (Menunggu persetujuan Atasan)" ? $e->getMessage() : 'Gagal menyetujui pengajuan lembur.',
-                "Lembur Approve ID: $id."
-            );
-        }
-    }
-
-    public function reject(Request $request, $id)
-    {
-        // $this->guard('edit', 'users:lembur');
-
-        try {
-            $myid = decrypt($id);
-            $profile = $this->getCurrentProfile();
-
-            $lembur = LemburKaryawan::where('id', $myid)
-                ->where(function($q) use ($profile) {
-                    $q->where('id_atasan', $profile->id)
-                      ->orWhere('id_hrd', $profile->id);
-                })
-                ->first();
-
-            if (!$lembur) {
-                throw new \Exception("Data tidak ditemukan atau Anda bukan atasan/SDM untuk pengajuan ini.");
-            }
-
-            $isAtasan = $lembur->id_atasan == $profile->id;
-            $isHrd = $lembur->id_hrd == $profile->id;
-
-            if ($isAtasan && $lembur->statusatasan == 'waiting') {
-                DB::transaction(function () use ($lembur) {
-                    $lembur->statusatasan = 'rejected';
-                    // Jika atasan menolak, maka hrd juga batal
-                    $lembur->statushrd = 'rejected';
-                    $lembur->save();
-                });
-
-                // Feedback to Karyawan
-                $karyawanProfile = DataDosenTendik::find($lembur->id_user);
-                if ($karyawanProfile && $karyawanProfile->user_id) {
-                    $karyawanUser = User::find($karyawanProfile->user_id);
-                    if ($karyawanUser) {
-                        $karyawanUser->notify(new \App\Notifications\PengajuanDiprosesNotification(
-                            "Pengajuan Lembur Anda telah Ditolak oleh Atasan.",
-                            'feedback',
-                            route('users.lembur.index'),
-                            'Cek Riwayat',
-                            'fa-times-circle text-danger'
-                        ));
-                    }
-                }
-            } else if ($isHrd && $lembur->statusatasan == 'approved' && $lembur->statushrd == 'waiting') {
-                DB::transaction(function () use ($lembur) {
-                    $lembur->statushrd = 'rejected';
-                    $lembur->save();
-                });
-
-                // Feedback to Karyawan
-                $karyawanProfile = DataDosenTendik::find($lembur->id_user);
-                if ($karyawanProfile && $karyawanProfile->user_id) {
-                    $karyawanUser = User::find($karyawanProfile->user_id);
-                    if ($karyawanUser) {
-                        $karyawanUser->notify(new \App\Notifications\PengajuanDiprosesNotification(
-                            "Pengajuan Lembur Anda telah Ditolak oleh SDM.",
-                            'feedback',
-                            route('users.lembur.index'),
-                            'Cek Riwayat',
-                            'fa-times-circle text-danger'
-                        ));
-                    }
-                }
-            } else {
-                throw new \Exception("Status pengajuan tidak valid untuk ditolak oleh Anda saat ini. (Menunggu persetujuan Atasan)");
-            }
-
-            return $this->sendSuccess('Pengajuan lembur berhasil ditolak.');
-
-        } catch (\Exception $e) {
-            return TsuErrorHandlerService::handleJson(
-                $e,
-                '[TSU_LEMBUR_REJ_FAIL]',
-                $e->getMessage() === "Data tidak ditemukan atau Anda bukan atasan/SDM untuk pengajuan ini." || $e->getMessage() === "Status pengajuan tidak valid untuk ditolak oleh Anda saat ini. (Menunggu persetujuan Atasan)" ? $e->getMessage() : 'Gagal menolak pengajuan lembur.',
-                "Lembur Reject ID: $id."
-            );
-        }
     }
 }

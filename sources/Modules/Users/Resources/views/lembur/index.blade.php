@@ -26,11 +26,6 @@
         .tsu-skeleton { background:linear-gradient(90deg,#f0f4f8 25%,#e2eaee 50%,#f0f4f8 75%);background-size:200% 100%;animation:tsu-shimmer 1.4s infinite;border-radius:4px;height:14px; }
         @@keyframes tsu-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
         .skeleton-row td { padding:.65rem 1rem!important; }
-        .lembur-tab-nav { display:flex;align-items:stretch;padding:0 1rem;gap:.25rem;border-bottom:2px solid var(--tsu-primary-light);list-style:none;margin:0; }
-        .lembur-tab-nav li { display:flex; }
-        .lembur-tab-nav a { display:flex;align-items:center;padding:.75rem 1.1rem;font-size:.83rem;font-weight:600;color:#6c757d;border-bottom:3px solid transparent;margin-bottom:-2px;text-decoration:none;transition:all .2s; }
-        .lembur-tab-nav a:hover { color:var(--tsu-primary); }
-        .lembur-tab-nav a.active { color:var(--tsu-primary-dark);border-bottom-color:var(--tsu-primary); }
     </style>
 @endsection
 
@@ -45,25 +40,8 @@
     {{-- Main Content --}}
     <section class="content">
         <div class="container-fluid">
-            <div class="card card-primary card-outline card-tabs">
-            <div class="card-header p-0 border-bottom-0">
-                <ul class="lembur-tab-nav" id="lembur-tabs" role="tablist">
-                    <li role="presentation"><a class="active" id="tab-pengajuan-saya" data-toggle="pill" href="#content-pengajuan-saya" role="tab"><i class="fas fa-file-alt mr-1"></i> Pengajuan Saya</a></li>
-                    @if($isAtasan || $isSdm)
-                    <li role="presentation">
-                        <a id="tab-persetujuan-bawahan" data-toggle="pill" href="#content-persetujuan-bawahan" role="tab">
-                            <i class="fas fa-check-circle mr-1"></i> Persetujuan Lembur
-                            @php $totalNotifLembur=0; if($isAtasan)$totalNotifLembur+=session('notiflemburatasan',0); if($isSdm)$totalNotifLembur+=session('notiflemburhrd',0); @endphp
-                            @if($totalNotifLembur > 0)<span class="badge badge-danger ml-1" id="badge-approval">{{ $totalNotifLembur }}</span>@endif
-                        </a>
-                    </li>
-                    @endif
-                </ul>
-            </div>
-            <div class="card-body pt-3"><div class="tab-content" id="lembur-tabsContent">
-
-                {{-- TAB 1: PENGAJUAN SAYA --}}
-                <div class="tab-pane fade show active" id="content-pengajuan-saya" role="tabpanel">
+            <div class="card card-primary card-outline tsu-card">
+                <div class="card-body">
                     <div class="tsu-callout tsu-callout--info mb-3">
                         <i class="fas fa-info-circle mr-1"></i> Isi formulir di bawah untuk mengajukan lembur baru. Atasan terdeteksi otomatis. Pastikan bukti kegiatan siap sebelum submit.
                     </div>
@@ -197,27 +175,8 @@
                             </tbody>
                         </table>
                     </div>
-                </div>{{-- END TAB 1 --}}
-
-                @if($isAtasan || $isSdm)
-                <div class="tab-pane fade" id="content-persetujuan-bawahan" role="tabpanel">
-                    <div class="tsu-callout tsu-callout--info mb-3"><i class="fas fa-info-circle mr-1"></i> Daftar pengajuan lembur bawahan yang perlu persetujuan Anda. Klik <strong>Detail</strong> sebelum menyetujui.</div>
-                    <div class="table-responsive">
-                        <table id="dataTablesApproval" class="table table-hover" style="width:100%">
-                            <thead style="background:var(--tsu-primary-faint);">
-                                <tr style="font-size:.78rem;font-weight:700;color:var(--tsu-primary-dark);text-transform:uppercase;letter-spacing:.04em;">
-                                    <th class="text-center" style="width:45px;">No</th><th>Karyawan</th><th>Jenis Lembur</th><th>Waktu</th>
-                                    <th class="text-center" style="width:80px;">Durasi</th><th>Keterangan</th>
-                                    <th class="text-center" style="width:130px;">Status</th><th class="text-center" style="width:120px;">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
-                    </div>
                 </div>
-                @endif
-
-            </div></div>
+            </div>
         </div>
     </section>
 
@@ -380,45 +339,6 @@
             Swal.fire({title:'Tarik Pengajuan?',html:'Pengajuan akan ditarik ke status <strong>Draft</strong>.',icon:'question',showCancelButton:true,confirmButtonColor:'var(--tsu-warning)',cancelButtonColor:'#6c757d',confirmButtonText:'<i class="fas fa-undo mr-1"></i> Ya, Tarik!',cancelButtonText:'Batal'})
             .then((r)=>{if(r.isConfirmed)pikdiAjax({url:url,type:'POST',data:{_token:$('meta[name=csrf-token]').attr('content')},onSuccess:()=>{oTable.draw();}});});
         });
-
-        @if($isAtasan || $isSdm)
-        var oTableApproval=$('#dataTablesApproval').DataTable({processing:true,serverSide:true,
-            ajax:{url:"{{ route('users.lembur.approval.json') }}"},
-            columns:[
-                {data:'DT_RowIndex',orderable:false,searchable:false,className:'text-center'},
-                {data:'pengaju'},{data:'jenislembur'},{data:'waktu'},
-                {data:'durasi',className:'text-center'},
-                {data:'keterangan',render:function(d){return d&&d.length>50?'<span title="'+d+'">'+d.substring(0,50)+'...</span>':(d||'-');}},
-                {data:'status',className:'text-center',orderable:false},
-                {data:'action',orderable:false,searchable:false,className:'text-center'},
-            ],
-            language:{
-                emptyTable:'<div class="text-center py-3"><i class="fas fa-check-double fa-2x mb-2" style="color:var(--tsu-success-light);"></i><p class="mb-0" style="font-size:.85rem;color:#6c757d;">Tidak ada pengajuan yang perlu disetujui</p></div>',
-                processing:'<div class="text-center py-2"><div class="spinner-border spinner-border-sm" style="color:var(--tsu-primary);"></div></div>',
-            }
-        });
-
-        $('body').on('click','.btn-approve',function(){
-            var id=$(this).data('id'),url="{{ route('users.lembur.approve',':id') }}".replace(':id',id);
-            Swal.fire({title:'Setujui Pengajuan?',text:'Anda akan menyetujui pengajuan ini.',icon:'question',showCancelButton:true,confirmButtonColor:'var(--tsu-success)',cancelButtonColor:'#6c757d',confirmButtonText:'<i class="fas fa-check mr-1"></i> Ya, Setujui',cancelButtonText:'Batal'})
-            .then((r)=>{if(r.isConfirmed)processApproval(url,'POST');});
-        });
-        $('body').on('click','.btn-reject',function(){
-            var id=$(this).data('id'),url="{{ route('users.lembur.reject',':id') }}".replace(':id',id);
-            Swal.fire({title:'Tolak Pengajuan?',html:'Pengajuan akan ditolak.',icon:'warning',showCancelButton:true,confirmButtonColor:'var(--tsu-danger)',cancelButtonColor:'#6c757d',confirmButtonText:'<i class="fas fa-times mr-1"></i> Ya, Tolak',cancelButtonText:'Batal'})
-            .then((r)=>{if(r.isConfirmed)processApproval(url,'POST');});
-        });
-        function processApproval(url,method){
-            pikdiAjax({url:url,type:method,data:{},onSuccess:function(){
-                oTableApproval.ajax.reload(null,false);oTable.ajax.reload(null,false);
-                var sb=$('#sidebar-badge-users-lembur-index');if(sb.length){var v=parseInt(sb.text())||0;if(v>0){sb.text(v-1);if(v-1===0)sb.hide();}}
-                var na=$('#badge-notif-lembur-atasan');if(na.length){var v=parseInt(na.text())||0;if(v>0){na.text(v-1);if(v-1===0){$('#lembur-atasan-divider').hide();$('#lembur-atasan-item').hide();}}}
-                var nh=$('#badge-notif-lembur-hrd');if(nh.length){var v=parseInt(nh.text())||0;if(v>0){nh.text(v-1);if(v-1===0){$('#lembur-hrd-divider').hide();$('#lembur-hrd-item').hide();}}}
-                var gb=$('#global-notif-badge');if(gb.length){var v=parseInt(gb.text())||0;if(v>0){gb.text(v-1);$('#global-notif-text').text(v-1);if(v-1===0){gb.hide();$('#global-notif-header').hide();$('#global-notif-empty').show();}}}
-                var tb=$('#badge-approval');if(tb.length){var v=parseInt(tb.text())||0;if(v>0){tb.text(v-1);if(v-1===0)tb.remove();}}
-            }});
-        }
-        @endif
     });
     </script>
 @endsection

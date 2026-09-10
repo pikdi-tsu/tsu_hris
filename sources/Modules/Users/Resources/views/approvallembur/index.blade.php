@@ -59,8 +59,8 @@
 @section('content')
     {{-- TSU Page Header --}}
     <x-tsu-page-header
-        :title="$title ?? 'Approval Izin Karyawan'"
-        :icon="$menuIcon ?? 'fas fa-clipboard-check'"
+        :title="$title ?? 'Approval Lembur Karyawan'"
+        :icon="$menuIcon ?? 'fas fa-business-time'"
         :breadcrumb="true"
     >
         <x-slot name="actions">
@@ -82,11 +82,12 @@
                                     <thead>
                                         <tr>
                                             <th class="text-center" style="width: 5%">No</th>
-                                            <th style="width: 25%">Nama Pegawai</th>
-                                            <th style="width: 20%">Jenis Izin</th>
-                                            <th class="text-center" style="width: 15%">Jumlah Hari</th>
-                                            <th style="width: 25%">Keterangan</th>
-                                            <th class="text-center" style="width: 10%">Aksi</th>
+                                            <th style="width: 22%">Nama Pegawai</th>
+                                            <th style="width: 15%">Jenis Lembur</th>
+                                            <th style="width: 15%">Tanggal Lembur</th>
+                                            <th style="width: 15%">Jam & Durasi</th>
+                                            <th style="width: 15%">Status</th>
+                                            <th class="text-center" style="width: 13%">Aksi</th>
                                         </tr>
                                     </thead>
                                 </table>
@@ -98,13 +99,13 @@
         </div>
     </div>
 
-    {{-- Modal content --}}
+    {{-- Modal Detail & Approval --}}
     <div class="modal fade" id="modaldetail">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title font-weight-bold">
-                        <i class="fas fa-clipboard-check mr-2 text-primary"></i> <span id="modaltitle">Detail & Approval Izin</span>
+                        <i class="fas fa-business-time mr-2 text-primary"></i> <span id="modaltitle">Detail & Approval Lembur</span>
                     </h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
@@ -130,7 +131,7 @@
                 processing: true,
                 serverSide: true,
                 ajax: {
-                    url: "{!! route('users.approval-izin.datatables') !!}",
+                    url: "{!! route('users.approval-lembur.datatables') !!}",
                     type: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
@@ -149,17 +150,20 @@
                         name: 'nama'
                     },
                     {
-                        data: 'jenisizin',
-                        name: 'jenisizin'
+                        data: 'jenislembur',
+                        name: 'jenislembur'
                     },
                     {
-                        data: 'jumlah',
-                        name: 'jumlah',
-                        className: 'text-center'
+                        data: 'tanggal',
+                        name: 'tanggal'
                     },
                     {
-                        data: 'keterangan',
-                        name: 'keterangan'
+                        data: 'waktu',
+                        name: 'waktu'
+                    },
+                    {
+                        data: 'status',
+                        name: 'status'
                     },
                     {
                         data: 'action',
@@ -184,7 +188,7 @@
                 let idku = $(this).attr('data-id');
 
                 $.ajax({
-                    url: "{!! route('users.approval-izin.detail') !!}",
+                    url: "{!! route('users.approval-lembur.detail') !!}",
                     type: 'POST',
                     data: {
                         myid: idku
@@ -221,8 +225,7 @@
             });
 
             $('body').on('click', '#btnsimpan', function() {
-                let idizinkaryawan = $("#idizinkaryawan").val();
-                let iduser = $("#iduser").val();
+                let idlemburkaryawan = $("#idlemburkaryawan").val();
                 let approval = $("#approval").val();
                 let ketapproval = $("#keterangan").val();
 
@@ -238,18 +241,17 @@
                 if (approval === 'rejected' && !ketapproval) {
                     Swal.fire({
                         title: 'Informasi',
-                        text: 'Jika Approval Ditolak, Keterangan Approval Harus Diisi',
+                        text: 'Jika Approval Ditolak, Alasan Penolakan Wajib Diisi',
                         icon: 'warning'
                     });
                     return;
                 }
 
                 pikdiAjax({
-                    url: "{!! route('users.approval-izin.simpan') !!}",
+                    url: "{!! route('users.approval-lembur.simpan') !!}",
                     type: 'POST',
                     data: {
-                        idizinkaryawan: idizinkaryawan,
-                        iduser: iduser,
+                        idlemburkaryawan: idlemburkaryawan,
                         approval: approval,
                         ketapproval: ketapproval
                     },
@@ -258,7 +260,7 @@
                         oTable.ajax.reload(null, false);
 
                         // 1. Decrement Sidebar Badge
-                        let sidebarBadge = $('#sidebar-badge-approval-izin, #sidebar-badge-users-approval-izin-index, #sidebar-badge-users-indexapprovalizin');
+                        let sidebarBadge = $('#sidebar-badge-approval-lembur, #sidebar-badge-users-approval-lembur-index, #sidebar-badge-users-indexapprovallembur');
                         if (sidebarBadge.length > 0) {
                             sidebarBadge.each(function() {
                                 let val = parseInt($(this).text()) || 0;
@@ -270,27 +272,25 @@
                         }
 
                         // 2. Decrement Navbar Badge & Dropdown Item (Atasan)
-                        let navbarBadgeAtasan = $('#badge-notif-izin-atasan');
+                        let navbarBadgeAtasan = $('#badge-notif-lembur-atasan');
                         if (navbarBadgeAtasan.length > 0) {
                             let val = parseInt(navbarBadgeAtasan.text()) || 0;
                             if (val > 0) {
                                 navbarBadgeAtasan.text(val - 1);
                                 if (val - 1 === 0) {
-                                    $('#izin-atasan-divider').hide();
-                                    $('#izin-atasan-item').hide();
+                                    $('#lembur-atasan-item').hide();
                                 }
                             }
                         }
 
                         // Decrement Navbar Badge & Dropdown Item (HRD)
-                        let navbarBadgeHrd = $('#badge-notif-izin-hrd');
+                        let navbarBadgeHrd = $('#badge-notif-lembur-hrd');
                         if (navbarBadgeHrd.length > 0) {
                             let val = parseInt(navbarBadgeHrd.text()) || 0;
                             if (val > 0) {
                                 navbarBadgeHrd.text(val - 1);
                                 if (val - 1 === 0) {
-                                    $('#izin-hrd-divider').hide();
-                                    $('#izin-hrd-item').hide();
+                                    $('#lembur-hrd-item').hide();
                                 }
                             }
                         }

@@ -25,8 +25,8 @@ class IzinDiajukanNotification extends TsuRealtimeNotification
 
         parent::__construct(
             $message,
-            'indexapprovalizin', // module
-            route('users.indexapprovalizin'), // action_url
+            'approval-izin', // module
+            route('users.approval-izin.index'), // action_url
             $action_text, // action_text
             'Pengajuan Izin', // title
             'fas fa-envelope-open-text text-primary', // icon

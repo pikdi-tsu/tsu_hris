@@ -170,31 +170,93 @@ class MasterPengembanganSdmController extends MiddlewareController
     }
 
     /**
-     * Master Sertifikasi Kompetensi
+     * Master Sertifikasi Kompetensi - Index View
      */
     public function sertifikasiIndex(Request $request)
     {
         $this->guard('view', 'admin:pengembangan-sdm');
 
-        if ($request->ajax()) {
-            $data = MasterSertifikasi::with('unit')->select('master_sertifikasis.*');
-            return DataTables::of($data)
-                ->addIndexColumn()
-                ->addColumn('unit_name', fn($row) => $row->unit ? $row->unit->nama_unit : 'Semua / Umum')
-                ->addColumn('action', function ($row) {
-                    return '<button class="btn btn-xs btn-danger btn-delete-sert" data-id="' . $row->id . '"><i class="fas fa-trash"></i></button>';
-                })
-                ->rawColumns(['action'])
-                ->make(true);
+        $stats = [
+            'total'      => MasterSertifikasi::count(),
+            'dosen'      => MasterSertifikasi::where('kategori_peserta', 'dosen')->count(),
+            'tendik'     => MasterSertifikasi::where('kategori_peserta', 'tendik')->count(),
+            'unit_count' => MasterSertifikasi::whereNotNull('unit_id')->distinct('unit_id')->count('unit_id'),
+        ];
+
+        $menuIcon = MenuSidebar::where('route', 'admin.master-sertifikasi.index')->value('icon') ?: 'fas fa-certificate';
+        $unitList = MasterUnit::orderBy('nama_unit')->get();
+
+        return view('admin::master-pengembangan.sertifikasi_index', [
+            'title'    => 'Master Sertifikasi Kompetensi',
+            'menuIcon' => $menuIcon,
+            'stats'    => $stats,
+            'unitList' => $unitList,
+        ]);
+    }
+
+    /**
+     * Master Sertifikasi Kompetensi - DataTables JSON
+     */
+    public function sertifikasiJson(Request $request)
+    {
+        $this->guard('view', 'admin:pengembangan-sdm');
+
+        $query = MasterSertifikasi::with('unit')->withCount('pengembanganSertifikasis as peserta_count')->select('master_sertifikasis.*');
+
+        if ($request->filled('kategori') && $request->kategori !== 'all') {
+            $query->where('kategori_peserta', $request->kategori);
         }
 
-        $unitList = MasterUnit::orderBy('nama_unit')->get();
-        $sertifikasiList = MasterSertifikasi::with('unit')->withCount('pengembanganSertifikasis as peserta_count')->orderBy('nama_sertifikasi')->get();
-        return view('admin::master-pengembangan.sertifikasi_index', [
-            'title' => 'Master Sertifikasi Kompetensi',
-            'unitList' => $unitList,
-            'sertifikasiList' => $sertifikasiList,
-        ]);
+        return DataTables::of($query)
+            ->addIndexColumn()
+            ->editColumn('nama_sertifikasi', function ($row) {
+                return '<span class="font-weight-bold text-dark">' . e($row->nama_sertifikasi) . '</span>';
+            })
+            ->editColumn('kategori_peserta', function ($row) {
+                $kat = strtolower($row->kategori_peserta ?? 'umum');
+                if ($kat === 'dosen') {
+                    return '<span class="badge badge-pill px-3 py-1 font-weight-bold" style="background-color: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; font-size: 0.76rem;">Dosen</span>';
+                } elseif ($kat === 'tendik') {
+                    return '<span class="badge badge-pill px-3 py-1 font-weight-bold" style="background-color: #fef3c7; color: #b45309; border: 1px solid #fde68a; font-size: 0.76rem;">Tendik</span>';
+                }
+                return '<span class="badge badge-pill px-3 py-1 font-weight-bold" style="background-color: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; font-size: 0.76rem;">Umum</span>';
+            })
+            ->editColumn('lembaga_penerbit', function ($row) {
+                if ($row->lembaga_penerbit) {
+                    return '<span class="font-weight-500 text-dark">' . e($row->lembaga_penerbit) . '</span>';
+                }
+                return '<span class="text-muted font-italic">-</span>';
+            })
+            ->editColumn('unit_name', function ($row) {
+                if ($row->unit) {
+                    return '<span class="font-weight-500 text-dark">' . e($row->unit->nama_unit) . '</span>';
+                }
+                return '<span class="text-muted font-italic">Semua Unit / Umum</span>';
+            })
+            ->editColumn('peserta_count', function ($row) {
+                $count = $row->peserta_count ?? 0;
+                return '<span class="badge badge-pill px-3 py-1 font-weight-bold" style="background-color: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-size: 0.76rem;">' . $count . ' Target</span>';
+            })
+            ->addColumn('action', function ($row) {
+                $editBtn = '<button type="button" class="btn btn-primary btn-xs mr-1 btn-edit-sertifikasi" ' .
+                    'data-id="' . $row->id . '" ' .
+                    'data-nama="' . e($row->nama_sertifikasi) . '" ' .
+                    'data-kategori="' . e($row->kategori_peserta ?? 'umum') . '" ' .
+                    'data-lembaga="' . e($row->lembaga_penerbit ?? '') . '" ' .
+                    'data-unit="' . e($row->unit_id ?? '') . '" ' .
+                    'title="Ubah Sertifikasi"><i class="fas fa-edit mr-1"></i>Edit</button>';
+
+                $deleteUrl = route('admin.master-sertifikasi.destroy', $row->id);
+                $delBtn = '<button type="button" class="btn btn-danger btn-xs btn-delete-sertifikasi" ' .
+                    'data-id="' . $row->id . '" ' .
+                    'data-name="' . e($row->nama_sertifikasi) . '" ' .
+                    'data-url="' . $deleteUrl . '" ' .
+                    'title="Hapus Sertifikasi"><i class="fas fa-trash mr-1"></i>Hapus</button>';
+
+                return '<div class="text-center text-nowrap">' . $editBtn . $delBtn . '</div>';
+            })
+            ->rawColumns(['nama_sertifikasi', 'kategori_peserta', 'lembaga_penerbit', 'unit_name', 'peserta_count', 'action'])
+            ->make(true);
     }
 
     public function sertifikasiStore(Request $request)
@@ -202,24 +264,55 @@ class MasterPengembanganSdmController extends MiddlewareController
         $this->guard('edit', 'admin:pengembangan-sdm');
 
         $request->validate([
-            'nama_sertifikasi' => 'required|string|max:150',
-            'kategori_peserta' => 'nullable|in:dosen,tendik,umum',
+            'nama_sertifikasi'    => 'required|string|max:150',
+            'kategori_peserta'    => 'nullable|in:dosen,tendik,umum',
+            'lembaga_penerbit'    => 'nullable|string|max:100',
             'lembaga_sertifikasi' => 'nullable|string|max:100',
-            'unit_id' => 'nullable|uuid',
+            'unit_id'             => 'nullable|uuid',
         ]);
 
+        $lembaga = $request->lembaga_penerbit ?: $request->lembaga_sertifikasi;
+
         MasterSertifikasi::create([
-            'nama_sertifikasi' => $request->nama_sertifikasi,
+            'nama_sertifikasi' => trim($request->nama_sertifikasi),
             'kategori_peserta' => $request->kategori_peserta ?? 'umum',
-            'lembaga_sertifikasi' => $request->lembaga_sertifikasi,
-            'unit_id' => $request->unit_id,
-            'is_active' => true,
+            'lembaga_penerbit' => $lembaga ? trim($lembaga) : null,
+            'unit_id'          => $request->unit_id,
+            'is_active'        => true,
         ]);
 
         if ($request->ajax()) {
-            return response()->json(['success' => true, 'message' => 'Sertifikasi berhasil ditambahkan!']);
+            return response()->json(['success' => true, 'message' => 'Sertifikasi kompetensi berhasil ditambahkan!']);
         }
-        return redirect()->back()->with('success', 'Sertifikasi berhasil ditambahkan!');
+        return redirect()->back()->with('success', 'Sertifikasi kompetensi berhasil ditambahkan!');
+    }
+
+    public function sertifikasiUpdate(Request $request, $id)
+    {
+        $this->guard('edit', 'admin:pengembangan-sdm');
+
+        $request->validate([
+            'nama_sertifikasi'    => 'required|string|max:150',
+            'kategori_peserta'    => 'nullable|in:dosen,tendik,umum',
+            'lembaga_penerbit'    => 'nullable|string|max:100',
+            'lembaga_sertifikasi' => 'nullable|string|max:100',
+            'unit_id'             => 'nullable|uuid',
+        ]);
+
+        $sertifikasi = MasterSertifikasi::findOrFail($id);
+        $lembaga = $request->lembaga_penerbit ?: $request->lembaga_sertifikasi;
+
+        $sertifikasi->update([
+            'nama_sertifikasi' => trim($request->nama_sertifikasi),
+            'kategori_peserta' => $request->kategori_peserta ?? 'umum',
+            'lembaga_penerbit' => $lembaga ? trim($lembaga) : null,
+            'unit_id'          => $request->unit_id,
+        ]);
+
+        if ($request->ajax()) {
+            return response()->json(['success' => true, 'message' => 'Sertifikasi kompetensi berhasil diperbarui!']);
+        }
+        return redirect()->back()->with('success', 'Sertifikasi kompetensi berhasil diperbarui!');
     }
 
     public function sertifikasiDestroy($id)
@@ -228,8 +321,8 @@ class MasterPengembanganSdmController extends MiddlewareController
 
         MasterSertifikasi::findOrFail($id)->delete();
         if (request()->ajax()) {
-            return response()->json(['success' => true, 'message' => 'Sertifikasi berhasil dihapus!']);
+            return response()->json(['success' => true, 'message' => 'Sertifikasi kompetensi berhasil dihapus!']);
         }
-        return redirect()->back()->with('success', 'Sertifikasi berhasil dihapus!');
+        return redirect()->back()->with('success', 'Sertifikasi kompetensi berhasil dihapus!');
     }
 }

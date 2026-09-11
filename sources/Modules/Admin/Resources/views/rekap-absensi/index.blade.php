@@ -1,83 +1,535 @@
 @extends('system::template.admin.header')
+@section('title', $title ?? 'Rekap Data Absensi')
+
+@section('css')
+    <style>
+        /* === TSU Color Tokens === */
+        :root {
+            --tsu-primary: #094b54;
+            --tsu-primary-dark: #07383f;
+            --tsu-primary-light: #cce6e9;
+            --tsu-accent-green: #047857;
+            --tsu-accent-amber: #b45309;
+            --tsu-accent-blue: #0284c7;
+            --tsu-bg-gray: #f8fafc;
+            --tsu-border-gray: #e2e8f0;
+            --tsu-radius: 8px;
+            --tsu-radius-lg: 12px;
+        }
+
+        /* === Stat Cards Grid === */
+        .tsu-stat-grid-rekap {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        @media (max-width: 991.98px) {
+            .tsu-stat-grid-rekap {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .tsu-stat-grid-rekap {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .tsu-stat-card {
+            border-radius: var(--tsu-radius-lg, 12px);
+            padding: 1.25rem 1.35rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.07);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 112px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .tsu-stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+        }
+
+        .tsu-stat-card__icon {
+            position: absolute;
+            right: 1.1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 3.2rem;
+            opacity: 0.15;
+            pointer-events: none;
+        }
+
+        .tsu-stat-card__title {
+            font-size: 0.76rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.4rem;
+            opacity: 0.92;
+        }
+
+        .tsu-stat-card__value {
+            font-size: 1.75rem;
+            font-weight: 800;
+            line-height: 1.1;
+            margin-bottom: 0.3rem;
+        }
+
+        .tsu-stat-card__subtext {
+            font-size: 0.75rem;
+            font-weight: 500;
+            opacity: 0.88;
+            line-height: 1.25;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Stat Card Variations */
+        .tsu-stat-card--pegawai {
+            background: linear-gradient(135deg, #094b54 0%, #0c6170 100%);
+            color: #ffffff;
+        }
+
+        .tsu-stat-card--transport {
+            background: linear-gradient(135deg, #047857 0%, #10b981 100%);
+            color: #ffffff;
+        }
+
+        .tsu-stat-card--periode {
+            background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%);
+            color: #ffffff;
+        }
+
+        .tsu-stat-card--log {
+            background: linear-gradient(135deg, #b45309 0%, #d97706 100%);
+            color: #ffffff;
+        }
+
+        /* === Container Card === */
+        .tsu-card {
+            background: #ffffff;
+            border-radius: var(--tsu-radius-lg, 12px);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            box-shadow: 0 4px 16px rgba(9, 75, 84, 0.06);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+
+        .tsu-card__header {
+            background: #ffffff;
+            border-bottom: 1px solid var(--tsu-border-gray, #e2e8f0);
+            padding: 1.1rem 1.4rem;
+        }
+
+        .tsu-card__title {
+            color: var(--tsu-primary-dark, #07383f);
+            font-weight: 700;
+            font-size: 1.05rem;
+            letter-spacing: -0.01em;
+            margin: 0;
+        }
+
+        /* === Modern Sub-Bar Info === */
+        .tsu-subbar-info {
+            background: #f8fafc;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 0.75rem 1.4rem;
+        }
+
+        /* === Table Styling === */
+        .tsu-rekap-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin-bottom: 0;
+        }
+
+        .tsu-rekap-table thead th {
+            background: #f8fafc;
+            color: #334155;
+            font-size: 0.76rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            vertical-align: middle;
+            padding: 0.85rem 0.65rem;
+            border: 1px solid #e2e8f0;
+            border-top: none;
+        }
+
+        .tsu-rekap-table tbody td {
+            vertical-align: middle;
+            font-size: 0.85rem;
+            padding: 0.8rem 0.65rem;
+            border: 1px solid #e2e8f0;
+            background: #ffffff;
+            transition: background 0.15s ease;
+        }
+
+        .tsu-rekap-table tbody tr:hover td {
+            background-color: #f8fafc;
+        }
+
+        /* === Badges without Icons === */
+        .tsu-badge-soft {
+            display: inline-block;
+            padding: 0.28rem 0.65rem;
+            font-size: 0.74rem;
+            font-weight: 600;
+            border-radius: 6px;
+            line-height: 1.2;
+        }
+
+        .tsu-badge-valid {
+            background: #dcfce7;
+            color: #15803d;
+            border: 1px solid #86efac;
+            font-weight: 700;
+        }
+
+        .tsu-badge-cuti {
+            background: #e0f2fe;
+            color: #0369a1;
+            border: 1px solid #bae6fd;
+            font-weight: 700;
+        }
+
+        .tsu-badge-izin {
+            background: #f3e8ff;
+            color: #7e22ce;
+            border: 1px solid #d8b4fe;
+            font-weight: 700;
+        }
+
+        .tsu-badge-alpha {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+            font-weight: 700;
+        }
+
+        /* === Action Buttons === */
+        .tsu-btn-detail {
+            border-radius: 6px;
+            font-size: 0.74rem;
+            font-weight: 600;
+            padding: 0.25rem 0.6rem;
+            border: 1px solid #0284c7;
+            color: #0284c7;
+            background: #f0f9ff;
+            transition: all 0.15s ease;
+        }
+
+        .tsu-btn-detail:hover {
+            background: #0284c7;
+            color: #ffffff;
+        }
+
+        .tsu-btn-pdf {
+            border-radius: 6px;
+            font-size: 0.74rem;
+            font-weight: 600;
+            padding: 0.25rem 0.6rem;
+            border: 1px solid #dc2626;
+            color: #dc2626;
+            background: #fef2f2;
+            transition: all 0.15s ease;
+        }
+
+        .tsu-btn-pdf:hover {
+            background: #dc2626;
+            color: #ffffff;
+        }
+
+        /* === Header Buttons === */
+        .tsu-btn-filter {
+            background: linear-gradient(135deg, var(--tsu-primary, #094b54) 0%, #0c6170 100%) !important;
+            border: none !important;
+            color: #ffffff !important;
+            border-radius: var(--tsu-radius, 8px);
+            font-weight: 600;
+            padding: 0.45rem 1rem;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 6px rgba(9, 75, 84, 0.2);
+        }
+
+        .tsu-btn-filter:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(9, 75, 84, 0.3);
+            color: #ffffff !important;
+        }
+
+        .tsu-btn-hitung {
+            border-radius: var(--tsu-radius, 8px);
+            font-weight: 600;
+            padding: 0.45rem 1rem;
+            border: 1px solid #0284c7;
+            color: #0284c7;
+            background: #f0f9ff;
+            transition: all 0.2s ease;
+        }
+
+        .tsu-btn-hitung:hover {
+            background: #0284c7;
+            color: #ffffff;
+        }
+
+        .tsu-btn-export {
+            border-radius: var(--tsu-radius, 8px);
+            font-weight: 600;
+            padding: 0.45rem 1rem;
+            border: 1px solid #047857;
+            color: #047857;
+            background: #f0fdf4;
+            transition: all 0.2s ease;
+        }
+
+        .tsu-btn-export:hover {
+            background: #047857;
+            color: #ffffff;
+        }
+
+        .tsu-btn-zip {
+            border-radius: var(--tsu-radius, 8px);
+            font-weight: 600;
+            padding: 0.45rem 1rem;
+            border: 1px solid #dc2626;
+            color: #dc2626;
+            background: #fef2f2;
+            transition: all 0.2s ease;
+        }
+
+        .tsu-btn-zip:hover {
+            background: #dc2626;
+            color: #ffffff;
+        }
+
+        .tsu-btn-update-periode {
+            border-radius: var(--tsu-radius, 8px);
+            font-weight: 600;
+            padding: 0.45rem 1rem;
+            border: 1px solid #b45309;
+            color: #b45309;
+            background: #fffbeb;
+            transition: all 0.2s ease;
+        }
+
+        .tsu-btn-update-periode:hover {
+            background: #b45309;
+            color: #ffffff;
+        }
+
+        /* === Modal Polish === */
+        .tsu-modal-header {
+            background: linear-gradient(135deg, var(--tsu-primary, #094b54) 0%, #0c6170 100%);
+            color: #ffffff;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+            padding: 1rem 1.4rem;
+        }
+
+        .tsu-modal-header .close {
+            color: #ffffff;
+            opacity: 0.85;
+            text-shadow: none;
+        }
+
+        .tsu-modal-header .close:hover {
+            opacity: 1;
+        }
+
+        .modal-content {
+            border-radius: 12px;
+            border: none;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+        }
+
+        /* DataTables Controls */
+        .dataTables_wrapper .dataTables_paginate .page-item.active .page-link {
+            background-color: var(--tsu-primary, #094b54) !important;
+            border-color: var(--tsu-primary, #094b54) !important;
+        }
+
+        .dataTables_wrapper .dataTables_filter input {
+            border-radius: var(--tsu-radius, 8px) !important;
+            border: 1.5px solid #cbd5e1;
+            padding: 0.35rem 0.75rem;
+            font-size: 0.85rem;
+        }
+
+        .dataTables_wrapper .dataTables_filter input:focus {
+            border-color: var(--tsu-primary, #094b54) !important;
+            box-shadow: 0 0 0 3px rgba(9, 75, 84, 0.12) !important;
+            outline: none;
+        }
+    </style>
+@endsection
 
 @section('content')
-    <div class="card card-primary card-outline">
-        <div class="card-header d-flex flex-wrap align-items-center">
-            <h3 class="card-title mr-4 font-weight-bold">{{ $title ?? 'Rekap Data Absensi Karyawan' }}</h3>
+    {{-- TSU Page Header --}}
+    <x-tsu-page-header
+        :title="$title ?? 'Rekap Data Absensi'"
+        subtitle="Baseline Presensi, Rekapitulasi Kehadiran &amp; Kalkulasi Insentif Transport"
+        icon="fas fa-calendar-check"
+        :breadcrumb="true"
+    >
+        <x-slot name="actions">
+            {{-- Filter Periode --}}
+            <button type="button" class="btn btn-sm tsu-btn-filter mr-1" id="btnFilter" title="Filter Periode / Tanggal Cut-off">
+                <i class="fas fa-filter mr-1"></i> Filter Periode
+            </button>
 
-            <div class="d-flex flex-wrap gap-2 ml-auto align-items-center mt-2 mt-md-0">
-                <button type="button" class="btn btn-outline-primary btn-sm mr-2" id="btnFilter" title="Filter Periode / Tanggal Cut-off">
-                    <i class="fas fa-filter"></i> Filter Periode
-                </button>
+            {{-- Hitung Ulang Validitas --}}
+            <button type="button" class="btn btn-sm tsu-btn-hitung mr-1" id="btnKalkulasi" title="Hitung Ulang Durasi &amp; Validitas Presensi">
+                <i class="fas fa-sync-alt mr-1"></i> Hitung Ulang Validitas
+            </button>
 
-                <button type="button" class="btn btn-info btn-sm mr-2" id="btnKalkulasi" title="Hitung Ulang Durasi & Validitas Presensi">
-                    <i class="fas fa-sync-alt"></i> Hitung Ulang Validitas
-                </button>
+            {{-- Export Rekap Excel --}}
+            <button type="button" class="btn btn-sm tsu-btn-export mr-1" id="btnExportExcel" title="Export Rekap Presensi &amp; Payroll Transport (Excel)">
+                <i class="fas fa-file-excel mr-1"></i> Export Excel
+            </button>
 
-                <button type="button" class="btn btn-success btn-sm mr-2" id="btnExportExcel" title="Export Rekap Presensi & Payroll Transport (Excel)">
-                    <i class="fas fa-file-excel"></i> Export Rekap Excel
-                </button>
+            {{-- Download Semua Slip ZIP --}}
+            <button type="button" class="btn btn-sm tsu-btn-zip mr-1" id="btnDownloadAllSlip" title="Download Slip Presensi Semua Pegawai (ZIP)">
+                <i class="fas fa-file-archive mr-1"></i> Download Slip (ZIP)
+            </button>
 
-                <button type="button" class="btn btn-danger btn-sm mr-2" id="btnDownloadAllSlip" title="Download Slip Presensi Semua Pegawai (ZIP)">
-                    <i class="fas fa-file-archive"></i> Download Semua Slip (ZIP)
-                </button>
+            {{-- Update Periode --}}
+            <button type="button" class="btn btn-sm tsu-btn-update-periode" id="updateperiode" title="Update Periode Absensi">
+                <i class="fas fa-calendar-alt mr-1"></i> Update Periode
+            </button>
+        </x-slot>
+    </x-tsu-page-header>
 
-                <button type="button" class="btn btn-warning btn-modal btn-sm" id="updateperiode" title="Update Periode Absensi">
-                    <i class="fas fa-calendar-alt"></i> Update Periode
-                </button>
-            </div>
-        </div>
+    {{-- Main Content Section --}}
+    <section class="content">
+        <div class="container-fluid">
 
-        {{-- Filter Bar Active Information --}}
-        <div class="card-body border-bottom bg-light py-2 px-3">
-            <div class="row align-items-center">
-                <div class="col-md-6">
-                    <span class="text-muted mr-2"><i class="fas fa-calendar-check mr-1 text-primary"></i> Periode Terpilih:</span>
-                    <strong class="text-primary font-weight-bold" id="labelPeriodeAktif">Silahkan Terapkan Filter Periode</strong>
+            {{-- 4 Stat Cards: Metrics Ringkasan Rekap Presensi --}}
+            <div class="tsu-stat-grid-rekap">
+                {{-- Total Pegawai Ber-PIN --}}
+                <div class="tsu-stat-card tsu-stat-card--pegawai">
+                    <div class="tsu-stat-card__icon">
+                        <i class="fas fa-id-card"></i>
+                    </div>
+                    <div class="tsu-stat-card__title">Pegawai Terdaftar PIN</div>
+                    <div class="tsu-stat-card__value">{{ $stats['total_karyawan_pin'] ?? 0 }} <span style="font-size: 1rem; font-weight: 600;">Pegawai</span></div>
+                    <div class="tsu-stat-card__subtext">Terhubung dengan mesin absensi</div>
                 </div>
-                <div class="col-md-6 text-md-right mt-1 mt-md-0">
-                    <span class="text-muted mr-1">Tarif Transport:</span>
-                    <strong class="text-success">Rp {{ number_format($defaultNominal, 0, ',', '.') }}</strong> / kehadiran valid
+
+                {{-- Tarif Transport Kehadiran --}}
+                <div class="tsu-stat-card tsu-stat-card--transport">
+                    <div class="tsu-stat-card__icon">
+                        <i class="fas fa-money-bill-wave"></i>
+                    </div>
+                    <div class="tsu-stat-card__title">Tarif Transport</div>
+                    <div class="tsu-stat-card__value">Rp {{ number_format($defaultNominal, 0, ',', '.') }}</div>
+                    <div class="tsu-stat-card__subtext">Per hari kehadiran valid (1.0)</div>
+                </div>
+
+                {{-- Periode Terpilih --}}
+                <div class="tsu-stat-card tsu-stat-card--periode">
+                    <div class="tsu-stat-card__icon">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div class="tsu-stat-card__title">Periode Terpilih</div>
+                    <div class="tsu-stat-card__value" id="statCardPeriode" style="font-size: 1.45rem;">
+                        {{ $bulan[$defaultBulan] ?? 'Bulan' }} {{ $defaultTahun }}
+                    </div>
+                    <div class="tsu-stat-card__subtext">Rentang aktif kalkulasi presensi</div>
+                </div>
+
+                {{-- Total Arsip Log --}}
+                <div class="tsu-stat-card tsu-stat-card--log">
+                    <div class="tsu-stat-card__icon">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <div class="tsu-stat-card__title">Riwayat Log Mesin</div>
+                    <div class="tsu-stat-card__value">{{ number_format($stats['total_logs'] ?? 0, 0, ',', '.') }} <span style="font-size: 1rem; font-weight: 600;">Log</span></div>
+                    <div class="tsu-stat-card__subtext">{{ $stats['total_shifts'] ?? 0 }} master pola shift aktif</div>
                 </div>
             </div>
-        </div>
 
-        <div class="card-body" style="font-size: 9.5pt">
-            <div class="table-responsive">
-                <table id="table-rekap-absensi" class="table table-bordered table-striped table-hover" style="width:100%">
-                    <thead class="bg-light text-center">
-                        <tr>
-                            <th width="4%">No</th>
-                            <th width="8%">PIN</th>
-                            <th width="28%">Nama Karyawan</th>
-                            <th width="14%">Akumulasi Validasi</th>
-                            <th width="10%">Cuti (CT)</th>
-                            <th width="10%">Izin (I)</th>
-                            <th width="10%">Alpha (A)</th>
-                            <th width="16%">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
+            {{-- Table Rekapitulasi Presensi Card --}}
+            <div class="tsu-card">
+                <div class="tsu-card__header d-flex flex-wrap justify-content-between align-items-center">
+                    <div>
+                        <h5 class="tsu-card__title">
+                            Daftar Rekapitulasi Presensi Pegawai
+                        </h5>
+                        <div class="text-muted small mt-1">
+                            Akumulasi hari kehadiran valid, perizinan, cuti tahunan, dan ketidakhadiran per pegawai
+                        </div>
+                    </div>
+                    <div class="mt-2 mt-sm-0">
+                        <span class="tsu-badge-soft tsu-badge-valid">
+                            Transport: Rp {{ number_format($defaultNominal, 0, ',', '.') }} / hari valid
+                        </span>
+                    </div>
+                </div>
+
+                {{-- Sub-bar Filter Status --}}
+                <div class="tsu-subbar-info d-flex flex-wrap justify-content-between align-items-center">
+                    <div>
+                        <span class="text-muted small mr-2">Periode Aktif:</span>
+                        <strong class="text-dark font-weight-bold" id="labelPeriodeAktif" style="font-size: 0.9rem;">
+                            {{ $bulan[$defaultBulan] ?? 'Bulan' }} {{ $defaultTahun }}
+                        </strong>
+                    </div>
+                    <div class="text-muted small mt-1 mt-md-0">
+                        Klik <strong>Detail</strong> pada baris pegawai untuk memeriksa catatan jam scan harian
+                    </div>
+                </div>
+
+                <div class="card-body p-3">
+                    <div class="table-responsive">
+                        <table id="table-rekap-absensi" class="table tsu-rekap-table" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th style="width: 40px; text-align: center;">No</th>
+                                    <th style="width: 80px; text-align: center;">PIN</th>
+                                    <th style="min-width: 240px; text-align: left;">Nama Karyawan</th>
+                                    <th style="width: 140px; text-align: center;">Akumulasi Validasi</th>
+                                    <th style="width: 100px; text-align: center;">Cuti (CT)</th>
+                                    <th style="width: 100px; text-align: center;">Izin (I)</th>
+                                    <th style="width: 100px; text-align: center;">Alpha (A)</th>
+                                    <th style="width: 140px; text-align: center;">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
+
         </div>
-    </div>
+    </section>
 
     {{-- MODAL FILTER PERIODE --}}
     <div class="modal fade" id="modal-filter">
         <div class="modal-dialog">
             <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title font-weight-bold"><i class="fas fa-filter mr-2"></i> Filter Data Presensi</h5>
+                <div class="modal-header tsu-modal-header">
+                    <h5 class="modal-title font-weight-bold">
+                        <i class="fas fa-filter mr-2"></i> Filter Data Presensi
+                    </h5>
                     <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label class="font-weight-bold">Tipe Filter</label>
+                <div class="modal-body p-4">
+                    <div class="form-group mb-3">
+                        <label class="font-weight-bold small text-dark">Tipe Filter Periode</label>
                         <select class="form-control" id="filter_tipe">
-                            <option value="bulan">Berdasarkan Bulan & Tahun</option>
+                            <option value="bulan">Berdasarkan Bulan &amp; Tahun</option>
                             <option value="custom">Rentang Tanggal Cut-off (Custom)</option>
                         </select>
                     </div>
@@ -85,7 +537,7 @@
                     <div id="filter_bulan_section">
                         <div class="row">
                             <div class="col-6 form-group">
-                                <label>Bulan <span class="text-danger">*</span></label>
+                                <label class="font-weight-bold small text-dark">Bulan <span class="text-danger">*</span></label>
                                 <select class="form-control select2" id="filter_bulan">
                                     @foreach ($bulan as $key => $item)
                                         <option value="{{ $key }}" {{ $key == $defaultBulan ? 'selected' : '' }}>{{ $item }}</option>
@@ -93,7 +545,7 @@
                                 </select>
                             </div>
                             <div class="col-6 form-group">
-                                <label>Tahun <span class="text-danger">*</span></label>
+                                <label class="font-weight-bold small text-dark">Tahun <span class="text-danger">*</span></label>
                                 @php $tahun = date('Y'); @endphp
                                 <select class="form-control select2" id="filter_tahun">
                                     @for ($i = $tahun - 2; $i <= $tahun + 1; $i++)
@@ -107,11 +559,11 @@
                     <div id="filter_custom_section" style="display: none;">
                         <div class="row">
                             <div class="col-6 form-group">
-                                <label>Tanggal Mulai <span class="text-danger">*</span></label>
+                                <label class="font-weight-bold small text-dark">Tanggal Mulai <span class="text-danger">*</span></label>
                                 <input type="date" class="form-control" id="filter_start_date">
                             </div>
                             <div class="col-6 form-group">
-                                <label>Tanggal Selesai <span class="text-danger">*</span></label>
+                                <label class="font-weight-bold small text-dark">Tanggal Selesai <span class="text-danger">*</span></label>
                                 <input type="date" class="form-control" id="filter_end_date">
                             </div>
                         </div>
@@ -119,7 +571,7 @@
                 </div>
                 <div class="modal-footer bg-light">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
-                    <button type="button" class="btn btn-primary font-weight-bold px-4" id="btnApplyFilter">Terapkan Filter</button>
+                    <button type="button" class="btn tsu-btn-filter px-4" id="btnApplyFilter">Terapkan Filter</button>
                 </div>
             </div>
         </div>
@@ -129,7 +581,7 @@
     <div class="modal fade" id="modal-detail-presensi" tabindex="-1">
         <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
-                <div class="modal-header bg-info text-white">
+                <div class="modal-header tsu-modal-header">
                     <h5 class="modal-title font-weight-bold">
                         <i class="fas fa-calendar-alt mr-2"></i> Rincian Harian Presensi: <span id="detailNamaKaryawan"></span>
                     </h5>
@@ -137,7 +589,7 @@
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
-                <div class="modal-body" id="detailContent">
+                <div class="modal-body p-4" id="detailContent">
                     {{-- Loaded dynamically via AJAX --}}
                 </div>
                 <div class="modal-footer bg-light">
@@ -151,11 +603,11 @@
     <div class="modal fade" id="modal-edit-harian" tabindex="-1" role="dialog" style="z-index: 1060;">
         <div class="modal-dialog modal-md modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg">
-                <div class="modal-header bg-warning text-dark">
+                <div class="modal-header tsu-modal-header">
                     <h5 class="modal-title font-weight-bold">
                         <i class="fas fa-user-edit mr-2"></i> Koreksi Jam Kerja Harian
                     </h5>
-                    <button type="button" class="close text-dark" data-dismiss="modal" aria-label="Close">
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
@@ -165,10 +617,10 @@
                     <input type="hidden" name="pin" id="edit_harian_pin">
                     <input type="hidden" name="tanggal_absen" id="edit_harian_tanggal">
 
-                    <div class="modal-body p-3">
-                        <div class="p-2 rounded mb-3 border" style="background-color: #f8f9fa; border-color: #dee2e6 !important;">
-                            <div class="small font-weight-bold text-primary" id="edit_harian_info_karyawan">-</div>
-                            <div class="font-weight-bold text-dark h6 mb-0" id="edit_harian_info_tanggal">-</div>
+                    <div class="modal-body p-4">
+                        <div class="p-3 rounded mb-3 border" style="background-color: #f8fafc; border-color: #e2e8f0 !important;">
+                            <div class="small font-weight-bold" style="color: var(--tsu-primary, #094b54);" id="edit_harian_info_karyawan">-</div>
+                            <div class="font-weight-bold text-dark h6 mb-0 mt-1" id="edit_harian_info_tanggal">-</div>
                         </div>
 
                         {{-- Panel Bantuan Quick Action Pindahkan Scan 3 / Scan 4 --}}
@@ -187,19 +639,19 @@
                             <div class="col-6">
                                 <div class="form-group mb-2">
                                     <label class="small font-weight-bold text-success">
-                                        <i class="fas fa-sign-in-alt mr-1"></i> Scan 1 (Jam Masuk)
+                                        Scan 1 (Jam Masuk)
                                     </label>
-                                    <input type="text" name="scan_1" id="edit_harian_scan_1" class="form-control form-control-sm text-center font-weight-bold text-dark" placeholder="00:00:00" style="font-size: 1rem; color: #212529 !important;">
-                                    <small class="font-weight-bold" style="color: #6c757d;">Format: JJ:MM:DD</small>
+                                    <input type="text" name="scan_1" id="edit_harian_scan_1" class="form-control text-center font-weight-bold text-dark" placeholder="00:00:00" style="font-size: 1rem;">
+                                    <small class="text-muted font-weight-semibold">Format: JJ:MM:DD</small>
                                 </div>
                             </div>
                             <div class="col-6">
                                 <div class="form-group mb-2">
                                     <label class="small font-weight-bold text-danger">
-                                        <i class="fas fa-sign-out-alt mr-1"></i> Scan 2 (Jam Pulang)
+                                        Scan 2 (Jam Pulang)
                                     </label>
-                                    <input type="text" name="scan_2" id="edit_harian_scan_2" class="form-control form-control-sm text-center font-weight-bold text-dark" placeholder="00:00:00" style="font-size: 1rem; color: #212529 !important;">
-                                    <small class="font-weight-bold" style="color: #6c757d;">Format: JJ:MM:DD</small>
+                                    <input type="text" name="scan_2" id="edit_harian_scan_2" class="form-control text-center font-weight-bold text-dark" placeholder="00:00:00" style="font-size: 1rem;">
+                                    <small class="text-muted font-weight-semibold">Format: JJ:MM:DD</small>
                                 </div>
                             </div>
                         </div>
@@ -229,19 +681,19 @@
                             </div>
                         </div>
 
-                        <div class="alert py-2 px-3 mt-3 mb-0" style="background-color: #e8f4fd !important; border: 1px solid #b8daff !important; border-radius: 6px;">
+                        <div class="alert py-2 px-3 mt-3 mb-0" style="background-color: #f0fdfa !important; border: 1px solid #ccfbf1 !important; border-radius: 6px;">
                             <div class="d-flex align-items-center">
-                                <i class="fas fa-info-circle fa-lg mr-2 text-info"></i>
-                                <div class="small font-weight-bold" style="color: #0c5460 !important; line-height: 1.4;">
-                                    Jika Scan 3/4 dipindahkan ke Scan 1/2, sistem otomatis mengosongkannya agar data tersimpan bersih dan kalkulasi akurat.
+                                <i class="fas fa-info-circle fa-lg mr-2" style="color: var(--tsu-primary, #094b54);"></i>
+                                <div class="small font-weight-semibold" style="color: #0f766e !important; line-height: 1.4;">
+                                    Jika Scan 3/4 dipindahkan ke Scan 1/2, sistem otomatis mengosongkannya agar kalkulasi presensi akurat.
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer bg-light p-2">
+                    <div class="modal-footer bg-light p-3">
                         <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-sm btn-warning font-weight-bold px-3" id="btnSubmitEditHarian">
-                            <i class="fas fa-save mr-1"></i> Simpan & Kalkulasi Ulang
+                        <button type="submit" class="btn btn-sm tsu-btn-filter px-3" id="btnSubmitEditHarian">
+                            <i class="fas fa-save mr-1"></i> Simpan &amp; Kalkulasi Ulang
                         </button>
                     </div>
                 </form>
@@ -253,17 +705,19 @@
     <div class="modal fade" id="modal-update">
         <div class="modal-dialog">
             <div class="modal-content">
-                <div class="modal-header bg-warning text-dark">
-                    <h5 class="modal-title font-weight-bold"><i class="fas fa-calendar-alt mr-2"></i> Update Periode Absensi</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <div class="modal-header tsu-modal-header">
+                    <h5 class="modal-title font-weight-bold">
+                        <i class="fas fa-calendar-alt mr-2"></i> Update Periode Absensi
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
                 <form action="{{ route('admin.rekap-absensi.updateperiode') }}" method="POST" id="formUpdate">
                     @csrf
-                    <div class="modal-body">
-                        <div class="form-group row">
-                            <label class="col-sm-4 col-form-label font-weight-bold">Periode Lama</label>
+                    <div class="modal-body p-4">
+                        <div class="form-group row mb-3">
+                            <label class="col-sm-4 col-form-label font-weight-bold small text-dark">Periode Lama</label>
                             <div class="col-sm-4">
                                 <select class="form-control select2" name="periodebulanold" id="periodebulanold">
                                     @foreach ($bulan as $key => $item)
@@ -280,8 +734,8 @@
                             </div>
                         </div>
 
-                        <div class="form-group row">
-                            <label class="col-sm-4 col-form-label font-weight-bold">Periode Baru</label>
+                        <div class="form-group row mb-3">
+                            <label class="col-sm-4 col-form-label font-weight-bold small text-dark">Periode Baru</label>
                             <div class="col-sm-4">
                                 <select class="form-control select2" name="periodebulannew" id="periodebulannew">
                                     @foreach ($bulan as $key => $item)
@@ -300,7 +754,7 @@
                     </div>
                     <div class="modal-footer bg-light">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-warning font-weight-bold px-4" id="btnUpdate">Update Periode</button>
+                        <button type="submit" class="btn tsu-btn-filter px-4" id="btnUpdate">Update Periode</button>
                     </div>
                 </form>
             </div>
@@ -310,7 +764,12 @@
 
 @section('script')
     <script>
-        $('.select2').select2({ width: '100%' });
+        $(document).ready(function() {
+            $('.select2').select2({
+                theme: 'bootstrap4',
+                width: '100%'
+            });
+        });
 
         var currentFilter = {
             periode_bulan: '{{ $defaultBulan }}',
@@ -322,10 +781,14 @@
 
         function updateLabelPeriode() {
             if (currentFilter.start_date && currentFilter.end_date) {
-                $('#labelPeriodeAktif').text(currentFilter.start_date + ' s/d ' + currentFilter.end_date);
+                var rangeText = currentFilter.start_date + ' s/d ' + currentFilter.end_date;
+                $('#labelPeriodeAktif').text(rangeText);
+                $('#statCardPeriode').text(rangeText);
             } else if (currentFilter.periode_bulan && currentFilter.periode_tahun) {
                 var bulanText = $('#filter_bulan option[value="' + currentFilter.periode_bulan + '"]').text();
-                $('#labelPeriodeAktif').text((bulanText || 'Bulan ' + currentFilter.periode_bulan) + ' ' + currentFilter.periode_tahun);
+                var fullText = (bulanText || 'Bulan ' + currentFilter.periode_bulan) + ' ' + currentFilter.periode_tahun;
+                $('#labelPeriodeAktif').text(fullText);
+                $('#statCardPeriode').text(fullText);
             } else {
                 $('#labelPeriodeAktif').text('Silahkan Pilih Periode Filter');
             }
@@ -346,15 +809,29 @@
                 }
             },
             columns: [
-                { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, className: 'text-center' },
-                { data: 'pin', name: 'pin', className: 'text-center font-weight-bold' },
+                { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, className: 'text-center font-weight-bold text-muted' },
+                { data: 'pin', name: 'pin', className: 'text-center font-weight-bold text-dark' },
                 { data: 'nama_karyawan', name: 'nama' },
                 { data: 'validasi_badge', name: 'akumulasi_validasi', className: 'text-center' },
                 { data: 'cuti_badge', name: 'cuti', className: 'text-center' },
                 { data: 'izin_badge', name: 'izin', className: 'text-center' },
                 { data: 'alpha_badge', name: 'alpha', className: 'text-center' },
                 { data: 'aksi', name: 'aksi', orderable: false, searchable: false, className: 'text-center' },
-            ]
+            ],
+            language: {
+                search: "Cari Pegawai:",
+                lengthMenu: "Tampilkan _MENU_ baris",
+                info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ pegawai",
+                infoEmpty: "Menampilkan 0 data",
+                infoFiltered: "(disaring dari _MAX_ total pegawai)",
+                zeroRecords: "Tidak ada data rekap presensi yang sesuai",
+                paginate: {
+                    first: "Awal",
+                    last: "Akhir",
+                    next: "Lanjut",
+                    previous: "Sebelum"
+                }
+            }
         });
 
         // Filter modal handling
@@ -398,7 +875,7 @@
             currentDetailPin = pin;
             currentDetailNama = nama;
             $('#detailNamaKaryawan').text(nama + ' (PIN: ' + pin + ')');
-            $('#detailContent').html('<div class="text-center p-5"><div class="spinner-border text-info"></div><p class="mt-2 font-weight-bold">Menyinkronkan dan memuat matriks presensi harian...</p></div>');
+            $('#detailContent').html('<div class="text-center p-5"><div class="spinner-border text-info"></div><p class="mt-2 font-weight-bold text-muted">Menyinkronkan dan memuat rincian harian presensi...</p></div>');
 
             $.ajax({
                 url: "{{ route('admin.rekap-absensi.detail') }}",
@@ -419,57 +896,57 @@
                             <div class="row text-center mb-3">
                                 <div class="col-md-2 col-4 mb-2">
                                     <div class="bg-light p-2 rounded border">
-                                        <small class="text-muted d-block">Hadir Valid</small>
-                                        <strong class="text-success h5">${sum.total_valid} Hari</strong>
+                                        <small class="text-muted d-block font-weight-bold">Hadir Valid</small>
+                                        <strong class="text-success h5 font-weight-bold">${sum.total_valid} Hari</strong>
                                     </div>
                                 </div>
                                 <div class="col-md-2 col-4 mb-2">
                                     <div class="bg-light p-2 rounded border">
-                                        <small class="text-muted d-block">Cuti (CT)</small>
-                                        <strong class="text-primary h5">${sum.total_cuti} Hari</strong>
+                                        <small class="text-muted d-block font-weight-bold">Cuti (CT)</small>
+                                        <strong class="text-primary h5 font-weight-bold">${sum.total_cuti} Hari</strong>
                                     </div>
                                 </div>
                                 <div class="col-md-2 col-4 mb-2">
                                     <div class="bg-light p-2 rounded border">
-                                        <small class="text-muted d-block">Izin (I)</small>
-                                        <strong class="text-purple h5" style="color:#6f42c1;">${sum.total_izin} Hari</strong>
+                                        <small class="text-muted d-block font-weight-bold">Izin (I)</small>
+                                        <strong class="text-purple h5 font-weight-bold" style="color:#6f42c1;">${sum.total_izin} Hari</strong>
                                     </div>
                                 </div>
                                 <div class="col-md-2 col-4 mb-2">
                                     <div class="bg-light p-2 rounded border">
-                                        <small class="text-muted d-block">Alpha (A)</small>
-                                        <strong class="text-danger h5">${sum.total_alpha} Hari</strong>
+                                        <small class="text-muted d-block font-weight-bold">Alpha (A)</small>
+                                        <strong class="text-danger h5 font-weight-bold">${sum.total_alpha} Hari</strong>
                                     </div>
                                 </div>
                                 <div class="col-md-2 col-4 mb-2">
                                     <div class="bg-light p-2 rounded border">
-                                        <small class="text-muted d-block">Libur / OFF</small>
-                                        <strong class="text-secondary h5">${sum.total_libur} Hari</strong>
+                                        <small class="text-muted d-block font-weight-bold">Libur / OFF</small>
+                                        <strong class="text-secondary h5 font-weight-bold">${sum.total_libur} Hari</strong>
                                     </div>
                                 </div>
                                 <div class="col-md-2 col-4 mb-2">
                                     <div class="bg-light p-2 rounded border">
-                                        <small class="text-muted d-block">Kurang Durasi</small>
-                                        <strong class="text-warning h5">${sum.total_kurang_durasi} Hari</strong>
+                                        <small class="text-muted d-block font-weight-bold">Kurang Durasi</small>
+                                        <strong class="text-warning h5 font-weight-bold">${sum.total_kurang_durasi} Hari</strong>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="d-flex align-items-center justify-content-between mb-2">
                                 <div class="small text-muted">
-                                    <span class="badge badge-light border text-danger font-weight-bold mr-2 px-2 py-1" style="background-color: #ffe6e6; border-color: #f5c6cb !important;">
-                                        <i class="fas fa-exclamation-circle mr-1"></i> Jam Berwarna Merah
+                                    <span class="tsu-badge-soft tsu-badge-alpha mr-2">
+                                        Jam Berwarna Merah
                                     </span>
-                                    <span>: Menandakan <strong>Terlambat Masuk</strong> (melebihi jam shift) atau <strong>Akumulasi Durasi Harian Tidak Memenuhi Target</strong>.</span>
+                                    <span>: Menandakan <strong>Terlambat Masuk</strong> atau <strong>Durasi Jam Harian Belum Memenuhi Syarat</strong>.</span>
                                 </div>
                             </div>
 
                             <div class="table-responsive">
-                                <table class="table table-bordered table-sm table-hover" style="font-size: 9pt;">
+                                <table class="table table-bordered table-sm table-hover" style="font-size: 8.5pt;">
                                     <thead class="bg-light text-center">
                                         <tr>
                                             <th width="3%">No</th>
-                                            <th width="16%">Hari & Tanggal</th>
+                                            <th width="16%">Hari &amp; Tanggal</th>
                                             <th width="8%">Scan 1</th>
                                             <th width="8%">Scan 2</th>
                                             <th width="8%">Scan 3</th>
@@ -486,13 +963,13 @@
                         function formatScan(val, isRed, tooltip) {
                             if (!val || val === '-') return '<span class="text-muted">-</span>';
                             if (isRed) {
-                                return `<span class="text-danger font-weight-bold" style="background-color: #ffe6e6; padding: 2px 6px; border-radius: 4px; border: 1px solid #f5c6cb;" title="${tooltip || 'Terlambat / Kurang Durasi'}">${val}</span>`;
+                                return `<span class="text-danger font-weight-bold" style="background-color: #fee2e2; padding: 2px 6px; border-radius: 4px; border: 1px solid #fca5a5;" title="${tooltip || 'Terlambat / Kurang Durasi'}">${val}</span>`;
                             }
                             return `<span class="text-dark font-weight-bold">${val}</span>`;
                         }
 
                         $.each(res.logs, function(idx, item) {
-                            var badge = `<span class="badge ${item.badge_class} px-2 py-1">${item.status_label}</span>`;
+                            var badge = `<span class="tsu-badge-soft ${item.badge_class} px-2 py-1">${item.status_label}</span>`;
                             var rowBg = item.status_type === 'ALPHA' ? 'style="background-color: #fff5f5;"' : (item.status_type === 'CUTI' ? 'style="background-color: #f0f8ff;"' : '');
 
                             var scan1Html = formatScan(item.scan_1, item.scan_1_red, item.is_late_in ? 'Terlambat Masuk (Melebihi Jam Shift)' : 'Akumulasi Durasi Harian Tidak Memenuhi Target');
@@ -500,7 +977,7 @@
                             var scan3Html = formatScan(item.scan_3, item.scan_3_red, 'Akumulasi Durasi Harian Tidak Memenuhi Target');
                             var scan4Html = formatScan(item.scan_4, item.scan_4_red, 'Akumulasi Durasi Harian Tidak Memenuhi Target');
 
-                            var btnEdit = `<button type="button" class="btn btn-xs btn-warning btn-edit-harian" 
+                            var btnEdit = `<button type="button" class="btn btn-xs tsu-btn-detail btn-edit-harian" 
                                 data-pin="${res.karyawan.pin}" 
                                 data-nama="${res.karyawan.nama}" 
                                 data-absensi-id="${item.absensi_id || ''}" 
@@ -516,7 +993,7 @@
 
                             html += `
                                 <tr ${rowBg}>
-                                    <td class="text-center">${idx + 1}</td>
+                                    <td class="text-center font-weight-bold text-muted">${idx + 1}</td>
                                     <td><strong>${item.tanggal_formatted}</strong></td>
                                     <td class="text-center">${scan1Html}</td>
                                     <td class="text-center">${scan2Html}</td>
@@ -524,7 +1001,7 @@
                                     <td class="text-center">${scan4Html}</td>
                                     <td class="text-center font-weight-bold">${item.durasi}</td>
                                     <td class="text-center">${badge}</td>
-                                    <td><small class="text-muted">${item.keterangan}</small></td>
+                                    <td><small class="text-muted">${item.keterangan || '-'}</small></td>
                                     <td class="text-center">${btnEdit}</td>
                                 </tr>
                             `;
@@ -538,7 +1015,7 @@
 
                         $('#detailContent').html(html);
                     } else {
-                        $('#detailContent').html('<div class="text-center text-muted p-4">Tidak ada catatan presensi pada periode ini.</div>');
+                        $('#detailContent').html('<div class="text-center text-muted p-5"><i class="fas fa-folder-open mb-2" style="font-size: 2rem; opacity: 0.3; display: block;"></i>Tidak ada catatan presensi pada periode ini.</div>');
                     }
                 },
                 error: function(xhr) {
@@ -584,7 +1061,7 @@
             var quickButtons = '';
             if (scan3) {
                 quickButtons += `
-                    <div class="mb-2 p-2 bg-white rounded border shadow-sm" style="border-color: #bee5eb !important;">
+                    <div class="mb-2 p-2 bg-white rounded border shadow-sm" style="border-color: #bae6fd !important;">
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <span class="small font-weight-bold text-dark"><i class="fas fa-history text-info mr-1"></i> Terdeteksi Scan 3: <code class="font-weight-bold h6 text-primary bg-light px-2 py-1 rounded border">${scan3}</code></span>
                         </div>
@@ -596,14 +1073,14 @@
                                 <i class="fas fa-arrow-left mr-1"></i> Pindah ke Jam Masuk (Scan 1)
                             </button>
                         </div>
-                        <small class="d-block mt-1 font-italic font-weight-bold" style="color: #495057 !important;">* Scan 3 otomatis dikosongkan setelah dipindahkan.</small>
+                        <small class="d-block mt-1 font-italic font-weight-bold text-muted">* Scan 3 otomatis dikosongkan setelah dipindahkan.</small>
                     </div>
                 `;
             }
 
             if (scan4) {
                 quickButtons += `
-                    <div class="mb-1 p-2 bg-white rounded border shadow-sm" style="border-color: #bee5eb !important;">
+                    <div class="mb-1 p-2 bg-white rounded border shadow-sm" style="border-color: #bae6fd !important;">
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <span class="small font-weight-bold text-dark"><i class="fas fa-history text-info mr-1"></i> Terdeteksi Scan 4: <code class="font-weight-bold h6 text-primary bg-light px-2 py-1 rounded border">${scan4}</code></span>
                         </div>
@@ -615,7 +1092,7 @@
                                 <i class="fas fa-arrow-left mr-1"></i> Pindah ke Jam Masuk (Scan 1)
                             </button>
                         </div>
-                        <small class="d-block mt-1 font-italic font-weight-bold" style="color: #495057 !important;">* Scan 4 otomatis dikosongkan setelah dipindahkan.</small>
+                        <small class="d-block mt-1 font-italic font-weight-bold text-muted">* Scan 4 otomatis dikosongkan setelah dipindahkan.</small>
                     </div>
                 `;
             }
@@ -670,7 +1147,7 @@
                 type: 'POST',
                 data: form.serialize(),
                 success: function(res) {
-                    btn.prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Simpan & Kalkulasi Ulang');
+                    btn.prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Simpan &amp; Kalkulasi Ulang');
                     if (res.success) {
                         $('#modal-edit-harian').modal('hide');
                         // Reload detail modal
@@ -678,24 +1155,20 @@
                         // Reload main summary table
                         oTable.ajax.reload(null, false);
 
-                        if (typeof Swal !== 'undefined') {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Berhasil',
-                                text: res.message,
-                                timer: 2000,
-                                showConfirmButton: false
-                            });
-                        } else {
-                            alert(res.message);
-                        }
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil',
+                            text: res.message,
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
                     } else {
-                        alert(res.message || 'Gagal menyimpan.');
+                        Swal.fire('Gagal', res.message || 'Gagal menyimpan.', 'error');
                     }
                 },
                 error: function(xhr) {
-                    btn.prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Simpan & Kalkulasi Ulang');
-                    alert('Gagal menyimpan: ' + (xhr.responseJSON?.message || 'Terjadi kesalahan server.'));
+                    btn.prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Simpan &amp; Kalkulasi Ulang');
+                    Swal.fire('Gagal', xhr.responseJSON?.message || 'Terjadi kesalahan server.', 'error');
                 }
             });
         });
@@ -714,15 +1187,15 @@
                 text: 'Sistem akan mengkalkulasi ulang durasi kerja dan status validasi (1.0) untuk data periode terpilih.',
                 icon: 'question',
                 showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
+                confirmButtonColor: '#094b54',
+                cancelButtonColor: '#64748b',
                 confirmButtonText: 'Ya, Hitung Sekarang!',
                 cancelButtonText: 'Batal'
             }).then((result) => {
                 if (result.isConfirmed) {
                     Swal.fire({
                         title: 'Sedang Mengkalkulasi...',
-                        html: 'Mohon tunggu beberapa saat...',
+                        text: 'Mohon tunggu beberapa saat...',
                         allowOutsideClick: false,
                         didOpen: () => { Swal.showLoading(); }
                     });
@@ -749,7 +1222,7 @@
             });
         });
 
-        // Export Rekap Excel (Slide 4)
+        // Export Rekap Excel
         $('#btnExportExcel').click(function() {
             var params = $.param({
                 periode_bulan: currentFilter.periode_bulan,
@@ -761,7 +1234,7 @@
             window.location.href = "{{ route('admin.rekap-absensi.exportrekap') }}?" + params;
         });
 
-        // Download All Slip PDF ZIP (Slide 5)
+        // Download All Slip PDF ZIP
         $('#btnDownloadAllSlip').click(function() {
             var params = $.param({
                 periode_bulan: currentFilter.periode_bulan,
@@ -780,7 +1253,7 @@
             $('#btnUpdate').prop('disabled', true);
             Swal.fire({
                 title: 'Mengupdate Periode Absensi ...',
-                html: 'Mohon tunggu...<br><br>Jangan menutup halaman atau me-refresh browser sampai proses selesai.',
+                text: 'Mohon tunggu, jangan menutup browser sampai proses selesai.',
                 allowOutsideClick: false,
                 allowEscapeKey: false,
                 showConfirmButton: false,

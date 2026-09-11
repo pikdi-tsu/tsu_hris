@@ -1,164 +1,510 @@
 @extends('system::template.admin.header')
+@section('title', $title)
+
+@section('link_href')
+    <!-- DataTables -->
+    <link rel="stylesheet" href="{{ asset('assets/adminlte/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/adminlte/plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/adminlte/plugins/sweetalert2/sweetalert2.min.css') }}">
+
+    <style>
+        /* === TSU Stat Cards Grid (4 Columns) === */
+        .tsu-stat-grid-unit {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+        }
+        @media (max-width: 992px) {
+            .tsu-stat-grid-unit {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 576px) {
+            .tsu-stat-grid-unit {
+                grid-template-columns: 1fr;
+            }
+        }
+        .tsu-stat-card {
+            border-radius: var(--tsu-radius-lg, 12px);
+            padding: 1.15rem 1.25rem;
+            box-shadow: 0 4px 14px rgba(9, 75, 84, 0.08);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .tsu-stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(9, 75, 84, 0.15);
+        }
+        .tsu-stat-card__top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.65rem;
+        }
+        .tsu-stat-card__label {
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            opacity: 0.95;
+            margin: 0;
+        }
+        .tsu-stat-card__icon-badge {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+        .tsu-stat-card__value {
+            font-size: 1.85rem;
+            font-weight: 800;
+            line-height: 1.15;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.25rem;
+            display: flex;
+            align-items: baseline;
+            gap: 0.35rem;
+        }
+        .tsu-stat-card__unit {
+            font-size: 0.9rem;
+            font-weight: 600;
+            opacity: 0.85;
+        }
+        .tsu-stat-card__subtext {
+            font-size: 0.75rem;
+            font-weight: 500;
+            opacity: 0.85;
+            line-height: 1.25;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Card Color Schemes */
+        .tsu-stat-card--total {
+            background: linear-gradient(135deg, #094b54 0%, #0c6170 100%);
+            color: #ffffff;
+        }
+        .tsu-stat-card--induk {
+            background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%);
+            color: #ffffff;
+        }
+        .tsu-stat-card--sub {
+            background: linear-gradient(135deg, #047857 0%, #10b981 100%);
+            color: #ffffff;
+        }
+        .tsu-stat-card--kepala {
+            background: linear-gradient(135deg, #b45309 0%, #d97706 100%);
+            color: #ffffff;
+        }
+
+        /* === TSU Container Card === */
+        .tsu-card {
+            background: #ffffff;
+            border-radius: var(--tsu-radius-lg, 12px);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            box-shadow: 0 4px 16px rgba(9, 75, 84, 0.06);
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        /* === Modern Table Styles === */
+        .tsu-table-modern thead th {
+            background: #f8fafc !important;
+            color: var(--tsu-primary-dark, #094b54) !important;
+            font-size: 0.78rem !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.04em !important;
+            border-bottom: 2px solid var(--tsu-primary-light, #cce6e9) !important;
+            vertical-align: middle !important;
+            padding: 0.75rem 1rem !important;
+        }
+        .tsu-table-modern tbody td {
+            vertical-align: middle !important;
+            font-size: 0.85rem;
+            padding: 0.75rem 1rem !important;
+            border-color: #f1f5f9 !important;
+        }
+        .tsu-table-modern tbody tr:hover {
+            background-color: #f8fafc !important;
+        }
+
+        /* === Buttons & Controls === */
+        .tsu-btn-reload {
+            color: var(--tsu-primary, #094b54);
+            background: #ffffff;
+            border: 1.5px solid var(--tsu-primary-light, #cce6e9);
+            border-radius: var(--tsu-radius, 8px);
+            font-weight: 600;
+            padding: 0.45rem 1rem;
+            transition: all 0.2s ease;
+        }
+        .tsu-btn-reload:hover {
+            background: var(--tsu-primary, #094b54);
+            color: #ffffff;
+            border-color: var(--tsu-primary, #094b54);
+        }
+        .tsu-btn-primary-action {
+            background: linear-gradient(135deg, #094b54 0%, #0c6170 100%);
+            color: #ffffff !important;
+            border: none;
+            border-radius: var(--tsu-radius, 8px);
+            font-weight: 600;
+            padding: 0.45rem 1.1rem;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 6px rgba(9, 75, 84, 0.2);
+        }
+        .tsu-btn-primary-action:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(9, 75, 84, 0.3);
+            color: #ffffff !important;
+        }
+
+        /* === DataTables Pagination & Filter === */
+        .dataTables_wrapper .dataTables_paginate .page-item.active .page-link {
+            background-color: var(--tsu-primary, #094b54) !important;
+            border-color: var(--tsu-primary, #094b54) !important;
+        }
+        .dataTables_wrapper .dataTables_filter input {
+            border-radius: var(--tsu-radius, 8px) !important;
+            border: 1.5px solid #cbd5e1;
+            padding: 0.35rem 0.75rem;
+            font-size: 0.85rem;
+            transition: border-color 0.2s;
+        }
+        .dataTables_wrapper .dataTables_filter input:focus {
+            border-color: var(--tsu-primary, #094b54) !important;
+            box-shadow: 0 0 0 3px rgba(9, 75, 84, 0.12) !important;
+            outline: none;
+        }
+    </style>
+@endsection
 
 @section('content')
-    <div class="card card-primary card-outline">
-        <div class="card-header d-flex align-items-center">
-            <h3 class="card-title mr-4">{{ $title ?? 'Master Data Unit' }}</h3>
-
-            <div class="d-flex gap-2 ml-auto">
-                <button type="button" class="btn btn-success btn-modal btn-sm"
-                    data-url="{{ route('admin.master-unit.create') }}" title="Tambah Master Unit">
-                    <i class="fas fa-plus"></i> Tambah Master Unit
+    {{-- TSU Page Header --}}
+    <x-tsu-page-header
+        :title="$title ?? 'Master Data Unit'"
+        :icon="$menuIcon ?? 'fas fa-building'"
+        :breadcrumb="true"
+    >
+        <x-slot name="actions">
+            @can('admin:master-unit:create')
+                <button type="button" class="btn btn-sm tsu-btn-primary-action btn-modal mr-2" data-url="{{ route('admin.master-unit.create') }}" title="Tambah Unit Kerja Baru">
+                    <i class="fas fa-plus mr-1"></i> Tambah Master Unit
                 </button>
+            @endcan
+
+            <button type="button" class="btn btn-sm tsu-btn-reload" id="btn-reload" title="Segarkan Data Tabel">
+                <i class="fas fa-sync-alt mr-1"></i> Refresh Data
+            </button>
+        </x-slot>
+    </x-tsu-page-header>
+
+    {{-- Main Content --}}
+    <section class="content">
+        <div class="container-fluid">
+
+            {{-- Stat Cards Grid --}}
+            <div class="tsu-stat-grid-unit">
+                {{-- Total Unit Kerja --}}
+                <div class="tsu-stat-card tsu-stat-card--total">
+                    <div class="tsu-stat-card__top">
+                        <span class="tsu-stat-card__label">Total Unit Kerja</span>
+                        <div class="tsu-stat-card__icon-badge">
+                            <i class="fas fa-building"></i>
+                        </div>
+                    </div>
+                    <div class="tsu-stat-card__value">
+                        {{ number_format($stats['total'] ?? 0) }}
+                        <span class="tsu-stat-card__unit">Unit</span>
+                    </div>
+                    <div class="tsu-stat-card__subtext">
+                        Keseluruhan Entitas Organisasi di TSU
+                    </div>
+                </div>
+
+                {{-- Unit Induk / Utama --}}
+                <div class="tsu-stat-card tsu-stat-card--induk">
+                    <div class="tsu-stat-card__top">
+                        <span class="tsu-stat-card__label">Unit Induk</span>
+                        <div class="tsu-stat-card__icon-badge">
+                            <i class="fas fa-layer-group"></i>
+                        </div>
+                    </div>
+                    <div class="tsu-stat-card__value">
+                        {{ number_format($stats['induk'] ?? 0) }}
+                        <span class="tsu-stat-card__unit">Unit</span>
+                    </div>
+                    <div class="tsu-stat-card__subtext">
+                        Tingkat Universitas, Lembaga & Fakultas
+                    </div>
+                </div>
+
+                {{-- Sub-Unit / Prodi --}}
+                <div class="tsu-stat-card tsu-stat-card--sub">
+                    <div class="tsu-stat-card__top">
+                        <span class="tsu-stat-card__label">Sub-Unit / Prodi</span>
+                        <div class="tsu-stat-card__icon-badge">
+                            <i class="fas fa-sitemap"></i>
+                        </div>
+                    </div>
+                    <div class="tsu-stat-card__value">
+                        {{ number_format($stats['sub_unit'] ?? 0) }}
+                        <span class="tsu-stat-card__unit">Unit</span>
+                    </div>
+                    <div class="tsu-stat-card__subtext">
+                        Unit Kerja Berada di Bawah Induk
+                    </div>
+                </div>
+
+                {{-- Dengan Kepala Unit --}}
+                <div class="tsu-stat-card tsu-stat-card--kepala">
+                    <div class="tsu-stat-card__top">
+                        <span class="tsu-stat-card__label">Dengan Kepala Unit</span>
+                        <div class="tsu-stat-card__icon-badge">
+                            <i class="fas fa-user-tie"></i>
+                        </div>
+                    </div>
+                    <div class="tsu-stat-card__value">
+                        {{ number_format($stats['with_kepala'] ?? 0) }}
+                        <span class="tsu-stat-card__unit">Unit</span>
+                    </div>
+                    <div class="tsu-stat-card__subtext">
+                        Memiliki Pemimpin / Kepala Unit Terdaftar
+                    </div>
+                </div>
             </div>
-        </div>
 
-        <div class="card-body">
-            <table id="table-unit" class="table table-bordered table-striped">
-                <thead>
-                    <tr>
-                        <th width="5%">No</th>
-                        <th>Nama Unit</th>
-                        <th>Unit Induk</th>
-                        <th>Keterangan</th>
-                        <th>Kepala Unit</th>
-                        <th width="15%">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody>
-                </tbody>
-            </table>
-        </div>
-    </div>
+            {{-- Main Card --}}
+            <div class="tsu-card">
+                <div class="card-body p-3">
+                    <div class="table-responsive">
+                        <table id="table-unit" class="table tsu-table-modern table-hover w-100">
+                            <thead>
+                                <tr>
+                                    <th width="5%" class="text-center">NO</th>
+                                    <th>NAMA UNIT</th>
+                                    <th>UNIT INDUK</th>
+                                    <th>KETERANGAN</th>
+                                    <th>KEPALA UNIT</th>
+                                    <th width="12%" class="text-center">AKSI</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
 
-    {{-- MODAL EDIT/CREATE CONTAINER --}}
-    <div class="modal fade" id="modal-edit" tabindex="-1" role="dialog">
-        <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-            <div class="modal-content" id="modal-edit-content">
-                {{-- Loading State --}}
+        </div>
+    </section>
+
+    {{-- MODAL CONTAINER --}}
+    <div class="modal fade" id="modal-unit" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-md modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" id="modal-unit-content" style="border-radius: 12px; overflow: hidden;">
+                {{-- Loaded via AJAX --}}
             </div>
         </div>
     </div>
 @endsection
 
 @section('script')
+    <!-- DataTables & SweetAlert2 JS -->
+    <script src="{{ asset('assets/adminlte/plugins/datatables/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ asset('assets/adminlte/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
+    <script src="{{ asset('assets/adminlte/plugins/datatables-responsive/js/dataTables.responsive.min.js') }}"></script>
+    <script src="{{ asset('assets/adminlte/plugins/datatables-responsive/js/responsive.bootstrap4.min.js') }}"></script>
+    <script src="{{ asset('assets/adminlte/plugins/sweetalert2/sweetalert2.min.js') }}"></script>
+
     <script>
         $(document).ready(function() {
-            // Inisialisasi Yajra DataTables
-            $('#table-unit').DataTable({
+            var table = $('#table-unit').DataTable({
                 processing: true,
                 serverSide: true,
+                responsive: true,
                 ajax: "{{ route('admin.master-unit.json') }}",
-                columns: [{
-                        data: 'DT_RowIndex',
-                        name: 'DT_RowIndex',
-                        orderable: false,
-                        searchable: false
+                columns: [
+                    { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, className: 'text-center' },
+                    { data: 'nama_unit', name: 'nama_unit' },
+                    { data: 'unit_induk', name: 'unit_induk', orderable: false, searchable: false },
+                    { data: 'keterangan', name: 'keterangan' },
+                    { data: 'kepala_unit', name: 'kepala_unit', orderable: false, searchable: false },
+                    { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-center' }
+                ],
+                language: {
+                    processing: '<div class="spinner-border spinner-border-sm text-primary" role="status"></div> Memuat data...',
+                    search: "Cari:",
+                    lengthMenu: "Tampilkan _MENU_ entri",
+                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
+                    infoEmpty: "Menampilkan 0 sampai 0 dari 0 entri",
+                    infoFiltered: "(disaring dari _MAX_ total entri)",
+                    paginate: {
+                        first: "Pertama",
+                        last: "Terakhir",
+                        next: "Selanjutnya",
+                        previous: "Sebelumnya"
                     },
-                    {
-                        data: 'nama_unit',
-                        name: 'nama_unit'
-                    },
-                    {
-                        data: 'unit_induk',
-                        name: 'unit_induk',
-                        orderable: false,
-                        searchable: false
-                    },
-                    {
-                        data: 'keterangan',
-                        name: 'keterangan'
-                    },
-                    {
-                        data: 'kepala_unit',
-                        name: 'kepala_unit'
-                    },
-                    {
-                        data: 'action',
-                        name: 'action',
-                        orderable: false,
-                        searchable: false
-                    },
-                ]
+                    emptyTable: "Tidak ada data unit kerja yang tersedia",
+                    zeroRecords: "Tidak ditemukan data yang sesuai"
+                }
             });
 
-            // Logic Create & Modal
-            $('body').on('click', '.btn-modal, .btn-edit', function(e) {
+            // Tombol Refresh Data
+            $('#btn-reload').on('click', function() {
+                var $btn = $(this);
+                $btn.find('i').addClass('fa-spin');
+                table.ajax.reload(function() {
+                    setTimeout(function() {
+                        $btn.find('i').removeClass('fa-spin');
+                    }, 400);
+                }, false);
+            });
+
+            // Open Modal (Create / Edit)
+            $(document).on('click', '.btn-modal, .btn-edit', function(e) {
                 e.preventDefault();
                 var url = $(this).data('url');
                 if (!url) url = $(this).attr('href');
 
-                $('#modal-edit').modal('show');
-                $('#modal-edit-content').html(
-                    `<div class="text-center p-5"><div class="spinner-border text-primary"></div><p>Memuat Form...</p></div>`
+                $('#modal-unit').modal('show');
+                $('#modal-unit-content').html(
+                    '<div class="text-center p-5">' +
+                        '<div class="spinner-border text-primary" style="color: var(--tsu-primary, #094b54) !important;" role="status"></div>' +
+                        '<p class="text-muted mt-2 mb-0" style="font-size: 0.88rem;">Memuat form...</p>' +
+                    '</div>'
                 );
 
                 $.ajax({
                     url: url,
                     type: 'GET',
                     success: function(res) {
-                        $('#modal-edit-content').html(res);
+                        $('#modal-unit-content').html(res);
                     },
                     error: function(xhr) {
-                        $('#modal-edit-content').html(
-                            `<div class="text-center text-danger p-5">Gagal memuat form. Error: ${xhr.status}</div>`
+                        $('#modal-unit-content').html(
+                            '<div class="text-center p-4">' +
+                                '<i class="fas fa-exclamation-triangle text-danger fa-2x mb-2"></i>' +
+                                '<p class="text-danger font-weight-bold mb-0">Gagal memuat formulir.</p>' +
+                                '<small class="text-muted">Error ' + xhr.status + ': ' + (xhr.statusText || 'Terjadi kesalahan sistem') + '</small>' +
+                            '</div>'
                         );
                     }
                 });
             });
 
-            // Logic Submit Form via AJAX
-            $('body').on('submit', '#modal-edit form', function(e) {
+            // Submit Form Modal via AJAX
+            $(document).on('submit', '#modal-unit form', function(e) {
                 e.preventDefault();
-                var form = $(this);
-                var url = form.attr('action');
-                var method = form.attr('method');
-                var formData = form.serialize();
-                var btnSubmit = form.find('button[type="submit"]');
-                var originalBtnText = btnSubmit.html();
+                var $form = $(this);
+                var $btnSubmit = $form.find('button[type="submit"]');
+                var originalHtml = $btnSubmit.html();
 
-                pikdiAjax({
-                    url: url,
-                    type: method,
-                    data: formData,
-                    onSuccess: function(res) {
-                        btnSubmit.html(originalBtnText).prop('disabled', false);
-                        $('#modal-edit').modal('hide');
-                        $('#table-unit').DataTable().ajax.reload(null, false);
+                $btnSubmit.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Menyimpan...');
+
+                $.ajax({
+                    url: $form.attr('action'),
+                    type: $form.attr('method') || 'POST',
+                    data: $form.serialize(),
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                     },
-                    onError: function(xhr) {
-                        btnSubmit.html(originalBtnText).prop('disabled', false);
+                    success: function(res) {
+                        $('#modal-unit').modal('hide');
+                        table.ajax.reload(null, false);
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: res.message || 'Data master unit berhasil disimpan.',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    },
+                    error: function(xhr) {
+                        $btnSubmit.prop('disabled', false).html(originalHtml);
+                        var errMsg = 'Terjadi kesalahan sistem.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errMsg = xhr.responseJSON.message;
+                        } else if (xhr.responseJSON && xhr.responseJSON.errors) {
+                            var errors = xhr.responseJSON.errors;
+                            errMsg = Object.values(errors).flat().join('<br>');
+                        }
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Gagal Menyimpan',
+                            html: errMsg
+                        });
                     }
                 });
             });
 
-            // Logic Delete via AJAX
-            $('body').on('click', '.btn-delete', function(e) {
+            // Handle Delete with SweetAlert2 Confirmation
+            $(document).on('click', '.btn-delete', function(e) {
                 e.preventDefault();
-                var btn = $(this);
-                var url = btn.attr('href') || btn.data('url') || btn.closest('form').attr('action');
-                var name = btn.closest('tr').find('td:eq(1)').text();
+                var $form = $(this).closest('form');
+                var actionUrl = $form.attr('action');
+                var rowName = $(this).closest('tr').find('td:eq(1)').text().trim();
 
                 Swal.fire({
                     title: 'Hapus Master Unit?',
-                    html: "Anda akan menghapus unit: <b>" + name +
-                        "</b>.<br><small class='text-danger'>Apakah Anda yakin? Data yang dihapus tidak dapat dikembalikan!</small>",
+                    html: "Anda akan menghapus unit: <br><strong>" + rowName + "</strong>.<br><small class='text-danger'>Data yang dihapus tidak dapat dipulihkan!</small>",
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonColor: '#d33',
-                    cancelButtonColor: '#3085d6',
-                    confirmButtonText: '<i class="fas fa-trash"></i> Ya, Hapus!',
-                    cancelButtonText: 'Batal'
+                    confirmButtonColor: '#dc2626',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: '<i class="fas fa-trash mr-1"></i> Ya, Hapus!',
+                    cancelButtonText: 'Batal',
+                    reverseButtons: true
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        pikdiAjax({
-                            url: url,
+                        Swal.fire({
+                            title: 'Sedang Menghapus...',
+                            text: 'Mohon tunggu beberapa saat.',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+
+                        $.ajax({
+                            url: actionUrl,
                             type: 'POST',
                             data: {
-                                _method: 'DELETE'
+                                _method: 'DELETE',
+                                _token: '{{ csrf_token() }}'
                             },
-                            onSuccess: function(res) {
-                                $('#table-unit').DataTable().ajax.reload(null, false);
+                            success: function(res) {
+                                table.ajax.reload(null, false);
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Terhapus!',
+                                    text: res.message || 'Data master unit berhasil dihapus.',
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                });
+                            },
+                            error: function(xhr) {
+                                var msg = 'Gagal menghapus data.';
+                                if (xhr.responseJSON && xhr.responseJSON.message) {
+                                    msg = xhr.responseJSON.message;
+                                }
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Gagal Menghapus',
+                                    text: msg
+                                });
                             }
                         });
                     }

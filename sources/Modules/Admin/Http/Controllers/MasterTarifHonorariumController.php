@@ -7,6 +7,7 @@ use App\Http\Controllers\MiddlewareController;
 use Illuminate\Support\Facades\DB;
 use App\Models\MasterTarifHonorarium;
 use App\Models\MasterJabatanFungsional;
+use Modules\System\Models\MenuSidebar;
 use App\Services\TsuErrorHandlerService;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Str;
@@ -24,8 +25,19 @@ class MasterTarifHonorariumController extends MiddlewareController
 
     public function index()
     {
+        $stats = [
+            'total'   => MasterTarifHonorarium::count(),
+            'min_sks' => MasterTarifHonorarium::min('tarif_sks_hadir') ?? 0,
+            'max_sks' => MasterTarifHonorarium::max('tarif_sks_hadir') ?? 0,
+            'avg_ta'  => round(MasterTarifHonorarium::avg('tarif_bimbingan_ta') ?? 0),
+        ];
+
+        $menuIcon = MenuSidebar::where('route', 'admin.master-tarif-honorarium.index')->value('icon') ?: 'fas fa-money-bill-wave';
+
         return view('admin::master-data.tarif-honorarium.index', [
-            'title' => 'Master Tarif Honorarium Dosen',
+            'title'    => 'Master Tarif Honorarium Dosen',
+            'menuIcon' => $menuIcon,
+            'stats'    => $stats,
         ]);
     }
 
@@ -46,32 +58,37 @@ class MasterTarifHonorariumController extends MiddlewareController
             ->addIndexColumn()
             ->addColumn('jafung_badge', function ($row) {
                 $nama = $row->jabatanFungsional->nama_jabatan ?? $row->nama_jafung;
-                return '<div><span class="badge badge-primary px-2 py-1 font-weight-bold" style="font-size: 0.9rem;">' . e($row->kode_jafung) . '</span><br><strong class="text-dark">' . e($nama) . '</strong></div>';
+                return '<div class="d-flex align-items-center">
+                    <span class="badge badge-pill badge-primary px-2 py-1 font-weight-bold mr-2" style="font-size: 0.85rem; min-width: 32px; text-align: center;">' . e($row->kode_jafung) . '</span>
+                    <div>
+                        <div class="font-weight-bold text-dark" style="font-size: 0.9rem;">' . e($nama) . '</div>
+                    </div>
+                </div>';
             })
             ->addColumn('sks_lebih_formatted', function ($row) {
-                return '<strong class="text-success" style="font-size: 0.95rem;">Rp ' . number_format($row->tarif_sks_hadir, 0, ',', '.') . '</strong><br><small class="text-muted">/ SKS / Pertemuan</small>';
+                return '<div class="text-center"><span class="font-weight-bold" style="color: #047857; font-size: 0.95rem;">Rp ' . number_format($row->tarif_sks_hadir, 0, ',', '.') . '</span><br><span class="text-muted text-xs">/ SKS / Pertemuan</span></div>';
             })
             ->addColumn('bimbing_uji_formatted', function ($row) {
-                $html = '<div style="font-size: 8.5pt;" class="text-dark">';
-                $html .= '<div><strong>Pembimbing TA:</strong> Rp ' . number_format($row->tarif_bimbingan_ta, 0, ',', '.') . '</div>';
-                $html .= '<div><strong>Penguji TA:</strong> Rp ' . number_format($row->tarif_penguji_ta, 0, ',', '.') . '</div>';
-                $html .= '<div><strong>Kerja Praktek:</strong> Rp ' . number_format($row->tarif_kerja_praktek, 0, ',', '.') . '</div>';
+                $html = '<div class="text-muted" style="font-size: 0.8rem; line-height: 1.5;">';
+                $html .= '<div><span class="font-weight-bold text-dark">Pembimbing TA:</span> Rp ' . number_format($row->tarif_bimbingan_ta, 0, ',', '.') . '</div>';
+                $html .= '<div><span class="font-weight-bold text-dark">Penguji TA:</span> Rp ' . number_format($row->tarif_penguji_ta, 0, ',', '.') . '</div>';
+                $html .= '<div><span class="font-weight-bold text-dark">Kerja Praktek:</span> Rp ' . number_format($row->tarif_kerja_praktek, 0, ',', '.') . '</div>';
                 $html .= '</div>';
                 return $html;
             })
             ->addColumn('ujian_formatted', function ($row) {
-                $html = '<div style="font-size: 8.5pt;" class="text-dark">';
-                $html .= '<div><strong>Soal T:</strong> Rp ' . number_format($row->tarif_soal_teori, 0, ',', '.') . ' | <strong>T/P:</strong> Rp ' . number_format($row->tarif_soal_teori_praktik, 0, ',', '.') . '</div>';
-                $html .= '<div><strong>Koreksi T:</strong> Rp ' . number_format($row->tarif_koreksi_teori, 0, ',', '.') . ' | <strong>T/P:</strong> Rp ' . number_format($row->tarif_koreksi_teori_praktik, 0, ',', '.') . '</div>';
+                $html = '<div class="text-muted" style="font-size: 0.8rem; line-height: 1.5;">';
+                $html .= '<div><span class="font-weight-bold text-dark">Soal T:</span> Rp ' . number_format($row->tarif_soal_teori, 0, ',', '.') . ' &nbsp;|&nbsp; <span class="font-weight-bold text-dark">T/P:</span> Rp ' . number_format($row->tarif_soal_teori_praktik, 0, ',', '.') . '</div>';
+                $html .= '<div><span class="font-weight-bold text-dark">Koreksi T:</span> Rp ' . number_format($row->tarif_koreksi_teori, 0, ',', '.') . ' &nbsp;|&nbsp; <span class="font-weight-bold text-dark">T/P:</span> Rp ' . number_format($row->tarif_koreksi_teori_praktik, 0, ',', '.') . '</div>';
                 $html .= '</div>';
                 return $html;
             })
             ->addColumn('keterangan_display', function ($row) {
-                return $row->keterangan ? '<span class="text-secondary small">' . nl2br(e($row->keterangan)) . '</span>' : '<span class="text-muted font-italic">-</span>';
+                return $row->keterangan ? '<span class="text-muted" style="font-size: 0.83rem;">' . nl2br(e($row->keterangan)) . '</span>' : '<span class="text-muted text-xs font-italic">-</span>';
             })
             ->addColumn('action', function ($row) {
-                $btnEdit = '<button type="button" class="btn btn-xs btn-primary btn-modal mr-1" data-url="' . route('admin.master-tarif-honorarium.edit', $row->id) . '" title="Edit"><i class="fas fa-edit"></i> Edit</button>';
-                $btnDelete = '<button type="button" class="btn btn-xs btn-danger btn-delete" data-url="' . route('admin.master-tarif-honorarium.destroy', $row->id) . '" data-name="' . e($row->nama_jafung) . '" title="Hapus"><i class="fas fa-trash"></i></button>';
+                $btnEdit = '<button type="button" class="btn btn-xs btn-primary btn-modal mr-1" data-url="' . route('admin.master-tarif-honorarium.edit', $row->id) . '" title="Edit Tarif"><i class="fas fa-edit"></i> Edit</button>';
+                $btnDelete = '<button type="button" class="btn btn-xs btn-danger btn-delete" data-url="' . route('admin.master-tarif-honorarium.destroy', $row->id) . '" data-name="Tarif ' . htmlspecialchars($row->nama_jafung, ENT_QUOTES) . '" title="Hapus Tarif"><i class="fas fa-trash"></i></button>';
                 return '<div class="text-center text-nowrap">' . $btnEdit . $btnDelete . '</div>';
             })
             ->rawColumns(['jafung_badge', 'sks_lebih_formatted', 'bimbing_uji_formatted', 'ujian_formatted', 'keterangan_display', 'action'])

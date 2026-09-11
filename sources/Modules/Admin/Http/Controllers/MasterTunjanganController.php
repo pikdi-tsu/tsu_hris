@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use App\Models\MasterPengaturanTunjangan;
 use App\Models\MasterJabatanStruktural;
 use App\Models\MasterJabatanFungsional;
+use Modules\System\Models\MenuSidebar;
 use Yajra\DataTables\Facades\DataTables;
 use App\Services\TsuErrorHandlerService;
 use App\Traits\ApiResponseTrait;
@@ -25,8 +26,18 @@ class MasterTunjanganController extends MiddlewareController
     public function index()
     {
         $settingKeluarga = MasterPengaturanTunjangan::getSettingKeluarga();
+        $stats = [
+            'total'      => MasterPengaturanTunjangan::whereIn('kategori', ['struktural', 'fungsional'])->count(),
+            'struktural' => MasterPengaturanTunjangan::struktural()->count(),
+            'fungsional' => MasterPengaturanTunjangan::fungsional()->count(),
+        ];
+
+        $menuIcon = MenuSidebar::where('route', 'admin.master-tunjangan.index')->value('icon') ?: 'fas fa-hand-holding-usd';
+
         return view('admin::master-data.master-tunjangan.index', [
             'title'           => 'Master Data Tunjangan Pegawai',
+            'menuIcon'        => $menuIcon,
+            'stats'           => $stats,
             'settingKeluarga' => $settingKeluarga
         ]);
     }
@@ -45,33 +56,33 @@ class MasterTunjanganController extends MiddlewareController
             ->addColumn('nama_display', function ($row) {
                 $nama = e($row->nama_tunjangan);
                 if ($row->jabatanStruktural) {
-                    return '<div><strong>' . $nama . '</strong><br><small class="text-success"><i class="fas fa-link mr-1"></i> Terhubung ke Master Jabatan</small></div>';
+                    return '<div><div class="font-weight-bold text-dark">' . $nama . '</div><span class="badge badge-pill badge-light text-success border font-weight-normal px-2 py-0" style="font-size: 0.75rem;">Terhubung ke Master Jabatan</span></div>';
                 }
-                return '<div><strong>' . $nama . '</strong></div>';
+                return '<div><div class="font-weight-bold text-dark">' . $nama . '</div></div>';
             })
             ->addColumn('nominal_dasar_formatted', function ($row) {
-                return '<span class="text-muted font-monospace" style="font-size: 0.9rem;">Rp ' . number_format($row->nominal_dasar ?: 0, 0, ',', '.') . '</span>';
+                return '<span class="text-muted" style="font-size: 0.88rem;">Rp ' . number_format($row->nominal_dasar ?: 0, 0, ',', '.') . '</span>';
             })
             ->addColumn('persen_bayar_badge', function ($row) {
                 $persen = floatval($row->persen_bayar);
-                $badgeClass = ($persen >= 100) ? 'badge-success' : (($persen >= 50) ? 'badge-primary' : 'badge-warning');
-                return '<span class="badge ' . $badgeClass . ' px-2 py-1 font-weight-bold">' . number_format($persen, 0) . '%</span>';
+                $badgeClass = ($persen >= 100) ? 'badge-success' : (($persen >= 50) ? 'badge-primary' : 'badge-warning text-dark');
+                return '<span class="badge badge-pill ' . $badgeClass . ' px-2 py-1 font-weight-normal" style="font-size: 0.82rem;">' . number_format($persen, 0) . '%</span>';
             })
             ->addColumn('nominal_formatted', function ($row) {
-                return '<span class="font-weight-bold text-success font-monospace" style="font-size: 0.95rem;">Rp ' . number_format($row->nominal_tunjangan ?: 0, 0, ',', '.') . '</span>';
+                return '<span class="font-weight-bold" style="color: #047857; font-size: 0.92rem;">Rp ' . number_format($row->nominal_tunjangan ?: 0, 0, ',', '.') . '</span>';
             })
             ->addColumn('action', function ($row) {
                 $editUrl = route('admin.master-tunjangan.struktural.edit', $row->id);
                 $deleteUrl = route('admin.master-tunjangan.struktural.destroy', $row->id);
 
-                $btnEdit = '<button type="button" class="btn btn-outline-primary btn-xs btn-modal mr-1" data-url="' . $editUrl . '">
-                                <i class="fas fa-edit mr-1"></i> Edit
+                $btnEdit = '<button type="button" class="btn btn-primary btn-xs btn-modal mr-1" data-url="' . $editUrl . '" title="Edit Tunjangan">
+                                <i class="fas fa-edit"></i> Edit
                             </button>';
-                $btnDelete = '<button type="button" class="btn btn-outline-danger btn-xs btn-delete" data-url="' . $deleteUrl . '" data-name="' . e($row->nama_tunjangan) . '">
-                                <i class="fas fa-trash-alt mr-1"></i> Hapus
+                $btnDelete = '<button type="button" class="btn btn-danger btn-xs btn-delete" data-url="' . $deleteUrl . '" data-name="' . htmlspecialchars($row->nama_tunjangan, ENT_QUOTES) . '" title="Hapus Tunjangan">
+                                <i class="fas fa-trash"></i>
                             </button>';
 
-                return '<div class="d-flex justify-content-center">' . $btnEdit . $btnDelete . '</div>';
+                return '<div class="text-center text-nowrap">' . $btnEdit . $btnDelete . '</div>';
             })
             ->rawColumns(['nama_display', 'nominal_dasar_formatted', 'persen_bayar_badge', 'nominal_formatted', 'action'])
             ->make(true);
@@ -216,30 +227,30 @@ class MasterTunjanganController extends MiddlewareController
         return DataTables::of($data)
             ->addIndexColumn()
             ->addColumn('kode_badge', function ($row) {
-                return $row->kode ? '<span class="badge badge-primary px-2 py-1 font-monospace" style="font-size: 0.85rem;">' . $row->kode . '</span>' : '-';
+                return $row->kode ? '<span class="badge badge-pill badge-primary px-2 py-1 font-weight-bold" style="font-size: 0.82rem;">' . e($row->kode) . '</span>' : '<span class="text-muted text-xs font-italic">-</span>';
             })
             ->addColumn('nama_display', function ($row) {
                 $nama = e($row->nama_tunjangan);
                 if ($row->jabatanFungsional) {
-                    return '<div><strong>' . $nama . '</strong><br><small class="text-success"><i class="fas fa-link mr-1"></i> Terhubung ke Master Fungsional</small></div>';
+                    return '<div><div class="font-weight-bold text-dark">' . $nama . '</div><span class="badge badge-pill badge-light text-success border font-weight-normal px-2 py-0" style="font-size: 0.75rem;">Terhubung ke Master Fungsional</span></div>';
                 }
-                return '<div><strong>' . $nama . '</strong></div>';
+                return '<div><div class="font-weight-bold text-dark">' . $nama . '</div></div>';
             })
             ->addColumn('nominal_formatted', function ($row) {
-                return '<span class="font-weight-bold text-success font-monospace" style="font-size: 0.95rem;">Rp ' . number_format($row->nominal_tunjangan ?: 0, 0, ',', '.') . '</span>';
+                return '<span class="font-weight-bold" style="color: #047857; font-size: 0.92rem;">Rp ' . number_format($row->nominal_tunjangan ?: 0, 0, ',', '.') . '</span>';
             })
             ->addColumn('action', function ($row) {
                 $editUrl = route('admin.master-tunjangan.fungsional.edit', $row->id);
                 $deleteUrl = route('admin.master-tunjangan.fungsional.destroy', $row->id);
 
-                $btnEdit = '<button type="button" class="btn btn-outline-primary btn-xs btn-modal mr-1" data-url="' . $editUrl . '">
-                                <i class="fas fa-edit mr-1"></i> Edit
+                $btnEdit = '<button type="button" class="btn btn-primary btn-xs btn-modal mr-1" data-url="' . $editUrl . '" title="Edit Tunjangan">
+                                <i class="fas fa-edit"></i> Edit
                             </button>';
-                $btnDelete = '<button type="button" class="btn btn-outline-danger btn-xs btn-delete" data-url="' . $deleteUrl . '" data-name="' . e($row->nama_tunjangan) . '">
-                                <i class="fas fa-trash-alt mr-1"></i> Hapus
+                $btnDelete = '<button type="button" class="btn btn-danger btn-xs btn-delete" data-url="' . $deleteUrl . '" data-name="' . htmlspecialchars($row->nama_tunjangan, ENT_QUOTES) . '" title="Hapus Tunjangan">
+                                <i class="fas fa-trash"></i>
                             </button>';
 
-                return '<div class="d-flex justify-content-center">' . $btnEdit . $btnDelete . '</div>';
+                return '<div class="text-center text-nowrap">' . $btnEdit . $btnDelete . '</div>';
             })
             ->rawColumns(['kode_badge', 'nama_display', 'nominal_formatted', 'action'])
             ->make(true);

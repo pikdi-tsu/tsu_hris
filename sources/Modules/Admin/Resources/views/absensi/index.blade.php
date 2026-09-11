@@ -445,7 +445,7 @@
                 <div class="card-body p-4">
                     <form id="formPreview" enctype="multipart/form-data">
                         @csrf
-                        <div class="row align-items-center">
+                        <div class="row align-items-end">
                             {{-- Periode Bulan --}}
                             <div class="col-lg-3 col-md-6 form-group mb-3">
                                 <label class="font-weight-bold small text-dark mb-1">Periode Bulan <span class="text-danger">*</span></label>
@@ -473,14 +473,15 @@
                                 <label class="font-weight-bold small text-dark mb-1">File Excel Mesin Presensi <span class="text-danger">*</span></label>
                                 <div class="custom-file">
                                     <input type="file" class="custom-file-input" name="absensiexcel" id="absensiexcel" accept=".xlsx,.xls,.csv" required>
-                                    <label class="custom-file-label" for="absensiexcel" id="labelFileExcel" style="border-radius: var(--tsu-radius, 8px);">Pilih berkas excel mesin presensi...</label>
+                                    <label class="custom-file-label" for="absensiexcel" id="labelFileExcel" style="border-radius: var(--tsu-radius, 8px); height: 38px; line-height: 24px;">Pilih berkas excel mesin presensi...</label>
                                 </div>
                             </div>
 
                             {{-- Tombol Submit Upload --}}
-                            <div class="col-lg-2 col-md-4 form-group mb-3 pt-md-2">
-                                <button type="submit" class="btn tsu-btn-primary-action btn-block" id="btnPreview">
-                                    <i class="fas fa-upload mr-1"></i> Upload &amp; Proses
+                            <div class="col-lg-2 col-md-4 form-group mb-3">
+                                <label class="d-none d-md-block font-weight-bold small mb-1" style="visibility: hidden; user-select: none;">Aksi</label>
+                                <button type="submit" class="btn tsu-btn-primary-action btn-block" id="btnPreview" style="height: 38px; display: inline-flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-upload mr-2"></i> Upload &amp; Proses
                                 </button>
                             </div>
                         </div>

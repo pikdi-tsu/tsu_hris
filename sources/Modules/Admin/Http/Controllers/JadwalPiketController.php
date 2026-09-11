@@ -31,11 +31,28 @@ class JadwalPiketController extends MiddlewareController
         $currentMonth = date('n');
         $currentYear = date('Y');
 
+        $totalPiket = DataJadwalPiket::count();
+        $piketBulanIni = DataJadwalPiket::whereMonth('tanggal_piket', $currentMonth)
+            ->whereYear('tanggal_piket', $currentYear)
+            ->count();
+        $petugasTerjadwal = DataJadwalPiket::distinct('data_dosen_tendik_id')->count('data_dosen_tendik_id');
+        $totalTendikSarpras = DataDosenTendik::where('tipe_karyawan', 'Tendik')
+            ->orWhereNull('tipe_karyawan')
+            ->count();
+
+        $stats = [
+            'total_piket' => $totalPiket,
+            'piket_bulan_ini' => $piketBulanIni,
+            'petugas_terjadwal' => $petugasTerjadwal,
+            'total_tendik' => $totalTendikSarpras,
+        ];
+
         return view('admin::jadwal-piket.index', [
             'title' => 'Jadwal Piket Sabtu (Tendik & Sarpras)',
             'bulan' => $bulan,
             'defaultBulan' => $currentMonth,
             'defaultTahun' => $currentYear,
+            'stats' => $stats,
         ]);
     }
 
@@ -59,35 +76,36 @@ class JadwalPiketController extends MiddlewareController
         return DataTables::of($query)
             ->addIndexColumn()
             ->addColumn('nama_karyawan', function ($row) {
-                $nama = $row->karyawan ? $row->karyawan->nama_lengkap : '-';
-                $unit = $row->karyawan && $row->karyawan->unit ? '<br><small class="text-muted">' . $row->karyawan->unit->nama_unit . '</small>' : '';
-                return '<strong>' . $nama . '</strong>' . $unit;
+                $nama = $row->karyawan ? e($row->karyawan->nama_lengkap) : '-';
+                $unit = $row->karyawan && $row->karyawan->unit ? '<br><small class="text-muted font-weight-normal">' . e($row->karyawan->unit->nama_unit) . '</small>' : '';
+                return '<strong class="text-dark">' . $nama . '</strong>' . $unit;
             })
             ->addColumn('pin', function ($row) {
-                return $row->pin ?? ($row->karyawan ? $row->karyawan->pin_absensi : '-');
+                $pinVal = $row->pin ?? ($row->karyawan ? $row->karyawan->pin_absensi : '-');
+                return '<span class="tsu-badge-pin">' . e($pinVal) . '</span>';
             })
             ->addColumn('tanggal_formatted', function ($row) {
                 $dt = Carbon::parse($row->tanggal_piket);
-                return '<strong>' . $dt->translatedFormat('l') . '</strong>, ' . $dt->format('d-m-Y');
+                return '<strong class="text-dark">' . $dt->translatedFormat('l') . '</strong><br><span class="text-muted small">' . $dt->format('d/m/Y') . '</span>';
             })
             ->addColumn('jam_kerja', function ($row) {
                 $start = substr($row->jam_mulai, 0, 5);
                 $end = substr($row->jam_selesai, 0, 5);
-                return '<span class="badge badge-info font-weight-bold" style="font-size: 0.85rem;"><i class="far fa-clock mr-1"></i> ' . $start . ' - ' . $end . '</span>';
+                return '<span class="tsu-badge-jam">' . $start . ' - ' . $end . '</span>';
             })
             ->addColumn('durasi', function ($row) {
                 $hours = round($row->target_durasi_menit / 60, 1);
-                return $hours . ' Jam (' . $row->target_durasi_menit . ' Menit)';
+                return '<span class="tsu-badge-durasi">' . $hours . ' Jam (' . $row->target_durasi_menit . ' mnt)</span>';
             })
             ->addColumn('keterangan_badge', function ($row) {
-                return $row->keterangan ?? '<span class="text-muted">Piket Sabtu</span>';
+                return $row->keterangan ? '<span class="text-dark">' . e($row->keterangan) . '</span>' : '<span class="text-muted">Piket Sabtu</span>';
             })
             ->addColumn('aksi', function ($row) {
-                $btnEdit = '<button type="button" class="btn btn-xs btn-warning text-white btn-modal mr-1" data-url="' . route('admin.jadwal-piket.edit', $row->id) . '" title="Edit Piket"><i class="fas fa-edit"></i></button>';
-                $btnDelete = '<button type="button" class="btn btn-xs btn-danger btn-delete" data-url="' . route('admin.jadwal-piket.destroy', $row->id) . '" data-nama="' . ($row->karyawan ? $row->karyawan->nama_lengkap : 'Karyawan') . '" title="Hapus Jadwal"><i class="fas fa-trash"></i></button>';
+                $btnEdit = '<button type="button" class="btn btn-xs tsu-btn-action tsu-btn-action--edit btn-modal mr-1" data-url="' . route('admin.jadwal-piket.edit', $row->id) . '" title="Edit Piket"><i class="fas fa-pencil-alt"></i></button>';
+                $btnDelete = '<button type="button" class="btn btn-xs tsu-btn-action tsu-btn-action--delete btn-delete" data-url="' . route('admin.jadwal-piket.destroy', $row->id) . '" data-nama="' . e($row->karyawan ? $row->karyawan->nama_lengkap : 'Karyawan') . '" title="Hapus Jadwal"><i class="fas fa-trash-alt"></i></button>';
                 return '<div class="text-center text-nowrap">' . $btnEdit . $btnDelete . '</div>';
             })
-            ->rawColumns(['nama_karyawan', 'tanggal_formatted', 'jam_kerja', 'keterangan_badge', 'aksi'])
+            ->rawColumns(['nama_karyawan', 'pin', 'tanggal_formatted', 'jam_kerja', 'durasi', 'keterangan_badge', 'aksi'])
             ->make(true);
     }
 

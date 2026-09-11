@@ -386,9 +386,10 @@ class PengembanganSdmService
 
         foreach ($pesertas as $p) {
             $karyawan = $p->karyawan;
-            if (!$karyawan || !$karyawan->tanggal_lahir) continue;
+            $rawTglLahir = $karyawan?->tgl_lahir ?? $karyawan?->tanggal_lahir;
+            if (!$karyawan || !$rawTglLahir) continue;
 
-            $tglLahir = Carbon::parse($karyawan->tanggal_lahir);
+            $tglLahir = Carbon::parse($rawTglLahir);
             $usiaPensiun = $p->tipe_pegawai === 'dosen' ? 65 : 58;
             $tglPensiun = $tglLahir->copy()->addYears($usiaPensiun);
             $tahunPensiun = $tglPensiun->year;

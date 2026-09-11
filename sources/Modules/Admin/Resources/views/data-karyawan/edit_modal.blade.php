@@ -92,5 +92,92 @@
         });
 
         updateWizardButtons();
+
+        // -------------------------------------------------------------
+        // DOKUMEN BERKAS DINAMIS (UPLOAD & DELETE)
+        // -------------------------------------------------------------
+        $('#btn-upload-dokumen-action').on('click', function(e) {
+            e.preventDefault();
+            let btn = $(this);
+            let url = btn.data('url');
+            let jenisId = $('#doc_master_jenis_id').val();
+            let fileInput = document.getElementById('doc_file');
+
+            if (!jenisId) {
+                Swal.fire('Peringatan', 'Silakan pilih Jenis Dokumen terlebih dahulu.', 'warning');
+                return;
+            }
+
+            if (!fileInput.files || fileInput.files.length === 0) {
+                Swal.fire('Peringatan', 'Silakan pilih file berkas yang akan diunggah.', 'warning');
+                return;
+            }
+
+            let formData = new FormData();
+            formData.append('master_jenis_dokumen_id', jenisId);
+            formData.append('file', fileInput.files[0]);
+            formData.append('nomor_dokumen', $('#doc_nomor').val());
+            formData.append('tanggal_dokumen', $('#doc_tanggal').val());
+            formData.append('keterangan', $('#doc_keterangan').val());
+
+            btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Mengunggah...');
+
+            pikdiAjax({
+                url: url,
+                type: 'POST',
+                data: formData,
+                loadingText: 'Sedang mengunggah berkas...',
+                onSuccess: function(res) {
+                    btn.prop('disabled', false).html('<i class="fas fa-cloud-upload-alt mr-1"></i> Unggah Berkas');
+                    if (res.data && res.data.html) {
+                        $('#dokumen-list-container').html(res.data.html);
+                    }
+                    // Reset input
+                    $('#doc_master_jenis_id').val('');
+                    $('#doc_file').val('');
+                    $('#doc_nomor').val('');
+                    $('#doc_tanggal').val('');
+                    $('#doc_keterangan').val('');
+                },
+                onError: function() {
+                    btn.prop('disabled', false).html('<i class="fas fa-cloud-upload-alt mr-1"></i> Unggah Berkas');
+                }
+            });
+        });
+
+        // Delete Dokumen
+        $(document).on('click', '.btn-delete-dokumen', function(e) {
+            e.preventDefault();
+            let btn = $(this);
+            let url = btn.data('url');
+            let nama = btn.data('nama');
+
+            Swal.fire({
+                title: 'Hapus Berkas Dokumen?',
+                html: `Apakah Anda yakin ingin menghapus berkas <strong>${nama}</strong>?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: '<i class="fas fa-trash mr-1"></i> Ya, Hapus Berkas!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    pikdiAjax({
+                        url: url,
+                        type: 'POST',
+                        data: {
+                            _method: 'DELETE'
+                        },
+                        loadingText: 'Menghapus berkas dokumen...',
+                        onSuccess: function(res) {
+                            if (res.data && res.data.html) {
+                                $('#dokumen-list-container').html(res.data.html);
+                            }
+                        }
+                    });
+                }
+            });
+        });
     });
 </script>

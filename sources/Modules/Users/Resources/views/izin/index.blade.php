@@ -149,6 +149,16 @@
                                         </div>
                                     </div>
                                 </div>
+                                <div class="mb-3" id="wrapper-file-bukti">
+                                    <label class="tsu-form-label">Berkas Bukti Dukungan <span class="text-danger">*</span></label>
+                                    <div class="custom-file">
+                                        <input type="file" class="custom-file-input" id="file_bukti" name="file_bukti" accept=".pdf,.jpg,.jpeg,.png">
+                                        <label class="custom-file-label text-truncate" for="file_bukti" id="label-file-bukti">Pilih berkas bukti (PDF/Foto)...</label>
+                                    </div>
+                                    <small class="text-muted d-block mt-1">
+                                        <i class="fas fa-info-circle mr-1 text-info"></i>Wajib melampirkan berkas bukti pendukung (surat dokter, surat tugas dinas, dll). Format: PDF, JPG, PNG (Maks. 10MB).
+                                    </small>
+                                </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
@@ -204,6 +214,7 @@
                                     <th><center>Tgl Selesai</center></th>
                                     <th><center>Jumlah</center></th>
                                     <th><center>Keterangan</center></th>
+                                    <th><center>Berkas Bukti</center></th>
                                     <th><center>Status Atasan</center></th>
                                     <th><center>Status HRD</center></th>
                                     <th><center>Aksi</center></th>
@@ -266,6 +277,7 @@
                     { data: 'tanggalselesai', name: 'tanggalselesai' },
                     { data: 'jumlah',         name: 'jumlah' },
                     { data: 'keterangan',     name: 'keterangan' },
+                    { data: 'file_bukti',     name: 'file_bukti', orderable: false, searchable: false, className: 'text-center' },
                     { data: 'statusatasan',   name: 'statusatasan' },
                     { data: 'statushrd',      name: 'statushrd' },
                     { data: 'action',         name: 'action', orderable: false, searchable: false },
@@ -273,6 +285,11 @@
             });
 
             $('#dataTables').on('draw.dt', function () { $('[data-toggle="tooltip"]').tooltip(); });
+
+            $('#file_bukti').on('change', function() {
+                let fileName = $(this).val().split('\\').pop();
+                $('#label-file-bukti').text(fileName || 'Pilih berkas bukti (PDF/Foto)...');
+            });
 
             // Load stat numbers
             $.post("{!! route('users.izin.datatables') !!}", { _token: '{{ csrf_token() }}', start: 0, length: 9999 }, function(res) {
@@ -293,6 +310,7 @@
                 var tanggal2  = $("#tanggal2").val();
                 var alasan    = $("#alasan").val();
                 var id_hrd    = $("#id_hrd").val();
+                var fileBukti = $('#file_bukti')[0].files[0];
 
                 if (!jenisizin) { notifalert('Jenis Izin'); return; }
                 if (!tanggal1)  { notifalert('Tanggal Mulai'); return; }
@@ -300,11 +318,47 @@
                 if (!alasan)    { notifalert('Alasan'); return; }
                 if (!id_hrd)    { notifalert('HRD'); return; }
 
-                pikdiAjax({
+                // Validasi Berkas Bukti Wajib untuk Izin
+                if (ketedit === 'no' && !fileBukti) {
+                    Swal.fire({ title: 'Perhatian', text: 'Berkas Bukti Dukungan wajib diunggah untuk pengajuan izin.', icon: 'warning' });
+                    return;
+                }
+
+                var $btn = $(this);
+                var origHtml = $btn.html();
+                $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Menyimpan...');
+
+                var fd = new FormData();
+                fd.append('_token', $('meta[name=csrf-token]').attr('content'));
+                fd.append('idedit', idedit);
+                fd.append('ketedit', ketedit);
+                fd.append('jenisizin', jenisizin);
+                fd.append('tanggal1', tanggal1);
+                fd.append('tanggal2', tanggal2);
+                fd.append('alasan', alasan);
+                fd.append('id_hrd', id_hrd);
+                if (fileBukti) {
+                    fd.append('file_bukti', fileBukti);
+                }
+
+                $.ajax({
                     url: "{!! route('users.izin.simpan') !!}",
                     type: 'POST',
-                    data: { _token: $('meta[name=csrf-token]').attr('content'), idedit: idedit, ketedit: ketedit, jenisizin: jenisizin, tanggal1: tanggal1, tanggal2: tanggal2, alasan: alasan, id_hrd: id_hrd },
-                    onSuccess: function () { location.reload(); }
+                    data: fd,
+                    processData: false,
+                    contentType: false,
+                    beforeSend: function () {
+                        Swal.fire({ title: 'Menyimpan Pengajuan...', allowEscapeKey: false, allowOutsideClick: false, showCancelButton: false, showConfirmButton: false, didOpen: function() { Swal.showLoading(); } });
+                    },
+                    success: function (res) {
+                        Swal.fire({ title: 'Berhasil', text: res.message || 'Pengajuan izin berhasil dikirim.', icon: 'success', timer: 1500, showConfirmButton: false })
+                            .then(function() { location.reload(); });
+                    },
+                    error: function (xhr, status, error) {
+                        $btn.prop('disabled', false).html(origHtml);
+                        var res = xhr.responseJSON;
+                        Swal.fire({ title: res && res.title ? res.title : 'Perhatian', text: res && res.message ? res.message : error, icon: 'warning' });
+                    }
                 });
             });
 
@@ -324,6 +378,8 @@
                         $("#tanggal1").val(r.tanggalmulai); $("#tanggal2").val(r.tanggalselesai);
                         $("#alasan").val(r.keterangan);
                         $("#id_hrd").val(r.id_hrd).trigger('change');
+                        $("#file_bukti").val('');
+                        $("#label-file-bukti").text(r.file_bukti ? 'Ganti berkas bukti (opsional)...' : 'Pilih berkas bukti (PDF/Foto)...');
                         Swal.close();
                         $('html, body').animate({ scrollTop: $('#formIzin').offset().top - 80 }, 400);
                     },
@@ -341,6 +397,8 @@
                 $("#tanggal1").val(''); $("#tanggal2").val('');
                 $("#alasan").val('');
                 $("#id_hrd").val('').trigger('change');
+                $("#file_bukti").val('');
+                $("#label-file-bukti").text('Pilih berkas bukti (PDF/Foto)...');
             });
 
             $('body').on('click', '#btndetail', function () {

@@ -77,6 +77,11 @@ class User extends Authenticatable
         return $this->hasOne(DataDosenTendik::class, 'user_id');
     }
 
+    public function karyawan()
+    {
+        return $this->hasOne(DataDosenTendik::class, 'user_id');
+    }
+
     /**
      * Cek apakah User ini Mahasiswa
      * Cara pakai: if ($user->isMahasiswa()) { ... }

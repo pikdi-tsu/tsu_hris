@@ -17,12 +17,14 @@
             <table id="table-cuti" class="table table-bordered table-striped">
                 <thead>
                     <tr>
-                        <th width="5%">No</th>
+                        <th width="5%" class="text-center">No</th>
                         <th>Jenis Cuti</th>
-                        <th>Durasi Cuti</th>
-                        <th>Minimal Hari Pengajuan</th>
-                        <th width="15%">Status</th>
-                        <th width="15%">Aksi</th>
+                        <th width="15%" class="text-center">Kategori Cuti</th>
+                        <th width="10%" class="text-center">Durasi Maks</th>
+                        <th width="20%">Pengaruh Kuota &amp; Akses</th>
+                        <th width="10%" class="text-center">Min. Hari</th>
+                        <th width="10%" class="text-center">Status</th>
+                        <th width="12%" class="text-center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -52,29 +54,43 @@
                     data: 'DT_RowIndex',
                     name: 'DT_RowIndex',
                     orderable: false,
-                    searchable: false
+                    searchable: false,
+                    className: 'text-center'
                 },
                 {
                     data: 'jeniscuti',
                     name: 'jeniscuti'
                 },
                 {
+                    data: 'kategori_badge',
+                    name: 'kategori_cuti',
+                    className: 'text-center'
+                },
+                {
                     data: 'durasicuti',
-                    name: 'durasicuti'
+                    name: 'durasicuti',
+                    className: 'text-center'
+                },
+                {
+                    data: 'aturan_badge',
+                    name: 'memotong_kuota'
                 },
                 {
                     data: 'minimalhari',
-                    name: 'minimalhari'
+                    name: 'minimalhari',
+                    className: 'text-center'
                 },
                 {
                     data: 'is_active',
-                    name: 'is_active'
+                    name: 'is_active',
+                    className: 'text-center'
                 },
                 {
                     data: 'action',
                     name: 'action',
                     orderable: false,
-                    searchable: false
+                    searchable: false,
+                    className: 'text-center'
                 },
             ]
         });

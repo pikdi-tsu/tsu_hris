@@ -52,6 +52,15 @@
             </div>
         </div>
     </div>
+
+    {{-- MODAL PREVIEW DOKUMEN --}}
+    <div class="modal fade" id="modal-preview-dokumen" tabindex="-1" role="dialog" style="z-index: 1065;">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content" id="modal-preview-dokumen-content">
+                {{-- Loading State --}}
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('script')
@@ -232,5 +241,29 @@
                 }
             });
         }
+
+        // Preview Dokumen Modal Handler
+        $('body').on('click', '.btn-preview-dokumen', function(e) {
+            e.preventDefault();
+            let url = $(this).data('url');
+
+            $('#modal-preview-dokumen').modal('show');
+            $('#modal-preview-dokumen-content').html(
+                `<div class="p-5 text-center bg-white"><div class="spinner-border text-info"></div><p class="mt-2 text-muted">Memuat preview dokumen...</p></div>`
+            );
+
+            $.ajax({
+                url: url,
+                type: 'GET',
+                success: function(res) {
+                    $('#modal-preview-dokumen-content').html(res);
+                },
+                error: function(xhr) {
+                    $('#modal-preview-dokumen-content').html(
+                        `<div class="p-4 text-center text-danger bg-white"><i class="fas fa-exclamation-triangle fa-2x mb-2"></i><p>Gagal memuat preview dokumen. Error: ${xhr.status}</p></div>`
+                    );
+                }
+            });
+        });
     </script>
 @endsection

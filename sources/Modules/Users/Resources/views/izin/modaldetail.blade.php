@@ -1,4 +1,4 @@
-﻿<style>
+<style>
     .izin-detail-info-row {
         display: flex;
         gap: .5rem;
@@ -94,6 +94,18 @@
                     <div class="izin-detail-value">{{ $data->keterangan ?? '-' }}</div>
                 </div>
             </div>
+
+            @if($data->file_bukti)
+            <div class="izin-detail-info-row">
+                <div class="izin-detail-icon"><i class="fas fa-paperclip"></i></div>
+                <div>
+                    <div class="izin-detail-label">Berkas Bukti Dukungan (Wajib)</div>
+                    <a href="{{ $data->file_bukti_url }}" target="_blank" download class="btn btn-xs btn-outline-info rounded-pill px-3 py-1 font-weight-bold mt-1">
+                        <i class="fas fa-download mr-1"></i> Unduh / Lihat Bukti Izin
+                    </a>
+                </div>
+            </div>
+            @endif
         </div>
 
         {{-- Kolom Kanan: Status Persetujuan --}}

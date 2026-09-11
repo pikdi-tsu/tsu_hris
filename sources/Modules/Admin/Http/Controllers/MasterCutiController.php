@@ -34,6 +34,25 @@ class MasterCutiController extends MiddlewareController
 
         return DataTables::of($data)
             ->addIndexColumn()
+            ->addColumn('kategori_badge', function ($row) {
+                if ($row->kategori_cuti === 'khusus') {
+                    return '<span class="badge badge-success px-2 py-1" style="background:#0f766e;color:#fff;"><i class="fas fa-certificate mr-1"></i> Cuti Khusus (SE)</span>';
+                }
+                return '<span class="badge badge-primary px-2 py-1" style="background:#0284c7;color:#fff;"><i class="fas fa-calendar-alt mr-1"></i> Cuti Tahunan / Reguler</span>';
+            })
+            ->addColumn('aturan_badge', function ($row) {
+                $html = '';
+                if ($row->memotong_kuota == 1) {
+                    $html .= '<span class="badge badge-warning text-dark"><i class="fas fa-minus-circle mr-1"></i> Potong Kuota</span>';
+                } else {
+                    $html .= '<span class="badge badge-info"><i class="fas fa-check-circle mr-1"></i> Tanpa Potong Kuota</span>';
+                }
+
+                if ($row->khusus_pegawai_tetap == 1) {
+                    $html .= ' <span class="badge badge-secondary"><i class="fas fa-user-lock mr-1"></i> Khusus Tetap</span>';
+                }
+                return $html;
+            })
             ->addColumn('is_active', function ($row) {
                 if ($row->is_active === '1') return '<span class="badge badge-success"><i class="fas fa-check-circle"></i> Aktif</span>';
                 return '<span class="badge badge-secondary"><i class="fas fa-times-circle"></i> Non-Aktif</span>';
@@ -46,7 +65,7 @@ class MasterCutiController extends MiddlewareController
                     'delete_url' => route('admin.master-cuti.destroy', $row->id),
                 ]);
             })
-            ->rawColumns(['is_active', 'action'])
+            ->rawColumns(['kategori_badge', 'aturan_badge', 'is_active', 'action'])
             ->make(true);
     }
 
@@ -61,20 +80,31 @@ class MasterCutiController extends MiddlewareController
         $this->guardStore($request->id, 'admin:master-cuti');
 
         $request->validate([
-            'jeniscuti'     => 'required|string|max:255',
-            'durasicuti'    => 'required|integer',
-            'minimalhari'   => 'required|integer',
+            'jeniscuti'            => 'required|string|max:255',
+            'durasicuti'           => 'required|integer',
+            'minimalhari'          => 'required|integer',
+            'kategori_cuti'        => 'required|in:tahunan,khusus',
+            'memotong_kuota'       => 'nullable|in:0,1',
+            'khusus_pegawai_tetap' => 'nullable|in:0,1',
+            'keterangan_edaran'    => 'nullable|string|max:255',
         ]);
 
         try {
+            $isKhusus = $request->kategori_cuti === 'khusus';
+            $memotongKuota = $request->has('memotong_kuota') ? (int)$request->memotong_kuota : ($isKhusus ? 0 : 1);
+            $khususTetap = $request->has('khusus_pegawai_tetap') ? (int)$request->khusus_pegawai_tetap : ($isKhusus ? 1 : 0);
+
             MasterCuti::create([
-                'jeniscuti'   => $request->jeniscuti,
-                'durasicuti'  => $request->durasicuti,
-                'minimalhari' => $request->minimalhari,
-                'is_active'   => '1',
-                'created_at'  => date("Y-m-d H:i:s"),
-                'created_by'  => Auth::check() ? $this->getCurrentProfile()->nik : 'System',
-                // 'updated_by'  => auth()->check() ? auth()->user()->name : 'System',
+                'jeniscuti'            => $request->jeniscuti,
+                'durasicuti'           => $request->durasicuti,
+                'minimalhari'          => $request->minimalhari,
+                'kategori_cuti'        => $request->kategori_cuti,
+                'memotong_kuota'       => $memotongKuota,
+                'khusus_pegawai_tetap' => $khususTetap,
+                'keterangan_edaran'    => $request->keterangan_edaran,
+                'is_active'            => '1',
+                'created_at'           => date("Y-m-d H:i:s"),
+                'created_by'           => (Auth::check() && $this->getCurrentProfile()) ? $this->getCurrentProfile()->nik : (Auth::check() ? Auth::user()->name : 'System'),
             ]);
 
             return back()->with('success', 'Master Cuti Berhasil Ditambahkan.');
@@ -102,20 +132,32 @@ class MasterCutiController extends MiddlewareController
         $cuti = MasterCuti::findOrFail($id);
 
         $request->validate([
-            'jeniscuti'   => 'required|string|max:255',
-            'durasicuti'  => 'required|integer',
-            'minimalhari' => 'required|integer',
-            'is_active'   => 'required|in:0,1'
+            'jeniscuti'            => 'required|string|max:255',
+            'durasicuti'           => 'required|integer',
+            'minimalhari'          => 'required|integer',
+            'kategori_cuti'        => 'required|in:tahunan,khusus',
+            'memotong_kuota'       => 'nullable|in:0,1',
+            'khusus_pegawai_tetap' => 'nullable|in:0,1',
+            'keterangan_edaran'    => 'nullable|string|max:255',
+            'is_active'            => 'required|in:0,1'
         ]);
 
         try {
+            $isKhusus = $request->kategori_cuti === 'khusus';
+            $memotongKuota = $request->has('memotong_kuota') ? (int)$request->memotong_kuota : ($isKhusus ? 0 : 1);
+            $khususTetap = $request->has('khusus_pegawai_tetap') ? (int)$request->khusus_pegawai_tetap : ($isKhusus ? 1 : 0);
+
             $cuti->update([
-                'jeniscuti'   => $request->jeniscuti,
-                'durasicuti'  => $request->durasicuti,
-                'minimalhari' => $request->minimalhari,
-                'is_active'   => $request->is_active,
-                'updated_at'  => date("Y-m-d H:i:s"),
-                'updated_by'  => Auth::check() ? $this->getCurrentProfile()->nik : 'System',
+                'jeniscuti'            => $request->jeniscuti,
+                'durasicuti'           => $request->durasicuti,
+                'minimalhari'          => $request->minimalhari,
+                'kategori_cuti'        => $request->kategori_cuti,
+                'memotong_kuota'       => $memotongKuota,
+                'khusus_pegawai_tetap' => $khususTetap,
+                'keterangan_edaran'    => $request->keterangan_edaran,
+                'is_active'            => $request->is_active,
+                'updated_at'           => date("Y-m-d H:i:s"),
+                'updated_by'           => (Auth::check() && $this->getCurrentProfile()) ? $this->getCurrentProfile()->nik : (Auth::check() ? Auth::user()->name : 'System'),
             ]);
 
             return back()->with('success', 'Master Cuti Berhasil Diperbarui!');

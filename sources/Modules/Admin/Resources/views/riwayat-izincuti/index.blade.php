@@ -155,12 +155,13 @@
                                     <thead>
                                         <tr>
                                             <th width="5%" class="text-center">No</th>
-                                            <th width="20%">Nama Pegawai</th>
-                                            <th width="15%">Jenis Cuti</th>
-                                            <th width="18%">Tanggal Cuti</th>
-                                            <th width="18%">Keterangan</th>
-                                            <th width="12%">Approval Atasan</th>
-                                            <th width="12%">Approval SDM</th>
+                                            <th width="18%">Nama Pegawai</th>
+                                            <th width="13%">Jenis Cuti</th>
+                                            <th width="15%">Tanggal Cuti</th>
+                                            <th width="16%">Keterangan</th>
+                                            <th width="11%" class="text-center">Berkas Bukti</th>
+                                            <th width="11%">Approval Atasan</th>
+                                            <th width="11%">Approval SDM</th>
                                         </tr>
                                     </thead>
                                     <tbody></tbody>
@@ -175,12 +176,13 @@
                                     <thead>
                                         <tr>
                                             <th width="5%" class="text-center">No</th>
-                                            <th width="20%">Nama Pegawai</th>
-                                            <th width="15%">Jenis Izin</th>
-                                            <th width="18%">Tanggal Izin</th>
-                                            <th width="18%">Keterangan</th>
-                                            <th width="12%">Approval Atasan</th>
-                                            <th width="12%">Approval SDM</th>
+                                            <th width="18%">Nama Pegawai</th>
+                                            <th width="13%">Jenis Izin</th>
+                                            <th width="15%">Tanggal Izin</th>
+                                            <th width="16%">Keterangan</th>
+                                            <th width="11%" class="text-center">Berkas Bukti</th>
+                                            <th width="11%">Approval Atasan</th>
+                                            <th width="11%">Approval SDM</th>
                                         </tr>
                                     </thead>
                                     <tbody></tbody>
@@ -237,6 +239,7 @@
                     { data: 'jeniscuti', name: 'masterCuti.jeniscuti' },
                     { data: 'tanggalcuti', name: 'tanggalmulai' },
                     { data: 'keterangan', name: 'keterangan' },
+                    { data: 'file_bukti', name: 'file_bukti', orderable: false, searchable: false, className: 'text-center' },
                     { data: 'approvalatasan', name: 'statusatasan' },
                     { data: 'approvalsdm', name: 'statushrd' }
                 ]
@@ -255,6 +258,7 @@
                     { data: 'jenisizin', name: 'masterIzin.jenisizin' },
                     { data: 'tanggalizin', name: 'tanggalmulai' },
                     { data: 'keterangan', name: 'keterangan' },
+                    { data: 'file_bukti', name: 'file_bukti', orderable: false, searchable: false, className: 'text-center' },
                     { data: 'approvalatasan', name: 'statusatasan' },
                     { data: 'approvalsdm', name: 'statushrd' }
                 ]

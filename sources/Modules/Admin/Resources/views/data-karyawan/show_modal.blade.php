@@ -71,34 +71,28 @@
                                     $isDokumenTab = $tabKey === 'tab_dokumen';
                                 @endphp
 
-                                @if($isDokumenTab)
-                                    @php
-                                        $icon = 'fa-file-alt'; // default
-                                        if(str_contains($field['name'], 'ktp')) $icon = 'fa-id-card';
-                                        elseif(str_contains($field['name'], 'kk')) $icon = 'fa-users';
-                                        elseif(str_contains($field['name'], 'npwp')) $icon = 'fa-file-invoice-dollar';
-                                        elseif(str_contains($field['name'], 'ijazah')) $icon = 'fa-user-graduate';
-                                    @endphp
-
-                                    <div class="col-md-6 mb-4">
-                                        <div class="border rounded p-3 d-flex align-items-center h-100 shadow-sm" style="background: #f8f9fc;">
-                                            <div class="bg-white text-info rounded-circle d-flex justify-content-center align-items-center shadow-sm mr-3" style="width: 50px; height: 50px; min-width: 50px;">
-                                                <i class="fas {{ $icon }} fa-lg"></i>
-                                            </div>
-                                            <div class="w-100">
-                                                <div class="text-muted small font-weight-bold text-uppercase mb-1">{{ $field['label'] }}</div>
-                                                @if($isEmpty)
-                                                    <span class="text-black-50 font-italic small">Belum diunggah</span>
-                                                @else
-                                                    <a href="{{ $value }}" target="_blank" class="btn btn-sm btn-info shadow-sm mt-1" style="border-radius: 15px; padding: 2px 12px; font-size: 0.85rem;">
-                                                        <i class="fas fa-cloud-download-alt mr-1"></i> Buka Dokumen
-                                                    </a>
-                                                @endif
-                                            </div>
+                                @if($tabKey === 'tab_dokumen')
+                                    <div class="col-12">
+                                        <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
+                                            <h6 class="font-weight-bold text-dark mb-0">
+                                                <i class="fas fa-folder-open mr-2 text-info"></i> Berkas Digital Kepegawaian
+                                            </h6>
+                                            <span class="badge badge-info px-2 py-1">
+                                                {{ $karyawan->dokumenBerkas->count() }} Berkas Terunggah
+                                            </span>
                                         </div>
+                                        @include('admin::data-karyawan._dokumen_list', ['karyawan' => $karyawan, 'canEdit' => false])
                                     </div>
-
+                                    @break
                                 @else
+                                    @if($field['name'] === 'kontak_darurat_nama')
+                                        <div class="col-12 mt-3 mb-2">
+                                            <h6 class="font-weight-bold text-danger border-bottom pb-2">
+                                                <i class="fas fa-phone-alt mr-2"></i> Kontak Darurat (Emergency Contact)
+                                            </h6>
+                                        </div>
+                                    @endif
+
                                     <div class="col-md-{{ $field['col_size'] ?? 12 }} mb-4">
                                         <div class="d-flex flex-column h-100 justify-content-between">
                                             <div>

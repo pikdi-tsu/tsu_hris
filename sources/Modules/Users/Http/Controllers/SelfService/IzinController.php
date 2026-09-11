@@ -114,21 +114,30 @@ class IzinController extends Controller
     public function simpan(Request $req)
     {
         try {
-            $validator = Validator::make($req->all(), [
-                'jenisizin' => 'required',
-                'tanggal1'  => 'required|date',
-                'tanggal2'  => 'required|date|after_or_equal:tanggal1',
-                'alasan'    => 'required',
-                'id_hrd'    => 'required',
-            ], [
-                // custom message
-                'jenisizin.required' => 'Jenis Izin Tidak Boleh Kosong',
-                'tanggal1.required' => 'Tanggal Mulai Tidak Boleh Kosong',
-                'tanggal2.required' => 'Tanggal Selesai Tidak Boleh Kosong',
+            $rules = [
+                'jenisizin'  => 'required',
+                'tanggal1'   => 'required|date',
+                'tanggal2'   => 'required|date|after_or_equal:tanggal1',
+                'alasan'     => 'required',
+                'id_hrd'     => 'required',
+                'file_bukti' => ($req->ketedit == 'no')
+                    ? 'required|file|mimes:pdf,jpg,jpeg,png|max:10240'
+                    : 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
+            ];
+
+            $messages = [
+                'jenisizin.required'      => 'Jenis Izin Tidak Boleh Kosong',
+                'tanggal1.required'       => 'Tanggal Mulai Tidak Boleh Kosong',
+                'tanggal2.required'       => 'Tanggal Selesai Tidak Boleh Kosong',
                 'tanggal2.after_or_equal' => 'Waktu Selesai harus setelah Waktu Mulai',
-                'alasan.required' => 'Alasan Tidak Boleh Kosong',
-                'id_hrd.required' => 'HRD Tidak Boleh Kosong',
-            ]);
+                'alasan.required'         => 'Alasan Tidak Boleh Kosong',
+                'id_hrd.required'         => 'HRD Tidak Boleh Kosong',
+                'file_bukti.required'     => 'Berkas Bukti Dukungan wajib diunggah untuk pengajuan Izin.',
+                'file_bukti.mimes'        => 'Format berkas bukti izin harus berupa PDF, JPG, JPEG, atau PNG.',
+                'file_bukti.max'          => 'Ukuran berkas bukti izin maksimal 10 MB.',
+            ];
+
+            $validator = Validator::make($req->all(), $rules, $messages);
 
             if ($validator->fails()) {
                 return $this->sendError($validator->errors()->first());
@@ -160,6 +169,15 @@ class IzinController extends Controller
             $alasan = $req->alasan;
             $idhrd = $req->id_hrd;
 
+            // Handle upload file bukti izin (Private Storage)
+            $filePath = null;
+            if ($req->hasFile('file_bukti')) {
+                $file = $req->file('file_bukti');
+                $filename = 'BuktiIzin_' . ($profile->nik ?? 'user') . '_' . time() . '.' . $file->getClientOriginalExtension();
+                $file->storeAs('private/izin/bukti', $filename);
+                $filePath = 'private/izin/bukti/' . $filename;
+            }
+
             $jumlahHari = IzinKaryawan::hitungHariEfektif($tgl1, $tgl2);
             if ($jumlahHari <= 0) {
                 return $this->sendError('Gagal mengajukan: Rentang tanggal yang dipilih tidak memuat hari kerja efektif (semua tanggal merupakan akhir pekan atau hari libur nasional).');
@@ -167,23 +185,25 @@ class IzinController extends Controller
 
             $izinId = null;
             if ($req->ketedit == 'no') {
-                $izinId = IzinKaryawan::insertGetId([
+                $insertData = [
                     'id_mizin'        => $jenisizin,
                     'id_user'         => $iduser,
                     'tanggalmulai'    => $tgl1,
                     'tanggalselesai'  => $tgl2,
                     'tanggaldiajukan' => date("Y-m-d H:i:s"),
                     'keterangan'      => $alasan,
+                    'file_bukti'      => $filePath,
                     'id_atasan'       => $idatasan,
                     'statusatasan'    => 'waiting',
                     'id_hrd'          => $idhrd,
                     'statushrd'       => 'waiting',
                     'created_at'      => date("Y-m-d H:i:s"),
                     'created_by'      => $profile->nik ?? Auth::id()
-                ]);
+                ];
+                $izinId = IzinKaryawan::insertGetId($insertData);
             } else {
                 $izinId = $req->idedit;
-                IzinKaryawan::where('id', $izinId)->where('is_active', '1')->update([
+                $updateData = [
                     'id_mizin'        => $jenisizin,
                     'id_user'         => $iduser,
                     'tanggalmulai'    => $tgl1,
@@ -196,7 +216,11 @@ class IzinController extends Controller
                     'statushrd'       => 'waiting',
                     'updated_at'      => date("Y-m-d H:i:s"),
                     'updated_by'      => $profile->nik ?? Auth::id()
-                ]);
+                ];
+                if ($filePath) {
+                    $updateData['file_bukti'] = $filePath;
+                }
+                IzinKaryawan::where('id', $izinId)->where('is_active', '1')->update($updateData);
             }
 
             // Real-Time Notifications
@@ -286,6 +310,12 @@ class IzinController extends Controller
                 }
                 return $stat;
             })
+            ->addColumn('file_bukti', function ($data) {
+                if ($data->file_bukti && $data->file_bukti_url) {
+                    return '<a href="' . $data->file_bukti_url . '" target="_blank" download class="btn btn-xs btn-outline-info rounded-pill px-2" title="Unduh / Lihat Bukti"><i class="fas fa-paperclip mr-1"></i> Bukti</a>';
+                }
+                return '<span class="text-muted small">-</span>';
+            })
             ->addColumn('action', function ($data) {
                 $encId = encrypt($data->id);
                 if ($data->statusatasan != 'waiting' || $data->statushrd != 'waiting') {
@@ -303,7 +333,7 @@ class IzinController extends Controller
                 }
                 return $button;
             })
-            ->rawColumns(['statusatasan', 'statushrd', 'action'])
+            ->rawColumns(['statusatasan', 'statushrd', 'file_bukti', 'action'])
             ->make(true);
     }
 
@@ -383,5 +413,62 @@ class IzinController extends Controller
         }
 
         return null;
+    }
+
+    /**
+     * Stream atau unduh berkas bukti izin secara privat
+     */
+    public function streamBukti($id)
+    {
+        $izin = IzinKaryawan::with('user')->findOrFail($id);
+
+        $currentUser = Auth::user();
+        $currentProfile = $this->getCurrentProfile();
+
+        $canAccess = false;
+        if ($currentUser && ($currentUser->isAdmin() || $currentUser->hasRole(['superadmin', 'admin', 'hrd']))) {
+            $canAccess = true;
+        } elseif ($currentProfile) {
+            if ($izin->id_user == $currentProfile->id || $izin->id_atasan == $currentProfile->id || $izin->id_hrd == $currentProfile->id) {
+                $canAccess = true;
+            }
+        }
+
+        if (!$canAccess) {
+            abort(403, 'Anda tidak memiliki hak akses untuk melihat berkas bukti izin ini.');
+        }
+
+        $filePath = $izin->file_bukti;
+        if (!$filePath) {
+            abort(404, 'Berkas bukti izin tidak ditemukan.');
+        }
+
+        $candidates = [
+            storage_path('app/' . ltrim($filePath, '/')),
+            storage_path('app/public/' . str_replace('storage/', '', ltrim($filePath, '/'))),
+            public_path(ltrim($filePath, '/')),
+            public_path('storage/' . str_replace('storage/', '', ltrim($filePath, '/'))),
+        ];
+
+        $fullPath = null;
+        foreach ($candidates as $cand) {
+            if (file_exists($cand) && is_file($cand)) {
+                $fullPath = $cand;
+                break;
+            }
+        }
+
+        if (!$fullPath) {
+            abort(404, 'File fisik bukti izin tidak ditemukan di server.');
+        }
+
+        $mimeType = mime_content_type($fullPath) ?: 'application/octet-stream';
+        $filename = 'Bukti_Izin_' . ($izin->user->nama ?? 'Pegawai') . '.' . pathinfo($fullPath, PATHINFO_EXTENSION);
+
+        return response()->file($fullPath, [
+            'Content-Type'        => $mimeType,
+            'Content-Disposition' => 'inline; filename="' . addslashes($filename) . '"',
+            'Cache-Control'       => 'no-store, no-cache, must-revalidate, max-age=0',
+        ]);
     }
 }

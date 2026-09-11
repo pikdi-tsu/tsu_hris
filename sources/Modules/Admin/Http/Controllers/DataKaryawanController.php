@@ -21,6 +21,8 @@ use App\Models\CutiKaryawan;
 use Modules\System\Models\MenuSidebar;
 use App\Models\IzinKaryawan;
 use App\Models\LemburKaryawan;
+use App\Models\MasterJenisDokumen;
+use App\Models\KaryawanDokumenBerkas;
 
 use App\Traits\ApiResponseTrait;
 
@@ -259,7 +261,10 @@ class DataKaryawanController extends MiddlewareController
     public function show($id)
     {
         $karyawan = DataDosenTendik::with([
-            'jabatanStrukturals' => function($q) { $q->where('is_active', 'Y')->with('masterStruktural'); },
+            'unit',
+            'statusKaryawan',
+            'dokumenBerkas.masterJenis',
+            'jabatanStrukturals' => function($q) { $q->where('is_active', 'Y')->with(['masterStruktural', 'unit']); },
             'jabatanFungsionals' => function($q) { $q->where('is_active', 'Y')->with(['masterFungsional', 'pangkatGolongan']); },
         ])->findOrFail($id);
         $formConfig = DataDosenTendik::getFormConfig();
@@ -279,8 +284,9 @@ class DataKaryawanController extends MiddlewareController
         // Hapus tab jabatan pada saat tambah data baru
         unset($formConfig['tab_kepangkatan']);
 
-        // Pastikan file view ini nanti dibuat ya Bosku
-        return view('admin::data-karyawan.create_modal', compact('formConfig'));
+        $masterJenisDokumen = MasterJenisDokumen::active()->get();
+
+        return view('admin::data-karyawan.create_modal', compact('formConfig', 'masterJenisDokumen'));
     }
 
     /**
@@ -290,10 +296,11 @@ class DataKaryawanController extends MiddlewareController
     {
         $this->guardStore($request->id, 'admin:data-karyawan');
 
-        // Validasi sesuaikan dengan kebutuhan field-mu
+        // Validasi sesuaikan dengan kebutuhan field
         $request->validate([
             'nik'  => 'required|unique:data_dosen_tendiks,nik',
             'nama' => 'required|string|max:255',
+            'dokumen_files.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp|max:10240',
         ]);
 
         try {
@@ -308,6 +315,35 @@ class DataKaryawanController extends MiddlewareController
             }
 
             $newKaryawan = DataDosenTendik::create($data);
+
+            // Simpan berkas dokumen yang diunggah saat pendaftaran pegawai baru
+            if ($request->hasFile('dokumen_files')) {
+                foreach ($request->file('dokumen_files') as $jenisId => $file) {
+                    if ($file && $file->isValid()) {
+                        $jenis = MasterJenisDokumen::find($jenisId);
+                        $ext = strtolower($file->getClientOriginalExtension());
+                        $cleanJenisKode = $jenis ? $jenis->kode_dokumen : 'DOC';
+                        $filename = "{$cleanJenisKode}_{$newKaryawan->nik}_" . time() . "_{$jenisId}.{$ext}";
+
+                        // Simpan berkas di private storage
+                        $file->storeAs('private/dokumen_karyawan', $filename);
+                        $filePath = 'private/dokumen_karyawan/' . $filename;
+
+                        KaryawanDokumenBerkas::create([
+                            'data_dosen_tendik_id'    => $newKaryawan->id,
+                            'master_jenis_dokumen_id' => $jenisId,
+                            'nama_berkas'             => $jenis ? $jenis->nama_dokumen : $file->getClientOriginalName(),
+                            'nomor_dokumen'           => $request->input("dokumen_nomor.{$jenisId}"),
+                            'tanggal_dokumen'         => $request->input("dokumen_tanggal.{$jenisId}"),
+                            'file_path'               => $filePath,
+                            'file_size'               => $file->getSize(),
+                            'file_extension'          => $ext,
+                            'keterangan'              => $request->input("dokumen_keterangan.{$jenisId}"),
+                            'uploaded_by'             => auth()->id(),
+                        ]);
+                    }
+                }
+            }
 
             return back()->with('new_karyawan_id', $newKaryawan->id);
         } catch (\Exception $e) {
@@ -329,9 +365,10 @@ class DataKaryawanController extends MiddlewareController
         $this->guard('edit', 'admin:data-karyawan');
 
         $formConfig = DataDosenTendik::getFormConfig();
-        $karyawan = DataDosenTendik::findOrFail($id);
+        $karyawan = DataDosenTendik::with(['dokumenBerkas.masterJenis'])->findOrFail($id);
+        $masterJenisDokumen = MasterJenisDokumen::active()->get();
 
-        return view('admin::data-karyawan.edit_modal', compact('karyawan', 'formConfig'));
+        return view('admin::data-karyawan.edit_modal', compact('karyawan', 'formConfig', 'masterJenisDokumen'));
     }
 
     /**
@@ -667,9 +704,10 @@ class DataKaryawanController extends MiddlewareController
         $this->guard('edit', 'admin:data-karyawan');
         $request->validate([
             'jabatan_fungsional_id' => 'required',
-            'pangkat_golongan_id' => 'nullable',
-            'tgl_mulai' => 'required|date',
-            'sk_jabatan' => 'nullable|string|max:255',
+            'pangkat_golongan_id'   => 'nullable',
+            'tgl_mulai'             => 'required|date',
+            'sk_jabatan'            => 'nullable|string|max:255',
+            'file_sk'               => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]);
 
         try {
@@ -679,14 +717,23 @@ class DataKaryawanController extends MiddlewareController
                 $tglAkhir = Carbon::parse($request->tgl_mulai)->addMonths($master->periode_jabatan)->format('Y-m-d');
             }
 
+            $fileSkPath = null;
+            if ($request->hasFile('file_sk')) {
+                $file = $request->file('file_sk');
+                $filename = 'SK_Fung_' . $id . '_' . time() . '.' . $file->getClientOriginalExtension();
+                $file->storeAs('public/dokumen_sk', $filename);
+                $fileSkPath = 'storage/dokumen_sk/' . $filename;
+            }
+
             KaryawanJabatanFungsional::create([
-                'data_dosen_tendik_id' => $id,
+                'data_dosen_tendik_id'  => $id,
                 'jabatan_fungsional_id' => $request->jabatan_fungsional_id,
-                'pangkat_golongan_id' => $request->pangkat_golongan_id ?: null,
-                'tgl_mulai' => $request->tgl_mulai,
-                'tgl_akhir' => $tglAkhir,
-                'sk_jabatan' => $request->sk_jabatan,
-                'is_active' => 'Y'
+                'pangkat_golongan_id'   => $request->pangkat_golongan_id ?: null,
+                'tgl_mulai'             => $request->tgl_mulai,
+                'tgl_akhir'             => $tglAkhir,
+                'sk_jabatan'            => $request->sk_jabatan,
+                'file_sk'               => $fileSkPath,
+                'is_active'             => 'Y'
             ]);
 
             // Return JSON for AJAX modal refresh
@@ -696,7 +743,7 @@ class DataKaryawanController extends MiddlewareController
                 ])->render()
             ]);
         } catch (\Exception $e) {
-            return TsuErrorHandlerService::handleJson($e, '[TSU_FUNG_STORE]', 'Gagal menambah fungsional.', 'Gagal Store Fungsional');
+            return TsuErrorHandlerService::handleJson($e, '[TSU_FUNG_STORE]', 'Gagal menambah fungsional: ' . $e->getMessage(), 'Gagal Store Fungsional');
         }
     }
 
@@ -748,8 +795,10 @@ class DataKaryawanController extends MiddlewareController
         $this->guard('edit', 'admin:data-karyawan');
         $request->validate([
             'jabatan_struktural_id' => 'required',
-            'tgl_mulai' => 'required|date',
-            'unit_id' => 'nullable'
+            'tgl_mulai'             => 'required|date',
+            'unit_id'               => 'nullable',
+            'sk_jabatan'            => 'nullable|string|max:255',
+            'file_sk'               => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:10240',
         ]);
 
         try {
@@ -763,13 +812,23 @@ class DataKaryawanController extends MiddlewareController
                 $tglAkhir = Carbon::parse($request->tgl_mulai)->addMonths($master->periode_jabatan)->format('Y-m-d');
             }
 
+            $fileSkPath = null;
+            if ($request->hasFile('file_sk')) {
+                $file = $request->file('file_sk');
+                $filename = 'SK_Struk_' . $id . '_' . time() . '.' . $file->getClientOriginalExtension();
+                $file->storeAs('public/dokumen_sk', $filename);
+                $fileSkPath = 'storage/dokumen_sk/' . $filename;
+            }
+
             KaryawanJabatanStruktural::create([
-                'data_dosen_tendik_id' => $id,
+                'data_dosen_tendik_id'  => $id,
                 'jabatan_struktural_id' => $request->jabatan_struktural_id,
-                'unit_id' => $master->is_unit_specific == 'Y' ? $request->unit_id : null,
-                'tgl_mulai' => $request->tgl_mulai,
-                'tgl_akhir' => $tglAkhir,
-                'is_active' => 'Y'
+                'unit_id'               => $master->is_unit_specific == 'Y' ? $request->unit_id : null,
+                'tgl_mulai'             => $request->tgl_mulai,
+                'tgl_akhir'             => $tglAkhir,
+                'sk_jabatan'            => $request->sk_jabatan,
+                'file_sk'               => $fileSkPath,
+                'is_active'             => 'Y'
             ]);
 
             return $this->sendSuccess('Jabatan struktural berhasil ditambahkan.', [
@@ -778,7 +837,7 @@ class DataKaryawanController extends MiddlewareController
                 ])->render()
             ]);
         } catch (\Exception $e) {
-            return TsuErrorHandlerService::handleJson($e, '[TSU_STR_STORE]', 'Gagal menambah struktural.', 'Gagal Store Struktural');
+            return TsuErrorHandlerService::handleJson($e, '[TSU_STR_STORE]', 'Gagal menambah struktural: ' . $e->getMessage(), 'Gagal Store Struktural');
         }
     }
 
@@ -802,6 +861,178 @@ class DataKaryawanController extends MiddlewareController
         } catch (\Exception $e) {
             return TsuErrorHandlerService::handleJson($e, '[TSU_STR_DEL]', 'Gagal melepas struktural.', 'Gagal Delete Struktural');
         }
+    }
+
+    // =========================================================================
+    // MODUL DOKUMEN BERKAS DINAMIS KARYAWAN
+    // =========================================================================
+
+    /**
+     * Upload Dokumen Berkas Dinamis Pegawai
+     */
+    public function storeDokumen(Request $request, $id)
+    {
+        $this->guard('edit', 'admin:data-karyawan');
+        $karyawan = DataDosenTendik::findOrFail($id);
+
+        $request->validate([
+            'master_jenis_dokumen_id' => 'required|exists:master_jenis_dokumens,id',
+            'file'                    => 'required|file|mimes:pdf,jpg,jpeg,png,webp|max:10240',
+            'nomor_dokumen'           => 'nullable|string|max:100',
+            'tanggal_dokumen'         => 'nullable|date',
+            'keterangan'              => 'nullable|string',
+        ]);
+
+        try {
+            $file = $request->file('file');
+            $jenis = MasterJenisDokumen::find($request->master_jenis_dokumen_id);
+            $ext = strtolower($file->getClientOriginalExtension());
+            $cleanJenisKode = $jenis ? $jenis->kode_dokumen : 'DOC';
+            $filename = "{$cleanJenisKode}_{$karyawan->nik}_" . time() . ".{$ext}";
+
+            // Simpan di private storage (tidak dapat diakses publik langsung)
+            $file->storeAs('private/dokumen_karyawan', $filename);
+            $filePath = 'private/dokumen_karyawan/' . $filename;
+
+            KaryawanDokumenBerkas::create([
+                'data_dosen_tendik_id'    => $karyawan->id,
+                'master_jenis_dokumen_id' => $request->master_jenis_dokumen_id,
+                'nama_berkas'             => $jenis ? $jenis->nama_dokumen : $file->getClientOriginalName(),
+                'nomor_dokumen'           => $request->nomor_dokumen,
+                'tanggal_dokumen'         => $request->tanggal_dokumen,
+                'file_path'               => $filePath,
+                'file_size'               => $file->getSize(),
+                'file_extension'          => $ext,
+                'keterangan'              => $request->keterangan,
+                'uploaded_by'             => auth()->id(),
+            ]);
+
+            return $this->sendSuccess('Berkas dokumen berhasil diunggah.', [
+                'html' => view('admin::data-karyawan._dokumen_list', [
+                    'karyawan' => $karyawan->fresh(['dokumenBerkas.masterJenis']),
+                    'canEdit'  => true,
+                ])->render()
+            ]);
+        } catch (\Exception $e) {
+            return TsuErrorHandlerService::handleJson($e, '[TSU_DOC_STORE]', 'Gagal mengunggah berkas: ' . $e->getMessage(), 'Gagal Store Dokumen');
+        }
+    }
+
+    /**
+     * Hapus Dokumen Berkas Dinamis Pegawai
+     */
+    public function destroyDokumen($dokumen_id)
+    {
+        $this->guard('edit', 'admin:data-karyawan');
+        try {
+            $dokumen = KaryawanDokumenBerkas::findOrFail($dokumen_id);
+            $karyawanId = $dokumen->data_dosen_tendik_id;
+            $karyawan = DataDosenTendik::findOrFail($karyawanId);
+
+            if ($dokumen->file_path && !str_starts_with($dokumen->file_path, 'http')) {
+                \Illuminate\Support\Facades\Storage::delete($dokumen->file_path);
+                $rawPath = str_replace('storage/', 'public/', $dokumen->file_path);
+                \Illuminate\Support\Facades\Storage::delete($rawPath);
+            }
+
+            $dokumen->delete();
+
+            return $this->sendSuccess('Berkas dokumen berhasil dihapus.', [
+                'html' => view('admin::data-karyawan._dokumen_list', [
+                    'karyawan' => $karyawan->fresh(['dokumenBerkas.masterJenis']),
+                    'canEdit'  => true,
+                ])->render()
+            ]);
+        } catch (\Exception $e) {
+            return TsuErrorHandlerService::handleJson($e, '[TSU_DOC_DEL]', 'Gagal menghapus berkas: ' . $e->getMessage(), 'Gagal Delete Dokumen');
+        }
+    }
+
+    /**
+     * Preview Dokumen Modal (PDF / Gambar)
+     */
+    public function previewDokumenModal($dokumen_id)
+    {
+        $dokumen = KaryawanDokumenBerkas::with(['pegawai', 'masterJenis'])->findOrFail($dokumen_id);
+        return view('admin::data-karyawan.preview_modal', compact('dokumen'));
+    }
+
+    /**
+     * Secure Stream Berkas Dokumen Karyawan (Authorization Gate)
+     */
+    public function streamDokumen($dokumen_id)
+    {
+        if (!Auth::check()) {
+            abort(401, 'Silakan login terlebih dahulu untuk mengakses berkas ini.');
+        }
+
+        $dokumen = KaryawanDokumenBerkas::with('pegawai')->findOrFail($dokumen_id);
+        $user = Auth::user();
+        $pegawai = $dokumen->pegawai;
+
+        // 1. Super Admin HRIS & Admin SDM (Akses Penuh)
+        $isAdmin = $user->isAdmin()
+            || $user->hasRole(['super admin hris', 'admin hris testing', 'Super Admin', 'Admin SDM'])
+            || $user->can('admin:data-karyawan')
+            || $user->can('admin:data-karyawan:view');
+
+        // 2. Pemilik Berkas
+        $isOwner = false;
+        if ($pegawai) {
+            if (!empty($pegawai->user_id) && $pegawai->user_id == $user->id) {
+                $isOwner = true;
+            }
+            if (!empty($pegawai->nik) && !empty($user->nik) && $pegawai->nik == $user->nik) {
+                $isOwner = true;
+            }
+            if (!empty($pegawai->email) && !empty($user->email) && strtolower($pegawai->email) === strtolower($user->email)) {
+                $isOwner = true;
+            }
+        }
+
+        // 3. Atasan Langsung
+        $isAtasan = false;
+        if ($pegawai && method_exists($pegawai, 'isBawahanDari') && $pegawai->isBawahanDari($user->id)) {
+            $isAtasan = true;
+        }
+
+        if (!$isAdmin && !$isOwner && !$isAtasan) {
+            abort(403, 'Akses Ditolak: Anda tidak memiliki wewenang untuk mengakses dokumen pribadi ini.');
+        }
+
+        $filePath = $dokumen->file_path;
+        if (!$filePath) {
+            abort(404, 'Berkas tidak ditemukan.');
+        }
+
+        // Cari lokasi fisik berkas (Dukung private storage maupun legacy public storage)
+        $candidates = [
+            storage_path('app/' . ltrim($filePath, '/')),
+            storage_path('app/public/' . str_replace('storage/', '', ltrim($filePath, '/'))),
+            public_path(ltrim($filePath, '/')),
+            public_path('storage/' . str_replace('storage/', '', ltrim($filePath, '/'))),
+        ];
+
+        $fullPath = null;
+        foreach ($candidates as $cand) {
+            if (file_exists($cand) && is_file($cand)) {
+                $fullPath = $cand;
+                break;
+            }
+        }
+
+        if (!$fullPath) {
+            abort(404, 'File fisik berkas tidak ditemukan di server.');
+        }
+
+        $mimeType = mime_content_type($fullPath) ?: 'application/octet-stream';
+        $filename = $dokumen->nama_berkas . '.' . ($dokumen->file_extension ?? pathinfo($fullPath, PATHINFO_EXTENSION));
+
+        return response()->file($fullPath, [
+            'Content-Type'        => $mimeType,
+            'Content-Disposition' => 'inline; filename="' . addslashes($filename) . '"',
+            'Cache-Control'       => 'no-store, no-cache, must-revalidate, max-age=0',
+        ]);
     }
     // =========================================================================
     // MODUL RIWAYAT JABATAN

@@ -52,14 +52,9 @@ class MasterHariLiburController extends MiddlewareController
             ->addIndexColumn()
             ->editColumn('tanggal', function($row) {
                 $dayName = Carbon::parse($row->tanggal)->translatedFormat('l');
-                return '<div class="d-flex align-items-center" style="gap: 0.65rem;">
-                            <div class="d-inline-flex align-items-center justify-content-center" style="width: 34px; height: 34px; border-radius: 8px; background: rgba(9, 75, 84, 0.08); color: #094b54; font-size: 0.9rem; flex-shrink: 0;">
-                                <i class="far fa-calendar-alt"></i>
-                            </div>
-                            <div>
-                                <span class="font-weight-bold text-dark" style="font-size: 0.88rem;">' . tglIndo($row->tanggal) . '</span>
-                                <small class="text-muted d-block" style="font-size: 0.75rem;">' . $dayName . '</small>
-                            </div>
+                return '<div>
+                            <span class="font-weight-bold text-dark" style="font-size: 0.88rem;">' . tglIndo($row->tanggal) . '</span>
+                            <small class="text-muted d-block" style="font-size: 0.75rem;">' . $dayName . '</small>
                         </div>';
             })
             ->editColumn('keterangan', function($row) {
@@ -68,12 +63,12 @@ class MasterHariLiburController extends MiddlewareController
             ->addColumn('status_libur', function($row) {
                 $statusLower = strtolower($row->status_libur);
                 if ($statusLower === 'nasional') {
-                    return '<span class="badge" style="background: rgba(220, 38, 38, 0.1); color: #dc2626; border: 1px solid rgba(220, 38, 38, 0.25); font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.75rem;"><i class="fas fa-flag mr-1" style="font-size: 0.7rem;"></i> Nasional</span>';
+                    return '<span class="badge" style="background: rgba(220, 38, 38, 0.1); color: #dc2626; border: 1px solid rgba(220, 38, 38, 0.25); font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.75rem;">Nasional</span>';
                 }
                 if ($statusLower === 'cuti bersama') {
-                    return '<span class="badge" style="background: rgba(217, 119, 6, 0.1); color: #d97706; border: 1px solid rgba(217, 119, 6, 0.25); font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.75rem;"><i class="fas fa-calendar-week mr-1" style="font-size: 0.7rem;"></i> Cuti Bersama</span>';
+                    return '<span class="badge" style="background: rgba(217, 119, 6, 0.1); color: #d97706; border: 1px solid rgba(217, 119, 6, 0.25); font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.75rem;">Cuti Bersama</span>';
                 }
-                return '<span class="badge" style="background: rgba(2, 132, 199, 0.1); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.25); font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.75rem;"><i class="fas fa-university mr-1" style="font-size: 0.7rem;"></i> Institusi</span>';
+                return '<span class="badge" style="background: rgba(2, 132, 199, 0.1); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.25); font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.75rem;">Institusi</span>';
             })
             ->addColumn('isactive', function($row) {
                 if ($row->isactive === 'Y') {

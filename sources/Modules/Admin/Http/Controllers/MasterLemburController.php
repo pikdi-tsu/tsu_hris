@@ -43,15 +43,7 @@ class MasterLemburController extends MiddlewareController
         return DataTables::of($data)
             ->addIndexColumn()
             ->editColumn('jenislembur', function($row) {
-                $icon = str_contains(strtolower($row->jenislembur), 'libur') ? 'fas fa-calendar-day' : 'fas fa-business-time';
-                return '<div class="d-flex align-items-center" style="gap: 0.65rem;">
-                            <div class="d-inline-flex align-items-center justify-content-center" style="width: 34px; height: 34px; border-radius: 8px; background: rgba(9, 75, 84, 0.08); color: #094b54; font-size: 0.9rem; flex-shrink: 0;">
-                                <i class="'.$icon.'"></i>
-                            </div>
-                            <div>
-                                <span class="font-weight-bold text-dark" style="font-size: 0.88rem;">' . e($row->jenislembur) . '</span>
-                            </div>
-                        </div>';
+                return '<span class="font-weight-bold text-dark" style="font-size: 0.88rem;">' . e($row->jenislembur) . '</span>';
             })
             ->editColumn('keterangan', function($row) {
                 if (!$row->keterangan) {

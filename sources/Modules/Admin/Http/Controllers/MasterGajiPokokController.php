@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\MiddlewareController;
 use Illuminate\Support\Facades\DB;
 use App\Models\MasterGajiPokok;
+use Modules\System\Models\MenuSidebar;
 use App\Services\TsuErrorHandlerService;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Str;
@@ -23,8 +24,23 @@ class MasterGajiPokokController extends MiddlewareController
 
     public function index()
     {
+        $stats = [
+            'total'     => MasterGajiPokok::count(),
+            'gol_1_2'   => MasterGajiPokok::where(function($q) {
+                $q->where('golongan', 'like', 'I/%')->orWhere('golongan', 'like', 'II/%');
+            })->count(),
+            'gol_3_4'   => MasterGajiPokok::where(function($q) {
+                $q->where('golongan', 'like', 'III/%')->orWhere('golongan', 'like', 'IV/%');
+            })->count(),
+            'avg_gapok' => round(MasterGajiPokok::avg('gaji_pokok_100') ?? 0),
+        ];
+
+        $menuIcon = MenuSidebar::where('route', 'admin.master-gaji-pokok.index')->value('icon') ?: 'fas fa-money-check-alt';
+
         return view('admin::master-data.gaji-pokok.index', [
-            'title' => 'Master Matriks Gaji Pokok Pegawai',
+            'title'    => 'Master Matriks Gaji Pokok Pegawai',
+            'menuIcon' => $menuIcon,
+            'stats'    => $stats,
         ]);
     }
 
@@ -43,28 +59,28 @@ class MasterGajiPokokController extends MiddlewareController
         return DataTables::of($data)
             ->addIndexColumn()
             ->addColumn('golongan_badge', function ($row) {
-                return '<span class="badge badge-primary px-2 py-1 font-weight-bold" style="font-size: 0.95rem;">' . $row->golongan . '</span>';
+                return '<span class="badge badge-pill badge-primary px-3 py-1 font-weight-bold" style="font-size: 0.88rem;">' . e($row->golongan) . '</span>';
             })
             ->addColumn('gapok_100_formatted', function ($row) {
-                return '<strong class="text-success" style="font-size: 0.95rem;">Rp ' . number_format($row->gaji_pokok_100, 0, ',', '.') . '</strong>';
+                return '<span class="font-weight-bold" style="color: #047857; font-size: 0.92rem;">Rp ' . number_format($row->gaji_pokok_100, 0, ',', '.') . '</span>';
             })
             ->addColumn('gapok_80_formatted', function ($row) {
-                return '<span class="text-dark font-weight-bold">Rp ' . number_format($row->gaji_pokok_80, 0, ',', '.') . '</span>';
+                return '<span class="font-weight-bold text-dark" style="font-size: 0.9rem;">Rp ' . number_format($row->gaji_pokok_80, 0, ',', '.') . '</span>';
             })
             ->addColumn('berkala_formatted', function ($row) {
-                $html = '<div style="font-size: 8pt;" class="text-muted">';
-                $html .= '<div><strong>2 Thn:</strong> Rp ' . number_format($row->tahun_2, 0, ',', '.') . ' | <strong>4 Thn:</strong> Rp ' . number_format($row->tahun_4, 0, ',', '.') . '</div>';
-                $html .= '<div><strong>6 Thn:</strong> Rp ' . number_format($row->tahun_6, 0, ',', '.') . ' | <strong>8 Thn:</strong> Rp ' . number_format($row->tahun_8, 0, ',', '.') . '</div>';
-                $html .= '<div><strong>10 Thn:</strong> Rp ' . number_format($row->tahun_10, 0, ',', '.') . '</div>';
+                $html = '<div class="text-muted" style="font-size: 0.78rem; line-height: 1.45;">';
+                $html .= '<div><span class="font-weight-bold text-dark">2 Thn:</span> Rp ' . number_format($row->tahun_2, 0, ',', '.') . ' &nbsp;|&nbsp; <span class="font-weight-bold text-dark">4 Thn:</span> Rp ' . number_format($row->tahun_4, 0, ',', '.') . '</div>';
+                $html .= '<div><span class="font-weight-bold text-dark">6 Thn:</span> Rp ' . number_format($row->tahun_6, 0, ',', '.') . ' &nbsp;|&nbsp; <span class="font-weight-bold text-dark">8 Thn:</span> Rp ' . number_format($row->tahun_8, 0, ',', '.') . '</div>';
+                $html .= '<div><span class="font-weight-bold text-dark">10 Thn:</span> Rp ' . number_format($row->tahun_10, 0, ',', '.') . '</div>';
                 $html .= '</div>';
                 return $html;
             })
             ->addColumn('keterangan_display', function ($row) {
-                return $row->keterangan ? '<span class="text-secondary small">' . nl2br(e($row->keterangan)) . '</span>' : '<span class="text-muted font-italic">-</span>';
+                return $row->keterangan ? '<span class="text-muted" style="font-size: 0.83rem;">' . nl2br(e($row->keterangan)) . '</span>' : '<span class="text-muted text-xs font-italic">-</span>';
             })
             ->addColumn('action', function ($row) {
-                $btnEdit = '<button type="button" class="btn btn-xs btn-primary btn-modal mr-1" data-url="' . route('admin.master-gaji-pokok.edit', $row->id) . '" title="Edit"><i class="fas fa-edit"></i> Edit</button>';
-                $btnDelete = '<button type="button" class="btn btn-xs btn-danger btn-delete" data-url="' . route('admin.master-gaji-pokok.destroy', $row->id) . '" data-name="Golongan ' . $row->golongan . '" title="Hapus"><i class="fas fa-trash"></i></button>';
+                $btnEdit = '<button type="button" class="btn btn-xs btn-primary btn-modal mr-1" data-url="' . route('admin.master-gaji-pokok.edit', $row->id) . '" title="Edit Matriks"><i class="fas fa-edit"></i> Edit</button>';
+                $btnDelete = '<button type="button" class="btn btn-xs btn-danger btn-delete" data-url="' . route('admin.master-gaji-pokok.destroy', $row->id) . '" data-name="Golongan ' . htmlspecialchars($row->golongan, ENT_QUOTES) . '" title="Hapus Golongan"><i class="fas fa-trash"></i></button>';
                 return '<div class="text-center text-nowrap">' . $btnEdit . $btnDelete . '</div>';
             })
             ->rawColumns(['golongan_badge', 'gapok_100_formatted', 'gapok_80_formatted', 'berkala_formatted', 'keterangan_display', 'action'])

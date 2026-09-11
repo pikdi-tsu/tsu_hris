@@ -1,66 +1,350 @@
 @extends('system::template.admin.header')
+@section('title', $title)
+
+@section('link_href')
+    <!-- DataTables -->
+    <link rel="stylesheet" href="{{ asset('assets/adminlte/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/adminlte/plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/adminlte/plugins/sweetalert2/sweetalert2.min.css') }}">
+
+    <style>
+        /* === TSU Stat Cards Grid (4 Columns) === */
+        .tsu-stat-grid-gapok {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+        }
+        @media (max-width: 992px) {
+            .tsu-stat-grid-gapok {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 576px) {
+            .tsu-stat-grid-gapok {
+                grid-template-columns: 1fr;
+            }
+        }
+        .tsu-stat-card {
+            border-radius: var(--tsu-radius-lg, 12px);
+            padding: 1.15rem 1.25rem;
+            box-shadow: 0 4px 14px rgba(9, 75, 84, 0.08);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .tsu-stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(9, 75, 84, 0.15);
+        }
+        .tsu-stat-card__top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.65rem;
+        }
+        .tsu-stat-card__label {
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            opacity: 0.95;
+            margin: 0;
+        }
+        .tsu-stat-card__icon-badge {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+        .tsu-stat-card__value {
+            font-size: 1.75rem;
+            font-weight: 800;
+            line-height: 1.15;
+            letter-spacing: -0.02em;
+            margin-bottom: 0.25rem;
+            display: flex;
+            align-items: baseline;
+            gap: 0.35rem;
+        }
+        .tsu-stat-card__unit {
+            font-size: 0.9rem;
+            font-weight: 600;
+            opacity: 0.85;
+        }
+        .tsu-stat-card__subtext {
+            font-size: 0.75rem;
+            font-weight: 500;
+            opacity: 0.85;
+            line-height: 1.25;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Card Color Schemes */
+        .tsu-stat-card--total {
+            background: linear-gradient(135deg, #094b54 0%, #0c6170 100%);
+            color: #ffffff;
+        }
+        .tsu-stat-card--gol12 {
+            background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%);
+            color: #ffffff;
+        }
+        .tsu-stat-card--gol34 {
+            background: linear-gradient(135deg, #b45309 0%, #d97706 100%);
+            color: #ffffff;
+        }
+        .tsu-stat-card--avg {
+            background: linear-gradient(135deg, #047857 0%, #10b981 100%);
+            color: #ffffff;
+        }
+
+        /* === TSU Container Card === */
+        .tsu-card {
+            background: #ffffff;
+            border-radius: var(--tsu-radius-lg, 12px);
+            border: 1px solid rgba(0, 0, 0, 0.06);
+            box-shadow: 0 4px 16px rgba(9, 75, 84, 0.06);
+            overflow: hidden;
+            margin-bottom: 1.5rem;
+        }
+
+        /* === Modern Table Styles === */
+        .tsu-table-modern thead th {
+            background: #f8fafc !important;
+            color: var(--tsu-primary-dark, #094b54) !important;
+            font-size: 0.78rem !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.04em !important;
+            border-bottom: 2px solid var(--tsu-primary-light, #cce6e9) !important;
+            vertical-align: middle !important;
+            padding: 0.75rem 1rem !important;
+        }
+        .tsu-table-modern tbody td {
+            vertical-align: middle !important;
+            font-size: 0.85rem;
+            padding: 0.75rem 1rem !important;
+            border-color: #f1f5f9 !important;
+        }
+        .tsu-table-modern tbody tr:hover {
+            background-color: #f8fafc !important;
+        }
+
+        /* === Buttons & Controls === */
+        .tsu-btn-reload {
+            color: var(--tsu-primary, #094b54);
+            background: #ffffff;
+            border: 1.5px solid var(--tsu-primary-light, #cce6e9);
+            border-radius: var(--tsu-radius, 8px);
+            font-weight: 600;
+            padding: 0.45rem 1rem;
+            transition: all 0.2s ease;
+        }
+        .tsu-btn-reload:hover {
+            background: var(--tsu-primary, #094b54);
+            color: #ffffff;
+            border-color: var(--tsu-primary, #094b54);
+        }
+        .tsu-btn-primary-action {
+            background: linear-gradient(135deg, #094b54 0%, #0c6170 100%);
+            color: #ffffff !important;
+            border: none;
+            border-radius: var(--tsu-radius, 8px);
+            font-weight: 600;
+            padding: 0.45rem 1.1rem;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 6px rgba(9, 75, 84, 0.2);
+        }
+        .tsu-btn-primary-action:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(9, 75, 84, 0.3);
+            color: #ffffff !important;
+        }
+
+        /* === DataTables Pagination & Filter === */
+        .dataTables_wrapper .dataTables_paginate .page-item.active .page-link {
+            background-color: var(--tsu-primary, #094b54) !important;
+            border-color: var(--tsu-primary, #094b54) !important;
+        }
+        .dataTables_wrapper .dataTables_filter input {
+            border-radius: var(--tsu-radius, 8px) !important;
+            border: 1.5px solid #cbd5e1;
+            padding: 0.35rem 0.75rem;
+            font-size: 0.85rem;
+            transition: border-color 0.2s;
+        }
+        .dataTables_wrapper .dataTables_filter input:focus {
+            border-color: var(--tsu-primary, #094b54) !important;
+            box-shadow: 0 0 0 3px rgba(9, 75, 84, 0.12) !important;
+            outline: none;
+        }
+    </style>
+@endsection
 
 @section('content')
-    <div class="card card-primary card-outline shadow-sm">
-        <div class="card-header d-flex flex-wrap align-items-center justify-content-between">
-            <h3 class="card-title font-weight-bold">
-                <i class="fas fa-money-check-alt text-primary mr-2"></i> {{ $title ?? 'Master Matriks Gaji Pokok Pegawai' }}
-            </h3>
-
-            <div class="d-flex gap-2 ml-auto">
-                <button type="button" class="btn btn-success btn-modal btn-sm font-weight-bold"
-                    data-url="{{ route('admin.master-gaji-pokok.create') }}" title="Tambah Golongan Gaji">
+    {{-- TSU Page Header --}}
+    <x-tsu-page-header
+        :title="$title ?? 'Master Matriks Gaji Pokok Pegawai'"
+        :icon="$menuIcon ?? 'fas fa-money-check-alt'"
+        :breadcrumb="true"
+    >
+        <x-slot name="actions">
+            @can('admin:master-gaji-pokok:create')
+                <button type="button" class="btn btn-sm tsu-btn-primary-action btn-modal mr-2" data-url="{{ route('admin.master-gaji-pokok.create') }}" title="Tambah Golongan Gaji Baru">
                     <i class="fas fa-plus mr-1"></i> Tambah Golongan
                 </button>
-            </div>
-        </div>
+            @endcan
 
-        <div class="card-body">
-            <div class="alert alert-info border-0 shadow-sm mb-3" style="background-color: #e0f2fe; color: #0369a1;">
-                <div class="d-flex">
-                    <i class="fas fa-info-circle mr-2 mt-1" style="font-size: 1.2rem;"></i>
-                    <div style="font-size: 9pt;">
-                        <strong>Informasi Penggajian:</strong> Matriks Gaji Pokok ini digunakan sebagai dasar perhitungan Gaji Pokok (100% & 80%), Tunjangan Keluarga (10%), Tunjangan Anak (2%/anak), Tunjangan BPJS Kesehatan (4%), Upah Lembur per jam (Gapok / 173), dan Potongan Unpaid Leave (Gapok / 25).
+            <button type="button" class="btn btn-sm tsu-btn-reload" id="btn-reload" title="Segarkan Data Tabel">
+                <i class="fas fa-sync-alt mr-1"></i> Refresh Data
+            </button>
+        </x-slot>
+    </x-tsu-page-header>
+
+    {{-- Main Content --}}
+    <section class="content">
+        <div class="container-fluid">
+
+            {{-- Stat Cards Grid --}}
+            <div class="tsu-stat-grid-gapok">
+                {{-- Total Golongan --}}
+                <div class="tsu-stat-card tsu-stat-card--total">
+                    <div class="tsu-stat-card__top">
+                        <span class="tsu-stat-card__label">Total Golongan</span>
+                        <div class="tsu-stat-card__icon-badge">
+                            <i class="fas fa-layer-group"></i>
+                        </div>
+                    </div>
+                    <div class="tsu-stat-card__value">
+                        {{ number_format($stats['total'] ?? 0) }}
+                        <span class="tsu-stat-card__unit">Golongan</span>
+                    </div>
+                    <div class="tsu-stat-card__subtext">
+                        Skala Golongan I/a s/d IV/e Terdaftar
+                    </div>
+                </div>
+
+                {{-- Golongan I & II --}}
+                <div class="tsu-stat-card tsu-stat-card--gol12">
+                    <div class="tsu-stat-card__top">
+                        <span class="tsu-stat-card__label">Golongan I & II</span>
+                        <div class="tsu-stat-card__icon-badge">
+                            <i class="fas fa-user-tag"></i>
+                        </div>
+                    </div>
+                    <div class="tsu-stat-card__value">
+                        {{ number_format($stats['gol_1_2'] ?? 0) }}
+                        <span class="tsu-stat-card__unit">Golongan</span>
+                    </div>
+                    <div class="tsu-stat-card__subtext">
+                        Tingkat Pratama & Muda
+                    </div>
+                </div>
+
+                {{-- Golongan III & IV --}}
+                <div class="tsu-stat-card tsu-stat-card--gol34">
+                    <div class="tsu-stat-card__top">
+                        <span class="tsu-stat-card__label">Golongan III & IV</span>
+                        <div class="tsu-stat-card__icon-badge">
+                            <i class="fas fa-user-shield"></i>
+                        </div>
+                    </div>
+                    <div class="tsu-stat-card__value">
+                        {{ number_format($stats['gol_3_4'] ?? 0) }}
+                        <span class="tsu-stat-card__unit">Golongan</span>
+                    </div>
+                    <div class="tsu-stat-card__subtext">
+                        Tingkat Madya & Utama
+                    </div>
+                </div>
+
+                {{-- Rata-rata Gapok --}}
+                <div class="tsu-stat-card tsu-stat-card--avg">
+                    <div class="tsu-stat-card__top">
+                        <span class="tsu-stat-card__label">Rata-Rata Gapok (100%)</span>
+                        <div class="tsu-stat-card__icon-badge">
+                            <i class="fas fa-money-bill-wave"></i>
+                        </div>
+                    </div>
+                    <div class="tsu-stat-card__value" style="font-size: 1.45rem;">
+                        Rp {{ number_format($stats['avg_gapok'] ?? 0, 0, ',', '.') }}
+                    </div>
+                    <div class="tsu-stat-card__subtext">
+                        Acuan Standar Gaji Pokok Penuh
                     </div>
                 </div>
             </div>
 
-            <div class="table-responsive">
-                <table id="table-gapok" class="table table-bordered table-striped table-hover" style="width: 100%;">
-                    <thead class="bg-light text-center" style="font-size: 9pt;">
-                        <tr>
-                            <th width="4%">No</th>
-                            <th width="9%">Golongan</th>
-                            <th width="15%">Gaji Pokok 100% (Penuh)</th>
-                            <th width="15%">Gaji Pokok 80% (Percobaan)</th>
-                            <th width="24%">Jenjang Berkala Masa Kerja</th>
-                            <th width="21%">Keterangan</th>
-                            <th width="12%">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody style="font-size: 9pt;">
-                    </tbody>
-                </table>
+            {{-- Helper Information Alert --}}
+            <div class="alert alert-info border-0 mb-3 shadow-sm" style="background-color: #f0fdfa; border-left: 4px solid #0c6170 !important; border-radius: 10px; color: #0f766e;">
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-info-circle mr-3" style="font-size: 1.3rem;"></i>
+                    <div style="font-size: 0.85rem; line-height: 1.5;">
+                        <strong class="text-dark">Informasi Penggajian:</strong> Matriks Gaji Pokok ini digunakan sebagai acuan dasar perhitungan Gaji Pokok (100% & 80%), Tunjangan Keluarga (10%), Tunjangan Anak (2%/anak), Tunjangan BPJS Kesehatan (4%), Upah Lembur per jam (Gapok / 173), dan Potongan Unpaid Leave (Gapok / 25).
+                    </div>
+                </div>
             </div>
+
+            {{-- Main Table Card --}}
+            <div class="tsu-card">
+                <div class="card-body p-3">
+                    <div class="table-responsive">
+                        <table id="table-gapok" class="table tsu-table-modern table-hover w-100">
+                            <thead>
+                                <tr>
+                                    <th width="4%" class="text-center">NO</th>
+                                    <th width="9%" class="text-center">GOLONGAN</th>
+                                    <th width="16%" class="text-right">GAJI POKOK 100% (PENUH)</th>
+                                    <th width="16%" class="text-right">GAJI POKOK 80% (PERCOBAAN)</th>
+                                    <th width="25%">JENJANG BERKALA MASA KERJA</th>
+                                    <th>KETERANGAN</th>
+                                    <th width="10%" class="text-center">AKSI</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
         </div>
-    </div>
+    </section>
 
     {{-- MODAL CONTAINER --}}
-    <div class="modal fade" id="modal-edit" role="dialog">
+    <div class="modal fade" id="modal-gapok" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
-            <div class="modal-content" id="modal-edit-content">
-                {{-- Dynamic Modal Content --}}
+            <div class="modal-content border-0 shadow-lg" id="modal-gapok-content" style="border-radius: 12px; overflow: hidden;">
+                {{-- Loaded via AJAX --}}
             </div>
         </div>
     </div>
 @endsection
 
 @section('script')
+    <!-- DataTables & SweetAlert2 JS -->
+    <script src="{{ asset('assets/adminlte/plugins/datatables/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ asset('assets/adminlte/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
+    <script src="{{ asset('assets/adminlte/plugins/datatables-responsive/js/dataTables.responsive.min.js') }}"></script>
+    <script src="{{ asset('assets/adminlte/plugins/datatables-responsive/js/responsive.bootstrap4.min.js') }}"></script>
+    <script src="{{ asset('assets/adminlte/plugins/sweetalert2/sweetalert2.min.js') }}"></script>
+
     <script>
         $(document).ready(function() {
-            var oTable = $('#table-gapok').DataTable({
+            var table = $('#table-gapok').DataTable({
                 processing: true,
                 serverSide: true,
+                responsive: true,
                 ajax: "{{ route('admin.master-gaji-pokok.json') }}",
                 columns: [
                     { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, className: 'text-center align-middle' },
@@ -73,106 +357,138 @@
                 ],
                 pageLength: 25,
                 language: {
+                    processing: '<div class="spinner-border spinner-border-sm text-primary" role="status"></div> Memuat data...',
                     search: "Cari Golongan:",
-                    lengthMenu: "Tampilkan _MENU_ data",
-                    zeroRecords: "Data golongan tidak ditemukan",
-                    info: "Menampilkan _START_ s/d _END_ dari _TOTAL_ golongan",
-                    infoEmpty: "Tidak ada data",
+                    lengthMenu: "Tampilkan _MENU_ entri",
+                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ golongan",
+                    infoEmpty: "Menampilkan 0 sampai 0 dari 0 golongan",
+                    infoFiltered: "(disaring dari _MAX_ total golongan)",
                     paginate: {
                         first: "Pertama",
                         last: "Terakhir",
-                        next: "Lanjut",
-                        previous: "Kembali"
-                    }
+                        next: "Selanjutnya",
+                        previous: "Sebelumnya"
+                    },
+                    emptyTable: "Tidak ada data matriks gaji pokok yang tersedia",
+                    zeroRecords: "Tidak ditemukan data yang sesuai"
                 }
             });
 
-            // Modal Trigger
-            $('body').on('click', '.btn-modal', function(e) {
+            // Tombol Refresh Data
+            $('#btn-reload').on('click', function() {
+                var $btn = $(this);
+                $btn.find('i').addClass('fa-spin');
+                table.ajax.reload(function() {
+                    setTimeout(function() {
+                        $btn.find('i').removeClass('fa-spin');
+                    }, 400);
+                }, false);
+            });
+
+            // Open Modal (Create / Edit)
+            $(document).on('click', '.btn-modal, .btn-edit', function(e) {
                 e.preventDefault();
                 var url = $(this).data('url');
+                if (!url) url = $(this).attr('href');
 
-                $('#modal-edit').modal('show');
-                $('#modal-edit-content').html(
-                    `<div class="text-center p-5"><div class="spinner-border text-primary"></div><p class="mt-2 text-muted">Memuat Formulir...</p></div>`
+                $('#modal-gapok').modal('show');
+                $('#modal-gapok-content').html(
+                    '<div class="text-center p-5">' +
+                        '<div class="spinner-border text-primary" style="color: var(--tsu-primary, #094b54) !important;" role="status"></div>' +
+                        '<p class="text-muted mt-2 mb-0" style="font-size: 0.88rem;">Memuat formulir...</p>' +
+                    '</div>'
                 );
 
                 $.ajax({
                     url: url,
                     type: 'GET',
                     success: function(res) {
-                        $('#modal-edit-content').html(res);
+                        $('#modal-gapok-content').html(res);
                     },
                     error: function(xhr) {
-                        $('#modal-edit-content').html(
-                            `<div class="text-center text-danger p-5"><i class="fas fa-exclamation-triangle mr-2"></i> Gagal memuat form. Error: ${xhr.status}</div>`
+                        $('#modal-gapok-content').html(
+                            '<div class="text-center p-4">' +
+                                '<i class="fas fa-exclamation-triangle text-danger fa-2x mb-2"></i>' +
+                                '<p class="text-danger font-weight-bold mb-0">Gagal memuat formulir.</p>' +
+                                '<small class="text-muted">Error ' + xhr.status + ': ' + (xhr.statusText || 'Terjadi kesalahan sistem') + '</small>' +
+                            '</div>'
                         );
                     }
                 });
             });
 
-            // Handle Submit Form
-            $('body').on('submit', '#formGajiPokok', function(e) {
+            // Submit Form Modal via AJAX
+            $(document).on('submit', '#formGajiPokok', function(e) {
                 e.preventDefault();
-                var form = $(this);
-                var btn = form.find('button[type="submit"]');
-                btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Menyimpan...');
+                var $form = $(this);
+                var $btnSubmit = $form.find('button[type="submit"]');
+                var originalHtml = $btnSubmit.html();
+
+                $btnSubmit.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Menyimpan...');
 
                 $.ajax({
-                    url: form.attr('action'),
-                    type: 'POST',
-                    data: form.serialize(),
-                    success: function(response) {
-                        btn.prop('disabled', false).html('Simpan');
-                        if (response.success) {
-                            $('#modal-edit').modal('hide');
-                            oTable.ajax.reload();
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Berhasil',
-                                text: response.message,
-                                timer: 2000,
-                                showConfirmButton: false
-                            });
-                        } else {
-                            Swal.fire('Gagal', response.message || 'Terjadi kesalahan', 'error');
-                        }
+                    url: $form.attr('action'),
+                    type: $form.attr('method') || 'POST',
+                    data: $form.serialize(),
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(res) {
+                        $('#modal-gapok').modal('hide');
+                        table.ajax.reload(null, false);
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: res.message || 'Data matriks gaji pokok berhasil disimpan.',
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
                     },
                     error: function(xhr) {
-                        btn.prop('disabled', false).html('Simpan');
-                        var errors = xhr.responseJSON?.errors;
-                        var errorMsg = 'Terjadi kesalahan validasi.';
-                        if (errors) {
-                            errorMsg = Object.values(errors).flat().join('<br>');
-                        } else if (xhr.responseJSON?.message) {
-                            errorMsg = xhr.responseJSON.message;
+                        $btnSubmit.prop('disabled', false).html(originalHtml);
+                        var errMsg = 'Terjadi kesalahan sistem.';
+                        if (xhr.responseJSON && xhr.responseJSON.message) {
+                            errMsg = xhr.responseJSON.message;
+                        } else if (xhr.responseJSON && xhr.responseJSON.errors) {
+                            var errors = xhr.responseJSON.errors;
+                            errMsg = Object.values(errors).flat().join('<br>');
                         }
                         Swal.fire({
                             icon: 'error',
-                            title: 'Gagal',
-                            html: errorMsg
+                            title: 'Gagal Menyimpan',
+                            html: errMsg
                         });
                     }
                 });
             });
 
-            // Delete
-            $('body').on('click', '.btn-delete', function(e) {
+            // Delete Golongan with SweetAlert2 Confirmation
+            $(document).on('click', '.btn-delete', function(e) {
                 e.preventDefault();
                 var url = $(this).data('url');
-                var name = $(this).data('name');
+                var name = $(this).data('name') || $(this).closest('tr').find('td:eq(1)').text().trim();
 
                 Swal.fire({
                     title: 'Konfirmasi Hapus',
-                    text: `Apakah Anda yakin ingin menghapus master gaji pokok "${name}"?`,
+                    html: "Apakah Anda yakin ingin menghapus data matriks: <br><strong>" + name + "</strong>?",
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonColor: '#d33',
-                    cancelButtonColor: '#6c757d',
-                    confirmButtonText: 'Ya, Hapus!',
-                    cancelButtonText: 'Batal'
+                    confirmButtonColor: '#dc2626',
+                    cancelButtonColor: '#64748b',
+                    confirmButtonText: '<i class="fas fa-trash mr-1"></i> Ya, Hapus!',
+                    cancelButtonText: 'Batal',
+                    reverseButtons: true
                 }).then((result) => {
                     if (result.isConfirmed) {
+                        Swal.fire({
+                            title: 'Memproses...',
+                            text: 'Mohon tunggu beberapa saat.',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+
                         $.ajax({
                             url: url,
                             type: 'POST',
@@ -180,16 +496,26 @@
                                 _method: 'DELETE',
                                 _token: '{{ csrf_token() }}'
                             },
-                            success: function(response) {
-                                if (response.success) {
-                                    oTable.ajax.reload();
-                                    Swal.fire('Berhasil!', response.message, 'success');
-                                } else {
-                                    Swal.fire('Gagal!', response.message, 'error');
-                                }
+                            success: function(res) {
+                                table.ajax.reload(null, false);
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Berhasil!',
+                                    text: res.message || 'Data matriks gaji pokok berhasil dihapus.',
+                                    timer: 2000,
+                                    showConfirmButton: false
+                                });
                             },
                             error: function(xhr) {
-                                Swal.fire('Gagal!', 'Terjadi kesalahan sistem.', 'error');
+                                var msg = 'Gagal menghapus data.';
+                                if (xhr.responseJSON && xhr.responseJSON.message) {
+                                    msg = xhr.responseJSON.message;
+                                }
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Gagal',
+                                    text: msg
+                                });
                             }
                         });
                     }

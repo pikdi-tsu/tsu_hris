@@ -1,4 +1,4 @@
-q# <p align="center"> TSU HRIS <br> (Human Resource Information System) </p>
+# <p align="center"> TSU HRIS <br> (Human Resource Information System) </p>
 
 ## 📢 Description
 

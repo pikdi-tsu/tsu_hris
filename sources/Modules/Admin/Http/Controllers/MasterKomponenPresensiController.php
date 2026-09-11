@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Http\Controllers\MiddlewareController;
 use Illuminate\Support\Facades\DB;
 use App\Models\MasterKomponenPresensi;
+use Modules\System\Models\MenuSidebar;
 use App\Services\TsuErrorHandlerService;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Str;
@@ -23,7 +24,20 @@ class MasterKomponenPresensiController extends MiddlewareController
 
     public function index()
     {
-        return view('admin::master-data.komponen-presensi.index', ['title' => 'Master Tarif & Komponen Presensi']);
+        $stats = [
+            'total'     => MasterKomponenPresensi::count(),
+            'aktif'     => MasterKomponenPresensi::where('is_active', 'Y')->count(),
+            'kehadiran' => MasterKomponenPresensi::where('satuan', 'per_kehadiran')->count(),
+            'periode'   => MasterKomponenPresensi::whereIn('satuan', ['per_bulan', 'per_hari'])->count(),
+        ];
+
+        $menuIcon = MenuSidebar::where('route', 'admin.master-komponen-presensi.index')->value('icon') ?: 'fas fa-money-bill-wave';
+
+        return view('admin::master-data.komponen-presensi.index', [
+            'title'    => 'Master Tarif & Komponen Presensi',
+            'menuIcon' => $menuIcon,
+            'stats'    => $stats,
+        ]);
     }
 
     public function datatable()
@@ -32,30 +46,43 @@ class MasterKomponenPresensiController extends MiddlewareController
 
         return DataTables::of($data)
             ->addIndexColumn()
+            ->editColumn('nama_komponen', function ($row) {
+                $kode = $row->kode_komponen ? '<span class="badge badge-light text-muted border ml-1 font-weight-normal">' . e($row->kode_komponen) . '</span>' : '';
+                return '<div class="font-weight-bold text-dark">' . e($row->nama_komponen) . $kode . '</div>';
+            })
             ->addColumn('nominal_formatted', function ($row) {
-                return '<strong>Rp ' . number_format($row->nominal, 0, ',', '.') . '</strong> <small class="text-muted">/ ' . str_replace('_', ' ', $row->satuan) . '</small>';
+                $satuanMap = [
+                    'per_kehadiran' => 'per kehadiran',
+                    'per_hari'      => 'per hari',
+                    'per_bulan'     => 'per bulan',
+                ];
+                $satuanLabel = $satuanMap[$row->satuan] ?? str_replace('_', ' ', $row->satuan);
+                return '<div><span class="font-weight-bold text-dark">Rp ' . number_format($row->nominal, 0, ',', '.') . '</span> <span class="text-muted text-xs">/ ' . e($satuanLabel) . '</span></div>';
             })
             ->addColumn('kategori_badge', function ($row) {
                 $badges = [
-                    'transport' => '<span class="badge badge-primary"><i class="fas fa-bus mr-1"></i> Transport</span>',
-                    'makan' => '<span class="badge badge-warning"><i class="fas fa-utensils mr-1"></i> Uang Makan</span>',
-                    'tunjangan_kehadiran' => '<span class="badge badge-info"><i class="fas fa-award mr-1"></i> Tunjangan Kehadiran</span>',
-                    'lainnya' => '<span class="badge badge-secondary">Lainnya</span>',
+                    'transport'           => '<span class="badge badge-pill badge-primary px-2 py-1 font-weight-normal">Transport</span>',
+                    'makan'               => '<span class="badge badge-pill badge-warning px-2 py-1 font-weight-normal text-dark">Uang Makan</span>',
+                    'tunjangan_kehadiran' => '<span class="badge badge-pill badge-info px-2 py-1 font-weight-normal">Tunjangan Kehadiran</span>',
+                    'lainnya'             => '<span class="badge badge-pill badge-secondary px-2 py-1 font-weight-normal">Lainnya</span>',
                 ];
-                return $badges[$row->kategori] ?? '<span class="badge badge-light">' . $row->kategori . '</span>';
+                return $badges[$row->kategori] ?? '<span class="badge badge-pill badge-light px-2 py-1 font-weight-normal border">' . e($row->kategori) . '</span>';
+            })
+            ->editColumn('keterangan', function ($row) {
+                return $row->keterangan ? '<span class="text-muted" style="font-size: 0.85rem;">' . e($row->keterangan) . '</span>' : '<span class="text-muted text-xs font-italic">-</span>';
             })
             ->addColumn('status', function ($row) {
                 if ($row->is_active === 'Y') {
-                    return '<span class="badge badge-success">Aktif</span>';
+                    return '<span class="badge badge-pill badge-success px-2 py-1 font-weight-normal">Aktif</span>';
                 }
-                return '<span class="badge badge-secondary">Tidak Aktif</span>';
+                return '<span class="badge badge-pill badge-secondary px-2 py-1 font-weight-normal">Tidak Aktif</span>';
             })
             ->addColumn('action', function ($row) {
-                $btnEdit = '<button type="button" class="btn btn-xs btn-primary btn-modal mr-1" data-url="' . route('admin.master-komponen-presensi.edit', $row->id) . '" title="Edit"><i class="fas fa-edit"></i></button>';
-                $btnToggle = '<button type="button" class="btn btn-xs ' . ($row->is_active === 'Y' ? 'btn-warning' : 'btn-success') . ' btn-delete" data-url="' . route('admin.master-komponen-presensi.destroy', $row->id) . '" data-name="' . $row->nama_komponen . '" title="' . ($row->is_active === 'Y' ? 'Nonaktifkan' : 'Aktifkan') . '"><i class="fas fa-power-off"></i></button>';
+                $btnEdit = '<button type="button" class="btn btn-xs btn-primary btn-modal mr-1" data-url="' . route('admin.master-komponen-presensi.edit', $row->id) . '" title="Edit Komponen"><i class="fas fa-edit"></i></button>';
+                $btnToggle = '<button type="button" class="btn btn-xs ' . ($row->is_active === 'Y' ? 'btn-warning' : 'btn-success') . ' btn-delete" data-url="' . route('admin.master-komponen-presensi.destroy', $row->id) . '" data-name="' . htmlspecialchars($row->nama_komponen, ENT_QUOTES) . '" title="' . ($row->is_active === 'Y' ? 'Nonaktifkan' : 'Aktifkan') . '"><i class="fas fa-power-off"></i></button>';
                 return '<div class="text-center">' . $btnEdit . $btnToggle . '</div>';
             })
-            ->rawColumns(['nominal_formatted', 'kategori_badge', 'status', 'action'])
+            ->rawColumns(['nama_komponen', 'nominal_formatted', 'kategori_badge', 'keterangan', 'status', 'action'])
             ->make(true);
     }
 

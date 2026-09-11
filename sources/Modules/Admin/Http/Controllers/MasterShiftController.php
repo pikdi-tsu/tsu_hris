@@ -7,6 +7,8 @@ use App\Http\Controllers\MiddlewareController;
 use Illuminate\Support\Facades\DB;
 use App\Models\MasterShift;
 use App\Models\MasterShiftDetail;
+use App\Models\DataDosenTendik;
+use Modules\System\Models\MenuSidebar;
 use App\Services\TsuErrorHandlerService;
 use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Str;
@@ -24,7 +26,20 @@ class MasterShiftController extends MiddlewareController
 
     public function index()
     {
-        return view('admin::master-data.shift.index', ['title' => 'Master Data Shift & Jam Kerja']);
+        $stats = [
+            'total'   => MasterShift::count(),
+            'aktif'   => MasterShift::where('is_active', 'Y')->count(),
+            'jadwal'  => MasterShift::where('tipe_shift', 'jadwal')->count(),
+            'durasi'  => MasterShift::where('tipe_shift', 'durasi')->count(),
+        ];
+
+        $menuIcon = MenuSidebar::where('route', 'admin.master-shift.index')->value('icon') ?: 'fas fa-clock';
+
+        return view('admin::master-data.shift.index', [
+            'title'    => 'Master Data Shift & Jam Kerja',
+            'menuIcon' => $menuIcon,
+            'stats'    => $stats,
+        ]);
     }
 
     public function datatable()
@@ -33,27 +48,34 @@ class MasterShiftController extends MiddlewareController
 
         return DataTables::of($data)
             ->addIndexColumn()
+            ->editColumn('nama_shift', function ($row) {
+                $html = '<div class="font-weight-bold text-dark" style="font-size: 0.88rem;">' . e($row->nama_shift) . '</div>';
+                if ($row->kode_shift) {
+                    $html .= '<small class="text-muted d-block" style="font-size: 0.75rem;">Kode: ' . e($row->kode_shift) . '</small>';
+                }
+                return $html;
+            })
             ->addColumn('tipe_badge', function ($row) {
                 if ($row->tipe_shift === 'durasi') {
                     $jam = round($row->target_durasi_menit / 60, 1);
-                    return '<span class="badge badge-info"><i class="fas fa-hourglass-half mr-1"></i> Target ' . $jam . ' Jam</span>';
+                    return '<span class="badge px-2 py-1 font-weight-bold" style="background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; font-size: 0.78rem;">Target ' . $jam . ' Jam</span>';
                 }
-                return '<span class="badge badge-primary"><i class="fas fa-calendar-alt mr-1"></i> Jadwal Jam Harian</span>';
+                return '<span class="badge px-2 py-1 font-weight-bold" style="background: #e0e7ff; color: #3730a3; border: 1px solid #c7d2fe; font-size: 0.78rem;">Jadwal Jam Harian</span>';
             })
             ->addColumn('rincian_jadwal', function ($row) {
                 if ($row->tipe_shift === 'durasi') {
-                    return '<small class="text-muted">' . ($row->keterangan ?? 'Target jam kerja efektif per hari') . '</small>';
+                    return '<div class="text-secondary" style="font-size: 0.85rem;">' . e($row->keterangan ?? 'Target jam kerja efektif per hari') . '</div>';
                 }
-                
+
                 $details = $row->details;
                 if ($details->isEmpty()) {
                     return '<span class="text-muted">-</span>';
                 }
 
-                $html = '<div style="font-size: 0.85rem;">';
+                $html = '<div style="font-size: 0.82rem; line-height: 1.5;">';
                 foreach ($details as $d) {
                     if ($d->is_libur) {
-                        $html .= '<div><strong>' . $d->nama_hari . ':</strong> <span class="badge badge-secondary">Libur</span></div>';
+                        $html .= '<div><span class="font-weight-semibold text-dark">' . $d->nama_hari . ':</span> <span class="badge badge-light border text-muted px-1">Libur</span></div>';
                     } else {
                         $jamMasuk = $d->jam_masuk ? substr($d->jam_masuk, 0, 5) : '-';
                         $jamPulang = $d->jam_pulang ? substr($d->jam_pulang, 0, 5) : '-';
@@ -62,7 +84,7 @@ class MasterShiftController extends MiddlewareController
                             $istirahat = ' <small class="text-muted">(Istirahat: ' . substr($d->jam_istirahat_mulai, 0, 5) . '-' . substr($d->jam_istirahat_selesai, 0, 5) . ')</small>';
                         }
                         $crossDay = $d->is_cross_day ? ' <span class="badge badge-warning" style="font-size: 0.65rem;">Lintas Hari</span>' : '';
-                        $html .= '<div><strong>' . $d->nama_hari . ':</strong> ' . $jamMasuk . ' - ' . $jamPulang . $istirahat . $crossDay . '</div>';
+                        $html .= '<div><span class="font-weight-semibold text-dark">' . $d->nama_hari . ':</span> ' . $jamMasuk . ' - ' . $jamPulang . $istirahat . $crossDay . '</div>';
                     }
                 }
                 $html .= '</div>';
@@ -70,32 +92,60 @@ class MasterShiftController extends MiddlewareController
             })
             ->addColumn('status', function ($row) {
                 if ($row->is_active === 'Y') {
-                    return '<span class="badge badge-success">Aktif</span>';
+                    return '<span class="badge badge-success px-2 py-1" style="font-size: 0.78rem; font-weight: 600;">Aktif</span>';
                 }
-                return '<span class="badge badge-secondary">Tidak Aktif</span>';
+                return '<span class="badge badge-secondary px-2 py-1" style="font-size: 0.78rem; font-weight: 600;">Tidak Aktif</span>';
             })
             ->addColumn('action', function ($row) {
-                $btnEdit = '<button type="button" class="btn btn-xs btn-primary btn-modal mr-1" data-url="' . route('admin.master-shift.edit', $row->id) . '" title="Edit"><i class="fas fa-edit"></i></button>';
-                $btnToggle = '<button type="button" class="btn btn-xs ' . ($row->is_active === 'Y' ? 'btn-warning' : 'btn-success') . ' btn-delete" data-url="' . route('admin.master-shift.destroy', $row->id) . '" data-name="' . $row->nama_shift . '" title="' . ($row->is_active === 'Y' ? 'Nonaktifkan' : 'Aktifkan') . '"><i class="fas fa-power-off"></i></button>';
-                return '<div class="text-center">' . $btnEdit . $btnToggle . '</div>';
+                $canEdit   = auth()->user()->can('admin:master-shift:edit');
+                $canDelete = auth()->user()->can('admin:master-shift:delete');
+
+                $btn = '<div class="d-flex align-items-center justify-content-center" style="gap: 0.35rem;">';
+
+                if ($canEdit) {
+                    $btn .= '<button type="button" class="btn btn-sm btn-edit btn-modal" data-url="' . route('admin.master-shift.edit', $row->id) . '" style="background: #fffbeb; color: #d97706; border: 1px solid #fde68a; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; transition: all 0.2s;" title="Edit Master Shift">
+                                <i class="fas fa-pen"></i>
+                            </button>';
+                } else {
+                    $btn .= '<button type="button" class="btn btn-sm" disabled style="background: #f1f5f9; color: #94a3b8; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; cursor: not-allowed; opacity: 0.6;" title="No Access">
+                                <i class="fas fa-lock"></i>
+                             </button>';
+                }
+
+                if ($canDelete) {
+                    $isY = $row->is_active === 'Y';
+                    $btn .= '<button type="button" class="btn btn-sm btn-delete" data-url="' . route('admin.master-shift.destroy', $row->id) . '" data-name="' . e($row->nama_shift) . '" style="background: ' . ($isY ? '#fef2f2' : '#f0fdf4') . '; color: ' . ($isY ? '#dc2626' : '#16a34a') . '; border: 1px solid ' . ($isY ? '#fecaca' : '#bbf7d0') . '; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; transition: all 0.2s;" title="' . ($isY ? 'Nonaktifkan Shift' : 'Aktifkan Shift') . '">
+                                <i class="fas fa-power-off"></i>
+                            </button>';
+                } else {
+                    $btn .= '<button type="button" class="btn btn-sm" disabled style="background: #f1f5f9; color: #94a3b8; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; cursor: not-allowed; opacity: 0.6;" title="No Access">
+                                <i class="fas fa-lock"></i>
+                             </button>';
+                }
+
+                $btn .= '</div>';
+                return $btn;
             })
-            ->rawColumns(['tipe_badge', 'rincian_jadwal', 'status', 'action'])
+            ->rawColumns(['nama_shift', 'tipe_badge', 'rincian_jadwal', 'status', 'action'])
             ->make(true);
     }
 
     public function create()
     {
+        $this->guard('create', 'admin:master-shift');
         return view('admin::master-data.shift.create_modal');
     }
 
     public function store(Request $request)
     {
+        $this->guardStore($request->id, 'admin:master-shift');
+
         $request->validate([
-            'nama_shift' => 'required|string|max:255',
-            'kode_shift' => 'nullable|string|max:50',
-            'tipe_shift' => 'required|in:jadwal,durasi',
+            'nama_shift'        => 'required|string|max:255',
+            'kode_shift'        => 'nullable|string|max:50',
+            'tipe_shift'        => 'required|in:jadwal,durasi',
             'target_durasi_jam' => 'nullable|numeric|min:1|max:24',
-            'keterangan' => 'nullable|string',
+            'keterangan'        => 'nullable|string',
         ]);
 
         DB::beginTransaction();
@@ -103,29 +153,29 @@ class MasterShiftController extends MiddlewareController
             $shiftId = Str::uuid()->toString();
             $targetDurasiMenit = $request->target_durasi_jam ? intval($request->target_durasi_jam * 60) : 420;
 
-            $shift = MasterShift::create([
-                'id' => $shiftId,
-                'nama_shift' => $request->nama_shift,
-                'kode_shift' => $request->kode_shift ? strtoupper($request->kode_shift) : Str::slug($request->nama_shift),
-                'tipe_shift' => $request->tipe_shift,
+            MasterShift::create([
+                'id'                  => $shiftId,
+                'nama_shift'          => $request->nama_shift,
+                'kode_shift'          => $request->kode_shift ? strtoupper($request->kode_shift) : Str::slug($request->nama_shift),
+                'tipe_shift'          => $request->tipe_shift,
                 'target_durasi_menit' => $targetDurasiMenit,
-                'keterangan' => $request->keterangan,
-                'is_active' => 'Y',
+                'keterangan'          => $request->keterangan,
+                'is_active'           => 'Y',
             ]);
 
             if ($request->tipe_shift === 'jadwal' && is_array($request->hari)) {
                 foreach ($request->hari as $hariNum => $dataHari) {
                     $isLibur = isset($dataHari['is_libur']) && $dataHari['is_libur'] == '1';
                     MasterShiftDetail::create([
-                        'id' => Str::uuid()->toString(),
-                        'master_shift_id' => $shiftId,
-                        'hari' => $hariNum,
-                        'jam_masuk' => $isLibur ? null : ($dataHari['jam_masuk'] ?? null),
-                        'jam_pulang' => $isLibur ? null : ($dataHari['jam_pulang'] ?? null),
-                        'jam_istirahat_mulai' => $isLibur ? null : ($dataHari['jam_istirahat_mulai'] ?? null),
+                        'id'                    => Str::uuid()->toString(),
+                        'master_shift_id'       => $shiftId,
+                        'hari'                  => $hariNum,
+                        'jam_masuk'             => $isLibur ? null : ($dataHari['jam_masuk'] ?? null),
+                        'jam_pulang'            => $isLibur ? null : ($dataHari['jam_pulang'] ?? null),
+                        'jam_istirahat_mulai'   => $isLibur ? null : ($dataHari['jam_istirahat_mulai'] ?? null),
                         'jam_istirahat_selesai' => $isLibur ? null : ($dataHari['jam_istirahat_selesai'] ?? null),
-                        'is_cross_day' => isset($dataHari['is_cross_day']) && $dataHari['is_cross_day'] == '1',
-                        'is_libur' => $isLibur,
+                        'is_cross_day'          => isset($dataHari['is_cross_day']) && $dataHari['is_cross_day'] == '1',
+                        'is_libur'              => $isLibur,
                     ]);
                 }
             }
@@ -140,18 +190,20 @@ class MasterShiftController extends MiddlewareController
 
     public function edit($id)
     {
+        $this->guard('edit', 'admin:master-shift');
         $shift = MasterShift::with('details')->findOrFail($id);
         return view('admin::master-data.shift.edit_modal', compact('shift'));
     }
 
     public function update(Request $request, $id)
     {
+        $this->guard('edit', 'admin:master-shift');
         $request->validate([
-            'nama_shift' => 'required|string|max:255',
-            'kode_shift' => 'nullable|string|max:50',
-            'tipe_shift' => 'required|in:jadwal,durasi',
+            'nama_shift'        => 'required|string|max:255',
+            'kode_shift'        => 'nullable|string|max:50',
+            'tipe_shift'        => 'required|in:jadwal,durasi',
             'target_durasi_jam' => 'nullable|numeric|min:1|max:24',
-            'keterangan' => 'nullable|string',
+            'keterangan'        => 'nullable|string',
         ]);
 
         DB::beginTransaction();
@@ -160,11 +212,11 @@ class MasterShiftController extends MiddlewareController
             $targetDurasiMenit = $request->target_durasi_jam ? intval($request->target_durasi_jam * 60) : 420;
 
             $shift->update([
-                'nama_shift' => $request->nama_shift,
-                'kode_shift' => $request->kode_shift ? strtoupper($request->kode_shift) : $shift->kode_shift,
-                'tipe_shift' => $request->tipe_shift,
+                'nama_shift'          => $request->nama_shift,
+                'kode_shift'          => $request->kode_shift ? strtoupper($request->kode_shift) : $shift->kode_shift,
+                'tipe_shift'          => $request->tipe_shift,
                 'target_durasi_menit' => $targetDurasiMenit,
-                'keterangan' => $request->keterangan,
+                'keterangan'          => $request->keterangan,
             ]);
 
             if ($request->tipe_shift === 'jadwal' && is_array($request->hari)) {
@@ -172,15 +224,15 @@ class MasterShiftController extends MiddlewareController
                 foreach ($request->hari as $hariNum => $dataHari) {
                     $isLibur = isset($dataHari['is_libur']) && $dataHari['is_libur'] == '1';
                     MasterShiftDetail::create([
-                        'id' => Str::uuid()->toString(),
-                        'master_shift_id' => $shift->id,
-                        'hari' => $hariNum,
-                        'jam_masuk' => $isLibur ? null : ($dataHari['jam_masuk'] ?? null),
-                        'jam_pulang' => $isLibur ? null : ($dataHari['jam_pulang'] ?? null),
-                        'jam_istirahat_mulai' => $isLibur ? null : ($dataHari['jam_istirahat_mulai'] ?? null),
+                        'id'                    => Str::uuid()->toString(),
+                        'master_shift_id'       => $shift->id,
+                        'hari'                  => $hariNum,
+                        'jam_masuk'             => $isLibur ? null : ($dataHari['jam_masuk'] ?? null),
+                        'jam_pulang'            => $isLibur ? null : ($dataHari['jam_pulang'] ?? null),
+                        'jam_istirahat_mulai'   => $isLibur ? null : ($dataHari['jam_istirahat_mulai'] ?? null),
                         'jam_istirahat_selesai' => $isLibur ? null : ($dataHari['jam_istirahat_selesai'] ?? null),
-                        'is_cross_day' => isset($dataHari['is_cross_day']) && $dataHari['is_cross_day'] == '1',
-                        'is_libur' => $isLibur,
+                        'is_cross_day'          => isset($dataHari['is_cross_day']) && $dataHari['is_cross_day'] == '1',
+                        'is_libur'              => $isLibur,
                     ]);
                 }
             }
@@ -195,6 +247,7 @@ class MasterShiftController extends MiddlewareController
 
     public function destroy($id)
     {
+        $this->guard('delete', 'admin:master-shift');
         DB::beginTransaction();
         try {
             $shift = MasterShift::findOrFail($id);

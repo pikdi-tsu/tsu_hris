@@ -1,6 +1,8 @@
-<div class="modal-header bg-primary text-white">
-    <h5 class="modal-title font-weight-bold"><i class="fas fa-edit mr-2"></i> Edit Tarif / Komponen Presensi</h5>
-    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+<div class="modal-header text-white" style="background: linear-gradient(135deg, #094b54 0%, #0c6170 100%); border-top-left-radius: 12px; border-top-right-radius: 12px;">
+    <h5 class="modal-title font-weight-bold" style="font-size: 1.05rem;">
+        <i class="fas fa-edit mr-2"></i> Edit Tarif & Komponen Presensi
+    </h5>
+    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="opacity: 0.9;">
         <span aria-hidden="true">&times;</span>
     </button>
 </div>
@@ -8,20 +10,37 @@
 <form action="{{ route('admin.master-komponen-presensi.update', $komponen->id) }}" method="POST" id="formKomponen">
     @csrf
     @method('PUT')
-    <div class="modal-body">
-        <div class="form-group">
-            <label class="font-weight-bold">Nama Komponen <span class="text-danger">*</span></label>
-            <input type="text" name="nama_komponen" class="form-control" value="{{ $komponen->nama_komponen }}" required>
+    <div class="modal-body p-4" style="background-color: #fafbfc;">
+        {{-- Helper Information Alert --}}
+        <div class="alert alert-info border-0 mb-3" style="background-color: #f0fdfa; border-left: 4px solid #0c6170 !important; border-radius: 8px; color: #0f766e;">
+            <div class="d-flex align-items-start">
+                <i class="fas fa-info-circle mr-2 mt-1" style="font-size: 1.05rem;"></i>
+                <div style="font-size: 0.84rem; line-height: 1.45;">
+                    Perubahan nominal atau satuan pada komponen ini akan berlaku untuk perhitungan presensi dan rekapitulasi berikutnya.
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group mb-3">
+            <label class="font-weight-bold text-dark" style="font-size: 0.85rem;">
+                Nama Komponen <span class="text-danger">*</span>
+            </label>
+            <input type="text" name="nama_komponen" class="form-control" style="border-radius: 8px; border-color: #cbd5e1;" value="{{ $komponen->nama_komponen }}" required>
         </div>
 
         <div class="row">
-            <div class="col-md-6 form-group">
-                <label class="font-weight-bold">Kode Komponen</label>
-                <input type="text" name="kode_komponen" class="form-control" value="{{ $komponen->kode_komponen }}">
+            <div class="col-md-6 form-group mb-3">
+                <label class="font-weight-bold text-dark" style="font-size: 0.85rem;">
+                    Kode Komponen
+                </label>
+                <input type="text" name="kode_komponen" class="form-control" style="border-radius: 8px; border-color: #cbd5e1; text-transform: uppercase;" value="{{ $komponen->kode_komponen }}">
+                <small class="form-text text-muted" style="font-size: 0.75rem;">Kode pengenal internal sistem.</small>
             </div>
-            <div class="col-md-6 form-group">
-                <label class="font-weight-bold">Kategori <span class="text-danger">*</span></label>
-                <select name="kategori" class="form-control" required>
+            <div class="col-md-6 form-group mb-3">
+                <label class="font-weight-bold text-dark" style="font-size: 0.85rem;">
+                    Kategori Komponen <span class="text-danger">*</span>
+                </label>
+                <select name="kategori" class="form-control" style="border-radius: 8px; border-color: #cbd5e1;" required>
                     @foreach ($kategoriList as $key => $val)
                         <option value="{{ $key }}" {{ $komponen->kategori == $key ? 'selected' : '' }}>{{ $val }}</option>
                     @endforeach
@@ -30,18 +49,22 @@
         </div>
 
         <div class="row">
-            <div class="col-md-6 form-group">
-                <label class="font-weight-bold">Nominal Tarif (Rp) <span class="text-danger">*</span></label>
+            <div class="col-md-6 form-group mb-3">
+                <label class="font-weight-bold text-dark" style="font-size: 0.85rem;">
+                    Nominal Tarif (Rp) <span class="text-danger">*</span>
+                </label>
                 <div class="input-group">
                     <div class="input-group-prepend">
-                        <span class="input-group-text font-weight-bold">Rp</span>
+                        <span class="input-group-text font-weight-bold" style="background: #f1f5f9; border-color: #cbd5e1; border-top-left-radius: 8px; border-bottom-left-radius: 8px; color: #094b54;">Rp</span>
                     </div>
-                    <input type="number" name="nominal" class="form-control font-weight-bold" value="{{ intval($komponen->nominal) }}" min="0" required>
+                    <input type="number" name="nominal" class="form-control font-weight-bold text-dark" style="border-top-right-radius: 8px; border-bottom-right-radius: 8px; border-color: #cbd5e1;" value="{{ intval($komponen->nominal) }}" min="0" required>
                 </div>
             </div>
-            <div class="col-md-6 form-group">
-                <label class="font-weight-bold">Satuan Perhitungan <span class="text-danger">*</span></label>
-                <select name="satuan" class="form-control" required>
+            <div class="col-md-6 form-group mb-3">
+                <label class="font-weight-bold text-dark" style="font-size: 0.85rem;">
+                    Satuan Perhitungan <span class="text-danger">*</span>
+                </label>
+                <select name="satuan" class="form-control" style="border-radius: 8px; border-color: #cbd5e1;" required>
                     <option value="per_kehadiran" {{ $komponen->satuan == 'per_kehadiran' ? 'selected' : '' }}>Per Kehadiran Valid (Harian)</option>
                     <option value="per_hari" {{ $komponen->satuan == 'per_hari' ? 'selected' : '' }}>Per Hari Kalender</option>
                     <option value="per_bulan" {{ $komponen->satuan == 'per_bulan' ? 'selected' : '' }}>Per Bulan</option>
@@ -49,13 +72,19 @@
             </div>
         </div>
 
-        <div class="form-group">
-            <label class="font-weight-bold">Keterangan / Catatan</label>
-            <textarea name="keterangan" class="form-control" rows="2">{{ $komponen->keterangan }}</textarea>
+        <div class="form-group mb-0">
+            <label class="font-weight-bold text-dark" style="font-size: 0.85rem;">
+                Keterangan / Catatan
+            </label>
+            <textarea name="keterangan" class="form-control" rows="2" style="border-radius: 8px; border-color: #cbd5e1;">{{ $komponen->keterangan }}</textarea>
         </div>
     </div>
-    <div class="modal-footer bg-light">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-        <button type="submit" class="btn btn-primary font-weight-bold px-4">Simpan Perubahan</button>
+    <div class="modal-footer bg-white border-top d-flex justify-content-between px-4 py-3" style="border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;">
+        <button type="button" class="btn btn-sm btn-outline-secondary px-3" data-dismiss="modal" style="border-radius: 8px; font-weight: 500;">
+            <i class="fas fa-times mr-1"></i> Batal
+        </button>
+        <button type="submit" class="btn btn-sm tsu-btn-primary-action px-4" style="border-radius: 8px; font-weight: 600;">
+            <i class="fas fa-save mr-1"></i> Simpan Perubahan
+        </button>
     </div>
 </form>

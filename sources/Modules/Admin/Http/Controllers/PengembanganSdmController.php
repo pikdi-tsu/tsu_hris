@@ -273,13 +273,14 @@ class PengembanganSdmController extends MiddlewareController
                 ->where('unit_id', $request->unit_id)
                 ->max('order_no') ?? 0;
 
+            $tipePegawai = $request->tipe_pegawai ?? 'dosen';
             $peserta = PengembanganSdmPeserta::create([
                 'master_periode_id' => $periode->id,
-                'tipe_pegawai' => 'dosen',
+                'tipe_pegawai' => $tipePegawai,
                 'unit_id' => $request->unit_id,
                 'nama_placeholder' => $request->nama,
-                'pendidikan_awal' => 'S3',
-                'gelar' => 'Dr. / Ph.D',
+                'pendidikan_awal' => $request->pendidikan_terakhir ?? ($tipePegawai === 'tendik' ? 'S1' : 'S3'),
+                'gelar' => $request->gelar ?? ($tipePegawai === 'tendik' ? '-' : 'Dr. / Ph.D'),
                 'lokasi_studi' => $request->lokasi_studi ?? 'DN',
                 'order_no' => $maxOrder + 1,
             ]);

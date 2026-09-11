@@ -35,13 +35,32 @@ class RiwayatAbsensiController extends MiddlewareController
     public function index()
     {
         $bulan = $this->getBulan();
+        $currentMonth = (int) date('n');
+        $currentYear = (int) date('Y');
+
         $komponenTransport = MasterKomponenPresensi::where('kategori', 'transport')->where('is_active', 'Y')->first();
         $defaultNominal = $komponenTransport ? $komponenTransport->nominal : 20000;
+
+        $totalPegawai = DataDosenTendik::count();
+        $totalHadirBulanIni = DataAbsensi::where('periode_bulan', $currentMonth)
+            ->where('periode_tahun', $currentYear)
+            ->sum('akumulasi_validasi');
+        $totalPayrollBulanIni = $totalHadirBulanIni * $defaultNominal;
+
+        $stats = [
+            'total_pegawai' => $totalPegawai,
+            'default_nominal' => $defaultNominal,
+            'total_hadir_bulan_ini' => $totalHadirBulanIni,
+            'total_payroll_bulan_ini' => $totalPayrollBulanIni,
+        ];
 
         return view('admin::riwayatabsensi.index', [
             'title' => 'Rekap Riwayat Presensi & Payroll Transport',
             'bulan' => $bulan,
+            'defaultBulan' => $currentMonth,
+            'defaultTahun' => $currentYear,
             'defaultNominal' => $defaultNominal,
+            'stats' => $stats,
         ]);
     }
 
@@ -77,22 +96,23 @@ class RiwayatAbsensiController extends MiddlewareController
         return DataTables::of($data)
             ->addIndexColumn()
             ->addColumn('nik', function ($data) {
-                return $data->users ? ($data->users->nik ?? '-') : '-';
+                $nikVal = $data->users ? ($data->users->nik ?? '-') : '-';
+                return '<span class="tsu-badge-nik">' . e($nikVal) . '</span>';
             })
             ->addColumn('nama_lengkap', function ($data) {
-                $nama = $data->users ? $data->users->nama_lengkap : $data->nama;
-                $unit = $data->users && $data->users->unit ? '<br><small class="text-muted">' . $data->users->unit->nama_unit . '</small>' : '';
-                return '<strong>' . $nama . '</strong>' . $unit;
+                $nama = $data->users ? e($data->users->nama_lengkap) : e($data->nama);
+                $unit = $data->users && $data->users->unit ? '<br><small class="text-muted font-weight-normal">' . e($data->users->unit->nama_unit) . '</small>' : '';
+                return '<strong class="text-dark">' . $nama . '</strong>' . $unit;
             })
             ->addColumn('hadir', function ($data) {
                 $valid = floatval($data->total_hadir ?? 0);
-                return '<span class="badge badge-success px-2 py-1 font-weight-bold" style="font-size: 0.95rem;">' . number_format($valid, 0) . ' Hari</span>';
+                return '<span class="tsu-badge-hadir">' . number_format($valid, 0) . ' Hari</span>';
             })
             ->addColumn('nominal_transport', function ($data) use ($nominal) {
                 if ($data->users && !$data->users->dapat_uang_transport) {
-                    return '<span class="badge badge-light border text-secondary px-2 py-1 shadow-sm" title="Tidak berhak menerima uang transport"><i class="fas fa-info-circle text-muted mr-1"></i>Rp 0 (Non-Eligible)</span>';
+                    return '<span class="tsu-badge-ineligible" title="Tidak berhak menerima uang transport">Rp 0 (Non-Eligible)</span>';
                 }
-                return 'Rp ' . number_format($nominal, 0, ',', '.');
+                return '<span class="text-dark font-weight-bold">Rp ' . number_format($nominal, 0, ',', '.') . '</span>';
             })
             ->addColumn('total_transport', function ($data) use ($nominal) {
                 if ($data->users && !$data->users->dapat_uang_transport) {
@@ -110,12 +130,12 @@ class RiwayatAbsensiController extends MiddlewareController
                     'end_date' => $request->end_date,
                 ]);
 
-                $btnDetail = '<button type="button" class="btn btn-xs btn-info btn-detail-rekap mr-1" data-pin="' . $data->pin . '" data-nama="' . ($data->users ? $data->users->nama_lengkap : $data->nama) . '" title="Rincian Hari Presensi"><i class="fas fa-list"></i> Rincian</button>';
-                $btnPdf = '<a href="' . route('admin.absensi.downloadslip', $data->pin) . '?' . $params . '" class="btn btn-xs btn-danger" target="_blank" title="Cetak Slip PDF"><i class="fas fa-file-pdf"></i> Slip PDF</a>';
+                $btnDetail = '<button type="button" class="btn btn-xs tsu-btn-action tsu-btn-action--detail btn-detail-rekap mr-1" data-pin="' . $data->pin . '" data-nama="' . e($data->users ? $data->users->nama_lengkap : $data->nama) . '" title="Rincian Hari Presensi"><i class="fas fa-list mr-1"></i> Rincian</button>';
+                $btnPdf = '<a href="' . route('admin.absensi.downloadslip', $data->pin) . '?' . $params . '" class="btn btn-xs tsu-btn-action tsu-btn-action--pdf" target="_blank" title="Cetak Slip PDF"><i class="fas fa-file-pdf mr-1"></i> Slip PDF</a>';
 
-                return '<div class="text-center">' . $btnDetail . $btnPdf . '</div>';
+                return '<div class="text-center text-nowrap">' . $btnDetail . $btnPdf . '</div>';
             })
-            ->rawColumns(['nama_lengkap', 'hadir', 'nominal_transport', 'total_transport', 'aksi'])
+            ->rawColumns(['nik', 'nama_lengkap', 'hadir', 'nominal_transport', 'total_transport', 'aksi'])
             ->make(true);
     }
 

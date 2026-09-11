@@ -255,6 +255,13 @@ class PengembanganSdmController extends MiddlewareController
         $this->guard('edit', 'admin:pengembangan-sdm');
 
         try {
+            $nama = $request->nama ?? $request->nama_lengkap;
+            $tahunMulai = $request->tahun_mulai ?? $request->tahun_masuk_s3 ?? 2026;
+            $request->merge([
+                'nama' => $nama,
+                'tahun_mulai' => $tahunMulai,
+            ]);
+
             $request->validate([
                 'unit_id' => 'required|uuid',
                 'tahun_mulai' => 'required|integer',
@@ -273,7 +280,7 @@ class PengembanganSdmController extends MiddlewareController
                 'nama_placeholder' => $request->nama,
                 'pendidikan_awal' => 'S3',
                 'gelar' => 'Dr. / Ph.D',
-                'lokasi_studi' => 'DN',
+                'lokasi_studi' => $request->lokasi_studi ?? 'DN',
                 'order_no' => $maxOrder + 1,
             ]);
 
@@ -299,17 +306,27 @@ class PengembanganSdmController extends MiddlewareController
     /**
      * Hapus Peserta / Slot Proyeksi
      */
-    public function deletePeserta($id)
+    public function deletePeserta(Request $request, $id)
     {
         $this->guard('edit', 'admin:pengembangan-sdm');
 
         try {
             $peserta = PengembanganSdmPeserta::findOrFail($id);
-            $nama = $peserta->nama_tampil;
+            $nama = $peserta->nama_tampil ?? 'Peserta';
             $peserta->delete();
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => "Data '{$nama}' berhasil dihapus dari rencana pengembangan.",
+                ]);
+            }
 
             return back()->with('success', "Data '{$nama}' berhasil dihapus dari rencana pengembangan.");
         } catch (\Throwable $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+            }
             return back()->with('error', 'Gagal menghapus peserta: ' . $e->getMessage());
         }
     }

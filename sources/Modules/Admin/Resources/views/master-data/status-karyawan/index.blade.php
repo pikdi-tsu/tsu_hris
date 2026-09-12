@@ -1,6 +1,18 @@
 @extends('system::template.admin.header')
 
 @section('content')
+    <x-tsu-master-guide
+        title="Panduan Keterkaitan Master Status Kepegawaian"
+        description="Master Status Karyawan mengatur ikatan kerja pegawai di lingkungan universitas (Tetap Yayasan, Kontrak / PKWT, Paruh Waktu, Dosen Luar Biasa, dan Tenaga Alih Daya)."
+        :connections="[
+            ['label' => 'Data Induk Pegawai', 'route' => 'admin.data-karyawan.index', 'icon' => 'fas fa-user-tag'],
+            ['label' => 'Hak Saldo Cuti', 'route' => 'admin.saldo-cuti.index', 'icon' => 'fas fa-balance-scale'],
+            ['label' => 'Penggajian Payroll', 'route' => 'admin.payroll.index', 'icon' => 'fas fa-money-check-alt'],
+            ['label' => 'Monitoring Masa Kontrak & Pensiun', 'route' => 'admin.pengembangan-sdm.pensiun', 'icon' => 'fas fa-hourglass-half']
+        ]"
+        impact="Status kepegawaian menjadi penentu utama apakah pegawai berhak atas jatah saldo cuti tahunan, eligibility komponen tunjangan tetap, serta jadwal evaluasi perpanjangan kontrak kerja."
+    />
+
     <div class="card card-primary card-outline">
         <div class="card-header d-flex align-items-center">
             <h3 class="card-title mr-4">{{ $title ?? 'Master Data Status Karyawan' }}</h3>

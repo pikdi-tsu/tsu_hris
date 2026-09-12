@@ -19,6 +19,17 @@
 
     <section class="content">
         <div class="container-fluid">
+            <x-tsu-master-guide
+                title="Panduan Keterkaitan Master Jenis Surat SDM"
+                description="Master Jenis Surat mengatur kategori layanan surat resmi kepegawaian (Surat Keterangan Aktif Kerja, Permohonan KPR, Rekomendasi Visa/Beasiswa, dan Pengantar Resmi)."
+                :connections="[
+                    ['label' => 'Layanan Pengajuan Mandiri', 'route' => 'admin.request-surat.user-index', 'icon' => 'fas fa-paper-plane'],
+                    ['label' => 'Kelola Permohonan (Admin)', 'route' => 'admin.request-surat.admin-index', 'icon' => 'fas fa-tasks'],
+                    ['label' => 'Pusat Surat Edaran & SK', 'route' => 'admin.surat-edaran.index', 'icon' => 'fas fa-archive']
+                ]"
+                impact="Pilihan jenis surat pada master ini langsung tampil sebagai opsi di portal pengajuan mandiri pegawai dan menentukan template format verifikasi bagi admin SDM."
+            />
+
             <div class="card card-outline card-info shadow-sm">
                 <div class="card-body">
                     <table id="table-jenis-surat" class="table table-bordered table-striped w-100">

@@ -19,6 +19,17 @@
 
     <section class="content">
         <div class="container-fluid">
+            <x-tsu-master-guide
+                title="Panduan Keterkaitan Master Jenis Dokumen Berkas"
+                description="Master Jenis Dokumen mengatur katalog berkas administrasi digital kepegawaian (KTP, KK, NPWP, Ijazah, SK Pengangkatan, Sertifikat Pendidik, dll.) beserta syarat wajibnya."
+                :connections="[
+                    ['label' => 'Arsip Berkas Data Pegawai', 'route' => 'admin.data-karyawan.index', 'icon' => 'fas fa-id-card'],
+                    ['label' => 'Profil Berkas Mandiri', 'route' => 'profile.index', 'icon' => 'fas fa-user-circle'],
+                    ['label' => 'Laporan BKD Dosen', 'route' => 'admin.monitoring-bkd.index', 'icon' => 'fas fa-certificate']
+                ]"
+                impact="Menambah atau mengubah jenis dokumen di sini otomatis memperbarui slot unggah berkas digital di profil tiap pegawai dan mempengaruhi indikator kelengkapan arsip SDM."
+            />
+
             <div class="card card-outline card-info shadow-sm">
                 <div class="card-body">
                     <table id="table-jenis-dokumen" class="table table-bordered table-striped w-100">

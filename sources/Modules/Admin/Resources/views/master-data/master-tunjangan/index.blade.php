@@ -21,6 +21,17 @@
     </style>
 
     <div class="container-fluid">
+        <x-tsu-master-guide
+            title="Panduan Keterkaitan Master Tunjangan Pegawai"
+            description="Master Tunjangan mengatur komponen pendapatan tetap dan variabel pegawai (Tunjangan Jabatan Struktural, Fungsional Dosen, Tunjangan Beras/Keluarga, serta Tunjangan Khusus)."
+            :connections="[
+                ['label' => 'Penggajian (Payroll)', 'route' => 'admin.payroll.index', 'icon' => 'fas fa-money-check-alt'],
+                ['label' => 'Penetapan di Data Pegawai', 'route' => 'admin.data-karyawan.index', 'icon' => 'fas fa-user-tag'],
+                ['label' => 'Master Jabatan Terkait', 'route' => 'admin.master-jabatan.index', 'icon' => 'fas fa-sitemap']
+            ]"
+            impact="Besaran nominal tunjangan di sini otomatis masuk ke rincian penghasilan kotor (*Gross Earnings*) pada slip gaji bulanan pegawai yang memenuhi kriteria jabatan atau fungsionalnya."
+        />
+
         {{-- Header Title --}}
         <div class="d-flex justify-content-between align-items-center mb-3">
             <div>

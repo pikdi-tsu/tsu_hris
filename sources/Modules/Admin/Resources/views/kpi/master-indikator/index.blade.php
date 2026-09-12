@@ -10,6 +10,18 @@
 
     <section class="content">
         <div class="container-fluid">
+            <x-tsu-master-guide
+                title="Panduan Keterkaitan Kamus Master Indikator KPI"
+                description="Kamus Indikator KPI menjadi bank data tolak ukur kinerja baku universitas berdasarkan 4 pilar BSC (FIN, CUS, INT, LRN) dengan struktur hierarki Induk dan Sub-Indikator."
+                :connections="[
+                    ['label' => 'Cascading KPI Unit Kerja', 'route' => 'admin.kpi.cascading.index', 'icon' => 'fas fa-sitemap'],
+                    ['label' => 'Monitoring & Evaluasi Realisasi', 'route' => 'admin.kpi.monitoring.index', 'icon' => 'fas fa-clipboard-check'],
+                    ['label' => 'Dashboard Eksekutif BSC', 'route' => 'admin.kpi.dashboard.index', 'icon' => 'fas fa-tachometer-alt'],
+                    ['label' => 'Master Perspektif BSC', 'route' => 'admin.kpi.perspektif.index', 'icon' => 'fas fa-layer-group']
+                ]"
+                impact="Indikator di sini menjadi pilihan saat menyusun scorecard unit kerja. Satuan, polaritas (Maximize/Minimize), dan tipe target mengendalikan formula penghitungan otomatis capaian (%) dan skor kinerja di modul monev."
+            />
+
             <div class="card card-outline card-primary shadow-sm border-0">
                 <div class="card-header bg-white py-3">
                     <div class="row align-items-center">

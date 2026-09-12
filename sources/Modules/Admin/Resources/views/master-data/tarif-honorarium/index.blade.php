@@ -1,6 +1,17 @@
 @extends('system::template.admin.header')
 
 @section('content')
+    <x-tsu-master-guide
+        title="Panduan Keterkaitan Master Tarif Honorarium Dosen"
+        description="Master Tarif Honorarium mengatur standar honor akademik: Honor Mengajar Kelebihan SKS / Dosen LB, Pembimbingan Tugas Akhir/Skripsi, Penguji Sidang, serta Koreksi Ujian."
+        :connections="[
+            ['label' => 'Rekap Honorarium Dosen', 'route' => 'admin.honorarium.index', 'icon' => 'fas fa-file-invoice-dollar'],
+            ['label' => 'Data Jafung Dosen', 'route' => 'admin.data-karyawan.index', 'icon' => 'fas fa-user-graduate'],
+            ['label' => 'Integrasi Payroll Akhir Bulan', 'route' => 'admin.payroll.index', 'icon' => 'fas fa-receipt']
+        ]"
+        impact="Perubahan tarif per SKS atau tarif per mahasiswa bimbingan langsung mempengaruhi nominal rupiah yang tertera pada laporan rekapitulasi honorarium dosen serta slip transfer gaji bulanan."
+    />
+
     <div class="card card-primary card-outline shadow-sm">
         <div class="card-header d-flex flex-wrap align-items-center justify-content-between">
             <h3 class="card-title font-weight-bold">

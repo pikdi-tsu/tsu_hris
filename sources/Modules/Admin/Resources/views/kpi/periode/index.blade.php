@@ -10,6 +10,17 @@
 
     <section class="content">
         <div class="container-fluid">
+            <x-tsu-master-guide
+                title="Panduan Keterkaitan Master Periode Penilaian KPI"
+                description="Master Periode mengatur tahun kalender evaluasi kinerja Balanced Scorecard universitas (misal: Tahun 2026), status periode aktif, serta hak gembok pengisian monev."
+                :connections="[
+                    ['label' => 'Dashboard Eksekutif KPI', 'route' => 'admin.kpi.dashboard.index', 'icon' => 'fas fa-tachometer-alt'],
+                    ['label' => 'Cascading Scorecard Unit', 'route' => 'admin.kpi.cascading.index', 'icon' => 'fas fa-sitemap'],
+                    ['label' => 'Monitoring Realisasi Kinerja', 'route' => 'admin.kpi.monitoring.index', 'icon' => 'fas fa-clipboard-check']
+                ]"
+                impact="Periode aktif menentukan data acuan yang dimuat di seluruh dashboard. Status gembok (kunci) berfungsi menutup hak entri realisasi nilai bagi unit kerja setelah masa penilaian berakhir."
+            />
+
             <div class="card card-outline card-primary shadow-sm border-0">
                 <div class="card-header bg-white py-3">
                     <div class="row align-items-center">

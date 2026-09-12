@@ -1,6 +1,19 @@
 @extends('system::template.admin.header')
 
 @section('content')
+    <x-tsu-master-guide
+        title="Panduan Keterkaitan Master Cuti"
+        description="Master Cuti mengatur seluruh klasifikasi hak cuti pegawai (Cuti Tahunan, Cuti Melahirkan, Cuti Sakit, Cuti Alasan Penting, dll.) beserta batas kuota maksimal hari."
+        :connections="[
+            ['label' => 'Pengajuan Cuti Mandiri', 'route' => 'users.cuti.index', 'icon' => 'fas fa-calendar-check'],
+            ['label' => 'Approval Cuti Atasan', 'route' => 'users.approval-cuti.index', 'icon' => 'fas fa-user-check'],
+            ['label' => 'Saldo Cuti Tahunan', 'route' => 'admin.saldo-cuti.index', 'icon' => 'fas fa-balance-scale'],
+            ['label' => 'Riwayat Cuti & Izin', 'route' => 'admin.riwayat-izincuti.index', 'icon' => 'fas fa-history'],
+            ['label' => 'Payroll & Presensi', 'route' => 'admin.payroll.index', 'icon' => 'fas fa-money-check-alt']
+        ]"
+        impact="Mengubah kuota hari atau opsi pemotongan cuti tahunan di master ini akan langsung mempengaruhi batas validasi formulir pengajuan cuti pegawai serta kalkulasi pemotongan saldo hak cuti berjalan."
+    />
+
     <div class="card card-primary card-outline">
         <div class="card-header d-flex align-items-center">
             <h3 class="card-title mr-4">{{ $title ?? 'Data Master Cuti' }}</h3>

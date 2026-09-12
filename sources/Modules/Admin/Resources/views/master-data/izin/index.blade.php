@@ -1,6 +1,18 @@
 @extends('system::template.admin.header')
 
 @section('content')
+    <x-tsu-master-guide
+        title="Panduan Keterkaitan Master Izin"
+        description="Master Izin mengatur jenis izin tidak masuk kerja sementara atau dispensasi jam dinas (Tugas Luar, Pelatihan, Sakit Ringan, Acara Keluarga, dll.)."
+        :connections="[
+            ['label' => 'Pengajuan Izin Mandiri', 'route' => 'users.izin.index', 'icon' => 'fas fa-user-clock'],
+            ['label' => 'Approval Izin Atasan', 'route' => 'users.approval-izin.index', 'icon' => 'fas fa-user-check'],
+            ['label' => 'Riwayat Cuti & Izin', 'route' => 'admin.riwayat-izincuti.index', 'icon' => 'fas fa-history'],
+            ['label' => 'Rekap Presensi Harian', 'route' => 'admin.rekap-absensi.index', 'icon' => 'fas fa-clipboard-list']
+        ]"
+        impact="Jenis izin menentukan opsi alasan ketidakhadiran sah pada formulir pengajuan izin pegawai, sehingga presensi tidak tercatat alpa (*mangkir*) pada rekapitulasi bulanan."
+    />
+
     <div class="card card-primary card-outline">
         <div class="card-header d-flex align-items-center">
             <h3 class="card-title mr-4">{{ $title ?? 'Data Master Izin' }}</h3>

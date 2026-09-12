@@ -17,6 +17,15 @@
 
     <section class="content">
         <div class="container-fluid">
+            <x-tsu-master-guide
+                title="Panduan Keterkaitan Master Onboarding & Offboarding"
+                description="Master Onboarding & Offboarding mengatur butir checklist tugas orientasi pegawai baru (Onboarding) serta protokol pengembalian aset dan serah terima tugas saat pegawai berhenti (Offboarding)."
+                :connections="[
+                    ['label' => 'Pelaksanaan On/Offboarding', 'route' => 'admin.pelaksanaan-onboarding-offboarding.index', 'icon' => 'fas fa-clipboard-list'],
+                    ['label' => 'Data Karyawan & Dosen', 'route' => 'admin.data-karyawan.index', 'icon' => 'fas fa-user-plus']
+                ]"
+                impact="Checklist yang dibuat di master ini otomatis ditugaskan kepada pegawai baru yang didaftarkan ke sistem serta memicu verifikasi serah terima inventaris kampus saat proses offboarding."
+            />
 
             {{-- Ringkasan Statistik --}}
             <div class="row mb-3">

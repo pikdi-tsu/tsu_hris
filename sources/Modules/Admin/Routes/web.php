@@ -52,6 +52,7 @@ use Modules\Admin\Http\Controllers\DisposisiUnitController;
 use Modules\Admin\Http\Controllers\KpiDashboardController;
 use Modules\Admin\Http\Controllers\KpiPeriodeController;
 use Modules\Admin\Http\Controllers\KpiMasterIndikatorController;
+use Modules\Admin\Http\Controllers\KpiMasterPerspektifController;
 use Modules\Admin\Http\Controllers\KpiCascadingController;
 use Modules\Admin\Http\Controllers\KpiMonitoringController;
 
@@ -597,6 +598,16 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
             Route::get('/{id}', [KpiMasterIndikatorController::class, 'show'])->name('show');
             Route::put('/{id}', [KpiMasterIndikatorController::class, 'update'])->name('update');
             Route::delete('/{id}', [KpiMasterIndikatorController::class, 'destroy'])->name('destroy');
+        });
+
+        // Master Perspektif BSC
+        Route::prefix('perspektif')->name('perspektif.')->group(function () {
+            Route::get('/', [KpiMasterPerspektifController::class, 'index'])->name('index');
+            Route::get('/json', [KpiMasterPerspektifController::class, 'dataTable'])->name('json');
+            Route::post('/store', [KpiMasterPerspektifController::class, 'store'])->name('store');
+            Route::get('/{id}', [KpiMasterPerspektifController::class, 'show'])->name('show');
+            Route::put('/{id}', [KpiMasterPerspektifController::class, 'update'])->name('update');
+            Route::delete('/{id}', [KpiMasterPerspektifController::class, 'destroy'])->name('destroy');
         });
 
         // Cascading KPI Unit Kerja

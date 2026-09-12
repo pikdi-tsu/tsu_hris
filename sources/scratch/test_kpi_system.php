@@ -177,6 +177,20 @@ try {
     assertTest(false, "KpiMonitoringController failed: " . $e->getMessage());
 }
 
+// F. Test KpiMasterPerspektifController
+try {
+    $c = app()->make(Modules\Admin\Http\Controllers\KpiMasterPerspektifController::class);
+    $view = $c->index();
+    $renderedHtml = $view->render();
+    assertTest(strlen($renderedHtml) > 500 && str_contains($renderedHtml, 'Master Perspektif Balanced Scorecard'), "KpiMasterPerspektifController@index renders successfully with HTML (" . strlen($renderedHtml) . " bytes)");
+
+    $dt = $c->dataTable();
+    $dtData = $dt->getData(true);
+    assertTest(isset($dtData['data']) && count($dtData['data']) === 4, "KpiMasterPerspektifController@dataTable returns valid DataTables JSON (Count: " . count($dtData['data']) . ")");
+} catch (\Exception $e) {
+    assertTest(false, "KpiMasterPerspektifController failed: " . $e->getMessage());
+}
+
 echo "\n====================================================\n";
 echo "TEST RESULTS: {$passCount} / {$totalTests} PASSED\n";
 if ($passCount === $totalTests) {

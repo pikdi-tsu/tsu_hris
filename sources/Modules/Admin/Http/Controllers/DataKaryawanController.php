@@ -6,6 +6,7 @@ use App\Http\Controllers\MiddlewareController;
 use App\Models\DataDosenTendik;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\Facades\DataTables;
 use App\Services\TsuErrorHandlerService;
 use App\Services\HomebaseSyncService;
@@ -301,6 +302,7 @@ class DataKaryawanController extends MiddlewareController
             'nik'  => 'required|unique:data_dosen_tendiks,nik',
             'nama' => 'required|string|max:255',
             'dokumen_files.*' => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp|max:10240',
+            'dokumen_items.*.file' => 'nullable|file|mimes:pdf,jpg,jpeg,png,webp|max:10240',
         ]);
 
         try {
@@ -316,7 +318,38 @@ class DataKaryawanController extends MiddlewareController
 
             $newKaryawan = DataDosenTendik::create($data);
 
-            // Simpan berkas dokumen yang diunggah saat pendaftaran pegawai baru
+            // 1. Simpan berkas dokumen yang diunggah via form dinamis staged (dokumen_items)
+            if ($request->has('dokumen_items') && is_array($request->dokumen_items)) {
+                foreach ($request->dokumen_items as $item) {
+                    if (isset($item['file']) && $item['file'] instanceof \Illuminate\Http\UploadedFile && $item['file']->isValid()) {
+                        $file = $item['file'];
+                        $jenisId = $item['master_jenis_dokumen_id'] ?? null;
+                        $jenis = $jenisId ? MasterJenisDokumen::find($jenisId) : null;
+                        $ext = strtolower($file->getClientOriginalExtension());
+                        $cleanJenisKode = $jenis ? $jenis->kode_dokumen : 'DOC';
+                        $filename = "{$cleanJenisKode}_{$newKaryawan->nik}_" . time() . "_" . uniqid() . ".{$ext}";
+
+                        // Simpan berkas di private storage
+                        $file->storeAs('private/dokumen_karyawan', $filename);
+                        $filePath = 'private/dokumen_karyawan/' . $filename;
+
+                        KaryawanDokumenBerkas::create([
+                            'data_dosen_tendik_id'    => $newKaryawan->id,
+                            'master_jenis_dokumen_id' => $jenisId,
+                            'nama_berkas'             => $jenis ? $jenis->nama_dokumen : $file->getClientOriginalName(),
+                            'nomor_dokumen'           => $item['nomor_dokumen'] ?? null,
+                            'tanggal_dokumen'         => $item['tanggal_dokumen'] ?? null,
+                            'file_path'               => $filePath,
+                            'file_size'               => $file->getSize(),
+                            'file_extension'          => $ext,
+                            'keterangan'              => $item['keterangan'] ?? null,
+                            'uploaded_by'             => auth()->id(),
+                        ]);
+                    }
+                }
+            }
+
+            // 2. Simpan berkas dokumen legacy (dokumen_files) jika ada
             if ($request->hasFile('dokumen_files')) {
                 foreach ($request->file('dokumen_files') as $jenisId => $file) {
                     if ($file && $file->isValid()) {

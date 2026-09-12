@@ -1,5 +1,5 @@
-<div class="modal-header text-white" style="background: var(--tsu-primary-dark, #094b54) !important;">
-    <h5 class="modal-title font-weight-bold d-flex align-items-center">
+<div class="modal-header text-white" style="background: #094b54 !important; border-bottom: 2px solid #063137;">
+    <h5 class="modal-title font-weight-bold d-flex align-items-center" style="color: #ffffff !important;">
         @if($dokumen->is_pdf)
             <i class="fas fa-file-pdf mr-2 text-danger"></i>
         @elseif($dokumen->is_image)
@@ -7,18 +7,24 @@
         @else
             <i class="fas fa-file-alt mr-2 text-warning"></i>
         @endif
-        <span>{{ $dokumen->masterJenis ? $dokumen->masterJenis->nama_dokumen : $dokumen->nama_berkas }}</span>
-        <small class="badge badge-light ml-2 text-dark font-weight-normal">{{ $dokumen->pegawai->nama ?? '' }}</small>
+        <span class="font-weight-bold mr-2" style="color: #ffffff !important; font-size: 1.15rem; text-shadow: 0 1px 2px rgba(0,0,0,0.3);">
+            {{ $dokumen->masterJenis ? $dokumen->masterJenis->nama_dokumen : $dokumen->nama_berkas }}
+        </span>
+        @if($dokumen->pegawai)
+            <span class="badge badge-light text-dark font-weight-bold px-2 py-1 shadow-sm" style="font-size: 0.8rem;">
+                <i class="fas fa-user text-info mr-1"></i> {{ $dokumen->pegawai->nama }}
+            </span>
+        @endif
     </h5>
     <div class="ml-auto d-flex align-items-center">
-        <a href="{{ $dokumen->file_url }}" target="_blank" class="btn btn-sm btn-outline-light mr-2" title="Buka di Tab Baru">
+        <a href="{{ $dokumen->file_url }}" target="_blank" class="btn btn-sm btn-outline-light mr-2 font-weight-bold shadow-sm" title="Buka di Tab Baru">
             <i class="fas fa-external-link-alt mr-1"></i> Buka Fullscreen
         </a>
-        <a href="{{ $dokumen->file_url }}" download class="btn btn-sm btn-light text-dark font-weight-bold mr-2" title="Unduh File">
+        <a href="{{ $dokumen->file_url }}" download class="btn btn-sm btn-light text-dark font-weight-bold mr-2 shadow-sm" title="Unduh File">
             <i class="fas fa-download mr-1"></i> Unduh
         </a>
-        <button type="button" class="close text-white ml-1" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
+        <button type="button" class="close text-white ml-2" data-dismiss="modal" aria-label="Close" style="opacity: 0.9; text-shadow: none;">
+            <span aria-hidden="true" style="color: #ffffff !important; font-size: 1.6rem;">&times;</span>
         </button>
     </div>
 </div>

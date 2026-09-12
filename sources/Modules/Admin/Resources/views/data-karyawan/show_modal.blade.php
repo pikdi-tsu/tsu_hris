@@ -35,56 +35,54 @@
                     <div class="tab-pane fade {{ $loop->first ? 'show active' : '' }}" id="show-{{ $tabKey }}">
                         <div class="row">
 
-                            {{-- LOOPING DATA --}}
-                            @foreach($tab['fields'] as $field)
-                                @php
-                                    $value = $karyawan->{$field['name']};
-
-                                    if ($value instanceof \DateTimeInterface) {
-                                        $value = tglIndo($value);
-                                    }
-
-                                    // Override khusus untuk unit_id (Tampilkan nama_unit, bukan UUID-nya)
-                                    if ($field['name'] === 'unit_id' && $karyawan->unit) {
-                                        $value = $karyawan->unit->nama_unit;
-                                    }
-
-                                    // Override khusus untuk status_karyawan_id
-                                    if ($field['name'] === 'status_karyawan_id' && $karyawan->statusKaryawan) {
-                                        $value = $karyawan->statusKaryawan->nama_status;
-                                    }
-
-                                    $isEmpty = is_null($value) || $value === '' || $value === '0' || $value === '-';
-
-                                    $valStr = trim((string)$value);
-
-                                    // 1. Deteksi WhatsApp
-                                    $isWa = !$isEmpty && (str_starts_with($valStr, 'wa.me/') || str_starts_with($valStr, 'https://wa.me/'));
-                                    // Fix href biar bisa diklik browser
-                                    $waHref = str_starts_with($valStr, 'wa.me/') ? 'https://' . $valStr : $valStr;
-
-                                    // 2. Deteksi URL Pintar (Selain WA)
-                                    $isUrl = !$isEmpty && !$isWa && (str_starts_with($valStr, 'http://') || str_starts_with($valStr, 'https://'));
-
-                                    // 3. Deteksi Status & Tab
-                                    $isStatus = in_array($field['name'], ['status_karyawan_id', 'status_pegawai']);
-                                    $isDokumenTab = $tabKey === 'tab_dokumen';
-                                @endphp
-
-                                @if($tabKey === 'tab_dokumen')
-                                    <div class="col-12">
-                                        <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
-                                            <h6 class="font-weight-bold text-dark mb-0">
-                                                <i class="fas fa-folder-open mr-2 text-info"></i> Berkas Digital Kepegawaian
-                                            </h6>
-                                            <span class="badge badge-info px-2 py-1">
-                                                {{ $karyawan->dokumenBerkas->count() }} Berkas Terunggah
-                                            </span>
-                                        </div>
-                                        @include('admin::data-karyawan._dokumen_list', ['karyawan' => $karyawan, 'canEdit' => false])
+                            @if($tabKey === 'tab_dokumen')
+                                <div class="col-12">
+                                    <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-2">
+                                        <h6 class="font-weight-bold text-dark mb-0">
+                                            <i class="fas fa-folder-open mr-2 text-info"></i> Berkas Digital Kepegawaian
+                                        </h6>
+                                        <span class="badge badge-info px-2 py-1">
+                                            {{ $karyawan->dokumenBerkas ? $karyawan->dokumenBerkas->count() : 0 }} Berkas Terunggah
+                                        </span>
                                     </div>
-                                    @break
-                                @else
+                                    @include('admin::data-karyawan._dokumen_list', ['karyawan' => $karyawan, 'canEdit' => false])
+                                </div>
+                            @else
+                                {{-- LOOPING DATA --}}
+                                @foreach($tab['fields'] as $field)
+                                    @php
+                                        $value = $karyawan->{$field['name']};
+
+                                        if ($value instanceof \DateTimeInterface) {
+                                            $value = tglIndo($value);
+                                        }
+
+                                        // Override khusus untuk unit_id (Tampilkan nama_unit, bukan UUID-nya)
+                                        if ($field['name'] === 'unit_id' && $karyawan->unit) {
+                                            $value = $karyawan->unit->nama_unit;
+                                        }
+
+                                        // Override khusus untuk status_karyawan_id
+                                        if ($field['name'] === 'status_karyawan_id' && $karyawan->statusKaryawan) {
+                                            $value = $karyawan->statusKaryawan->nama_status;
+                                        }
+
+                                        $isEmpty = is_null($value) || $value === '' || $value === '0' || $value === '-';
+
+                                        $valStr = trim((string)$value);
+
+                                        // 1. Deteksi WhatsApp
+                                        $isWa = !$isEmpty && (str_starts_with($valStr, 'wa.me/') || str_starts_with($valStr, 'https://wa.me/'));
+                                        // Fix href biar bisa diklik browser
+                                        $waHref = str_starts_with($valStr, 'wa.me/') ? 'https://' . $valStr : $valStr;
+
+                                        // 2. Deteksi URL Pintar (Selain WA)
+                                        $isUrl = !$isEmpty && !$isWa && (str_starts_with($valStr, 'http://') || str_starts_with($valStr, 'https://'));
+
+                                        // 3. Deteksi Status & Tab
+                                        $isStatus = in_array($field['name'], ['status_karyawan_id', 'status_pegawai']);
+                                    @endphp
+
                                     @if($field['name'] === 'kontak_darurat_nama')
                                         <div class="col-12 mt-3 mb-2">
                                             <h6 class="font-weight-bold text-danger border-bottom pb-2">
@@ -132,10 +130,9 @@
                                             <hr class="w-100 mt-2 mb-0" style="border-top: 1px dashed #d1d3e2;">
                                         </div>
                                     </div>
-                                @endif
+                                @endforeach
+                            @endif
 
-                            @endforeach
-                            
                             @if($tabKey === 'tab_kepangkatan')
                                 <div class="col-md-12 mt-3 mb-4">
                                     <div class="d-flex flex-column h-100 justify-content-between">
@@ -223,32 +220,30 @@
 {{-- 4. SCRIPT LOGIC --}}
 <script>
     $(document).ready(function() {
-        // Ambil ID tab dari show_modal
-        var $showTabs = $('#show-tabs .nav-link');
-        var $btnShowPrev = $('#btn-show-prev');
-        var $btnShowNext = $('#btn-show-next');
-
         function updateShowButtons() {
+            var $showTabs = $('#show-tabs .nav-link');
             var activeIndex = $showTabs.index($showTabs.filter('.active'));
             var totalTabs = $showTabs.length;
 
             // Tombol Kembali (Hilang di tab 1)
-            if (activeIndex === 0) {
-                $btnShowPrev.addClass('d-none');
+            if (activeIndex <= 0) {
+                $('#btn-show-prev').addClass('d-none');
             } else {
-                $btnShowPrev.removeClass('d-none');
+                $('#btn-show-prev').removeClass('d-none');
             }
 
             // Tombol Lanjut (Hilang di tab terakhir)
-            if (activeIndex === totalTabs - 1) {
-                $btnShowNext.addClass('d-none');
+            if (activeIndex >= totalTabs - 1) {
+                $('#btn-show-next').addClass('d-none');
             } else {
-                $btnShowNext.removeClass('d-none');
+                $('#btn-show-next').removeClass('d-none');
             }
         }
 
         // Action Klik Tombol Lanjut
-        $btnShowNext.click(function() {
+        $(document).off('click', '#btn-show-next').on('click', '#btn-show-next', function(e) {
+            e.preventDefault();
+            var $showTabs = $('#show-tabs .nav-link');
             var activeIndex = $showTabs.index($showTabs.filter('.active'));
             if (activeIndex < $showTabs.length - 1) {
                 $showTabs.eq(activeIndex + 1).tab('show');
@@ -256,7 +251,9 @@
         });
 
         // Action Klik Tombol Kembali
-        $btnShowPrev.click(function() {
+        $(document).off('click', '#btn-show-prev').on('click', '#btn-show-prev', function(e) {
+            e.preventDefault();
+            var $showTabs = $('#show-tabs .nav-link');
             var activeIndex = $showTabs.index($showTabs.filter('.active'));
             if (activeIndex > 0) {
                 $showTabs.eq(activeIndex - 1).tab('show');
@@ -264,7 +261,7 @@
         });
 
         // Event listener: tab diklik manual lewat header, update tombol
-        $('#show-tabs a[data-toggle="pill"]').on('shown.bs.tab', function (e) {
+        $(document).off('shown.bs.tab', '#show-tabs a[data-toggle="pill"]').on('shown.bs.tab', '#show-tabs a[data-toggle="pill"]', function (e) {
             updateShowButtons();
         });
 

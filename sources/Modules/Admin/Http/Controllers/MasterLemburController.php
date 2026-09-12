@@ -53,9 +53,9 @@ class MasterLemburController extends MiddlewareController
             })
             ->addColumn('is_active', function($row) {
                 if ($row->is_active === '1') {
-                    return '<div class="text-center"><span class="badge" style="background: rgba(16, 185, 129, 0.12); color: #047857; border: 1px solid rgba(16, 185, 129, 0.25); font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.75rem;"><i class="fas fa-check-circle mr-1"></i> Aktif</span></div>';
+                    return '<div class="text-center"><span class="badge" style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.76rem;">Aktif</span></div>';
                 }
-                return '<div class="text-center"><span class="badge" style="background: rgba(100, 116, 139, 0.12); color: #475569; border: 1px solid rgba(100, 116, 139, 0.25); font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.75rem;"><i class="fas fa-times-circle mr-1"></i> Non-Aktif</span></div>';
+                return '<div class="text-center"><span class="badge" style="background: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.76rem;">Non-Aktif</span></div>';
             })
             ->addColumn('action', function ($row) {
                 $canEdit   = auth()->user()->can('admin:master-lembur:edit');

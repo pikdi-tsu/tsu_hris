@@ -58,9 +58,9 @@ class MasterShiftController extends MiddlewareController
             ->addColumn('tipe_badge', function ($row) {
                 if ($row->tipe_shift === 'durasi') {
                     $jam = round($row->target_durasi_menit / 60, 1);
-                    return '<span class="badge px-2 py-1 font-weight-bold" style="background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; font-size: 0.78rem;">Target ' . $jam . ' Jam</span>';
+                    return '<span class="badge" style="background: rgba(2, 132, 199, 0.12); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.25); font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.75rem;">Target ' . $jam . ' Jam</span>';
                 }
-                return '<span class="badge px-2 py-1 font-weight-bold" style="background: #e0e7ff; color: #3730a3; border: 1px solid #c7d2fe; font-size: 0.78rem;">Jadwal Jam Harian</span>';
+                return '<span class="badge" style="background: rgba(9, 75, 84, 0.1); color: #094b54; border: 1px solid rgba(9, 75, 84, 0.25); font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.75rem;">Jadwal Jam Harian</span>';
             })
             ->addColumn('rincian_jadwal', function ($row) {
                 if ($row->tipe_shift === 'durasi') {
@@ -83,7 +83,7 @@ class MasterShiftController extends MiddlewareController
                         if ($d->jam_istirahat_mulai && $d->jam_istirahat_selesai) {
                             $istirahat = ' <small class="text-muted">(Istirahat: ' . substr($d->jam_istirahat_mulai, 0, 5) . '-' . substr($d->jam_istirahat_selesai, 0, 5) . ')</small>';
                         }
-                        $crossDay = $d->is_cross_day ? ' <span class="badge badge-warning" style="font-size: 0.65rem;">Lintas Hari</span>' : '';
+                        $crossDay = $d->is_cross_day ? ' <span class="badge" style="background: rgba(180, 83, 9, 0.12); color: #b45309; border: 1px solid rgba(180, 83, 9, 0.25); font-size: 0.68rem; padding: 0.15rem 0.4rem; border-radius: 4px;">Lintas Hari</span>' : '';
                         $html .= '<div><span class="font-weight-semibold text-dark">' . $d->nama_hari . ':</span> ' . $jamMasuk . ' - ' . $jamPulang . $istirahat . $crossDay . '</div>';
                     }
                 }
@@ -92,9 +92,9 @@ class MasterShiftController extends MiddlewareController
             })
             ->addColumn('status', function ($row) {
                 if ($row->is_active === 'Y') {
-                    return '<span class="badge badge-success px-2 py-1" style="font-size: 0.78rem; font-weight: 600;">Aktif</span>';
+                    return '<span class="badge" style="background: rgba(4, 120, 87, 0.12); color: #047857; border: 1px solid rgba(4, 120, 87, 0.25); font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.75rem;">Aktif</span>';
                 }
-                return '<span class="badge badge-secondary px-2 py-1" style="font-size: 0.78rem; font-weight: 600;">Tidak Aktif</span>';
+                return '<span class="badge" style="background: rgba(100, 116, 139, 0.12); color: #64748b; border: 1px solid rgba(100, 116, 139, 0.25); font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.75rem;">Tidak Aktif</span>';
             })
             ->addColumn('action', function ($row) {
                 $canEdit   = auth()->user()->can('admin:master-shift:edit');

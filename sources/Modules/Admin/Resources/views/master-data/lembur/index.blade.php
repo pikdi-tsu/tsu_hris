@@ -1,108 +1,128 @@
 @extends('system::template.admin.header')
-@section('title', $title)
+@section('title', $title ?? 'Data Master Lembur')
 
 @section('link_href')
     <!-- DataTables -->
     <link rel="stylesheet" href="{{ asset('assets/adminlte/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/adminlte/plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/adminlte/plugins/sweetalert2/sweetalert2.min.css') }}">
+@endsection
 
+@section('css')
     <style>
+        /* === TSU Color Tokens === */
+        :root {
+            --tsu-primary: #094b54;
+            --tsu-primary-dark: #07383f;
+            --tsu-primary-light: #cce6e9;
+            --tsu-accent-green: #047857;
+            --tsu-accent-amber: #b45309;
+            --tsu-accent-blue: #0284c7;
+            --tsu-bg-gray: #f8fafc;
+            --tsu-border-gray: #e2e8f0;
+            --tsu-radius: 8px;
+            --tsu-radius-lg: 12px;
+        }
+
         /* === TSU Stat Cards Grid (4 Columns) === */
         .tsu-stat-grid-lembur {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 1rem;
-            margin-bottom: 1.25rem;
+            margin-bottom: 1.5rem;
         }
-        @media (max-width: 992px) {
+
+        @media (max-width: 991.98px) {
             .tsu-stat-grid-lembur {
                 grid-template-columns: repeat(2, 1fr);
             }
         }
-        @media (max-width: 576px) {
+
+        @media (max-width: 575.98px) {
             .tsu-stat-grid-lembur {
                 grid-template-columns: 1fr;
             }
         }
+
         .tsu-stat-card {
             border-radius: var(--tsu-radius-lg, 12px);
-            padding: 1.15rem 1.25rem;
-            box-shadow: 0 4px 14px rgba(9, 75, 84, 0.08);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            padding: 1.25rem 1.35rem;
             position: relative;
             overflow: hidden;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.07);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            min-height: 112px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
+
         .tsu-stat-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(9, 75, 84, 0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
         }
-        .tsu-stat-card__top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 0.65rem;
+
+        .tsu-stat-card__icon {
+            position: absolute;
+            right: 1.1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 3.2rem;
+            opacity: 0.15;
+            pointer-events: none;
         }
-        .tsu-stat-card__label {
-            font-size: 0.78rem;
+
+        .tsu-stat-card__title {
+            font-size: 0.76rem;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            opacity: 0.95;
-            margin: 0;
+            margin-bottom: 0.4rem;
+            opacity: 0.9;
         }
-        .tsu-stat-card__icon-badge {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1rem;
-            flex-shrink: 0;
-        }
+
         .tsu-stat-card__value {
-            font-size: 1.85rem;
+            font-size: 1.75rem;
             font-weight: 800;
-            line-height: 1.15;
-            letter-spacing: -0.02em;
-            margin-bottom: 0.25rem;
+            line-height: 1.1;
+            margin-bottom: 0.3rem;
             display: flex;
             align-items: baseline;
             gap: 0.35rem;
         }
+
         .tsu-stat-card__unit {
             font-size: 0.9rem;
             font-weight: 600;
             opacity: 0.85;
         }
+
         .tsu-stat-card__subtext {
             font-size: 0.75rem;
             font-weight: 500;
-            opacity: 0.85;
+            opacity: 0.88;
             line-height: 1.25;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
-        /* Card Color Schemes */
+        /* Stat Card Gradient Variations */
         .tsu-stat-card--total {
             background: linear-gradient(135deg, #094b54 0%, #0c6170 100%);
             color: #ffffff;
         }
+
         .tsu-stat-card--active {
             background: linear-gradient(135deg, #047857 0%, #10b981 100%);
             color: #ffffff;
         }
+
         .tsu-stat-card--pengajuan {
             background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%);
             color: #ffffff;
         }
+
         .tsu-stat-card--bulan-ini {
             background: linear-gradient(135deg, #b45309 0%, #d97706 100%);
             color: #ffffff;
@@ -118,6 +138,30 @@
             margin-bottom: 1.5rem;
         }
 
+        .tsu-card__header {
+            background: #ffffff;
+            border-bottom: 1px solid var(--tsu-border-gray, #e2e8f0);
+            padding: 1.1rem 1.4rem;
+        }
+
+        .tsu-card__title {
+            color: var(--tsu-primary-dark, #07383f);
+            font-weight: 700;
+            font-size: 1.05rem;
+            letter-spacing: -0.01em;
+            margin: 0;
+        }
+
+        .tsu-badge-info-clean {
+            background: #f0fdf4;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            padding: 0.35rem 0.75rem;
+            font-weight: 600;
+        }
+
         /* === Modern Table Styles === */
         .tsu-table-modern thead th {
             background: #f8fafc !important;
@@ -127,15 +171,18 @@
             text-transform: uppercase !important;
             letter-spacing: 0.04em !important;
             border-bottom: 2px solid var(--tsu-primary-light, #cce6e9) !important;
+            border-top: none !important;
             vertical-align: middle !important;
             padding: 0.75rem 1rem !important;
         }
+
         .tsu-table-modern tbody td {
             vertical-align: middle !important;
             font-size: 0.85rem;
             padding: 0.75rem 1rem !important;
             border-color: #f1f5f9 !important;
         }
+
         .tsu-table-modern tbody tr:hover {
             background-color: #f8fafc !important;
         }
@@ -150,21 +197,24 @@
             padding: 0.45rem 1rem;
             transition: all 0.2s ease;
         }
+
         .tsu-btn-reload:hover {
             background: var(--tsu-primary, #094b54);
             color: #ffffff;
             border-color: var(--tsu-primary, #094b54);
         }
+
         .tsu-btn-primary-action {
-            background: linear-gradient(135deg, #094b54 0%, #0c6170 100%);
+            background: linear-gradient(135deg, var(--tsu-primary, #094b54) 0%, #0c6170 100%) !important;
             color: #ffffff !important;
             border: none;
             border-radius: var(--tsu-radius, 8px);
             font-weight: 600;
-            padding: 0.45rem 1.1rem;
+            padding: 0.45rem 1.15rem;
             transition: all 0.2s ease;
             box-shadow: 0 2px 6px rgba(9, 75, 84, 0.2);
         }
+
         .tsu-btn-primary-action:hover {
             transform: translateY(-1px);
             box-shadow: 0 4px 10px rgba(9, 75, 84, 0.3);
@@ -176,41 +226,43 @@
             background-color: var(--tsu-primary, #094b54) !important;
             border-color: var(--tsu-primary, #094b54) !important;
         }
+
         .dataTables_wrapper .dataTables_filter input {
             border-radius: var(--tsu-radius, 8px) !important;
             border: 1.5px solid #cbd5e1;
-            padding: 0.35rem 0.75rem;
+            padding: 0.38rem 0.75rem;
             font-size: 0.85rem;
             transition: border-color 0.2s;
         }
+
         .dataTables_wrapper .dataTables_filter input:focus {
             border-color: var(--tsu-primary, #094b54) !important;
             box-shadow: 0 0 0 3px rgba(9, 75, 84, 0.12) !important;
             outline: none;
         }
+
+        .dataTables_wrapper .dataTables_length select {
+            border-radius: var(--tsu-radius, 8px) !important;
+            border: 1.5px solid #cbd5e1;
+            padding: 0.35rem 1.8rem 0.35rem 0.65rem;
+            font-size: 0.85rem;
+        }
     </style>
 @endsection
 
 @section('content')
-    <x-tsu-master-guide
-        title="Panduan Keterkaitan Master Lembur"
-        description="Master Lembur mengatur kategori penugasan kerja lembur pegawai di luar jam operasional standar (lembur hari kerja, hari libur, atau event universitas)."
-        :connections="[
-            ['label' => 'Pengajuan Lembur Mandiri', 'route' => 'users.lembur.index', 'icon' => 'fas fa-business-time'],
-            ['label' => 'Approval Lembur Atasan', 'route' => 'users.approval-lembur.index', 'icon' => 'fas fa-check-double'],
-            ['label' => 'Riwayat Lembur (Admin)', 'route' => 'admin.riwayat-lembur.index', 'icon' => 'fas fa-history'],
-            ['label' => 'Kalkulasi Payroll Lembur', 'route' => 'admin.payroll.index', 'icon' => 'fas fa-calculator']
-        ]"
-        impact="Kategori lembur menentukan pengelompokan penugasan kerja serta parameter pengali perhitungan upah lembur yang akan diakumulasikan ke dalam rekapitulasi gaji bulanan (Payroll)."
-    />
-
-    <div class="card card-primary card-outline">
-        <div class="card-header d-flex align-items-center">
-            <h3 class="card-title mr-4">{{ $title ?? 'Data Master Lembur' }}</h3>
-
-            <div class="d-flex gap-2 ml-auto">
-                <button type="button" class="btn btn-success btn-modal btn-sm" data-url="{{ route('admin.master-lembur.create') }}" title="Tambah Master Lembur">
-                    <i class="fas fa-plus"></i> Tambah Master Lembur
+    {{-- TSU Page Header --}}
+    <x-tsu-page-header
+        :title="$title ?? 'Data Master Lembur'"
+        subtitle="Kelola jenis dan kategori penugasan lembur kerja pegawai TSU"
+        icon="fas fa-business-time"
+        :breadcrumb="true"
+    >
+        <x-slot name="actions">
+            {{-- Tombol Tambah Master Lembur --}}
+            @can('admin:master-lembur:create')
+                <button type="button" class="btn btn-sm tsu-btn-primary-action btn-modal mr-2" data-url="{{ route('admin.master-lembur.create') }}" title="Tambah Master Lembur">
+                    <i class="fas fa-plus mr-1"></i> Tambah Master Lembur
                 </button>
             @endcan
 
@@ -229,12 +281,10 @@
             <div class="tsu-stat-grid-lembur">
                 {{-- Total Jenis Lembur --}}
                 <div class="tsu-stat-card tsu-stat-card--total">
-                    <div class="tsu-stat-card__top">
-                        <span class="tsu-stat-card__label">Jenis Lembur</span>
-                        <div class="tsu-stat-card__icon-badge">
-                            <i class="fas fa-business-time"></i>
-                        </div>
+                    <div class="tsu-stat-card__icon">
+                        <i class="fas fa-business-time"></i>
                     </div>
+                    <div class="tsu-stat-card__title">Jenis Lembur</div>
                     <div class="tsu-stat-card__value">
                         {{ number_format($stats['total'] ?? 0) }}
                         <span class="tsu-stat-card__unit">Jenis</span>
@@ -246,66 +296,88 @@
 
                 {{-- Status Aktif --}}
                 <div class="tsu-stat-card tsu-stat-card--active">
-                    <div class="tsu-stat-card__top">
-                        <span class="tsu-stat-card__label">Status Aktif</span>
-                        <div class="tsu-stat-card__icon-badge">
-                            <i class="fas fa-check-circle"></i>
-                        </div>
+                    <div class="tsu-stat-card__icon">
+                        <i class="fas fa-check-circle"></i>
                     </div>
+                    <div class="tsu-stat-card__title">Status Aktif</div>
                     <div class="tsu-stat-card__value">
                         {{ number_format($stats['active'] ?? 0) }}
-                        <span class="tsu-stat-card__unit">Aktif</span>
+                        <span class="tsu-stat-card__unit">Jenis</span>
                     </div>
                     <div class="tsu-stat-card__subtext">
-                        Dapat Dipilih pada Pengajuan Karyawan
+                        Dapat Dipilih pada Pengajuan Lembur
                     </div>
                 </div>
 
-                {{-- Total Pengajuan Lembur --}}
+                {{-- Total Pengajuan --}}
                 <div class="tsu-stat-card tsu-stat-card--pengajuan">
-                    <div class="tsu-stat-card__top">
-                        <span class="tsu-stat-card__label">Total Pengajuan</span>
-                        <div class="tsu-stat-card__icon-badge">
-                            <i class="fas fa-file-invoice"></i>
-                        </div>
+                    <div class="tsu-stat-card__icon">
+                        <i class="fas fa-file-invoice-dollar"></i>
                     </div>
+                    <div class="tsu-stat-card__title">Total Pengajuan</div>
                     <div class="tsu-stat-card__value">
                         {{ number_format($stats['total_pengajuan'] ?? 0) }}
                         <span class="tsu-stat-card__unit">Berkas</span>
                     </div>
                     <div class="tsu-stat-card__subtext">
-                        Akumulasi Pengajuan Lembur Karyawan
+                        Akumulasi Pengajuan Lembur Pegawai
                     </div>
                 </div>
 
                 {{-- Pengajuan Bulan Ini --}}
                 <div class="tsu-stat-card tsu-stat-card--bulan-ini">
-                    <div class="tsu-stat-card__top">
-                        <span class="tsu-stat-card__label">Bulan Berjalan</span>
-                        <div class="tsu-stat-card__icon-badge">
-                            <i class="fas fa-calendar-check"></i>
-                        </div>
+                    <div class="tsu-stat-card__icon">
+                        <i class="fas fa-calendar-alt"></i>
                     </div>
+                    <div class="tsu-stat-card__title">Bulan Ini</div>
                     <div class="tsu-stat-card__value">
                         {{ number_format($stats['lembur_bulan_ini'] ?? 0) }}
-                        <span class="tsu-stat-card__unit">Berkas</span>
+                        <span class="tsu-stat-card__unit">Pengajuan</span>
                     </div>
                     <div class="tsu-stat-card__subtext">
-                        Pengajuan Lembur Periode {{ date('F Y') }}
+                        Periode {{ Carbon\Carbon::now()->translatedFormat('F Y') }}
                     </div>
                 </div>
             </div>
 
+            {{-- Card Panduan Keterkaitan Master --}}
+            <x-tsu-master-guide
+                title="Panduan Keterkaitan Master Lembur"
+                description="Master Lembur mengatur kategori penugasan kerja lembur pegawai di luar jam operasional standar (lembur hari kerja, hari libur, atau event universitas)."
+                :connections="[
+                    ['label' => 'Pengajuan Lembur Mandiri', 'route' => 'users.lembur.index', 'icon' => 'fas fa-business-time'],
+                    ['label' => 'Approval Lembur Atasan', 'route' => 'users.approval-lembur.index', 'icon' => 'fas fa-check-double'],
+                    ['label' => 'Riwayat Lembur (Admin)', 'route' => 'admin.riwayat-lembur.index', 'icon' => 'fas fa-history'],
+                    ['label' => 'Kalkulasi Payroll Lembur', 'route' => 'admin.payroll.index', 'icon' => 'fas fa-calculator']
+                ]"
+                impact="Kategori lembur menentukan pengelompokan penugasan kerja serta parameter pengali perhitungan upah lembur yang akan diakumulasikan ke dalam rekapitulasi gaji bulanan (Payroll)."
+            />
+
             {{-- Main Table Card --}}
             <div class="tsu-card">
+                <div class="tsu-card__header d-flex flex-wrap justify-content-between align-items-center">
+                    <div>
+                        <h5 class="tsu-card__title">
+                            Daftar Kategori &amp; Master Lembur
+                        </h5>
+                        <div class="text-muted small mt-1">
+                            Master data klasifikasi lembur yang terintegrasi dengan persetujuan atasan dan perhitungan payroll
+                        </div>
+                    </div>
+                    <div class="mt-2 mt-sm-0">
+                        <span class="tsu-badge-info-clean">
+                            Terkoneksi Modul Payroll &amp; Presensi
+                        </span>
+                    </div>
+                </div>
                 <div class="card-body p-3">
                     <div class="table-responsive">
                         <table class="table tsu-table-modern table-hover w-100" id="table-lembur">
                             <thead>
                                 <tr>
                                     <th width="5%" class="text-center">No</th>
-                                    <th width="35%">Jenis Lembur</th>
-                                    <th width="40%">Keterangan</th>
+                                    <th width="32%">Jenis Lembur</th>
+                                    <th width="43%">Keterangan</th>
                                     <th width="10%" class="text-center">Status</th>
                                     <th width="10%" class="text-center">Aksi</th>
                                 </tr>

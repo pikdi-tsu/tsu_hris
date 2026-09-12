@@ -8,6 +8,17 @@
     <link rel="stylesheet" href="{{ asset('assets/adminlte/plugins/sweetalert2/sweetalert2.min.css') }}">
 
     <style>
+        /* === TSU Design System Tokens === */
+        :root {
+            --tsu-primary: #094b54;
+            --tsu-primary-hover: #0c6170;
+            --tsu-primary-dark: #07383f;
+            --tsu-primary-light: #cce6e9;
+            --tsu-accent-green: #047857;
+            --tsu-radius: 8px;
+            --tsu-radius-lg: 12px;
+        }
+
         /* === TSU Stat Cards Grid (4 Columns) === */
         .tsu-stat-grid-gapok {
             display: grid;
@@ -25,6 +36,7 @@
                 grid-template-columns: 1fr;
             }
         }
+
         .tsu-stat-card {
             border-radius: var(--tsu-radius-lg, 12px);
             padding: 1.15rem 1.25rem;
@@ -35,36 +47,32 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            min-height: 110px;
         }
         .tsu-stat-card:hover {
             transform: translateY(-3px);
             box-shadow: 0 8px 20px rgba(9, 75, 84, 0.15);
         }
-        .tsu-stat-card__top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 0.65rem;
+
+        .tsu-stat-card__icon {
+            position: absolute;
+            right: 1.25rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 3.2rem;
+            opacity: 0.15;
+            pointer-events: none;
         }
-        .tsu-stat-card__label {
+
+        .tsu-stat-card__title {
             font-size: 0.78rem;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.05em;
             opacity: 0.95;
-            margin: 0;
+            margin-bottom: 0.4rem;
         }
-        .tsu-stat-card__icon-badge {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1rem;
-            flex-shrink: 0;
-        }
+
         .tsu-stat-card__value {
             font-size: 1.75rem;
             font-weight: 800;
@@ -75,15 +83,17 @@
             align-items: baseline;
             gap: 0.35rem;
         }
+
         .tsu-stat-card__unit {
             font-size: 0.9rem;
             font-weight: 600;
             opacity: 0.85;
         }
+
         .tsu-stat-card__subtext {
             font-size: 0.75rem;
             font-weight: 500;
-            opacity: 0.85;
+            opacity: 0.88;
             line-height: 1.25;
             white-space: nowrap;
             overflow: hidden;
@@ -116,6 +126,20 @@
             box-shadow: 0 4px 16px rgba(9, 75, 84, 0.06);
             overflow: hidden;
             margin-bottom: 1.5rem;
+        }
+
+        .tsu-card__header {
+            background: #ffffff;
+            border-bottom: 1px solid var(--tsu-border-gray, #e2e8f0);
+            padding: 1.1rem 1.4rem;
+        }
+
+        .tsu-card__title {
+            color: var(--tsu-primary-dark, #07383f);
+            font-weight: 700;
+            font-size: 1.05rem;
+            letter-spacing: -0.01em;
+            margin: 0;
         }
 
         /* === Modern Table Styles === */
@@ -192,34 +216,22 @@
 @endsection
 
 @section('content')
-    <x-tsu-master-guide
-        title="Panduan Keterkaitan Master Matriks Gaji Pokok"
-        description="Master Matriks Gaji Pokok mengatur struktur skala upah pokok bulanan pegawai universitas berdasarkan Golongan Ruang, Pangkat, serta Masa Kerja Golongan (MKG)."
-        :connections="[
-            ['label' => 'Penggajian (Payroll)', 'route' => 'admin.payroll.index', 'icon' => 'fas fa-money-check-alt'],
-            ['label' => 'Tunjangan Pegawai', 'route' => 'admin.master-tunjangan.index', 'icon' => 'fas fa-coins'],
-            ['label' => 'Pangkat Data Karyawan', 'route' => 'admin.data-karyawan.index', 'icon' => 'fas fa-layer-group'],
-            ['label' => 'Tarif Dasar Upah Lembur', 'route' => 'users.lembur.index', 'icon' => 'fas fa-calculator']
-        ]"
-        impact="Nilai Gaji Pokok di sini menjadi basis perhitungan formula: Gaji Pokok 100%/80%, Tunjangan Pasangan (10%), Tunjangan Anak (2%/anak), BPJS Kesehatan (4%), Upah Lembur (Gapok / 173), dan Potongan Unpaid Leave."
-    />
-
-    <div class="card card-primary card-outline shadow-sm">
-        <div class="card-header d-flex flex-wrap align-items-center justify-content-between">
-            <h3 class="card-title font-weight-bold">
-                <i class="fas fa-money-check-alt text-primary mr-2"></i> {{ $title ?? 'Master Matriks Gaji Pokok Pegawai' }}
-            </h3>
-
-            <div class="d-flex gap-2 ml-auto">
-                <button type="button" class="btn btn-success btn-modal btn-sm font-weight-bold"
+    <x-tsu-page-header
+        :title="$title ?? 'Master Matriks Gaji Pokok Pegawai'"
+        subtitle="Atur skala upah pokok bulanan pegawai universitas berdasarkan Golongan Ruang dan Pangkat"
+        icon="fas fa-money-check-alt"
+        :breadcrumb="true"
+    >
+        <x-slot name="actions">
+            <button type="button" class="btn tsu-btn-reload btn-sm" id="btn-reload" title="Refresh Data">
+                <i class="fas fa-sync-alt mr-1"></i> Refresh
+            </button>
+            @can('admin:master-gaji-pokok:create')
+                <button type="button" class="btn btn-sm tsu-btn-primary-action btn-modal ml-2"
                     data-url="{{ route('admin.master-gaji-pokok.create') }}" title="Tambah Golongan Gaji">
                     <i class="fas fa-plus mr-1"></i> Tambah Golongan
                 </button>
             @endcan
-
-            <button type="button" class="btn btn-sm tsu-btn-reload" id="btn-reload" title="Segarkan Data Tabel">
-                <i class="fas fa-sync-alt mr-1"></i> Refresh Data
-            </button>
         </x-slot>
     </x-tsu-page-header>
 
@@ -227,19 +239,17 @@
     <section class="content">
         <div class="container-fluid">
 
-            {{-- Stat Cards Grid --}}
+            {{-- Stat Cards Grid (4 Columns) --}}
             <div class="tsu-stat-grid-gapok">
                 {{-- Total Golongan --}}
                 <div class="tsu-stat-card tsu-stat-card--total">
-                    <div class="tsu-stat-card__top">
-                        <span class="tsu-stat-card__label">Total Golongan</span>
-                        <div class="tsu-stat-card__icon-badge">
-                            <i class="fas fa-layer-group"></i>
+                    <i class="fas fa-layer-group tsu-stat-card__icon"></i>
+                    <div>
+                        <div class="tsu-stat-card__title">Total Golongan</div>
+                        <div class="tsu-stat-card__value">
+                            {{ number_format($stats['total'] ?? 0) }}
+                            <span class="tsu-stat-card__unit">Golongan</span>
                         </div>
-                    </div>
-                    <div class="tsu-stat-card__value">
-                        {{ number_format($stats['total'] ?? 0) }}
-                        <span class="tsu-stat-card__unit">Golongan</span>
                     </div>
                     <div class="tsu-stat-card__subtext">
                         Skala Golongan I/a s/d IV/e Terdaftar
@@ -248,15 +258,13 @@
 
                 {{-- Golongan I & II --}}
                 <div class="tsu-stat-card tsu-stat-card--gol12">
-                    <div class="tsu-stat-card__top">
-                        <span class="tsu-stat-card__label">Golongan I & II</span>
-                        <div class="tsu-stat-card__icon-badge">
-                            <i class="fas fa-user-tag"></i>
+                    <i class="fas fa-user-tag tsu-stat-card__icon"></i>
+                    <div>
+                        <div class="tsu-stat-card__title">Golongan I & II</div>
+                        <div class="tsu-stat-card__value">
+                            {{ number_format($stats['gol_1_2'] ?? 0) }}
+                            <span class="tsu-stat-card__unit">Golongan</span>
                         </div>
-                    </div>
-                    <div class="tsu-stat-card__value">
-                        {{ number_format($stats['gol_1_2'] ?? 0) }}
-                        <span class="tsu-stat-card__unit">Golongan</span>
                     </div>
                     <div class="tsu-stat-card__subtext">
                         Tingkat Pratama & Muda
@@ -265,15 +273,13 @@
 
                 {{-- Golongan III & IV --}}
                 <div class="tsu-stat-card tsu-stat-card--gol34">
-                    <div class="tsu-stat-card__top">
-                        <span class="tsu-stat-card__label">Golongan III & IV</span>
-                        <div class="tsu-stat-card__icon-badge">
-                            <i class="fas fa-user-shield"></i>
+                    <i class="fas fa-user-shield tsu-stat-card__icon"></i>
+                    <div>
+                        <div class="tsu-stat-card__title">Golongan III & IV</div>
+                        <div class="tsu-stat-card__value">
+                            {{ number_format($stats['gol_3_4'] ?? 0) }}
+                            <span class="tsu-stat-card__unit">Golongan</span>
                         </div>
-                    </div>
-                    <div class="tsu-stat-card__value">
-                        {{ number_format($stats['gol_3_4'] ?? 0) }}
-                        <span class="tsu-stat-card__unit">Golongan</span>
                     </div>
                     <div class="tsu-stat-card__subtext">
                         Tingkat Madya & Utama
@@ -282,14 +288,12 @@
 
                 {{-- Rata-rata Gapok --}}
                 <div class="tsu-stat-card tsu-stat-card--avg">
-                    <div class="tsu-stat-card__top">
-                        <span class="tsu-stat-card__label">Rata-Rata Gapok (100%)</span>
-                        <div class="tsu-stat-card__icon-badge">
-                            <i class="fas fa-money-bill-wave"></i>
+                    <i class="fas fa-money-bill-wave tsu-stat-card__icon"></i>
+                    <div>
+                        <div class="tsu-stat-card__title">Rata-Rata Gapok (100%)</div>
+                        <div class="tsu-stat-card__value" style="font-size: 1.45rem;">
+                            Rp {{ number_format($stats['avg_gapok'] ?? 0, 0, ',', '.') }}
                         </div>
-                    </div>
-                    <div class="tsu-stat-card__value" style="font-size: 1.45rem;">
-                        Rp {{ number_format($stats['avg_gapok'] ?? 0, 0, ',', '.') }}
                     </div>
                     <div class="tsu-stat-card__subtext">
                         Acuan Standar Gaji Pokok Penuh
@@ -297,25 +301,46 @@
                 </div>
             </div>
 
+            {{-- Card Panduan (Placed BELOW Stat Cards) --}}
+            <x-tsu-master-guide
+                title="Panduan Keterkaitan Master Matriks Gaji Pokok"
+                description="Master Matriks Gaji Pokok mengatur struktur skala upah pokok bulanan pegawai universitas berdasarkan Golongan Ruang, Pangkat, serta Masa Kerja Golongan (MKG)."
+                :connections="[
+                    ['label' => 'Penggajian (Payroll)', 'route' => 'admin.payroll.index', 'icon' => 'fas fa-money-check-alt'],
+                    ['label' => 'Tunjangan Pegawai', 'route' => 'admin.master-tunjangan.index', 'icon' => 'fas fa-coins'],
+                    ['label' => 'Pangkat Data Karyawan', 'route' => 'admin.data-karyawan.index', 'icon' => 'fas fa-layer-group'],
+                    ['label' => 'Tarif Dasar Upah Lembur', 'route' => 'users.lembur.index', 'icon' => 'fas fa-calculator']
+                ]"
+                impact="Nilai Gaji Pokok di sini menjadi basis perhitungan formula: Gaji Pokok 100%/80%, Tunjangan Pasangan (10%), Tunjangan Anak (2%/anak), BPJS Kesehatan (4%), Upah Lembur (Gapok / 173), dan Potongan Unpaid Leave (Gapok / 25)."
+            />
+
             {{-- Helper Information Alert --}}
             <div class="alert alert-info border-0 mb-3 shadow-sm" style="background-color: #f0fdfa; border-left: 4px solid #0c6170 !important; border-radius: 10px; color: #0f766e;">
                 <div class="d-flex align-items-center">
                     <i class="fas fa-info-circle mr-3" style="font-size: 1.3rem;"></i>
                     <div style="font-size: 0.85rem; line-height: 1.5;">
-                        <strong class="text-dark">Informasi Penggajian:</strong> Matriks Gaji Pokok ini digunakan sebagai acuan dasar perhitungan Gaji Pokok (100% & 80%), Tunjangan Keluarga (10%), Tunjangan Anak (2%/anak), Tunjangan BPJS Kesehatan (4%), Upah Lembur per jam (Gapok / 173), dan Potongan Unpaid Leave (Gapok / 25).
+                        <strong class="text-dark">Informasi Penggajian:</strong> Matriks Gaji Pokok ini digunakan sebagai acuan dasar perhitungan Gaji Pokok (100% & 80%), Tunjangan Pasangan (10%), Tunjangan Anak (2%/anak), Tunjangan BPJS Kesehatan (4%), Upah Lembur per jam (Gapok / 173), dan Potongan Unpaid Leave (Gapok / 25).
                     </div>
                 </div>
             </div>
 
             {{-- Main Table Card --}}
             <div class="tsu-card">
+                <div class="tsu-card__header d-flex flex-wrap align-items-center justify-content-between">
+                    <h5 class="tsu-card__title">
+                        <i class="fas fa-table text-muted mr-2"></i>Daftar Matriks Skala Gaji Pokok
+                    </h5>
+                    <div class="text-muted" style="font-size: 0.82rem;">
+                        Matriks standar golongan I/a hingga IV/e
+                    </div>
+                </div>
                 <div class="card-body p-3">
                     <div class="table-responsive">
                         <table id="table-gapok" class="table tsu-table-modern table-hover w-100">
                             <thead>
                                 <tr>
                                     <th width="4%" class="text-center">NO</th>
-                                    <th width="9%" class="text-center">GOLONGAN</th>
+                                    <th width="10%" class="text-center">GOLONGAN</th>
                                     <th width="16%" class="text-right">GAJI POKOK 100% (PENUH)</th>
                                     <th width="16%" class="text-right">GAJI POKOK 80% (PERCOBAAN)</th>
                                     <th width="25%">JENJANG BERKALA MASA KERJA</th>

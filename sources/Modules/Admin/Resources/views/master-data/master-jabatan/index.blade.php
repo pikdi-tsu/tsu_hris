@@ -6,103 +6,122 @@
     <link rel="stylesheet" href="{{ asset('assets/adminlte/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/adminlte/plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/adminlte/plugins/sweetalert2/sweetalert2.min.css') }}">
+@endsection
 
+@section('css')
     <style>
+        :root {
+            --tsu-primary: #094b54;
+            --tsu-primary-dark: #07383f;
+            --tsu-primary-light: #cce6e9;
+            --tsu-accent-green: #047857;
+            --tsu-accent-amber: #b45309;
+            --tsu-accent-blue: #0284c7;
+            --tsu-bg-gray: #f8fafc;
+            --tsu-border-gray: #e2e8f0;
+            --tsu-radius: 8px;
+            --tsu-radius-lg: 12px;
+        }
+
         /* === TSU Stat Cards Grid (4 Columns) === */
         .tsu-stat-grid-jabatan {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 1rem;
-            margin-bottom: 1.25rem;
+            margin-bottom: 1.5rem;
         }
-        @media (max-width: 992px) {
+
+        @media (max-width: 991.98px) {
             .tsu-stat-grid-jabatan {
                 grid-template-columns: repeat(2, 1fr);
             }
         }
-        @media (max-width: 576px) {
+
+        @media (max-width: 575.98px) {
             .tsu-stat-grid-jabatan {
                 grid-template-columns: 1fr;
             }
         }
+
         .tsu-stat-card {
             border-radius: var(--tsu-radius-lg, 12px);
-            padding: 1.15rem 1.25rem;
-            box-shadow: 0 4px 14px rgba(9, 75, 84, 0.08);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            padding: 1.25rem 1.35rem;
             position: relative;
             overflow: hidden;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.07);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            min-height: 112px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
+
         .tsu-stat-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(9, 75, 84, 0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
         }
-        .tsu-stat-card__top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 0.65rem;
+
+        .tsu-stat-card__icon {
+            position: absolute;
+            right: 1.1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 3.2rem;
+            opacity: 0.15;
+            pointer-events: none;
         }
-        .tsu-stat-card__label {
-            font-size: 0.78rem;
+
+        .tsu-stat-card__title {
+            font-size: 0.76rem;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            opacity: 0.95;
-            margin: 0;
+            margin-bottom: 0.4rem;
+            opacity: 0.9;
         }
-        .tsu-stat-card__icon-badge {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1rem;
-            flex-shrink: 0;
-        }
+
         .tsu-stat-card__value {
-            font-size: 1.85rem;
+            font-size: 1.75rem;
             font-weight: 800;
-            line-height: 1.15;
-            letter-spacing: -0.02em;
-            margin-bottom: 0.25rem;
+            line-height: 1.1;
+            margin-bottom: 0.3rem;
             display: flex;
             align-items: baseline;
             gap: 0.35rem;
         }
+
         .tsu-stat-card__unit {
             font-size: 0.9rem;
             font-weight: 600;
             opacity: 0.85;
         }
+
         .tsu-stat-card__subtext {
             font-size: 0.75rem;
             font-weight: 500;
-            opacity: 0.85;
+            opacity: 0.88;
             line-height: 1.25;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
-        /* Card Color Schemes */
+        /* Stat Card Gradient Variations */
         .tsu-stat-card--total {
             background: linear-gradient(135deg, #094b54 0%, #0c6170 100%);
             color: #ffffff;
         }
+
         .tsu-stat-card--struktural {
             background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%);
             color: #ffffff;
         }
+
         .tsu-stat-card--fungsional {
             background: linear-gradient(135deg, #b45309 0%, #d97706 100%);
             color: #ffffff;
         }
+
         .tsu-stat-card--pangkat {
             background: linear-gradient(135deg, #047857 0%, #10b981 100%);
             color: #ffffff;
@@ -118,7 +137,7 @@
             margin-bottom: 1.5rem;
         }
 
-        /* === Underline Nav Tabs (Matching Riwayat Cuti & MPP) === */
+        /* === Underline Nav Tabs === */
         .card-tabs .card-header {
             background: #ffffff !important;
             border-bottom: 2px solid #e2e8f0 !important;
@@ -241,56 +260,47 @@
 @endsection
 
 @section('content')
-    <x-tsu-master-guide
-        title="Panduan Keterkaitan Master Jabatan & Pangkat"
-        description="Master Jabatan mengatur klasifikasi Jabatan Struktural (Rektor, Dekan, Kaprodi, Ka. Biro), Jabatan Fungsional Akademik (Asisten Ahli, Lektor, Guru Besar), serta Pangkat Golongan pegawai."
-        :connections="[
-            ['label' => 'Data Pegawai & Mutasi', 'route' => 'admin.data-karyawan.index', 'icon' => 'fas fa-users'],
-            ['label' => 'Bagan Struktur Organisasi', 'route' => 'admin.struktur-organisasi.index', 'icon' => 'fas fa-sitemap'],
-            ['label' => 'Tunjangan Jabatan', 'route' => 'admin.master-tunjangan.index', 'icon' => 'fas fa-coins'],
-            ['label' => 'Garis Approval Pimpinan', 'route' => 'users.approval-cuti.index', 'icon' => 'fas fa-user-shield']
-        ]"
-        impact="Jabatan menentukan garis hirarki atasan langsung untuk verifikasi approval berjenjang, penempatan bagan struktur organisasi universitas, serta dasar hak tunjangan struktural/fungsional."
-    />
+    <x-tsu-page-header
+        :title="$title ?? 'Data Master Jabatan & Pangkat'"
+        subtitle="Kelola klasifikasi jabatan struktural, fungsional akademik, dan jenjang kepangkatan pegawai"
+        icon="fas fa-sitemap"
+        :breadcrumb="true"
+    >
+        <x-slot name="actions">
+            <button type="button" class="btn tsu-btn-reload btn-sm" id="btn-reload" title="Refresh Data">
+                <i class="fas fa-sync-alt mr-1"></i> Refresh
+            </button>
+        </x-slot>
+    </x-tsu-page-header>
 
-    <div class="card card-primary card-outline card-outline-tabs">
-        <div class="card-header p-0 border-bottom-0">
-            <ul class="nav nav-tabs" id="custom-tabs-four-tab" role="tablist">
-                <li class="nav-item">
-                    <a class="nav-link active" id="tab-struktural" data-toggle="pill" href="#content-struktural" role="tab" aria-controls="content-struktural" aria-selected="true">Jabatan Struktural</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" id="tab-fungsional" data-toggle="pill" href="#content-fungsional" role="tab" aria-controls="content-fungsional" aria-selected="false">Jabatan Fungsional</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" id="tab-pangkat" data-toggle="pill" href="#content-pangkat" role="tab" aria-controls="content-pangkat" aria-selected="false">Pangkat & Golongan</a>
-                </li>
-            </ul>
-        </div>
-        
-        <div class="card-body">
-            <div class="tab-content" id="custom-tabs-four-tabContent">
-                
-                {{-- TAB STRUKTURAL --}}
-                <div class="tab-pane fade show active" id="content-struktural" role="tabpanel" aria-labelledby="tab-struktural">
-                    <div class="mb-3 text-right">
-                        <button type="button" class="btn btn-primary btn-modal btn-sm" data-url="{{ route('admin.master-jabatan.struktural.create') }}">
-                            <i class="fas fa-plus"></i> Tambah Struktural
-                        </button>
+    <section class="content">
+        <div class="container-fluid">
+            {{-- 4 Stat Cards --}}
+            <div class="tsu-stat-grid-jabatan">
+                {{-- Total Jabatan --}}
+                <div class="tsu-stat-card tsu-stat-card--total">
+                    <i class="fas fa-sitemap tsu-stat-card__icon"></i>
+                    <div>
+                        <div class="tsu-stat-card__title">Total Jabatan</div>
+                        <div class="tsu-stat-card__value">
+                            {{ number_format($stats['total_jabatan'] ?? 0) }}
+                            <span class="tsu-stat-card__unit">Jabatan</span>
+                        </div>
+                    </div>
+                    <div class="tsu-stat-card__subtext">
+                        Total Master Posisi Aktif
                     </div>
                 </div>
 
                 {{-- Jabatan Struktural --}}
                 <div class="tsu-stat-card tsu-stat-card--struktural">
-                    <div class="tsu-stat-card__top">
-                        <span class="tsu-stat-card__label">Jabatan Struktural</span>
-                        <div class="tsu-stat-card__icon-badge">
-                            <i class="fas fa-network-wired"></i>
+                    <i class="fas fa-network-wired tsu-stat-card__icon"></i>
+                    <div>
+                        <div class="tsu-stat-card__title">Jabatan Struktural</div>
+                        <div class="tsu-stat-card__value">
+                            {{ number_format($stats['struktural'] ?? 0) }}
+                            <span class="tsu-stat-card__unit">Posisi</span>
                         </div>
-                    </div>
-                    <div class="tsu-stat-card__value">
-                        {{ number_format($stats['struktural'] ?? 0) }}
-                        <span class="tsu-stat-card__unit">Jabatan</span>
                     </div>
                     <div class="tsu-stat-card__subtext">
                         Posisi Pimpinan & Manajerial Unit
@@ -299,15 +309,13 @@
 
                 {{-- Jabatan Fungsional --}}
                 <div class="tsu-stat-card tsu-stat-card--fungsional">
-                    <div class="tsu-stat-card__top">
-                        <span class="tsu-stat-card__label">Jabatan Fungsional</span>
-                        <div class="tsu-stat-card__icon-badge">
-                            <i class="fas fa-user-graduate"></i>
+                    <i class="fas fa-user-graduate tsu-stat-card__icon"></i>
+                    <div>
+                        <div class="tsu-stat-card__title">Jabatan Fungsional</div>
+                        <div class="tsu-stat-card__value">
+                            {{ number_format($stats['fungsional'] ?? 0) }}
+                            <span class="tsu-stat-card__unit">Jenjang</span>
                         </div>
-                    </div>
-                    <div class="tsu-stat-card__value">
-                        {{ number_format($stats['fungsional'] ?? 0) }}
-                        <span class="tsu-stat-card__unit">Jabatan</span>
                     </div>
                     <div class="tsu-stat-card__subtext">
                         Jenjang Akademik & Keahlian Khusus
@@ -316,15 +324,13 @@
 
                 {{-- Pangkat & Golongan --}}
                 <div class="tsu-stat-card tsu-stat-card--pangkat">
-                    <div class="tsu-stat-card__top">
-                        <span class="tsu-stat-card__label">Pangkat & Golongan</span>
-                        <div class="tsu-stat-card__icon-badge">
-                            <i class="fas fa-layer-group"></i>
+                    <i class="fas fa-layer-group tsu-stat-card__icon"></i>
+                    <div>
+                        <div class="tsu-stat-card__title">Pangkat & Golongan</div>
+                        <div class="tsu-stat-card__value">
+                            {{ number_format($stats['pangkat'] ?? 0) }}
+                            <span class="tsu-stat-card__unit">Tingkat</span>
                         </div>
-                    </div>
-                    <div class="tsu-stat-card__value">
-                        {{ number_format($stats['pangkat'] ?? 0) }}
-                        <span class="tsu-stat-card__unit">Jenjang</span>
                     </div>
                     <div class="tsu-stat-card__subtext">
                         Tingkatan Kepangkatan Pegawai
@@ -332,23 +338,36 @@
                 </div>
             </div>
 
+            {{-- Master Guide (Below Stat Cards) --}}
+            <x-tsu-master-guide
+                title="Panduan Keterkaitan Master Jabatan & Pangkat"
+                description="Master Jabatan mengatur klasifikasi Jabatan Struktural (Rektor, Dekan, Kaprodi, Ka. Biro), Jabatan Fungsional Akademik (Asisten Ahli, Lektor, Guru Besar), serta Pangkat Golongan pegawai."
+                :connections="[
+                    ['label' => 'Data Pegawai & Mutasi', 'route' => 'admin.data-karyawan.index', 'icon' => 'fas fa-users'],
+                    ['label' => 'Bagan Struktur Organisasi', 'route' => 'admin.struktur-organisasi.index', 'icon' => 'fas fa-sitemap'],
+                    ['label' => 'Tunjangan Jabatan', 'route' => 'admin.master-tunjangan.index', 'icon' => 'fas fa-coins'],
+                    ['label' => 'Garis Approval Pimpinan', 'route' => 'users.approval-cuti.index', 'icon' => 'fas fa-user-shield']
+                ]"
+                impact="Jabatan menentukan garis hirarki atasan langsung untuk verifikasi approval berjenjang, penempatan bagan struktur organisasi universitas, serta dasar hak tunjangan struktural/fungsional."
+            />
+
             {{-- Card Container with Underline Tabs --}}
             <div class="card card-primary card-outline card-tabs tsu-card">
                 <div class="card-header p-0 border-bottom-0">
                     <ul class="nav nav-tabs tsu-tab-nav" id="jabatanTabs" role="tablist">
                         <li class="nav-item" role="presentation">
                             <a class="nav-link active" id="tab-struktural" data-toggle="tab" href="#content-struktural" role="tab" aria-controls="content-struktural" aria-selected="true">
-                                Jabatan Struktural
+                                <i class="fas fa-network-wired mr-2"></i>Jabatan Struktural
                             </a>
                         </li>
                         <li class="nav-item" role="presentation">
                             <a class="nav-link" id="tab-fungsional" data-toggle="tab" href="#content-fungsional" role="tab" aria-controls="content-fungsional" aria-selected="false">
-                                Jabatan Fungsional
+                                <i class="fas fa-user-graduate mr-2"></i>Jabatan Fungsional
                             </a>
                         </li>
                         <li class="nav-item" role="presentation">
                             <a class="nav-link" id="tab-pangkat" data-toggle="tab" href="#content-pangkat" role="tab" aria-controls="content-pangkat" aria-selected="false">
-                                Pangkat & Golongan
+                                <i class="fas fa-layer-group mr-2"></i>Pangkat & Golongan
                             </a>
                         </li>
                     </ul>

@@ -6,103 +6,122 @@
     <link rel="stylesheet" href="{{ asset('assets/adminlte/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/adminlte/plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/adminlte/plugins/sweetalert2/sweetalert2.min.css') }}">
+@endsection
 
+@section('css')
     <style>
+        :root {
+            --tsu-primary: #094b54;
+            --tsu-primary-dark: #07383f;
+            --tsu-primary-light: #cce6e9;
+            --tsu-accent-green: #047857;
+            --tsu-accent-amber: #b45309;
+            --tsu-accent-blue: #0284c7;
+            --tsu-bg-gray: #f8fafc;
+            --tsu-border-gray: #e2e8f0;
+            --tsu-radius: 8px;
+            --tsu-radius-lg: 12px;
+        }
+
         /* === TSU Stat Cards Grid (4 Columns) === */
         .tsu-stat-grid-status {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 1rem;
-            margin-bottom: 1.25rem;
+            margin-bottom: 1.5rem;
         }
-        @media (max-width: 992px) {
+
+        @media (max-width: 991.98px) {
             .tsu-stat-grid-status {
                 grid-template-columns: repeat(2, 1fr);
             }
         }
-        @media (max-width: 576px) {
+
+        @media (max-width: 575.98px) {
             .tsu-stat-grid-status {
                 grid-template-columns: 1fr;
             }
         }
+
         .tsu-stat-card {
             border-radius: var(--tsu-radius-lg, 12px);
-            padding: 1.15rem 1.25rem;
-            box-shadow: 0 4px 14px rgba(9, 75, 84, 0.08);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            padding: 1.25rem 1.35rem;
             position: relative;
             overflow: hidden;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.07);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            min-height: 112px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
+
         .tsu-stat-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(9, 75, 84, 0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
         }
-        .tsu-stat-card__top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 0.65rem;
+
+        .tsu-stat-card__icon {
+            position: absolute;
+            right: 1.1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 3.2rem;
+            opacity: 0.15;
+            pointer-events: none;
         }
-        .tsu-stat-card__label {
-            font-size: 0.78rem;
+
+        .tsu-stat-card__title {
+            font-size: 0.76rem;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            opacity: 0.95;
-            margin: 0;
+            margin-bottom: 0.4rem;
+            opacity: 0.9;
         }
-        .tsu-stat-card__icon-badge {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1rem;
-            flex-shrink: 0;
-        }
+
         .tsu-stat-card__value {
-            font-size: 1.85rem;
+            font-size: 1.75rem;
             font-weight: 800;
-            line-height: 1.15;
-            letter-spacing: -0.02em;
-            margin-bottom: 0.25rem;
+            line-height: 1.1;
+            margin-bottom: 0.3rem;
             display: flex;
             align-items: baseline;
             gap: 0.35rem;
         }
+
         .tsu-stat-card__unit {
             font-size: 0.9rem;
             font-weight: 600;
             opacity: 0.85;
         }
+
         .tsu-stat-card__subtext {
             font-size: 0.75rem;
             font-weight: 500;
-            opacity: 0.85;
+            opacity: 0.88;
             line-height: 1.25;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
-        /* Card Color Schemes */
+        /* Stat Card Gradient Variations */
         .tsu-stat-card--total {
             background: linear-gradient(135deg, #094b54 0%, #0c6170 100%);
             color: #ffffff;
         }
+
         .tsu-stat-card--aktif {
             background: linear-gradient(135deg, #047857 0%, #10b981 100%);
             color: #ffffff;
         }
+
         .tsu-stat-card--nonaktif {
             background: linear-gradient(135deg, #475569 0%, #64748b 100%);
             color: #ffffff;
         }
+
         .tsu-stat-card--pegawai {
             background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%);
             color: #ffffff;
@@ -116,6 +135,20 @@
             box-shadow: 0 4px 16px rgba(9, 75, 84, 0.06);
             overflow: hidden;
             margin-bottom: 1.5rem;
+        }
+
+        .tsu-card__header {
+            background: #ffffff;
+            border-bottom: 1px solid var(--tsu-border-gray, #e2e8f0);
+            padding: 1.1rem 1.4rem;
+        }
+
+        .tsu-card__title {
+            color: var(--tsu-primary-dark, #07383f);
+            font-weight: 700;
+            font-size: 1.05rem;
+            letter-spacing: -0.01em;
+            margin: 0;
         }
 
         /* === Modern Table Styles === */
@@ -192,52 +225,38 @@
 @endsection
 
 @section('content')
-    <x-tsu-master-guide
-        title="Panduan Keterkaitan Master Status Kepegawaian"
-        description="Master Status Karyawan mengatur ikatan kerja pegawai di lingkungan universitas (Tetap Yayasan, Kontrak / PKWT, Paruh Waktu, Dosen Luar Biasa, dan Tenaga Alih Daya)."
-        :connections="[
-            ['label' => 'Data Induk Pegawai', 'route' => 'admin.data-karyawan.index', 'icon' => 'fas fa-user-tag'],
-            ['label' => 'Hak Saldo Cuti', 'route' => 'admin.saldo-cuti.index', 'icon' => 'fas fa-balance-scale'],
-            ['label' => 'Penggajian Payroll', 'route' => 'admin.payroll.index', 'icon' => 'fas fa-money-check-alt'],
-            ['label' => 'Monitoring Masa Kontrak & Pensiun', 'route' => 'admin.pengembangan-sdm.pensiun', 'icon' => 'fas fa-hourglass-half']
-        ]"
-        impact="Status kepegawaian menjadi penentu utama apakah pegawai berhak atas jatah saldo cuti tahunan, eligibility komponen tunjangan tetap, serta jadwal evaluasi perpanjangan kontrak kerja."
-    />
-
-    <div class="card card-primary card-outline">
-        <div class="card-header d-flex align-items-center">
-            <h3 class="card-title mr-4">{{ $title ?? 'Master Data Status Karyawan' }}</h3>
-
-            <div class="d-flex gap-2 ml-auto">
-                <button type="button" class="btn btn-success btn-modal btn-sm"
+    <x-tsu-page-header
+        :title="$title ?? 'Data Master Status Karyawan'"
+        subtitle="Kelola klasifikasi ikatan hubungan kerja pegawai di lingkungan Universitas TSU"
+        icon="fas fa-id-badge"
+        :breadcrumb="true"
+    >
+        <x-slot name="actions">
+            <button type="button" class="btn tsu-btn-reload btn-sm" id="btn-reload" title="Refresh Data">
+                <i class="fas fa-sync-alt mr-1"></i> Refresh
+            </button>
+            @can('admin:master-status-karyawan:create')
+                <button type="button" class="btn btn-sm tsu-btn-primary-action btn-modal ml-2"
                     data-url="{{ route('admin.master-status-karyawan.create') }}" title="Tambah Status Karyawan">
-                    <i class="fas fa-plus"></i> Tambah Status
+                    <i class="fas fa-plus mr-1"></i> Tambah Status
                 </button>
             @endcan
-
-            <button type="button" class="btn btn-sm tsu-btn-reload" id="btn-reload" title="Segarkan Data Tabel">
-                <i class="fas fa-sync-alt mr-1"></i> Refresh Data
-            </button>
         </x-slot>
     </x-tsu-page-header>
 
-    {{-- Main Content --}}
     <section class="content">
         <div class="container-fluid">
-
-            {{-- Stat Cards Grid --}}
+            {{-- 4 Stat Cards --}}
             <div class="tsu-stat-grid-status">
                 {{-- Total Status --}}
                 <div class="tsu-stat-card tsu-stat-card--total">
-                    <div class="tsu-stat-card__top">
-                        <span class="tsu-stat-card__label">Total Status</span>
-                        <div class="tsu-stat-card__icon-badge">
-                            <i class="fas fa-id-badge"></i>
+                    <i class="fas fa-id-badge tsu-stat-card__icon"></i>
+                    <div>
+                        <div class="tsu-stat-card__title">Total Status</div>
+                        <div class="tsu-stat-card__value">
+                            {{ number_format($stats['total'] ?? 0) }}
+                            <span class="tsu-stat-card__unit">Status</span>
                         </div>
-                    </div>
-                    <div class="tsu-stat-card__value">
-                        {{ number_format($stats['total'] ?? 0) }}
-                        <span class="tsu-stat-card__unit">Status</span>
                     </div>
                     <div class="tsu-stat-card__subtext">
                         Kategori Hubungan Kerja di TSU
@@ -246,15 +265,13 @@
 
                 {{-- Status Aktif --}}
                 <div class="tsu-stat-card tsu-stat-card--aktif">
-                    <div class="tsu-stat-card__top">
-                        <span class="tsu-stat-card__label">Status Aktif</span>
-                        <div class="tsu-stat-card__icon-badge">
-                            <i class="fas fa-check-circle"></i>
+                    <i class="fas fa-check-circle tsu-stat-card__icon"></i>
+                    <div>
+                        <div class="tsu-stat-card__title">Status Aktif</div>
+                        <div class="tsu-stat-card__value">
+                            {{ number_format($stats['aktif'] ?? 0) }}
+                            <span class="tsu-stat-card__unit">Status</span>
                         </div>
-                    </div>
-                    <div class="tsu-stat-card__value">
-                        {{ number_format($stats['aktif'] ?? 0) }}
-                        <span class="tsu-stat-card__unit">Status</span>
                     </div>
                     <div class="tsu-stat-card__subtext">
                         Dapat Digunakan pada Profil Pegawai
@@ -263,32 +280,28 @@
 
                 {{-- Status Non-Aktif --}}
                 <div class="tsu-stat-card tsu-stat-card--nonaktif">
-                    <div class="tsu-stat-card__top">
-                        <span class="tsu-stat-card__label">Non-Aktif</span>
-                        <div class="tsu-stat-card__icon-badge">
-                            <i class="fas fa-ban"></i>
+                    <i class="fas fa-ban tsu-stat-card__icon"></i>
+                    <div>
+                        <div class="tsu-stat-card__title">Non-Aktif</div>
+                        <div class="tsu-stat-card__value">
+                            {{ number_format($stats['non_aktif'] ?? 0) }}
+                            <span class="tsu-stat-card__unit">Status</span>
                         </div>
-                    </div>
-                    <div class="tsu-stat-card__value">
-                        {{ number_format($stats['non_aktif'] ?? 0) }}
-                        <span class="tsu-stat-card__unit">Status</span>
                     </div>
                     <div class="tsu-stat-card__subtext">
                         Kategori Hubungan Kerja Diarsipkan
                     </div>
                 </div>
 
-                {{-- Pegawai Terdistribusi --}}
+                {{-- Pegawai Terdaftar --}}
                 <div class="tsu-stat-card tsu-stat-card--pegawai">
-                    <div class="tsu-stat-card__top">
-                        <span class="tsu-stat-card__label">Pegawai Terdaftar</span>
-                        <div class="tsu-stat-card__icon-badge">
-                            <i class="fas fa-users"></i>
+                    <i class="fas fa-users tsu-stat-card__icon"></i>
+                    <div>
+                        <div class="tsu-stat-card__title">Pegawai Terdaftar</div>
+                        <div class="tsu-stat-card__value">
+                            {{ number_format($stats['total_pegawai'] ?? 0) }}
+                            <span class="tsu-stat-card__unit">Pegawai</span>
                         </div>
-                    </div>
-                    <div class="tsu-stat-card__value">
-                        {{ number_format($stats['total_pegawai'] ?? 0) }}
-                        <span class="tsu-stat-card__unit">Pegawai</span>
                     </div>
                     <div class="tsu-stat-card__subtext">
                         Total SDM dengan Status Terikat
@@ -296,22 +309,45 @@
                 </div>
             </div>
 
-            {{-- Main Card --}}
-            <div class="tsu-card">
+            {{-- Master Guide (Below Stat Cards) --}}
+            <x-tsu-master-guide
+                title="Panduan Keterkaitan Master Status Kepegawaian"
+                description="Master Status Karyawan mengatur ikatan kerja pegawai di lingkungan universitas (Tetap Yayasan, Kontrak / PKWT, Paruh Waktu, Dosen Luar Biasa, dan Tenaga Alih Daya)."
+                :connections="[
+                    ['label' => 'Data Induk Pegawai', 'route' => 'admin.data-karyawan.index', 'icon' => 'fas fa-user-tag'],
+                    ['label' => 'Hak Saldo Cuti', 'route' => 'admin.saldo-cuti.index', 'icon' => 'fas fa-balance-scale'],
+                    ['label' => 'Penggajian Payroll', 'route' => 'admin.payroll.index', 'icon' => 'fas fa-money-check-alt'],
+                    ['label' => 'Monitoring Masa Kontrak & Pensiun', 'route' => 'admin.pengembangan-sdm.pensiun', 'icon' => 'fas fa-hourglass-half']
+                ]"
+                impact="Status kepegawaian menjadi penentu utama apakah pegawai berhak atas jatah saldo cuti tahunan, eligibility komponen tunjangan tetap, serta jadwal evaluasi perpanjangan kontrak kerja."
+            />
+
+            {{-- Main Table Container Card --}}
+            <div class="card tsu-card">
+                <div class="tsu-card__header d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <div>
+                        <h3 class="tsu-card__title">
+                            <i class="fas fa-list-alt text-primary mr-2"></i>Daftar Master Status Kepegawaian
+                        </h3>
+                        <p class="text-muted text-xs mb-0 mt-1">
+                            Klasifikasi ikatan kerja aktif yang menjadi penentu hak cuti, tunjangan, dan evaluasi kontrak
+                        </p>
+                    </div>
+                </div>
+
                 <div class="card-body p-3">
                     <div class="table-responsive">
                         <table id="table-status" class="table tsu-table-modern table-hover w-100">
                             <thead>
                                 <tr>
-                                    <th width="5%" class="text-center">NO</th>
-                                    <th>NAMA STATUS</th>
-                                    <th>KETERANGAN</th>
-                                    <th width="12%" class="text-center">STATUS</th>
-                                    <th width="15%" class="text-center">AKSI</th>
+                                    <th width="5%" class="text-center">No</th>
+                                    <th width="35%">Nama Status Kepegawaian</th>
+                                    <th width="35%">Keterangan</th>
+                                    <th width="12%" class="text-center">Status</th>
+                                    <th width="13%" class="text-center">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                            </tbody>
+                            <tbody></tbody>
                         </table>
                     </div>
                 </div>
@@ -320,78 +356,78 @@
         </div>
     </section>
 
-    {{-- MODAL CONTAINER --}}
+    {{-- ================= MODAL CONTAINER (AJAX) ================= --}}
     <div class="modal fade" id="modal-status" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-md modal-dialog-centered">
-            <div class="modal-content border-0 shadow-lg" id="modal-status-content" style="border-radius: 12px; overflow: hidden;">
-                {{-- Loaded via AJAX --}}
+        <div class="modal-dialog modal-md modal-dialog-centered" role="document">
+            <div class="modal-content" id="modal-status-content" style="border-radius: 12px; overflow: hidden; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
+                {{-- Loading State --}}
+                <div class="text-center p-5">
+                    <div class="spinner-border" style="color: var(--tsu-primary, #094b54);" role="status">
+                        <span class="sr-only">Loading...</span>
+                    </div>
+                    <p class="mt-3 text-muted font-weight-bold">Memuat Formulir...</p>
+                </div>
             </div>
         </div>
     </div>
 @endsection
 
 @section('script')
-    <!-- DataTables & SweetAlert2 JS -->
+    <!-- DataTables & Plugins -->
     <script src="{{ asset('assets/adminlte/plugins/datatables/jquery.dataTables.min.js') }}"></script>
     <script src="{{ asset('assets/adminlte/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
     <script src="{{ asset('assets/adminlte/plugins/datatables-responsive/js/dataTables.responsive.min.js') }}"></script>
-    <script src="{{ asset('assets/adminlte/plugins/datatables-responsive/js/responsive.bootstrap4.min.js') }}"></script>
     <script src="{{ asset('assets/adminlte/plugins/sweetalert2/sweetalert2.min.js') }}"></script>
 
     <script>
         $(document).ready(function() {
+            var dtLanguage = {
+                search: "_INPUT_",
+                searchPlaceholder: "Cari status karyawan...",
+                lengthMenu: "Tampilkan _MENU_ baris",
+                zeroRecords: "Tidak ada data yang sesuai",
+                info: "Menampilkan _START_ s/d _END_ dari _TOTAL_ data",
+                infoEmpty: "Menampilkan 0 s/d 0 dari 0 data",
+                infoFiltered: "(difilter dari _MAX_ total data)",
+                processing: '<div class="d-flex align-items-center justify-content-center" style="gap: 0.5rem;"><div class="spinner-border spinner-border-sm text-primary" role="status"></div> <span>Memuat data...</span></div>'
+            };
+
+            // Inisialisasi DataTable
             var table = $('#table-status').DataTable({
                 processing: true,
                 serverSide: true,
                 responsive: true,
+                autoWidth: false,
                 ajax: "{{ route('admin.master-status-karyawan.json') }}",
+                language: dtLanguage,
                 columns: [
                     { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, className: 'text-center' },
                     { data: 'nama_status', name: 'nama_status' },
                     { data: 'keterangan', name: 'keterangan' },
                     { data: 'status', name: 'status', className: 'text-center' },
                     { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-center' }
-                ],
-                language: {
-                    processing: '<div class="spinner-border spinner-border-sm text-primary" role="status"></div> Memuat data...',
-                    search: "Cari:",
-                    lengthMenu: "Tampilkan _MENU_ entri",
-                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
-                    infoEmpty: "Menampilkan 0 sampai 0 dari 0 entri",
-                    infoFiltered: "(disaring dari _MAX_ total entri)",
-                    paginate: {
-                        first: "Pertama",
-                        last: "Terakhir",
-                        next: "Selanjutnya",
-                        previous: "Sebelumnya"
-                    },
-                    emptyTable: "Tidak ada data status karyawan yang tersedia",
-                    zeroRecords: "Tidak ditemukan data yang sesuai"
-                }
+                ]
             });
 
-            // Tombol Refresh Data
+            // Tombol Reload Data
             $('#btn-reload').on('click', function() {
                 var $btn = $(this);
                 $btn.find('i').addClass('fa-spin');
                 table.ajax.reload(function() {
-                    setTimeout(function() {
-                        $btn.find('i').removeClass('fa-spin');
-                    }, 400);
+                    $btn.find('i').removeClass('fa-spin');
                 }, false);
             });
 
-            // Open Modal (Create / Edit)
-            $(document).on('click', '.btn-modal, .btn-edit', function(e) {
+            // Handler Modal Umum (Create & Edit)
+            $('body').on('click', '.btn-modal, .btn-edit', function(e) {
                 e.preventDefault();
-                var url = $(this).data('url');
-                if (!url) url = $(this).attr('href');
+                var url = $(this).data('url') || $(this).attr('href');
 
                 $('#modal-status').modal('show');
                 $('#modal-status-content').html(
                     '<div class="text-center p-5">' +
-                        '<div class="spinner-border text-primary" style="color: var(--tsu-primary, #094b54) !important;" role="status"></div>' +
-                        '<p class="text-muted mt-2 mb-0" style="font-size: 0.88rem;">Memuat form...</p>' +
+                    '    <div class="spinner-border" style="color: var(--tsu-primary, #094b54);" role="status"></div>' +
+                    '    <p class="mt-3 text-muted font-weight-bold">Memuat Formulir...</p>' +
                     '</div>'
                 );
 
@@ -403,116 +439,76 @@
                     },
                     error: function(xhr) {
                         $('#modal-status-content').html(
-                            '<div class="text-center p-4">' +
-                                '<i class="fas fa-exclamation-triangle text-danger fa-2x mb-2"></i>' +
-                                '<p class="text-danger font-weight-bold mb-0">Gagal memuat formulir.</p>' +
-                                '<small class="text-muted">Error ' + xhr.status + ': ' + (xhr.statusText || 'Terjadi kesalahan sistem') + '</small>' +
+                            '<div class="modal-body p-4 text-center">' +
+                            '    <div class="alert alert-danger mb-0">Gagal memuat formulir. Error: ' + xhr.status + '</div>' +
+                            '</div>' +
+                            '<div class="modal-footer p-3" style="background: #f8fafc;">' +
+                            '    <button type="button" class="btn btn-secondary px-3" data-dismiss="modal">Tutup</button>' +
                             '</div>'
                         );
                     }
                 });
             });
 
-            // Submit Form Modal via AJAX
-            $(document).on('submit', '#modal-status form', function(e) {
+            // Handler Submit Form AJAX via pikdiAjax
+            $('body').on('submit', '#modal-status form', function(e) {
                 e.preventDefault();
-                var $form = $(this);
-                var $btnSubmit = $form.find('button[type="submit"]');
-                var originalHtml = $btnSubmit.html();
+                var form = $(this);
+                var url = form.attr('action');
+                var method = form.attr('method');
+                var formData = form.serialize();
+                var btnSubmit = form.find('button[type="submit"]');
+                var originalBtnText = btnSubmit.html();
 
-                $btnSubmit.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Menyimpan...');
+                btnSubmit.html('<i class="fas fa-spinner fa-spin mr-1"></i> Menyimpan...').prop('disabled', true);
 
-                $.ajax({
-                    url: $form.attr('action'),
-                    type: $form.attr('method') || 'POST',
-                    data: $form.serialize(),
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    },
-                    success: function(res) {
+                pikdiAjax({
+                    url: url,
+                    type: method,
+                    data: formData,
+                    onSuccess: function(res) {
+                        btnSubmit.html(originalBtnText).prop('disabled', false);
                         $('#modal-status').modal('hide');
                         table.ajax.reload(null, false);
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Berhasil!',
-                            text: res.message || 'Status karyawan berhasil disimpan.',
-                            timer: 2000,
-                            showConfirmButton: false
-                        });
                     },
-                    error: function(xhr) {
-                        $btnSubmit.prop('disabled', false).html(originalHtml);
-                        var errMsg = 'Terjadi kesalahan sistem.';
-                        if (xhr.responseJSON && xhr.responseJSON.message) {
-                            errMsg = xhr.responseJSON.message;
-                        } else if (xhr.responseJSON && xhr.responseJSON.errors) {
-                            var errors = xhr.responseJSON.errors;
-                            errMsg = Object.values(errors).flat().join('<br>');
-                        }
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Gagal Menyimpan',
-                            html: errMsg
-                        });
+                    onError: function(xhr) {
+                        btnSubmit.html(originalBtnText).prop('disabled', false);
                     }
                 });
             });
 
             // Handle Delete / Toggle with SweetAlert2 Confirmation
-            $(document).on('click', '.btn-delete', function(e) {
+            $('body').on('click', '.btn-delete', function(e) {
                 e.preventDefault();
-                var $form = $(this).closest('form');
-                var actionUrl = $form.attr('action');
-                var rowName = $(this).closest('tr').find('td:eq(1)').find('.font-weight-bold').text().trim() || $(this).closest('tr').find('td:eq(1)').text().trim();
+                var btn = $(this);
+                var form = btn.closest('form');
+                var actionUrl = form.attr('action') || btn.data('url') || btn.attr('href');
+                var rowName = btn.closest('tr').find('td:eq(1)').find('.font-weight-bold').text().trim() || btn.closest('tr').find('td:eq(1)').text().trim();
 
                 Swal.fire({
                     title: 'Kelola Status Karyawan?',
                     html: "Tindakan ini akan memperbarui status aktif/non-aktif atau menghapus kategori: <br><strong>" + rowName + "</strong>.",
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonColor: '#094b54',
-                    cancelButtonColor: '#64748b',
                     confirmButtonText: '<i class="fas fa-check mr-1"></i> Ya, Lanjutkan!',
-                    cancelButtonText: 'Batal',
-                    reverseButtons: true
+                    cancelButtonText: '<i class="fas fa-times mr-1"></i> Batal',
+                    buttonsStyling: false,
+                    customClass: {
+                        confirmButton: 'btn btn-primary btn-md px-3 mr-2',
+                        cancelButton: 'btn btn-secondary btn-md px-3'
+                    },
+                    backdrop: `rgba(9, 75, 84, 0.25)`
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        Swal.fire({
-                            title: 'Memproses...',
-                            text: 'Mohon tunggu beberapa saat.',
-                            allowOutsideClick: false,
-                            didOpen: () => {
-                                Swal.showLoading();
-                            }
-                        });
-
-                        $.ajax({
+                        pikdiAjax({
                             url: actionUrl,
                             type: 'POST',
                             data: {
                                 _method: 'DELETE',
                                 _token: '{{ csrf_token() }}'
                             },
-                            success: function(res) {
+                            onSuccess: function(res) {
                                 table.ajax.reload(null, false);
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: 'Berhasil!',
-                                    text: res.message || 'Status karyawan berhasil diperbarui.',
-                                    timer: 2000,
-                                    showConfirmButton: false
-                                });
-                            },
-                            error: function(xhr) {
-                                var msg = 'Gagal memproses data.';
-                                if (xhr.responseJSON && xhr.responseJSON.message) {
-                                    msg = xhr.responseJSON.message;
-                                }
-                                Swal.fire({
-                                    icon: 'error',
-                                    title: 'Gagal',
-                                    text: msg
-                                });
                             }
                         });
                     }

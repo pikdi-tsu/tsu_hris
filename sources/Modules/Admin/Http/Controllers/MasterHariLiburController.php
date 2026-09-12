@@ -63,18 +63,18 @@ class MasterHariLiburController extends MiddlewareController
             ->addColumn('status_libur', function($row) {
                 $statusLower = strtolower($row->status_libur);
                 if ($statusLower === 'nasional') {
-                    return '<span class="badge" style="background: rgba(220, 38, 38, 0.1); color: #dc2626; border: 1px solid rgba(220, 38, 38, 0.25); font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.75rem;">Nasional</span>';
+                    return '<span class="badge" style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.76rem;">Nasional</span>';
                 }
                 if ($statusLower === 'cuti bersama') {
-                    return '<span class="badge" style="background: rgba(217, 119, 6, 0.1); color: #d97706; border: 1px solid rgba(217, 119, 6, 0.25); font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.75rem;">Cuti Bersama</span>';
+                    return '<span class="badge" style="background: #fffbeb; color: #d97706; border: 1px solid #fde68a; font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.76rem;">Cuti Bersama</span>';
                 }
-                return '<span class="badge" style="background: rgba(2, 132, 199, 0.1); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.25); font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.75rem;">Institusi</span>';
+                return '<span class="badge" style="background: #f0f9ff; color: #0284c7; border: 1px solid #bae6fd; font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.76rem;">Institusi</span>';
             })
             ->addColumn('isactive', function($row) {
                 if ($row->isactive === 'Y') {
-                    return '<div class="text-center"><span class="badge" style="background: rgba(16, 185, 129, 0.12); color: #047857; border: 1px solid rgba(16, 185, 129, 0.25); font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.75rem;"><i class="fas fa-check-circle mr-1"></i> Aktif</span></div>';
+                    return '<div class="text-center"><span class="badge" style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.76rem;">Aktif</span></div>';
                 }
-                return '<div class="text-center"><span class="badge" style="background: rgba(100, 116, 139, 0.12); color: #475569; border: 1px solid rgba(100, 116, 139, 0.25); font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.75rem;"><i class="fas fa-times-circle mr-1"></i> Non-Aktif</span></div>';
+                return '<div class="text-center"><span class="badge" style="background: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.76rem;">Non-Aktif</span></div>';
             })
             ->addColumn('action', function ($row) {
                 $canEdit   = auth()->user()->can('admin:hari-libur:edit');

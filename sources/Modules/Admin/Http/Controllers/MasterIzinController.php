@@ -54,9 +54,9 @@ class MasterIzinController extends MiddlewareController
             })
             ->editColumn('is_active', function ($row) {
                 if ($row->is_active === '1' || $row->is_active == 1) {
-                    return '<span class="badge badge-success px-2 py-1" style="font-size: 0.78rem; font-weight: 600;">Aktif</span>';
+                    return '<span class="badge" style="background: rgba(4, 120, 87, 0.12); color: #047857; border: 1px solid rgba(4, 120, 87, 0.25); font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.75rem;">Aktif</span>';
                 }
-                return '<span class="badge badge-secondary px-2 py-1" style="font-size: 0.78rem; font-weight: 600;">Non-Aktif</span>';
+                return '<span class="badge" style="background: rgba(100, 116, 139, 0.12); color: #64748b; border: 1px solid rgba(100, 116, 139, 0.25); font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.75rem;">Non-Aktif</span>';
             })
             ->addColumn('action', function ($row) {
                 $canEdit   = auth()->user()->can('admin:master-izin:edit');

@@ -56,33 +56,49 @@ class MasterTunjanganController extends MiddlewareController
             ->addColumn('nama_display', function ($row) {
                 $nama = e($row->nama_tunjangan);
                 if ($row->jabatanStruktural) {
-                    return '<div><div class="font-weight-bold text-dark">' . $nama . '</div><span class="badge badge-pill badge-light text-success border font-weight-normal px-2 py-0" style="font-size: 0.75rem;">Terhubung ke Master Jabatan</span></div>';
+                    return '<div><div class="font-weight-bold text-dark" style="font-size: 0.88rem;">' . $nama . '</div><span class="badge mt-1" style="background: rgba(9, 75, 84, 0.08); color: #094b54; border: 1px solid rgba(9, 75, 84, 0.2); font-weight: 500; padding: 0.2rem 0.5rem; font-size: 0.72rem; border-radius: 4px;">Terhubung ke Master Jabatan</span></div>';
                 }
-                return '<div><div class="font-weight-bold text-dark">' . $nama . '</div></div>';
+                return '<div><div class="font-weight-bold text-dark" style="font-size: 0.88rem;">' . $nama . '</div></div>';
             })
             ->addColumn('nominal_dasar_formatted', function ($row) {
                 return '<span class="text-muted" style="font-size: 0.88rem;">Rp ' . number_format($row->nominal_dasar ?: 0, 0, ',', '.') . '</span>';
             })
             ->addColumn('persen_bayar_badge', function ($row) {
                 $persen = floatval($row->persen_bayar);
-                $badgeClass = ($persen >= 100) ? 'badge-success' : (($persen >= 50) ? 'badge-primary' : 'badge-warning text-dark');
-                return '<span class="badge badge-pill ' . $badgeClass . ' px-2 py-1 font-weight-normal" style="font-size: 0.82rem;">' . number_format($persen, 0) . '%</span>';
+                if ($persen >= 100) {
+                    $style = 'background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0;';
+                } elseif ($persen >= 50) {
+                    $style = 'background: #f0fdfa; color: #094b54; border: 1px solid #cce6e9;';
+                } else {
+                    $style = 'background: #fffbeb; color: #b45309; border: 1px solid #fde68a;';
+                }
+                return '<span class="badge px-2 py-1 font-weight-bold" style="border-radius: 6px; font-size: 0.82rem; ' . $style . '">' . number_format($persen, 0) . '%</span>';
             })
             ->addColumn('nominal_formatted', function ($row) {
                 return '<span class="font-weight-bold" style="color: #047857; font-size: 0.92rem;">Rp ' . number_format($row->nominal_tunjangan ?: 0, 0, ',', '.') . '</span>';
             })
             ->addColumn('action', function ($row) {
+                $canEdit = auth()->user()->can('admin:master-tunjangan:edit');
+                $canDelete = auth()->user()->can('admin:master-tunjangan:delete');
+
                 $editUrl = route('admin.master-tunjangan.struktural.edit', $row->id);
                 $deleteUrl = route('admin.master-tunjangan.struktural.destroy', $row->id);
 
-                $btnEdit = '<button type="button" class="btn btn-primary btn-xs btn-modal mr-1" data-url="' . $editUrl . '" title="Edit Tunjangan">
-                                <i class="fas fa-edit"></i> Edit
-                            </button>';
-                $btnDelete = '<button type="button" class="btn btn-danger btn-xs btn-delete" data-url="' . $deleteUrl . '" data-name="' . htmlspecialchars($row->nama_tunjangan, ENT_QUOTES) . '" title="Hapus Tunjangan">
-                                <i class="fas fa-trash"></i>
-                            </button>';
+                $btn = '<div class="d-flex align-items-center justify-content-center" style="gap: 0.35rem;">';
+                if ($canEdit) {
+                    $btn .= '<button type="button" class="btn btn-sm btn-edit btn-modal" data-url="' . $editUrl . '" style="background: #fffbeb; color: #d97706; border: 1px solid #fde68a; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; transition: all 0.2s;" title="Edit Tunjangan"><i class="fas fa-pen"></i></button>';
+                } else {
+                    $btn .= '<button type="button" class="btn btn-sm" disabled style="background: #f1f5f9; color: #94a3b8; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; cursor: not-allowed; opacity: 0.6;" title="Akses Dibatasi"><i class="fas fa-lock"></i></button>';
+                }
 
-                return '<div class="text-center text-nowrap">' . $btnEdit . $btnDelete . '</div>';
+                if ($canDelete) {
+                    $btn .= '<button type="button" class="btn btn-sm btn-delete" data-url="' . $deleteUrl . '" data-name="' . htmlspecialchars($row->nama_tunjangan, ENT_QUOTES) . '" style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; transition: all 0.2s;" title="Hapus Tunjangan"><i class="fas fa-trash"></i></button>';
+                } else {
+                    $btn .= '<button type="button" class="btn btn-sm" disabled style="background: #f1f5f9; color: #94a3b8; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; cursor: not-allowed; opacity: 0.6;" title="Akses Dibatasi"><i class="fas fa-lock"></i></button>';
+                }
+
+                $btn .= '</div>';
+                return $btn;
             })
             ->rawColumns(['nama_display', 'nominal_dasar_formatted', 'persen_bayar_badge', 'nominal_formatted', 'action'])
             ->make(true);
@@ -227,30 +243,40 @@ class MasterTunjanganController extends MiddlewareController
         return DataTables::of($data)
             ->addIndexColumn()
             ->addColumn('kode_badge', function ($row) {
-                return $row->kode ? '<span class="badge badge-pill badge-primary px-2 py-1 font-weight-bold" style="font-size: 0.82rem;">' . e($row->kode) . '</span>' : '<span class="text-muted text-xs font-italic">-</span>';
+                return $row->kode ? '<span class="badge" style="background: rgba(9, 75, 84, 0.1); color: #094b54; border: 1px solid rgba(9, 75, 84, 0.25); font-weight: 700; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.82rem;">' . e($row->kode) . '</span>' : '<span class="text-muted text-xs font-italic">-</span>';
             })
             ->addColumn('nama_display', function ($row) {
                 $nama = e($row->nama_tunjangan);
                 if ($row->jabatanFungsional) {
-                    return '<div><div class="font-weight-bold text-dark">' . $nama . '</div><span class="badge badge-pill badge-light text-success border font-weight-normal px-2 py-0" style="font-size: 0.75rem;">Terhubung ke Master Fungsional</span></div>';
+                    return '<div><div class="font-weight-bold text-dark" style="font-size: 0.88rem;">' . $nama . '</div><span class="badge mt-1" style="background: rgba(9, 75, 84, 0.08); color: #094b54; border: 1px solid rgba(9, 75, 84, 0.2); font-weight: 500; padding: 0.2rem 0.5rem; font-size: 0.72rem; border-radius: 4px;">Terhubung ke Master Fungsional</span></div>';
                 }
-                return '<div><div class="font-weight-bold text-dark">' . $nama . '</div></div>';
+                return '<div><div class="font-weight-bold text-dark" style="font-size: 0.88rem;">' . $nama . '</div></div>';
             })
             ->addColumn('nominal_formatted', function ($row) {
                 return '<span class="font-weight-bold" style="color: #047857; font-size: 0.92rem;">Rp ' . number_format($row->nominal_tunjangan ?: 0, 0, ',', '.') . '</span>';
             })
             ->addColumn('action', function ($row) {
+                $canEdit = auth()->user()->can('admin:master-tunjangan:edit');
+                $canDelete = auth()->user()->can('admin:master-tunjangan:delete');
+
                 $editUrl = route('admin.master-tunjangan.fungsional.edit', $row->id);
                 $deleteUrl = route('admin.master-tunjangan.fungsional.destroy', $row->id);
 
-                $btnEdit = '<button type="button" class="btn btn-primary btn-xs btn-modal mr-1" data-url="' . $editUrl . '" title="Edit Tunjangan">
-                                <i class="fas fa-edit"></i> Edit
-                            </button>';
-                $btnDelete = '<button type="button" class="btn btn-danger btn-xs btn-delete" data-url="' . $deleteUrl . '" data-name="' . htmlspecialchars($row->nama_tunjangan, ENT_QUOTES) . '" title="Hapus Tunjangan">
-                                <i class="fas fa-trash"></i>
-                            </button>';
+                $btn = '<div class="d-flex align-items-center justify-content-center" style="gap: 0.35rem;">';
+                if ($canEdit) {
+                    $btn .= '<button type="button" class="btn btn-sm btn-edit btn-modal" data-url="' . $editUrl . '" style="background: #fffbeb; color: #d97706; border: 1px solid #fde68a; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; transition: all 0.2s;" title="Edit Tunjangan"><i class="fas fa-pen"></i></button>';
+                } else {
+                    $btn .= '<button type="button" class="btn btn-sm" disabled style="background: #f1f5f9; color: #94a3b8; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; cursor: not-allowed; opacity: 0.6;" title="Akses Dibatasi"><i class="fas fa-lock"></i></button>';
+                }
 
-                return '<div class="text-center text-nowrap">' . $btnEdit . $btnDelete . '</div>';
+                if ($canDelete) {
+                    $btn .= '<button type="button" class="btn btn-sm btn-delete" data-url="' . $deleteUrl . '" data-name="' . htmlspecialchars($row->nama_tunjangan, ENT_QUOTES) . '" style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; transition: all 0.2s;" title="Hapus Tunjangan"><i class="fas fa-trash"></i></button>';
+                } else {
+                    $btn .= '<button type="button" class="btn btn-sm" disabled style="background: #f1f5f9; color: #94a3b8; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; cursor: not-allowed; opacity: 0.6;" title="Akses Dibatasi"><i class="fas fa-lock"></i></button>';
+                }
+
+                $btn .= '</div>';
+                return $btn;
             })
             ->rawColumns(['kode_badge', 'nama_display', 'nominal_formatted', 'action'])
             ->make(true);

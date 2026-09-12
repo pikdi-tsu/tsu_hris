@@ -117,6 +117,8 @@
             box-shadow: 0 4px 16px rgba(9, 75, 84, 0.06);
             overflow: hidden;
             margin-bottom: 1.5rem;
+        }
+
         /* === Underline Nav Tabs (Matching Riwayat Cuti, Jabatan, & MPP) === */
         .card-tabs .card-header {
             background: #ffffff !important;
@@ -142,43 +144,27 @@
             border: none !important;
             border-bottom: 3px solid transparent !important;
             background: transparent !important;
-            background-color: transparent !important;
             border-radius: 0 !important;
             margin-bottom: -2px;
             text-decoration: none;
             transition: all 0.2s ease;
             box-shadow: none !important;
-            outline: none !important;
             cursor: pointer;
         }
         .card-tabs .card-header .nav-tabs.tsu-tab-nav .nav-link:hover,
-        .tsu-tab-nav .nav-link:hover {
+        .tsu-tab-nav .nav-link:hover,
+        .nav-tabs .nav-link:hover {
             color: var(--tsu-primary, #094b54) !important;
             background: transparent !important;
-            background-color: transparent !important;
-            border: none !important;
             border-bottom: 3px solid transparent !important;
         }
         .card-tabs .card-header .nav-tabs.tsu-tab-nav .nav-link.active,
-        .card-tabs .card-header .nav-tabs .nav-link.active,
-        .tsu-tab-nav .nav-link.active {
-            color: var(--tsu-primary-dark, #094b54) !important;
-            border: none !important;
+        .tsu-tab-nav .nav-link.active,
+        .nav-tabs .nav-link.active {
+            color: var(--tsu-primary, #094b54) !important;
             border-bottom: 3px solid var(--tsu-primary, #094b54) !important;
             background: transparent !important;
-            background-color: transparent !important;
-            font-weight: 700 !important;
-            box-shadow: none !important;
-            outline: none !important;
-        }
-        .card-tabs .card-header .nav-tabs.tsu-tab-nav .nav-link:focus,
-        .card-tabs .card-header .nav-tabs.tsu-tab-nav .nav-link.active:focus,
-        .tsu-tab-nav .nav-link:focus,
-        .tsu-tab-nav .nav-link.active:focus {
-            outline: none !important;
-            box-shadow: none !important;
-            border: none !important;
-            border-bottom: 3px solid var(--tsu-primary, #094b54) !important;
+            font-weight: 700;
         }
 
         /* === Modern Table Styles === */
@@ -254,35 +240,16 @@
     </style>
 @endsection
 
-    <div class="container-fluid">
-        <x-tsu-master-guide
-            title="Panduan Keterkaitan Master Tunjangan Pegawai"
-            description="Master Tunjangan mengatur komponen pendapatan tetap dan variabel pegawai (Tunjangan Jabatan Struktural, Fungsional Dosen, Tunjangan Beras/Keluarga, serta Tunjangan Khusus)."
-            :connections="[
-                ['label' => 'Penggajian (Payroll)', 'route' => 'admin.payroll.index', 'icon' => 'fas fa-money-check-alt'],
-                ['label' => 'Penetapan di Data Pegawai', 'route' => 'admin.data-karyawan.index', 'icon' => 'fas fa-user-tag'],
-                ['label' => 'Master Jabatan Terkait', 'route' => 'admin.master-jabatan.index', 'icon' => 'fas fa-sitemap']
-            ]"
-            impact="Besaran nominal tunjangan di sini otomatis masuk ke rincian penghasilan kotor (*Gross Earnings*) pada slip gaji bulanan pegawai yang memenuhi kriteria jabatan atau fungsionalnya."
-        />
-
-        {{-- Header Title --}}
-        <div class="d-flex justify-content-between align-items-center mb-3">
-            <div>
-                <h4 class="font-weight-bold text-dark mb-1">
-                    <i class="fas fa-hand-holding-usd text-primary mr-2"></i> Master Data Tunjangan Pegawai
-                </h4>
-                <p class="text-muted small mb-0">Kelola matriks tarif tunjangan struktural, tunjangan fungsional, dan ketentuan tunjangan keluarga (Tersambung Otomatis ke Payroll).</p>
-            </div>
-            <div>
-                <span class="badge badge-warning px-3 py-2 text-dark font-weight-bold shadow-sm">
-                    <i class="fas fa-lock mr-1"></i> Khusus Hak Akses Keuangan / Payroll
-                </span>
-            </div>
-        </div>
-
-            <button type="button" class="btn btn-sm tsu-btn-reload" id="btn-reload" title="Segarkan Data Tabel">
-                <i class="fas fa-sync-alt mr-1"></i> Refresh Data
+@section('content')
+    <x-tsu-page-header
+        :title="$title ?? 'Master Data Tunjangan Pegawai'"
+        subtitle="Kelola matriks tarif tunjangan struktural, fungsional, dan ketentuan tunjangan keluarga (Tersambung Otomatis ke Payroll)"
+        icon="fas fa-hand-holding-usd"
+        :breadcrumb="true"
+    >
+        <x-slot name="actions">
+            <button type="button" class="btn tsu-btn-reload btn-sm" id="btn-reload" title="Refresh Data">
+                <i class="fas fa-sync-alt mr-1"></i> Refresh
             </button>
         </x-slot>
     </x-tsu-page-header>
@@ -291,19 +258,17 @@
     <section class="content">
         <div class="container-fluid">
 
-            {{-- Stat Cards Grid --}}
+            {{-- Stat Cards Grid (4 Columns) --}}
             <div class="tsu-stat-grid-tunjangan">
                 {{-- Total Pos Tunjangan --}}
                 <div class="tsu-stat-card tsu-stat-card--total">
-                    <div class="tsu-stat-card__top">
-                        <span class="tsu-stat-card__label">Total Pos Tunjangan</span>
-                        <div class="tsu-stat-card__icon-badge">
-                            <i class="fas fa-coins"></i>
+                    <i class="fas fa-coins tsu-stat-card__icon"></i>
+                    <div>
+                        <div class="tsu-stat-card__title">Total Pos Tunjangan</div>
+                        <div class="tsu-stat-card__value">
+                            {{ number_format($stats['total'] ?? 0) }}
+                            <span class="tsu-stat-card__unit">Pos</span>
                         </div>
-                    </div>
-                    <div class="tsu-stat-card__value">
-                        {{ number_format($stats['total'] ?? 0) }}
-                        <span class="tsu-stat-card__unit">Pos</span>
                     </div>
                     <div class="tsu-stat-card__subtext">
                         Struktural & Fungsional Terdaftar
@@ -312,15 +277,13 @@
 
                 {{-- Tunjangan Struktural --}}
                 <div class="tsu-stat-card tsu-stat-card--struktural">
-                    <div class="tsu-stat-card__top">
-                        <span class="tsu-stat-card__label">Tunjangan Struktural</span>
-                        <div class="tsu-stat-card__icon-badge">
-                            <i class="fas fa-sitemap"></i>
+                    <i class="fas fa-sitemap tsu-stat-card__icon"></i>
+                    <div>
+                        <div class="tsu-stat-card__title">Tunjangan Struktural</div>
+                        <div class="tsu-stat-card__value">
+                            {{ number_format($stats['struktural'] ?? 0) }}
+                            <span class="tsu-stat-card__unit">Jabatan</span>
                         </div>
-                    </div>
-                    <div class="tsu-stat-card__value">
-                        {{ number_format($stats['struktural'] ?? 0) }}
-                        <span class="tsu-stat-card__unit">Jabatan</span>
                     </div>
                     <div class="tsu-stat-card__subtext">
                         Jabatan Struktural & Tugas Tambahan
@@ -329,15 +292,13 @@
 
                 {{-- Tunjangan Fungsional --}}
                 <div class="tsu-stat-card tsu-stat-card--fungsional">
-                    <div class="tsu-stat-card__top">
-                        <span class="tsu-stat-card__label">Tunjangan Fungsional</span>
-                        <div class="tsu-stat-card__icon-badge">
-                            <i class="fas fa-graduation-cap"></i>
+                    <i class="fas fa-graduation-cap tsu-stat-card__icon"></i>
+                    <div>
+                        <div class="tsu-stat-card__title">Tunjangan Fungsional</div>
+                        <div class="tsu-stat-card__value">
+                            {{ number_format($stats['fungsional'] ?? 0) }}
+                            <span class="tsu-stat-card__unit">Jenjang</span>
                         </div>
-                    </div>
-                    <div class="tsu-stat-card__value">
-                        {{ number_format($stats['fungsional'] ?? 0) }}
-                        <span class="tsu-stat-card__unit">Jenjang</span>
                     </div>
                     <div class="tsu-stat-card__subtext">
                         Jenjang Akademik Jafung Dosen
@@ -346,20 +307,30 @@
 
                 {{-- Tunjangan Keluarga --}}
                 <div class="tsu-stat-card tsu-stat-card--keluarga">
-                    <div class="tsu-stat-card__top">
-                        <span class="tsu-stat-card__label">Tunjangan Keluarga</span>
-                        <div class="tsu-stat-card__icon-badge">
-                            <i class="fas fa-users"></i>
+                    <i class="fas fa-users tsu-stat-card__icon"></i>
+                    <div>
+                        <div class="tsu-stat-card__title">Tunjangan Keluarga</div>
+                        <div class="tsu-stat-card__value" style="font-size: 1.45rem;">
+                            {{ $settingKeluarga->persen_suami_istri }}% + {{ $settingKeluarga->persen_anak }}%
                         </div>
-                    </div>
-                    <div class="tsu-stat-card__value" style="font-size: 1.45rem;">
-                        {{ $settingKeluarga->persen_suami_istri }}% + {{ $settingKeluarga->persen_anak }}%
                     </div>
                     <div class="tsu-stat-card__subtext">
                         Suami/Istri & Maks. {{ $settingKeluarga->maksimal_anak }} Anak
                     </div>
                 </div>
             </div>
+
+            {{-- Card Panduan (Placed BELOW Stat Cards) --}}
+            <x-tsu-master-guide
+                title="Panduan Keterkaitan Master Tunjangan Pegawai"
+                description="Master Tunjangan mengatur komponen pendapatan tetap dan variabel pegawai (Tunjangan Jabatan Struktural, Fungsional Dosen, Tunjangan Beras/Keluarga, serta Tunjangan Khusus)."
+                :connections="[
+                    ['label' => 'Penggajian (Payroll)', 'route' => 'admin.payroll.index', 'icon' => 'fas fa-money-check-alt'],
+                    ['label' => 'Penetapan di Data Pegawai', 'route' => 'admin.data-karyawan.index', 'icon' => 'fas fa-user-tag'],
+                    ['label' => 'Master Jabatan Terkait', 'route' => 'admin.master-jabatan.index', 'icon' => 'fas fa-sitemap']
+                ]"
+                impact="Besaran nominal tunjangan di sini otomatis masuk ke rincian penghasilan kotor (Gross Earnings) pada slip gaji bulanan pegawai yang memenuhi kriteria jabatan atau fungsionalnya."
+            />
 
             {{-- Card Container with Underline Tabs (Matching Master Jabatan) --}}
             <div class="card card-primary card-outline card-tabs tsu-card">

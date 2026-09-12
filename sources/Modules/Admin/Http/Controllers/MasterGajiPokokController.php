@@ -59,7 +59,7 @@ class MasterGajiPokokController extends MiddlewareController
         return DataTables::of($data)
             ->addIndexColumn()
             ->addColumn('golongan_badge', function ($row) {
-                return '<span class="badge badge-pill badge-primary px-3 py-1 font-weight-bold" style="font-size: 0.88rem;">' . e($row->golongan) . '</span>';
+                return '<span class="badge" style="background: rgba(9, 75, 84, 0.1); color: #094b54; border: 1px solid rgba(9, 75, 84, 0.25); font-weight: 700; padding: 0.35rem 0.75rem; border-radius: 6px; font-size: 0.82rem;">' . e($row->golongan) . '</span>';
             })
             ->addColumn('gapok_100_formatted', function ($row) {
                 return '<span class="font-weight-bold" style="color: #047857; font-size: 0.92rem;">Rp ' . number_format($row->gaji_pokok_100, 0, ',', '.') . '</span>';
@@ -79,9 +79,24 @@ class MasterGajiPokokController extends MiddlewareController
                 return $row->keterangan ? '<span class="text-muted" style="font-size: 0.83rem;">' . nl2br(e($row->keterangan)) . '</span>' : '<span class="text-muted text-xs font-italic">-</span>';
             })
             ->addColumn('action', function ($row) {
-                $btnEdit = '<button type="button" class="btn btn-xs btn-primary btn-modal mr-1" data-url="' . route('admin.master-gaji-pokok.edit', $row->id) . '" title="Edit Matriks"><i class="fas fa-edit"></i> Edit</button>';
-                $btnDelete = '<button type="button" class="btn btn-xs btn-danger btn-delete" data-url="' . route('admin.master-gaji-pokok.destroy', $row->id) . '" data-name="Golongan ' . htmlspecialchars($row->golongan, ENT_QUOTES) . '" title="Hapus Golongan"><i class="fas fa-trash"></i></button>';
-                return '<div class="text-center text-nowrap">' . $btnEdit . $btnDelete . '</div>';
+                $canEdit = auth()->user()->can('admin:master-gaji-pokok:edit');
+                $canDelete = auth()->user()->can('admin:master-gaji-pokok:delete');
+
+                $btn = '<div class="d-flex align-items-center justify-content-center" style="gap: 0.35rem;">';
+                if ($canEdit) {
+                    $btn .= '<button type="button" class="btn btn-sm btn-edit btn-modal" data-url="' . route('admin.master-gaji-pokok.edit', $row->id) . '" style="background: #fffbeb; color: #d97706; border: 1px solid #fde68a; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; transition: all 0.2s;" title="Edit Matriks"><i class="fas fa-pen"></i></button>';
+                } else {
+                    $btn .= '<button type="button" class="btn btn-sm" disabled style="background: #f1f5f9; color: #94a3b8; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; cursor: not-allowed; opacity: 0.6;" title="Akses Dibatasi"><i class="fas fa-lock"></i></button>';
+                }
+
+                if ($canDelete) {
+                    $btn .= '<button type="button" class="btn btn-sm btn-delete" data-url="' . route('admin.master-gaji-pokok.destroy', $row->id) . '" data-name="Golongan ' . htmlspecialchars($row->golongan, ENT_QUOTES) . '" style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; transition: all 0.2s;" title="Hapus Golongan"><i class="fas fa-trash"></i></button>';
+                } else {
+                    $btn .= '<button type="button" class="btn btn-sm" disabled style="background: #f1f5f9; color: #94a3b8; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; cursor: not-allowed; opacity: 0.6;" title="Akses Dibatasi"><i class="fas fa-lock"></i></button>';
+                }
+
+                $btn .= '</div>';
+                return $btn;
             })
             ->rawColumns(['golongan_badge', 'gapok_100_formatted', 'gapok_80_formatted', 'berkala_formatted', 'keterangan_display', 'action'])
             ->make(true);

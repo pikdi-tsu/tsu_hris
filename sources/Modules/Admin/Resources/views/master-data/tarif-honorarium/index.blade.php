@@ -9,6 +9,17 @@
     <link rel="stylesheet" href="{{ asset('assets/adminlte/plugins/select2/css/select2.min.css') }}">
 
     <style>
+        /* === TSU Design System Tokens === */
+        :root {
+            --tsu-primary: #094b54;
+            --tsu-primary-hover: #0c6170;
+            --tsu-primary-dark: #07383f;
+            --tsu-primary-light: #cce6e9;
+            --tsu-accent-green: #047857;
+            --tsu-radius: 8px;
+            --tsu-radius-lg: 12px;
+        }
+
         /* === TSU Stat Cards Grid (4 Columns) === */
         .tsu-stat-grid-honor {
             display: grid;
@@ -26,6 +37,7 @@
                 grid-template-columns: 1fr;
             }
         }
+
         .tsu-stat-card {
             border-radius: var(--tsu-radius-lg, 12px);
             padding: 1.15rem 1.25rem;
@@ -36,36 +48,32 @@
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            min-height: 110px;
         }
         .tsu-stat-card:hover {
             transform: translateY(-3px);
             box-shadow: 0 8px 20px rgba(9, 75, 84, 0.15);
         }
-        .tsu-stat-card__top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 0.65rem;
+
+        .tsu-stat-card__icon {
+            position: absolute;
+            right: 1.25rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 3.2rem;
+            opacity: 0.15;
+            pointer-events: none;
         }
-        .tsu-stat-card__label {
+
+        .tsu-stat-card__title {
             font-size: 0.78rem;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.05em;
             opacity: 0.95;
-            margin: 0;
+            margin-bottom: 0.4rem;
         }
-        .tsu-stat-card__icon-badge {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1rem;
-            flex-shrink: 0;
-        }
+
         .tsu-stat-card__value {
             font-size: 1.65rem;
             font-weight: 800;
@@ -76,15 +84,17 @@
             align-items: baseline;
             gap: 0.35rem;
         }
+
         .tsu-stat-card__unit {
             font-size: 0.9rem;
             font-weight: 600;
             opacity: 0.85;
         }
+
         .tsu-stat-card__subtext {
             font-size: 0.75rem;
             font-weight: 500;
-            opacity: 0.85;
+            opacity: 0.88;
             line-height: 1.25;
             white-space: nowrap;
             overflow: hidden;
@@ -117,6 +127,20 @@
             box-shadow: 0 4px 16px rgba(9, 75, 84, 0.06);
             overflow: hidden;
             margin-bottom: 1.5rem;
+        }
+
+        .tsu-card__header {
+            background: #ffffff;
+            border-bottom: 1px solid var(--tsu-border-gray, #e2e8f0);
+            padding: 1.1rem 1.4rem;
+        }
+
+        .tsu-card__title {
+            color: var(--tsu-primary-dark, #07383f);
+            font-weight: 700;
+            font-size: 1.05rem;
+            letter-spacing: -0.01em;
+            margin: 0;
         }
 
         /* === Modern Table Styles === */
@@ -193,33 +217,22 @@
 @endsection
 
 @section('content')
-    <x-tsu-master-guide
-        title="Panduan Keterkaitan Master Tarif Honorarium Dosen"
-        description="Master Tarif Honorarium mengatur standar honor akademik: Honor Mengajar Kelebihan SKS / Dosen LB, Pembimbingan Tugas Akhir/Skripsi, Penguji Sidang, serta Koreksi Ujian."
-        :connections="[
-            ['label' => 'Rekap Honorarium Dosen', 'route' => 'admin.honorarium.index', 'icon' => 'fas fa-file-invoice-dollar'],
-            ['label' => 'Data Jafung Dosen', 'route' => 'admin.data-karyawan.index', 'icon' => 'fas fa-user-graduate'],
-            ['label' => 'Integrasi Payroll Akhir Bulan', 'route' => 'admin.payroll.index', 'icon' => 'fas fa-receipt']
-        ]"
-        impact="Perubahan tarif per SKS atau tarif per mahasiswa bimbingan langsung mempengaruhi nominal rupiah yang tertera pada laporan rekapitulasi honorarium dosen serta slip transfer gaji bulanan."
-    />
-
-    <div class="card card-primary card-outline shadow-sm">
-        <div class="card-header d-flex flex-wrap align-items-center justify-content-between">
-            <h3 class="card-title font-weight-bold">
-                <i class="fas fa-money-bill-wave text-primary mr-2"></i> {{ $title ?? 'Master Tarif Honorarium Dosen' }}
-            </h3>
-
-            <div class="d-flex gap-2 ml-auto">
-                <button type="button" class="btn btn-success btn-modal btn-sm font-weight-bold"
+    <x-tsu-page-header
+        :title="$title ?? 'Master Tarif Honorarium Dosen'"
+        subtitle="Atur standar honor kelebihan SKS, bimbingan dan penguji skripsi/TA, serta honor kepanitiaan ujian"
+        icon="fas fa-money-bill-wave"
+        :breadcrumb="true"
+    >
+        <x-slot name="actions">
+            <button type="button" class="btn tsu-btn-reload btn-sm" id="btn-reload" title="Refresh Data">
+                <i class="fas fa-sync-alt mr-1"></i> Refresh
+            </button>
+            @can('admin:master-tarif-honorarium:create')
+                <button type="button" class="btn btn-sm tsu-btn-primary-action btn-modal ml-2"
                     data-url="{{ route('admin.master-tarif-honorarium.create') }}" title="Tambah Tarif Jabatan Fungsional">
                     <i class="fas fa-plus mr-1"></i> Tambah Tarif Jafung
                 </button>
             @endcan
-
-            <button type="button" class="btn btn-sm tsu-btn-reload" id="btn-reload" title="Segarkan Data Tabel">
-                <i class="fas fa-sync-alt mr-1"></i> Refresh Data
-            </button>
         </x-slot>
     </x-tsu-page-header>
 
@@ -227,19 +240,17 @@
     <section class="content">
         <div class="container-fluid">
 
-            {{-- Stat Cards Grid --}}
+            {{-- Stat Cards Grid (4 Columns) --}}
             <div class="tsu-stat-grid-honor">
                 {{-- Total Jafung --}}
                 <div class="tsu-stat-card tsu-stat-card--total">
-                    <div class="tsu-stat-card__top">
-                        <span class="tsu-stat-card__label">Total Jafung</span>
-                        <div class="tsu-stat-card__icon-badge">
-                            <i class="fas fa-graduation-cap"></i>
+                    <i class="fas fa-graduation-cap tsu-stat-card__icon"></i>
+                    <div>
+                        <div class="tsu-stat-card__title">Total Jafung</div>
+                        <div class="tsu-stat-card__value">
+                            {{ number_format($stats['total'] ?? 0) }}
+                            <span class="tsu-stat-card__unit">Jafung</span>
                         </div>
-                    </div>
-                    <div class="tsu-stat-card__value">
-                        {{ number_format($stats['total'] ?? 0) }}
-                        <span class="tsu-stat-card__unit">Jafung</span>
                     </div>
                     <div class="tsu-stat-card__subtext">
                         Jenjang Jabatan Fungsional Dosen
@@ -248,14 +259,12 @@
 
                 {{-- Tarif Kelebihan SKS --}}
                 <div class="tsu-stat-card tsu-stat-card--sks">
-                    <div class="tsu-stat-card__top">
-                        <span class="tsu-stat-card__label">Tarif Kelebihan SKS</span>
-                        <div class="tsu-stat-card__icon-badge">
-                            <i class="fas fa-chalkboard-teacher"></i>
+                    <i class="fas fa-chalkboard-teacher tsu-stat-card__icon"></i>
+                    <div>
+                        <div class="tsu-stat-card__title">Tarif Kelebihan SKS</div>
+                        <div class="tsu-stat-card__value" style="font-size: 1.3rem;">
+                            Rp {{ number_format($stats['min_sks'] ?? 0, 0, ',', '.') }} - {{ number_format($stats['max_sks'] ?? 0, 0, ',', '.') }}
                         </div>
-                    </div>
-                    <div class="tsu-stat-card__value" style="font-size: 1.35rem;">
-                        Rp {{ number_format($stats['min_sks'] ?? 0, 0, ',', '.') }} - {{ number_format($stats['max_sks'] ?? 0, 0, ',', '.') }}
                     </div>
                     <div class="tsu-stat-card__subtext">
                         Tarif Per SKS / Pertemuan Hadir
@@ -264,14 +273,12 @@
 
                 {{-- Rata-rata Bimbingan TA --}}
                 <div class="tsu-stat-card tsu-stat-card--ta">
-                    <div class="tsu-stat-card__top">
-                        <span class="tsu-stat-card__label">Rata-Rata Bimbingan TA</span>
-                        <div class="tsu-stat-card__icon-badge">
-                            <i class="fas fa-user-graduate"></i>
+                    <i class="fas fa-user-graduate tsu-stat-card__icon"></i>
+                    <div>
+                        <div class="tsu-stat-card__title">Rata-Rata Bimbingan TA</div>
+                        <div class="tsu-stat-card__value" style="font-size: 1.45rem;">
+                            Rp {{ number_format($stats['avg_ta'] ?? 0, 0, ',', '.') }}
                         </div>
-                    </div>
-                    <div class="tsu-stat-card__value" style="font-size: 1.45rem;">
-                        Rp {{ number_format($stats['avg_ta'] ?? 0, 0, ',', '.') }}
                     </div>
                     <div class="tsu-stat-card__subtext">
                         Honor Pembimbing Tugas Akhir / Mhs
@@ -280,21 +287,31 @@
 
                 {{-- Kategori Honorarium --}}
                 <div class="tsu-stat-card tsu-stat-card--group">
-                    <div class="tsu-stat-card__top">
-                        <span class="tsu-stat-card__label">Kelompok Honor</span>
-                        <div class="tsu-stat-card__icon-badge">
-                            <i class="fas fa-file-invoice-dollar"></i>
+                    <i class="fas fa-file-invoice-dollar tsu-stat-card__icon"></i>
+                    <div>
+                        <div class="tsu-stat-card__title">Kelompok Honor</div>
+                        <div class="tsu-stat-card__value">
+                            3
+                            <span class="tsu-stat-card__unit">Kelompok</span>
                         </div>
-                    </div>
-                    <div class="tsu-stat-card__value">
-                        3
-                        <span class="tsu-stat-card__unit">Kelompok</span>
                     </div>
                     <div class="tsu-stat-card__subtext">
                         8A SKS, 8B TA/KP, 8C UTS & UAS
                     </div>
                 </div>
             </div>
+
+            {{-- Card Panduan (Placed BELOW Stat Cards) --}}
+            <x-tsu-master-guide
+                title="Panduan Keterkaitan Master Tarif Honorarium Dosen"
+                description="Master Tarif Honorarium mengatur standar honor akademik: Honor Mengajar Kelebihan SKS / Dosen LB, Pembimbingan Tugas Akhir/Skripsi, Penguji Sidang, serta Koreksi Ujian."
+                :connections="[
+                    ['label' => 'Rekap Honorarium Dosen', 'route' => 'admin.honorarium.index', 'icon' => 'fas fa-file-invoice-dollar'],
+                    ['label' => 'Data Jafung Dosen', 'route' => 'admin.data-karyawan.index', 'icon' => 'fas fa-user-graduate'],
+                    ['label' => 'Integrasi Payroll Akhir Bulan', 'route' => 'admin.payroll.index', 'icon' => 'fas fa-receipt']
+                ]"
+                impact="Perubahan tarif per SKS atau tarif per mahasiswa bimbingan langsung mempengaruhi nominal rupiah yang tertera pada laporan rekapitulasi honorarium dosen serta slip transfer gaji bulanan."
+            />
 
             {{-- Helper Information Alert --}}
             <div class="alert alert-info border-0 mb-3 shadow-sm" style="background-color: #f0fdfa; border-left: 4px solid #0c6170 !important; border-radius: 10px; color: #0f766e;">
@@ -313,6 +330,14 @@
 
             {{-- Main Table Card --}}
             <div class="tsu-card">
+                <div class="tsu-card__header d-flex flex-wrap align-items-center justify-content-between">
+                    <h5 class="tsu-card__title">
+                        <i class="fas fa-table text-muted mr-2"></i>Daftar Tarif Honorarium Berdasarkan Jabatan Fungsional
+                    </h5>
+                    <div class="text-muted" style="font-size: 0.82rem;">
+                        Standar SK Rektor untuk TP, AA, L, LK, dan GB
+                    </div>
+                </div>
                 <div class="card-body p-3">
                     <div class="table-responsive">
                         <table id="table-tarif-honor" class="table tsu-table-modern table-hover w-100">

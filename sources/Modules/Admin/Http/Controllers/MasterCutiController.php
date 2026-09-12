@@ -52,26 +52,28 @@ class MasterCutiController extends MiddlewareController
             ->addIndexColumn()
             ->addColumn('kategori_badge', function ($row) {
                 if ($row->kategori_cuti === 'khusus') {
-                    return '<span class="badge badge-success px-2 py-1" style="background:#0f766e;color:#fff;"><i class="fas fa-certificate mr-1"></i> Cuti Khusus (SE)</span>';
+                    return '<span class="badge" style="background: rgba(9, 75, 84, 0.1); color: #094b54; border: 1px solid rgba(9, 75, 84, 0.25); font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.75rem;">Cuti Khusus (SE)</span>';
                 }
-                return '<span class="badge badge-primary px-2 py-1" style="background:#0284c7;color:#fff;"><i class="fas fa-calendar-alt mr-1"></i> Cuti Tahunan / Reguler</span>';
+                return '<span class="badge" style="background: rgba(2, 132, 199, 0.12); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.25); font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.75rem;">Cuti Tahunan / Reguler</span>';
             })
             ->addColumn('aturan_badge', function ($row) {
                 $html = '';
                 if ($row->memotong_kuota == 1) {
-                    $html .= '<span class="badge badge-warning text-dark"><i class="fas fa-minus-circle mr-1"></i> Potong Kuota</span>';
+                    $html .= '<span class="badge" style="background: rgba(180, 83, 9, 0.12); color: #b45309; border: 1px solid rgba(180, 83, 9, 0.25); font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.75rem;">Potong Kuota</span>';
                 } else {
-                    $html .= '<span class="badge badge-info"><i class="fas fa-check-circle mr-1"></i> Tanpa Potong Kuota</span>';
+                    $html .= '<span class="badge" style="background: rgba(4, 120, 87, 0.12); color: #047857; border: 1px solid rgba(4, 120, 87, 0.25); font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.75rem;">Tanpa Potong Kuota</span>';
                 }
 
                 if ($row->khusus_pegawai_tetap == 1) {
-                    $html .= ' <span class="badge badge-secondary"><i class="fas fa-user-lock mr-1"></i> Khusus Tetap</span>';
+                    $html .= ' <span class="badge ml-1" style="background: rgba(100, 116, 139, 0.12); color: #475569; border: 1px solid rgba(100, 116, 139, 0.25); font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.75rem;">Khusus Tetap</span>';
                 }
                 return $html;
             })
             ->addColumn('is_active', function ($row) {
-                if ($row->is_active === '1') return '<span class="badge badge-success"><i class="fas fa-check-circle"></i> Aktif</span>';
-                return '<span class="badge badge-secondary"><i class="fas fa-times-circle"></i> Non-Aktif</span>';
+                if ($row->is_active === '1') {
+                    return '<span class="badge" style="background: rgba(4, 120, 87, 0.12); color: #047857; border: 1px solid rgba(4, 120, 87, 0.25); font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.75rem;">Aktif</span>';
+                }
+                return '<span class="badge" style="background: rgba(100, 116, 139, 0.12); color: #64748b; border: 1px solid rgba(100, 116, 139, 0.25); font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.75rem;">Non-Aktif</span>';
             })
             ->addColumn('action', function ($row) {
                 $canEdit   = auth()->user()->can('admin:master-cuti:edit');

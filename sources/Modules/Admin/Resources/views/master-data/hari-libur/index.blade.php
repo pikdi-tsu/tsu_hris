@@ -1,108 +1,128 @@
 @extends('system::template.admin.header')
-@section('title', $title)
+@section('title', $title ?? 'Master Data Hari Libur')
 
 @section('link_href')
     <!-- DataTables -->
     <link rel="stylesheet" href="{{ asset('assets/adminlte/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/adminlte/plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/adminlte/plugins/sweetalert2/sweetalert2.min.css') }}">
+@endsection
 
+@section('css')
     <style>
+        /* === TSU Color Tokens === */
+        :root {
+            --tsu-primary: #094b54;
+            --tsu-primary-dark: #07383f;
+            --tsu-primary-light: #cce6e9;
+            --tsu-accent-green: #047857;
+            --tsu-accent-amber: #b45309;
+            --tsu-accent-blue: #0284c7;
+            --tsu-bg-gray: #f8fafc;
+            --tsu-border-gray: #e2e8f0;
+            --tsu-radius: 8px;
+            --tsu-radius-lg: 12px;
+        }
+
         /* === TSU Stat Cards Grid (4 Columns) === */
         .tsu-stat-grid-libur {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
             gap: 1rem;
-            margin-bottom: 1.25rem;
+            margin-bottom: 1.5rem;
         }
-        @media (max-width: 992px) {
+
+        @media (max-width: 991.98px) {
             .tsu-stat-grid-libur {
                 grid-template-columns: repeat(2, 1fr);
             }
         }
-        @media (max-width: 576px) {
+
+        @media (max-width: 575.98px) {
             .tsu-stat-grid-libur {
                 grid-template-columns: 1fr;
             }
         }
+
         .tsu-stat-card {
             border-radius: var(--tsu-radius-lg, 12px);
-            padding: 1.15rem 1.25rem;
-            box-shadow: 0 4px 14px rgba(9, 75, 84, 0.08);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            padding: 1.25rem 1.35rem;
             position: relative;
             overflow: hidden;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.07);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
+            min-height: 112px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
+
         .tsu-stat-card:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 20px rgba(9, 75, 84, 0.15);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
         }
-        .tsu-stat-card__top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 0.65rem;
+
+        .tsu-stat-card__icon {
+            position: absolute;
+            right: 1.1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 3.2rem;
+            opacity: 0.15;
+            pointer-events: none;
         }
-        .tsu-stat-card__label {
-            font-size: 0.78rem;
+
+        .tsu-stat-card__title {
+            font-size: 0.76rem;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            opacity: 0.95;
-            margin: 0;
+            margin-bottom: 0.4rem;
+            opacity: 0.9;
         }
-        .tsu-stat-card__icon-badge {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1rem;
-            flex-shrink: 0;
-        }
+
         .tsu-stat-card__value {
-            font-size: 1.85rem;
+            font-size: 1.75rem;
             font-weight: 800;
-            line-height: 1.15;
-            letter-spacing: -0.02em;
-            margin-bottom: 0.25rem;
+            line-height: 1.1;
+            margin-bottom: 0.3rem;
             display: flex;
             align-items: baseline;
             gap: 0.35rem;
         }
+
         .tsu-stat-card__unit {
             font-size: 0.9rem;
             font-weight: 600;
             opacity: 0.85;
         }
+
         .tsu-stat-card__subtext {
             font-size: 0.75rem;
             font-weight: 500;
-            opacity: 0.85;
+            opacity: 0.88;
             line-height: 1.25;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
         }
 
-        /* Card Color Schemes */
+        /* Stat Card Gradient Variations */
         .tsu-stat-card--total {
             background: linear-gradient(135deg, #094b54 0%, #0c6170 100%);
             color: #ffffff;
         }
+
         .tsu-stat-card--nasional {
-            background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+            background: linear-gradient(135deg, #b91c1c 0%, #e11d48 100%);
             color: #ffffff;
         }
+
         .tsu-stat-card--institusi {
             background: linear-gradient(135deg, #b45309 0%, #d97706 100%);
             color: #ffffff;
         }
+
         .tsu-stat-card--active {
             background: linear-gradient(135deg, #047857 0%, #10b981 100%);
             color: #ffffff;
@@ -118,6 +138,30 @@
             margin-bottom: 1.5rem;
         }
 
+        .tsu-card__header {
+            background: #ffffff;
+            border-bottom: 1px solid var(--tsu-border-gray, #e2e8f0);
+            padding: 1.1rem 1.4rem;
+        }
+
+        .tsu-card__title {
+            color: var(--tsu-primary-dark, #07383f);
+            font-weight: 700;
+            font-size: 1.05rem;
+            letter-spacing: -0.01em;
+            margin: 0;
+        }
+
+        .tsu-badge-info-clean {
+            background: #f0fdf4;
+            color: #166534;
+            border: 1px solid #bbf7d0;
+            border-radius: 6px;
+            font-size: 0.78rem;
+            padding: 0.35rem 0.75rem;
+            font-weight: 600;
+        }
+
         /* === Modern Table Styles === */
         .tsu-table-modern thead th {
             background: #f8fafc !important;
@@ -127,15 +171,18 @@
             text-transform: uppercase !important;
             letter-spacing: 0.04em !important;
             border-bottom: 2px solid var(--tsu-primary-light, #cce6e9) !important;
+            border-top: none !important;
             vertical-align: middle !important;
             padding: 0.75rem 1rem !important;
         }
+
         .tsu-table-modern tbody td {
             vertical-align: middle !important;
             font-size: 0.85rem;
             padding: 0.75rem 1rem !important;
             border-color: #f1f5f9 !important;
         }
+
         .tsu-table-modern tbody tr:hover {
             background-color: #f8fafc !important;
         }
@@ -150,26 +197,30 @@
             padding: 0.45rem 1rem;
             transition: all 0.2s ease;
         }
+
         .tsu-btn-reload:hover {
             background: var(--tsu-primary, #094b54);
             color: #ffffff;
             border-color: var(--tsu-primary, #094b54);
         }
+
         .tsu-btn-primary-action {
-            background: linear-gradient(135deg, #094b54 0%, #0c6170 100%);
+            background: linear-gradient(135deg, var(--tsu-primary, #094b54) 0%, #0c6170 100%) !important;
             color: #ffffff !important;
             border: none;
             border-radius: var(--tsu-radius, 8px);
             font-weight: 600;
-            padding: 0.45rem 1.1rem;
+            padding: 0.45rem 1.15rem;
             transition: all 0.2s ease;
             box-shadow: 0 2px 6px rgba(9, 75, 84, 0.2);
         }
+
         .tsu-btn-primary-action:hover {
             transform: translateY(-1px);
             box-shadow: 0 4px 10px rgba(9, 75, 84, 0.3);
             color: #ffffff !important;
         }
+
         .tsu-btn-sync {
             background: #ffffff;
             color: #b45309 !important;
@@ -179,6 +230,7 @@
             padding: 0.45rem 1.05rem;
             transition: all 0.2s ease;
         }
+
         .tsu-btn-sync:hover {
             background: #fef3c7;
             color: #92400e !important;
@@ -190,41 +242,43 @@
             background-color: var(--tsu-primary, #094b54) !important;
             border-color: var(--tsu-primary, #094b54) !important;
         }
+
         .dataTables_wrapper .dataTables_filter input {
             border-radius: var(--tsu-radius, 8px) !important;
             border: 1.5px solid #cbd5e1;
-            padding: 0.35rem 0.75rem;
+            padding: 0.38rem 0.75rem;
             font-size: 0.85rem;
             transition: border-color 0.2s;
         }
+
         .dataTables_wrapper .dataTables_filter input:focus {
             border-color: var(--tsu-primary, #094b54) !important;
             box-shadow: 0 0 0 3px rgba(9, 75, 84, 0.12) !important;
             outline: none;
         }
+
+        .dataTables_wrapper .dataTables_length select {
+            border-radius: var(--tsu-radius, 8px) !important;
+            border: 1.5px solid #cbd5e1;
+            padding: 0.35rem 1.8rem 0.35rem 0.65rem;
+            font-size: 0.85rem;
+        }
     </style>
 @endsection
 
 @section('content')
-    <x-tsu-master-guide
-        title="Panduan Keterkaitan Master Hari Libur"
-        description="Master Hari Libur mencatat seluruh tanggal merah resmi, cuti bersama nasional (Sync API), serta hari libur khusus internal yayasan/universitas (Dies Natalis, dll.)."
-        :connections="[
-            ['label' => 'Pengajuan Cuti Pegawai', 'route' => 'users.cuti.index', 'icon' => 'fas fa-calendar-alt'],
-            ['label' => 'Validasi Absensi Harian', 'route' => 'admin.absensi.index', 'icon' => 'fas fa-calendar-day'],
-            ['label' => 'Jadwal Piket Satpam/Tendik', 'route' => 'admin.jadwal-piket.index', 'icon' => 'fas fa-shield-alt'],
-            ['label' => 'Lembur Hari Libur', 'route' => 'users.lembur.index', 'icon' => 'fas fa-business-time']
-        ]"
-        impact="Tanggal libur otomatis dilewati (*dikecualikan*) dari pemotongan hari kerja saat pegawai mengajukan cuti, tidak dianggap alpa pada rekap absensi, serta menjadi acuan tarif lembur hari libur."
-    />
-
-    <div class="card card-primary card-outline">
-        <div class="card-header d-flex align-items-center">
-            <h3 class="card-title mr-4">Data Master Hari Libur</h3>
-
-            <div class="d-flex gap-2 ml-auto">
-                <button type="button" class="btn btn-success btn-modal btn-sm" data-url="{{ route('admin.hari-libur.create') }}" title="Buat Libur Internal">
-                    <i class="fas fa-plus"></i> Tambah Libur Internal
+    {{-- TSU Page Header --}}
+    <x-tsu-page-header
+        :title="$title ?? 'Data Master Hari Libur'"
+        subtitle="Kelola data hari libur nasional, cuti bersama, dan agenda libur internal universitas"
+        icon="far fa-calendar-alt"
+        :breadcrumb="true"
+    >
+        <x-slot name="actions">
+            {{-- Tombol Tambah Libur Internal --}}
+            @can('admin:hari-libur:create')
+                <button type="button" class="btn btn-sm tsu-btn-primary-action btn-modal mr-2" data-url="{{ route('admin.hari-libur.create') }}" title="Buat Libur Internal">
+                    <i class="fas fa-plus mr-1"></i> Tambah Libur Internal
                 </button>
             @endcan
 
@@ -250,12 +304,10 @@
             <div class="tsu-stat-grid-libur">
                 {{-- Total Hari Libur --}}
                 <div class="tsu-stat-card tsu-stat-card--total">
-                    <div class="tsu-stat-card__top">
-                        <span class="tsu-stat-card__label">Total Hari Libur</span>
-                        <div class="tsu-stat-card__icon-badge">
-                            <i class="far fa-calendar-alt"></i>
-                        </div>
+                    <div class="tsu-stat-card__icon">
+                        <i class="far fa-calendar-alt"></i>
                     </div>
+                    <div class="tsu-stat-card__title">Total Hari Libur</div>
                     <div class="tsu-stat-card__value">
                         {{ number_format($stats['total'] ?? 0) }}
                         <span class="tsu-stat-card__unit">Hari</span>
@@ -267,12 +319,10 @@
 
                 {{-- Libur Nasional --}}
                 <div class="tsu-stat-card tsu-stat-card--nasional">
-                    <div class="tsu-stat-card__top">
-                        <span class="tsu-stat-card__label">Libur Nasional</span>
-                        <div class="tsu-stat-card__icon-badge">
-                            <i class="fas fa-flag"></i>
-                        </div>
+                    <div class="tsu-stat-card__icon">
+                        <i class="fas fa-flag"></i>
                     </div>
+                    <div class="tsu-stat-card__title">Libur Nasional</div>
                     <div class="tsu-stat-card__value">
                         {{ number_format($stats['nasional'] ?? 0) }}
                         <span class="tsu-stat-card__unit">Hari</span>
@@ -284,12 +334,10 @@
 
                 {{-- Libur Institusi & Bersama --}}
                 <div class="tsu-stat-card tsu-stat-card--institusi">
-                    <div class="tsu-stat-card__top">
-                        <span class="tsu-stat-card__label">Institusi & Cuti Bersama</span>
-                        <div class="tsu-stat-card__icon-badge">
-                            <i class="fas fa-university"></i>
-                        </div>
+                    <div class="tsu-stat-card__icon">
+                        <i class="fas fa-university"></i>
                     </div>
+                    <div class="tsu-stat-card__title">Institusi &amp; Cuti Bersama</div>
                     <div class="tsu-stat-card__value">
                         {{ number_format($stats['institusi_bersama'] ?? 0) }}
                         <span class="tsu-stat-card__unit">Hari</span>
@@ -301,12 +349,10 @@
 
                 {{-- Status Aktif --}}
                 <div class="tsu-stat-card tsu-stat-card--active">
-                    <div class="tsu-stat-card__top">
-                        <span class="tsu-stat-card__label">Status Aktif</span>
-                        <div class="tsu-stat-card__icon-badge">
-                            <i class="fas fa-check-circle"></i>
-                        </div>
+                    <div class="tsu-stat-card__icon">
+                        <i class="fas fa-calendar-check"></i>
                     </div>
+                    <div class="tsu-stat-card__title">Status Aktif</div>
                     <div class="tsu-stat-card__value">
                         {{ number_format($stats['active'] ?? 0) }}
                         <span class="tsu-stat-card__unit">Hari</span>
@@ -317,18 +363,46 @@
                 </div>
             </div>
 
+            {{-- Card Panduan Keterkaitan Master --}}
+            <x-tsu-master-guide
+                title="Panduan Keterkaitan Master Hari Libur"
+                description="Master Hari Libur mencatat seluruh tanggal merah resmi, cuti bersama nasional (Sync API), serta hari libur khusus internal yayasan/universitas (Dies Natalis, dll.)."
+                :connections="[
+                    ['label' => 'Pengajuan Cuti Pegawai', 'route' => 'users.cuti.index', 'icon' => 'fas fa-calendar-alt'],
+                    ['label' => 'Validasi Absensi Harian', 'route' => 'admin.absensi.index', 'icon' => 'fas fa-calendar-day'],
+                    ['label' => 'Jadwal Piket Satpam/Tendik', 'route' => 'admin.jadwal-piket.index', 'icon' => 'fas fa-shield-alt'],
+                    ['label' => 'Lembur Hari Libur', 'route' => 'users.lembur.index', 'icon' => 'fas fa-business-time']
+                ]"
+                impact="Tanggal libur otomatis dilewati (*dikecualikan*) dari pemotongan hari kerja saat pegawai mengajukan cuti, tidak dianggap alpa pada rekap absensi, serta menjadi acuan tarif lembur hari libur."
+            />
+
             {{-- Main Table Card --}}
             <div class="tsu-card">
+                <div class="tsu-card__header d-flex flex-wrap justify-content-between align-items-center">
+                    <div>
+                        <h5 class="tsu-card__title">
+                            Daftar Agenda Hari Libur &amp; Cuti Bersama
+                        </h5>
+                        <div class="text-muted small mt-1">
+                            Kalender operasional resmi yang terintegrasi dengan modul Presensi, Cuti, dan Payroll
+                        </div>
+                    </div>
+                    <div class="mt-2 mt-sm-0">
+                        <span class="tsu-badge-info-clean">
+                            Integrasi Otomatis Modul Presensi &amp; Cuti
+                        </span>
+                    </div>
+                </div>
                 <div class="card-body p-3">
                     <div class="table-responsive">
                         <table class="table tsu-table-modern table-hover w-100" id="table-libur">
                             <thead>
                                 <tr>
                                     <th width="4%" class="text-center">No</th>
-                                    <th width="26%">Tanggal & Hari</th>
-                                    <th width="34%">Keterangan</th>
-                                    <th width="16%">Status Libur</th>
-                                    <th width="10%" class="text-center">Aktif?</th>
+                                    <th width="24%">Tanggal &amp; Hari</th>
+                                    <th width="36%">Keterangan Libur</th>
+                                    <th width="16%">Kategori Libur</th>
+                                    <th width="10%" class="text-center">Status</th>
                                     <th width="10%" class="text-center">Aksi</th>
                                 </tr>
                             </thead>
@@ -446,7 +520,7 @@
                 $('#modal-libur-content').html(
                     '<div class="text-center p-5">' +
                     '    <div class="spinner-border" style="color: var(--tsu-primary, #094b54);" role="status"></div>' +
-                    '    <p class="mt-3 text-muted font-weight-bold">Mengambil Data Hari Libur...</p>' +
+                    '    <p class="mt-3 text-muted font-weight-bold">Mengambil Data...</p>' +
                     '</div>'
                 );
 
@@ -459,7 +533,7 @@
                     error: function(xhr) {
                         $('#modal-libur-content').html(
                             '<div class="modal-body p-4 text-center">' +
-                            '    <div class="alert alert-danger mb-0">Gagal mengambil data hari libur. Error: ' + xhr.status + '</div>' +
+                            '    <div class="alert alert-danger mb-0">Gagal mengambil data. Error: ' + xhr.status + '</div>' +
                             '</div>' +
                             '<div class="modal-footer p-3" style="background: #f8fafc;">' +
                             '    <button type="button" class="btn btn-secondary px-3" data-dismiss="modal">Tutup</button>' +

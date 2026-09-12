@@ -59,9 +59,9 @@ class MasterTarifHonorariumController extends MiddlewareController
             ->addColumn('jafung_badge', function ($row) {
                 $nama = $row->jabatanFungsional->nama_jabatan ?? $row->nama_jafung;
                 return '<div class="d-flex align-items-center">
-                    <span class="badge badge-pill badge-primary px-2 py-1 font-weight-bold mr-2" style="font-size: 0.85rem; min-width: 32px; text-align: center;">' . e($row->kode_jafung) . '</span>
+                    <span class="badge mr-2" style="background: rgba(9, 75, 84, 0.1); color: #094b54; border: 1px solid rgba(9, 75, 84, 0.25); font-weight: 700; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.82rem; min-width: 36px; text-align: center;">' . e($row->kode_jafung) . '</span>
                     <div>
-                        <div class="font-weight-bold text-dark" style="font-size: 0.9rem;">' . e($nama) . '</div>
+                        <div class="font-weight-bold text-dark" style="font-size: 0.88rem;">' . e($nama) . '</div>
                     </div>
                 </div>';
             })
@@ -87,9 +87,24 @@ class MasterTarifHonorariumController extends MiddlewareController
                 return $row->keterangan ? '<span class="text-muted" style="font-size: 0.83rem;">' . nl2br(e($row->keterangan)) . '</span>' : '<span class="text-muted text-xs font-italic">-</span>';
             })
             ->addColumn('action', function ($row) {
-                $btnEdit = '<button type="button" class="btn btn-xs btn-primary btn-modal mr-1" data-url="' . route('admin.master-tarif-honorarium.edit', $row->id) . '" title="Edit Tarif"><i class="fas fa-edit"></i> Edit</button>';
-                $btnDelete = '<button type="button" class="btn btn-xs btn-danger btn-delete" data-url="' . route('admin.master-tarif-honorarium.destroy', $row->id) . '" data-name="Tarif ' . htmlspecialchars($row->nama_jafung, ENT_QUOTES) . '" title="Hapus Tarif"><i class="fas fa-trash"></i></button>';
-                return '<div class="text-center text-nowrap">' . $btnEdit . $btnDelete . '</div>';
+                $canEdit = auth()->user()->can('admin:master-tarif-honorarium:edit');
+                $canDelete = auth()->user()->can('admin:master-tarif-honorarium:delete');
+
+                $btn = '<div class="d-flex align-items-center justify-content-center" style="gap: 0.35rem;">';
+                if ($canEdit) {
+                    $btn .= '<button type="button" class="btn btn-sm btn-edit btn-modal" data-url="' . route('admin.master-tarif-honorarium.edit', $row->id) . '" style="background: #fffbeb; color: #d97706; border: 1px solid #fde68a; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; transition: all 0.2s;" title="Edit Tarif"><i class="fas fa-pen"></i></button>';
+                } else {
+                    $btn .= '<button type="button" class="btn btn-sm" disabled style="background: #f1f5f9; color: #94a3b8; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; cursor: not-allowed; opacity: 0.6;" title="Akses Dibatasi"><i class="fas fa-lock"></i></button>';
+                }
+
+                if ($canDelete) {
+                    $btn .= '<button type="button" class="btn btn-sm btn-delete" data-url="' . route('admin.master-tarif-honorarium.destroy', $row->id) . '" data-name="Tarif ' . htmlspecialchars($row->nama_jafung, ENT_QUOTES) . '" style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; transition: all 0.2s;" title="Hapus Tarif"><i class="fas fa-trash"></i></button>';
+                } else {
+                    $btn .= '<button type="button" class="btn btn-sm" disabled style="background: #f1f5f9; color: #94a3b8; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; cursor: not-allowed; opacity: 0.6;" title="Akses Dibatasi"><i class="fas fa-lock"></i></button>';
+                }
+
+                $btn .= '</div>';
+                return $btn;
             })
             ->rawColumns(['jafung_badge', 'sks_lebih_formatted', 'bimbing_uji_formatted', 'ujian_formatted', 'keterangan_display', 'action'])
             ->make(true);

@@ -1,8 +1,8 @@
-<div class="modal-header bg-info text-white">
-    <h5 class="modal-title font-weight-bold">
-        <i class="fas fa-clipboard-check mr-2"></i> {{ $title }}
+<div class="modal-header" style="background: linear-gradient(135deg, #094b54 0%, #0c6170 100%); color: #ffffff; border-bottom: none; padding: 1.1rem 1.5rem;">
+    <h5 class="modal-title font-weight-bold" style="font-size: 1.05rem; display: flex; align-items: center; gap: 8px;">
+        <i class="fas fa-clipboard-check"></i> {{ $title }}
     </h5>
-    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="opacity: 0.85; text-shadow: none;">
         <span aria-hidden="true">&times;</span>
     </button>
 </div>
@@ -56,11 +56,11 @@
         </div>
     </div>
 
-    <div class="modal-footer bg-light">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">
+    <div class="modal-footer bg-light" style="border-top: 1px solid #edf2f7; padding: 0.9rem 1.5rem;">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal" style="border-radius: 8px;">
             <i class="fas fa-times mr-1"></i> Batal
         </button>
-        <button type="submit" class="btn btn-info font-weight-bold px-4">
+        <button type="submit" class="btn text-white font-weight-bold px-4" style="background-color: #094b54; border-color: #094b54; border-radius: 8px;">
             <i class="fas fa-save mr-1"></i> Simpan
         </button>
     </div>

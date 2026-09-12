@@ -14,7 +14,7 @@ class MasterOnboardingOffboardingController extends MiddlewareController
 
     public function __construct()
     {
-        $this->registerPermissions('admin:master-data');
+        $this->registerPermissions('admin:data-karyawan');
     }
 
     /**
@@ -50,27 +50,27 @@ class MasterOnboardingOffboardingController extends MiddlewareController
             ->addIndexColumn()
             ->addColumn('kategori_badge', function ($row) {
                 if ($row->kategori === 'onboarding') {
-                    return '<span class="badge badge-success px-2 py-1"><i class="fas fa-user-plus mr-1"></i> Onboarding</span>';
+                    return '<span class="badge" style="background: rgba(9, 75, 84, 0.1); color: #094b54; border: 1px solid rgba(9, 75, 84, 0.25); border-radius: 9999px; font-weight: 600; padding: 4px 10px;">Onboarding</span>';
                 }
-                return '<span class="badge badge-warning px-2 py-1"><i class="fas fa-user-minus mr-1"></i> Offboarding</span>';
+                return '<span class="badge" style="background: rgba(217, 119, 6, 0.1); color: #b45309; border: 1px solid rgba(217, 119, 6, 0.25); border-radius: 9999px; font-weight: 600; padding: 4px 10px;">Offboarding</span>';
             })
             ->addColumn('sasaran_badge', function ($row) {
                 return match($row->sasaran) {
-                    'dosen'  => '<span class="badge badge-primary px-2 py-1"><i class="fas fa-chalkboard-teacher mr-1"></i> Khusus Dosen</span>',
-                    'tendik' => '<span class="badge badge-info px-2 py-1"><i class="fas fa-user-cog mr-1"></i> Khusus Tendik</span>',
-                    default  => '<span class="badge badge-secondary px-2 py-1"><i class="fas fa-users mr-1"></i> Semua Pegawai</span>',
+                    'dosen'  => '<span class="badge" style="background: rgba(2, 132, 199, 0.1); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.25); border-radius: 9999px; font-weight: 600; padding: 4px 10px;">Khusus Dosen</span>',
+                    'tendik' => '<span class="badge" style="background: rgba(99, 102, 241, 0.1); color: #6366f1; border: 1px solid rgba(99, 102, 241, 0.25); border-radius: 9999px; font-weight: 600; padding: 4px 10px;">Khusus Tendik</span>',
+                    default  => '<span class="badge" style="background: rgba(107, 114, 128, 0.1); color: #4b5563; border: 1px solid rgba(107, 114, 128, 0.25); border-radius: 9999px; font-weight: 600; padding: 4px 10px;">Semua Pegawai</span>',
                 };
             })
             ->addColumn('status_badge', function ($row) {
                 if ($row->is_active) {
-                    return '<span class="badge badge-success px-2 py-1"><i class="fas fa-check-circle mr-1"></i> Aktif</span>';
+                    return '<span class="badge" style="background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 9999px; font-weight: 600; padding: 4px 10px;">Aktif</span>';
                 }
-                return '<span class="badge badge-secondary px-2 py-1"><i class="fas fa-times-circle mr-1"></i> Non-Aktif</span>';
+                return '<span class="badge" style="background: rgba(239, 68, 68, 0.1); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 9999px; font-weight: 600; padding: 4px 10px;">Nonaktif</span>';
             })
             ->addColumn('action', function ($row) {
-                $btn = '<div class="btn-group btn-group-sm">';
-                $btn .= '<button type="button" class="btn btn-outline-info btn-modal" data-url="' . route('admin.master-onboarding-offboarding.edit', $row->id) . '" title="Edit"><i class="fas fa-pencil-alt"></i></button>';
-                $btn .= '<button type="button" class="btn btn-outline-danger btn-delete" data-url="' . route('admin.master-onboarding-offboarding.destroy', $row->id) . '" title="Hapus"><i class="fas fa-trash"></i></button>';
+                $btn = '<div class="d-flex justify-content-center align-items-center" style="gap: 5px;">';
+                $btn .= '<button type="button" class="btn btn-sm btn-outline-info btn-modal" data-url="' . route('admin.master-onboarding-offboarding.edit', $row->id) . '" title="Edit" style="border-radius: 6px; padding: 3px 8px;"><i class="fas fa-pencil-alt"></i></button>';
+                $btn .= '<button type="button" class="btn btn-sm btn-outline-danger btn-delete" data-url="' . route('admin.master-onboarding-offboarding.destroy', $row->id) . '" title="Hapus" style="border-radius: 6px; padding: 3px 8px;"><i class="fas fa-trash"></i></button>';
                 $btn .= '</div>';
                 return $btn;
             })

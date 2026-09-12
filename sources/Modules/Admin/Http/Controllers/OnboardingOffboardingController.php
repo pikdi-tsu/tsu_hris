@@ -36,12 +36,15 @@ class OnboardingOffboardingController extends MiddlewareController
                   ->orWhereNull('tgl_bergabung');
             })->count();
 
+        $totalTasks = MasterOnboardingOffboarding::where('is_active', 1)->count();
+
         return view('admin::onboarding-offboarding.index', [
             'title'           => 'Pelaksanaan Onboarding & Offboarding Pegawai',
             'menuIcon'        => 'fas fa-user-check',
             'totalAktif'      => $totalAktif,
             'totalResign'     => $totalResign,
             'onboardingCount' => $onboardingCount,
+            'totalTasks'      => $totalTasks,
         ]);
     }
 
@@ -59,12 +62,16 @@ class OnboardingOffboardingController extends MiddlewareController
             ->addIndexColumn()
             ->addColumn('identitas', function ($row) {
                 $tipe = strtoupper($row->tipe_karyawan ?? 'PEGAWAI');
-                $badgeTipe = $tipe === 'DOSEN' ? 'badge-primary' : 'badge-info';
-                return '<div><strong>' . htmlspecialchars($row->nama) . '</strong> <span class="badge ' . $badgeTipe . ' ml-1">' . $tipe . '</span></div>' .
+                if ($tipe === 'DOSEN') {
+                    $badgeTipe = '<span class="badge ml-1" style="background: rgba(9, 75, 84, 0.1); color: #094b54; border: 1px solid rgba(9, 75, 84, 0.25); font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">DOSEN</span>';
+                } else {
+                    $badgeTipe = '<span class="badge ml-1" style="background: rgba(2, 132, 199, 0.1); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.25); font-weight: 700; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">' . e($tipe) . '</span>';
+                }
+                return '<div><strong class="text-dark" style="font-size: 0.9rem;">' . htmlspecialchars($row->nama) . '</strong> ' . $badgeTipe . '</div>' .
                        '<small class="text-muted">NIK: ' . ($row->nik ?? '-') . ' | ' . htmlspecialchars($row->unit->nama_unit ?? 'Unit Umum') . '</small>';
             })
             ->addColumn('tgl_bergabung_fmt', function ($row) {
-                return $row->tgl_bergabung ? \Carbon\Carbon::parse($row->tgl_bergabung)->format('d M Y') : '-';
+                return $row->tgl_bergabung ? '<span class="font-weight-bold text-dark" style="font-size: 0.85rem;">' . \Carbon\Carbon::parse($row->tgl_bergabung)->translatedFormat('d F Y') . '</span>' : '<span class="text-muted font-italic">-</span>';
             })
             ->addColumn('progress', function ($row) {
                 $tipe = strtolower($row->tipe_karyawan ?? 'tendik');
@@ -76,7 +83,7 @@ class OnboardingOffboardingController extends MiddlewareController
                     })->pluck('id');
 
                 $total = $masterIds->count();
-                if ($total == 0) return '<span class="text-muted small">Belum ada tugas</span>';
+                if ($total == 0) return '<span class="text-muted small font-italic">Belum ada tugas</span>';
 
                 $completed = KaryawanOnboardingOffboarding::where('data_dosen_tendik_id', $row->id)
                     ->whereIn('master_onboarding_offboarding_id', $masterIds)
@@ -84,25 +91,34 @@ class OnboardingOffboardingController extends MiddlewareController
                     ->count();
 
                 $percent = round(($completed / $total) * 100);
-                $color = $percent >= 100 ? 'bg-success' : ($percent > 50 ? 'bg-info' : 'bg-warning');
+                if ($percent >= 100) {
+                    $barGradient = 'linear-gradient(90deg, #047857 0%, #10b981 100%)';
+                    $textColor = '#047857';
+                } elseif ($percent >= 50) {
+                    $barGradient = 'linear-gradient(90deg, #094b54 0%, #0c6170 100%)';
+                    $textColor = '#094b54';
+                } else {
+                    $barGradient = 'linear-gradient(90deg, #d97706 0%, #f59e0b 100%)';
+                    $textColor = '#b45309';
+                }
 
                 return '
-                <div>
-                    <div class="d-flex justify-content-between small font-weight-bold mb-1">
-                        <span>' . $completed . ' / ' . $total . ' Selesai</span>
-                        <span>' . $percent . '%</span>
+                <div style="min-width: 170px;">
+                    <div class="d-flex justify-content-between align-items-center mb-1" style="font-size: 0.8rem;">
+                        <span class="text-muted font-weight-bold">' . $completed . ' / ' . $total . ' Selesai</span>
+                        <span class="font-weight-bold" style="color: ' . $textColor . ';">' . $percent . '%</span>
                     </div>
-                    <div class="progress" style="height: 7px;">
-                        <div class="progress-bar ' . $color . '" role="progressbar" style="width: ' . $percent . '%;"></div>
+                    <div class="progress" style="height: 6px; border-radius: 10px; background-color: #f1f5f9; overflow: hidden;">
+                        <div class="progress-bar" role="progressbar" style="width: ' . $percent . '%; background: ' . $barGradient . '; border-radius: 10px; transition: width 0.4s ease;"></div>
                     </div>
                 </div>';
             })
             ->addColumn('aksi', function ($row) {
-                return '<button type="button" class="btn btn-sm btn-outline-primary btn-modal-checklist" data-url="' . route('admin.pelaksanaan-onboarding-offboarding.detail', [$row->id, 'kategori' => 'onboarding']) . '">
+                return '<button type="button" class="btn btn-sm btn-modal-checklist" data-url="' . route('admin.pelaksanaan-onboarding-offboarding.detail', [$row->id, 'kategori' => 'onboarding']) . '" style="color: var(--tsu-primary, #094b54); background: #ffffff; border: 1.5px solid var(--tsu-primary-light, #cce6e9); border-radius: 8px; font-weight: 600; padding: 0.35rem 0.85rem; font-size: 0.82rem; transition: all 0.2s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.05);" onmouseover="this.style.background=\'var(--tsu-primary, #094b54)\';this.style.color=\'#fff\';" onmouseout="this.style.background=\'#fff\';this.style.color=\'var(--tsu-primary, #094b54)\';">
                     <i class="fas fa-tasks mr-1"></i> Buka Checklist
                 </button>';
             })
-            ->rawColumns(['identitas', 'progress', 'aksi'])
+            ->rawColumns(['identitas', 'tgl_bergabung_fmt', 'progress', 'aksi'])
             ->make(true);
     }
 
@@ -119,7 +135,8 @@ class OnboardingOffboardingController extends MiddlewareController
             ->addIndexColumn()
             ->addColumn('identitas', function ($row) {
                 $tipe = strtoupper($row->tipe_karyawan ?? 'PEGAWAI');
-                return '<div><strong>' . htmlspecialchars($row->nama) . '</strong> <span class="badge badge-secondary ml-1">' . $tipe . ' (Nonaktif)</span></div>' .
+                $badgeTipe = '<span class="badge ml-1" style="background: #f1f5f9; color: #64748b; border: 1px solid #cbd5e1; font-weight: 600; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">' . e($tipe) . ' &bull; Nonaktif</span>';
+                return '<div><strong class="text-dark" style="font-size: 0.9rem;">' . htmlspecialchars($row->nama) . '</strong> ' . $badgeTipe . '</div>' .
                        '<small class="text-muted">NIK: ' . ($row->nik ?? '-') . ' | ' . htmlspecialchars($row->unit->nama_unit ?? 'Unit Umum') . '</small>';
             })
             ->addColumn('progress', function ($row) {
@@ -128,7 +145,7 @@ class OnboardingOffboardingController extends MiddlewareController
                     ->pluck('id');
 
                 $total = $masterIds->count();
-                if ($total == 0) return '<span class="text-muted small">Belum ada tugas</span>';
+                if ($total == 0) return '<span class="text-muted small font-italic">Belum ada tugas</span>';
 
                 $completed = KaryawanOnboardingOffboarding::where('data_dosen_tendik_id', $row->id)
                     ->whereIn('master_onboarding_offboarding_id', $masterIds)
@@ -136,21 +153,30 @@ class OnboardingOffboardingController extends MiddlewareController
                     ->count();
 
                 $percent = round(($completed / $total) * 100);
-                $color = $percent >= 100 ? 'bg-success' : ($percent > 50 ? 'bg-info' : 'bg-warning');
+                if ($percent >= 100) {
+                    $barGradient = 'linear-gradient(90deg, #047857 0%, #10b981 100%)';
+                    $textColor = '#047857';
+                } elseif ($percent >= 50) {
+                    $barGradient = 'linear-gradient(90deg, #094b54 0%, #0c6170 100%)';
+                    $textColor = '#094b54';
+                } else {
+                    $barGradient = 'linear-gradient(90deg, #d97706 0%, #f59e0b 100%)';
+                    $textColor = '#b45309';
+                }
 
                 return '
-                <div>
-                    <div class="d-flex justify-content-between small font-weight-bold mb-1">
-                        <span>' . $completed . ' / ' . $total . ' Selesai</span>
-                        <span>' . $percent . '%</span>
+                <div style="min-width: 170px;">
+                    <div class="d-flex justify-content-between align-items-center mb-1" style="font-size: 0.8rem;">
+                        <span class="text-muted font-weight-bold">' . $completed . ' / ' . $total . ' Selesai</span>
+                        <span class="font-weight-bold" style="color: ' . $textColor . ';">' . $percent . '%</span>
                     </div>
-                    <div class="progress" style="height: 7px;">
-                        <div class="progress-bar ' . $color . '" role="progressbar" style="width: ' . $percent . '%;"></div>
+                    <div class="progress" style="height: 6px; border-radius: 10px; background-color: #f1f5f9; overflow: hidden;">
+                        <div class="progress-bar" role="progressbar" style="width: ' . $percent . '%; background: ' . $barGradient . '; border-radius: 10px; transition: width 0.4s ease;"></div>
                     </div>
                 </div>';
             })
             ->addColumn('aksi', function ($row) {
-                return '<button type="button" class="btn btn-sm btn-outline-warning btn-modal-checklist" data-url="' . route('admin.pelaksanaan-onboarding-offboarding.detail', [$row->id, 'kategori' => 'offboarding']) . '">
+                return '<button type="button" class="btn btn-sm btn-modal-checklist" data-url="' . route('admin.pelaksanaan-onboarding-offboarding.detail', [$row->id, 'kategori' => 'offboarding']) . '" style="color: #b45309; background: #ffffff; border: 1.5px solid #fde68a; border-radius: 8px; font-weight: 600; padding: 0.35rem 0.85rem; font-size: 0.82rem; transition: all 0.2s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.05);" onmouseover="this.style.background=\'#b45309\';this.style.color=\'#fff\';" onmouseout="this.style.background=\'#fff\';this.style.color=\'#b45309\';">
                     <i class="fas fa-clipboard-check mr-1"></i> Buka Checklist
                 </button>';
             })

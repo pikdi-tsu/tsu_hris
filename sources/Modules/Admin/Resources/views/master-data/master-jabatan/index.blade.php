@@ -241,40 +241,42 @@
 @endsection
 
 @section('content')
-    {{-- TSU Page Header --}}
-    <x-tsu-page-header
-        :title="$title ?? 'Master Data Jabatan'"
-        :icon="$menuIcon ?? 'fas fa-sitemap'"
-        :breadcrumb="true"
-    >
-        <x-slot name="actions">
-            {{-- Tombol Refresh Data --}}
-            <button type="button" class="btn btn-sm tsu-btn-reload" id="btn-reload" title="Segarkan Data Tabel">
-                <i class="fas fa-sync-alt mr-1"></i> Refresh Data
-            </button>
-        </x-slot>
-    </x-tsu-page-header>
+    <x-tsu-master-guide
+        title="Panduan Keterkaitan Master Jabatan & Pangkat"
+        description="Master Jabatan mengatur klasifikasi Jabatan Struktural (Rektor, Dekan, Kaprodi, Ka. Biro), Jabatan Fungsional Akademik (Asisten Ahli, Lektor, Guru Besar), serta Pangkat Golongan pegawai."
+        :connections="[
+            ['label' => 'Data Pegawai & Mutasi', 'route' => 'admin.data-karyawan.index', 'icon' => 'fas fa-users'],
+            ['label' => 'Bagan Struktur Organisasi', 'route' => 'admin.struktur-organisasi.index', 'icon' => 'fas fa-sitemap'],
+            ['label' => 'Tunjangan Jabatan', 'route' => 'admin.master-tunjangan.index', 'icon' => 'fas fa-coins'],
+            ['label' => 'Garis Approval Pimpinan', 'route' => 'users.approval-cuti.index', 'icon' => 'fas fa-user-shield']
+        ]"
+        impact="Jabatan menentukan garis hirarki atasan langsung untuk verifikasi approval berjenjang, penempatan bagan struktur organisasi universitas, serta dasar hak tunjangan struktural/fungsional."
+    />
 
-    {{-- Main Content Section --}}
-    <section class="content">
-        <div class="container-fluid">
-
-            {{-- Stat Cards: Summary Metrics --}}
-            <div class="tsu-stat-grid-jabatan">
-                {{-- Total Jabatan --}}
-                <div class="tsu-stat-card tsu-stat-card--total">
-                    <div class="tsu-stat-card__top">
-                        <span class="tsu-stat-card__label">Total Jabatan</span>
-                        <div class="tsu-stat-card__icon-badge">
-                            <i class="fas fa-sitemap"></i>
-                        </div>
-                    </div>
-                    <div class="tsu-stat-card__value">
-                        {{ number_format($stats['total_jabatan'] ?? 0) }}
-                        <span class="tsu-stat-card__unit">Posisi</span>
-                    </div>
-                    <div class="tsu-stat-card__subtext">
-                        Total Struktural & Fungsional Kampus
+    <div class="card card-primary card-outline card-outline-tabs">
+        <div class="card-header p-0 border-bottom-0">
+            <ul class="nav nav-tabs" id="custom-tabs-four-tab" role="tablist">
+                <li class="nav-item">
+                    <a class="nav-link active" id="tab-struktural" data-toggle="pill" href="#content-struktural" role="tab" aria-controls="content-struktural" aria-selected="true">Jabatan Struktural</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="tab-fungsional" data-toggle="pill" href="#content-fungsional" role="tab" aria-controls="content-fungsional" aria-selected="false">Jabatan Fungsional</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" id="tab-pangkat" data-toggle="pill" href="#content-pangkat" role="tab" aria-controls="content-pangkat" aria-selected="false">Pangkat & Golongan</a>
+                </li>
+            </ul>
+        </div>
+        
+        <div class="card-body">
+            <div class="tab-content" id="custom-tabs-four-tabContent">
+                
+                {{-- TAB STRUKTURAL --}}
+                <div class="tab-pane fade show active" id="content-struktural" role="tabpanel" aria-labelledby="tab-struktural">
+                    <div class="mb-3 text-right">
+                        <button type="button" class="btn btn-primary btn-modal btn-sm" data-url="{{ route('admin.master-jabatan.struktural.create') }}">
+                            <i class="fas fa-plus"></i> Tambah Struktural
+                        </button>
                     </div>
                 </div>
 

@@ -116,7 +116,13 @@ class RiwayatIzinCutiController extends MiddlewareController
             ->addColumn('approvalsdm', function ($data) {
                 return $this->formatApprovalBadge($data->statushrd, $data->hrd, $data->alasanhrd);
             })
-            ->rawColumns(['nama', 'jeniscuti', 'tanggalcuti', 'keterangan', 'approvalatasan', 'approvalsdm'])
+            ->addColumn('file_bukti', function ($data) {
+                if ($data->file_bukti && $data->file_bukti_url) {
+                    return '<a href="' . $data->file_bukti_url . '" target="_blank" download class="btn btn-xs btn-outline-info rounded-pill px-2" title="Unduh / Buka Bukti"><i class="fas fa-paperclip mr-1"></i> Bukti</a>';
+                }
+                return '<span class="text-muted small">-</span>';
+            })
+            ->rawColumns(['nama', 'jeniscuti', 'tanggalcuti', 'keterangan', 'approvalatasan', 'approvalsdm', 'file_bukti'])
             ->make(true);
     }
 
@@ -170,7 +176,13 @@ class RiwayatIzinCutiController extends MiddlewareController
             ->addColumn('approvalsdm', function ($data) {
                 return $this->formatApprovalBadge($data->statushrd, $data->hrd, $data->alasanhrd);
             })
-            ->rawColumns(['nama', 'jenisizin', 'tanggalizin', 'keterangan', 'approvalatasan', 'approvalsdm'])
+            ->addColumn('file_bukti', function ($data) {
+                if ($data->file_bukti && $data->file_bukti_url) {
+                    return '<a href="' . $data->file_bukti_url . '" target="_blank" download class="btn btn-xs btn-outline-info rounded-pill px-2" title="Unduh / Buka Bukti"><i class="fas fa-paperclip mr-1"></i> Bukti</a>';
+                }
+                return '<span class="text-muted small">-</span>';
+            })
+            ->rawColumns(['nama', 'jenisizin', 'tanggalizin', 'keterangan', 'approvalatasan', 'approvalsdm', 'file_bukti'])
             ->make(true);
     }
 

@@ -192,17 +192,25 @@
 @endsection
 
 @section('content')
-    {{-- TSU Page Header --}}
-    <x-tsu-page-header
-        :title="$title ?? 'Data Master Lembur'"
-        :icon="$menuIcon ?? 'fas fa-business-time'"
-        :breadcrumb="true"
-    >
-        <x-slot name="actions">
-            {{-- Tombol Tambah Master Lembur --}}
-            @can('admin:master-lembur:create')
-                <button type="button" class="btn btn-sm tsu-btn-primary-action btn-modal mr-2" data-url="{{ route('admin.master-lembur.create') }}" title="Tambah Jenis Master Lembur">
-                    <i class="fas fa-plus mr-1"></i> Tambah Master Lembur
+    <x-tsu-master-guide
+        title="Panduan Keterkaitan Master Lembur"
+        description="Master Lembur mengatur kategori penugasan kerja lembur pegawai di luar jam operasional standar (lembur hari kerja, hari libur, atau event universitas)."
+        :connections="[
+            ['label' => 'Pengajuan Lembur Mandiri', 'route' => 'users.lembur.index', 'icon' => 'fas fa-business-time'],
+            ['label' => 'Approval Lembur Atasan', 'route' => 'users.approval-lembur.index', 'icon' => 'fas fa-check-double'],
+            ['label' => 'Riwayat Lembur (Admin)', 'route' => 'admin.riwayat-lembur.index', 'icon' => 'fas fa-history'],
+            ['label' => 'Kalkulasi Payroll Lembur', 'route' => 'admin.payroll.index', 'icon' => 'fas fa-calculator']
+        ]"
+        impact="Kategori lembur menentukan pengelompokan penugasan kerja serta parameter pengali perhitungan upah lembur yang akan diakumulasikan ke dalam rekapitulasi gaji bulanan (Payroll)."
+    />
+
+    <div class="card card-primary card-outline">
+        <div class="card-header d-flex align-items-center">
+            <h3 class="card-title mr-4">{{ $title ?? 'Data Master Lembur' }}</h3>
+
+            <div class="d-flex gap-2 ml-auto">
+                <button type="button" class="btn btn-success btn-modal btn-sm" data-url="{{ route('admin.master-lembur.create') }}" title="Tambah Master Lembur">
+                    <i class="fas fa-plus"></i> Tambah Master Lembur
                 </button>
             @endcan
 

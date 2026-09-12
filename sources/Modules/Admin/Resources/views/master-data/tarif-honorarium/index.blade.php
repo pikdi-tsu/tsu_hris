@@ -193,15 +193,26 @@
 @endsection
 
 @section('content')
-    {{-- TSU Page Header --}}
-    <x-tsu-page-header
-        :title="$title ?? 'Master Tarif Honorarium Dosen'"
-        :icon="$menuIcon ?? 'fas fa-money-bill-wave'"
-        :breadcrumb="true"
-    >
-        <x-slot name="actions">
-            @can('admin:master-tarif-honorarium:create')
-                <button type="button" class="btn btn-sm tsu-btn-primary-action btn-modal mr-2" data-url="{{ route('admin.master-tarif-honorarium.create') }}" title="Tambah Tarif Jabatan Fungsional Baru">
+    <x-tsu-master-guide
+        title="Panduan Keterkaitan Master Tarif Honorarium Dosen"
+        description="Master Tarif Honorarium mengatur standar honor akademik: Honor Mengajar Kelebihan SKS / Dosen LB, Pembimbingan Tugas Akhir/Skripsi, Penguji Sidang, serta Koreksi Ujian."
+        :connections="[
+            ['label' => 'Rekap Honorarium Dosen', 'route' => 'admin.honorarium.index', 'icon' => 'fas fa-file-invoice-dollar'],
+            ['label' => 'Data Jafung Dosen', 'route' => 'admin.data-karyawan.index', 'icon' => 'fas fa-user-graduate'],
+            ['label' => 'Integrasi Payroll Akhir Bulan', 'route' => 'admin.payroll.index', 'icon' => 'fas fa-receipt']
+        ]"
+        impact="Perubahan tarif per SKS atau tarif per mahasiswa bimbingan langsung mempengaruhi nominal rupiah yang tertera pada laporan rekapitulasi honorarium dosen serta slip transfer gaji bulanan."
+    />
+
+    <div class="card card-primary card-outline shadow-sm">
+        <div class="card-header d-flex flex-wrap align-items-center justify-content-between">
+            <h3 class="card-title font-weight-bold">
+                <i class="fas fa-money-bill-wave text-primary mr-2"></i> {{ $title ?? 'Master Tarif Honorarium Dosen' }}
+            </h3>
+
+            <div class="d-flex gap-2 ml-auto">
+                <button type="button" class="btn btn-success btn-modal btn-sm font-weight-bold"
+                    data-url="{{ route('admin.master-tarif-honorarium.create') }}" title="Tambah Tarif Jabatan Fungsional">
                     <i class="fas fa-plus mr-1"></i> Tambah Tarif Jafung
                 </button>
             @endcan

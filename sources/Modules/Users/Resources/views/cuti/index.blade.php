@@ -222,8 +222,53 @@
     <section class="content">
         <div class="container-fluid">
 
-            {{-- 1. TSU Stat Cards: Hak & Saldo Cuti --}}
-            <div class="tsu-stat-grid">
+            {{-- 0. Tab Navigasi: Cuti Tahunan vs Cuti Khusus --}}
+            <div class="card border-0 shadow-sm mb-3" style="border-radius: 12px; overflow: hidden; background: #f8fafc;">
+                <div class="card-body p-2">
+                    <ul class="nav nav-pills nav-fill" id="cutiTabs" role="tablist">
+                        <li class="nav-item">
+                            <a class="nav-link active font-weight-bold py-2 px-3 tsu-tab-btn" id="tab-tahunan-btn" data-toggle="pill" href="#tab-tahunan-content" role="tab" data-kategori="tahunan" style="border-radius: 8px;">
+                                <i class="fas fa-calendar-check mr-2 text-primary"></i> Cuti Tahunan &amp; Reguler
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link font-weight-bold py-2 px-3 tsu-tab-btn" id="tab-khusus-btn" data-toggle="pill" href="#tab-khusus-content" role="tab" data-kategori="khusus" style="border-radius: 8px;">
+                                <i class="fas fa-award mr-2 text-warning"></i> Cuti Khusus (Surat Edaran SDM)
+                                @if($isPegawaiTetap)
+                                    <span class="badge badge-success ml-2 font-weight-normal px-2 py-1"><i class="fas fa-check-circle mr-1"></i>Pegawai Tetap</span>
+                                @else
+                                    <span class="badge badge-secondary ml-2 font-weight-normal px-2 py-1"><i class="fas fa-lock mr-1"></i>Khusus Tetap</span>
+                                @endif
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            {{-- Banner Khusus Cuti Khusus (Tampil saat tab cuti khusus aktif) --}}
+            <div id="banner-cuti-khusus" class="alert alert-info border-0 shadow-sm mb-4 d-none" style="background: linear-gradient(135deg, rgba(9,75,84,0.1), rgba(248,193,42,0.15)); border-left: 4px solid var(--tsu-gold, #f8c12a) !important; border-radius: 10px;">
+                <div class="d-flex align-items-start">
+                    <i class="fas fa-certificate fa-2x mr-3 mt-1" style="color: var(--tsu-teal-deep, #094b54);"></i>
+                    <div>
+                        <strong class="font-weight-bold" style="color: var(--tsu-teal-deep, #094b54); font-size: 1rem;">Pedoman Cuti Khusus Berdasarkan Surat Edaran SDM:</strong>
+                        <p class="mb-1 small text-dark mt-1">
+                            Cuti Khusus diperuntukkan bagi Pegawai Tetap Universitas untuk keperluan mendesak/istimewa (Melahirkan: 90 hari, Keguguran: 45 hari, Menikah: 3 hari, Menikahkan Anak: 2 hari, Khitan/Baptis: 2 hari, Duka Cita: 2 hari, Ibadah Haji/Umrah: 40 hari).
+                        </p>
+                        <span class="badge badge-pill badge-primary px-3 py-1 font-weight-bold mr-1" style="background: var(--tsu-teal-deep, #094b54);">
+                            <i class="fas fa-check mr-1"></i> Tidak Memotong Saldo 12 Hari Tahunan
+                        </span>
+                        <span class="badge badge-pill badge-warning text-dark px-3 py-1 font-weight-bold mr-1">
+                            <i class="fas fa-money-bill-wave mr-1"></i> Tetap Memperoleh Gaji Penuh
+                        </span>
+                        <span class="badge badge-pill badge-info px-3 py-1 font-weight-bold">
+                            <i class="fas fa-file-upload mr-1"></i> Wajib Lampirkan Berkas Bukti Resmi
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            {{-- 1. TSU Stat Cards: Hak & Saldo Cuti (Hanya untuk Cuti Tahunan) --}}
+            <div class="tsu-stat-grid" id="stat-grid-tahunan">
                 <!-- Cuti Tahunan -->
                 <div class="tsu-stat-card tsu-stat-primary">
                     <div class="tsu-stat-card__top">
@@ -417,6 +462,20 @@
                                     </div>
                                 </div>
 
+                                {{-- Upload Bukti Pendukung (Opsional untuk Cuti Tahunan & Khusus) --}}
+                                <div class="form-group row mb-2" id="wrapper-file-bukti">
+                                    <label for="file_bukti" class="col-sm-3 col-form-label">Berkas Bukti <small class="text-muted font-weight-normal">(Opsional)</small></label>
+                                    <div class="col-sm-9">
+                                        <div class="custom-file">
+                                            <input type="file" class="custom-file-input" id="file_bukti" name="file_bukti" accept=".pdf,.jpg,.jpeg,.png">
+                                            <label class="custom-file-label text-truncate" for="file_bukti" id="label-file-bukti">Pilih berkas bukti (PDF/Foto)...</label>
+                                        </div>
+                                        <small class="text-muted d-block mt-1" id="file-bukti-help">
+                                            <i class="fas fa-info-circle mr-1 text-info"></i>Opsional. Unggah dokumen bukti pendukung jika ada (surat dokter/keterangan/undangan). Format: PDF, JPG, JPEG, PNG (Maks: 10MB).
+                                        </small>
+                                    </div>
+                                </div>
+
                                 <div class="form-group row mb-2">
                                     <label class="col-sm-3 col-form-label">Atasan Langsung</label>
                                     <div class="col-sm-9">
@@ -448,6 +507,11 @@
                             </div>
                         </div>
 
+                        {{-- Warning jika bukan pegawai tetap saat tab cuti khusus --}}
+                        <div id="tetap-warning-banner" class="alert alert-warning border-0 mb-3 d-none" style="border-radius: 8px;">
+                            <i class="fas fa-lock mr-2"></i> <strong>Akses Khusus Pegawai Tetap:</strong> Layanan Cuti Khusus (Melahirkan, Pernikahan, Haji, Duka Cita, dll.) berdasarkan Surat Edaran SDM diperuntukkan bagi Pegawai Tetap (PKWTT / PNS). Silakan berkonsultasi langsung dengan bagian SDM Universitas.
+                        </div>
+
                         {{-- Tombol Aksi Form --}}
                         <div class="tsu-form-actions">
                             <button type="button" class="btn btn-secondary d-none" id="btnbatal" style="border-radius:var(--tsu-radius); font-weight:600; padding:0.45rem 1rem;">
@@ -476,15 +540,16 @@
                         <table id="dataTables" class="table table-bordered table-hover w-100">
                             <thead>
                                 <tr>
-                                    <th width="4%">No</th>
+                                    <th width="4%" class="text-center">No</th>
                                     <th>Jenis Cuti</th>
-                                    <th>Tanggal Mulai</th>
-                                    <th>Tanggal Selesai</th>
-                                    <th width="10%">Durasi</th>
+                                    <th width="11%" class="text-center">Tgl Mulai</th>
+                                    <th width="11%" class="text-center">Tgl Selesai</th>
+                                    <th width="8%" class="text-center">Durasi</th>
                                     <th>Alasan / Keterangan</th>
-                                    <th width="12%">Atasan</th>
-                                    <th width="12%">SDM / HRD</th>
-                                    <th width="12%">Aksi</th>
+                                    <th width="8%" class="text-center">Bukti</th>
+                                    <th width="11%" class="text-center">Atasan</th>
+                                    <th width="11%" class="text-center">SDM</th>
+                                    <th width="11%" class="text-center">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -532,9 +597,65 @@
                 placeholder: '..:: Pilih Pegawai SDM ::..'
             });
 
+            const listTahunan = @json($mcutiTahunan);
+            const listKhusus = @json($mcutiKhusus);
+            const isPegawaiTetap = @json($isPegawaiTetap);
+            var currentKategori = 'tahunan';
+
+            function populateJenisCuti(kategori) {
+                let items = (kategori === 'khusus') ? listKhusus : listTahunan;
+                let $sel = $('#jeniscuti');
+                $sel.empty().append('<option value="">..:: Pilih Jenis Cuti ::..</option>');
+                $.each(items, function(i, itm) {
+                    let text = itm.jeniscuti;
+                    if (kategori === 'khusus' && itm.durasicuti) {
+                        text += ' (' + itm.durasicuti + ' Hari Maks)';
+                    }
+                    $sel.append($('<option>', {
+                        value: itm.id,
+                        text: text,
+                        'data-minhari': itm.minimalhari || 0,
+                        'data-durasi': itm.durasicuti || 0
+                    }));
+                });
+                $sel.trigger('change.select2');
+            }
+
             $('#jeniscuti').select2({
                 width: '100%',
                 placeholder: '..:: Pilih Jenis Cuti ::..'
+            });
+
+            populateJenisCuti('tahunan');
+
+            // Handle Tab Cuti Tahunan vs Khusus
+            $('.tsu-tab-btn').on('click', function(e) {
+                currentKategori = $(this).data('kategori');
+                populateJenisCuti(currentKategori);
+
+                if (currentKategori === 'khusus') {
+                    $('#banner-cuti-khusus').removeClass('d-none');
+                    $('#stat-grid-tahunan').addClass('d-none');
+                    if (!isPegawaiTetap) {
+                        $('#tetap-warning-banner').removeClass('d-none');
+                        $('#btnsimpan').prop('disabled', true).addClass('btn-secondary').removeClass('tsu-btn-create');
+                    } else {
+                        $('#tetap-warning-banner').addClass('d-none');
+                        $('#btnsimpan').prop('disabled', false).removeClass('btn-secondary').addClass('tsu-btn-create');
+                    }
+                } else {
+                    $('#banner-cuti-khusus').addClass('d-none');
+                    $('#stat-grid-tahunan').removeClass('d-none');
+                    $('#tetap-warning-banner').addClass('d-none');
+                    $('#btnsimpan').prop('disabled', false).removeClass('btn-secondary').addClass('tsu-btn-create');
+                }
+
+                oTable.ajax.reload();
+            });
+
+            $('#file_bukti').on('change', function() {
+                let fileName = $(this).val().split('\\').pop();
+                $('#label-file-bukti').text(fileName || 'Pilih berkas bukti (PDF/Foto)...');
             });
 
             // Datepicker jQuery UI
@@ -607,6 +728,11 @@
                 let alasan    = $("#alasan").val();
                 let id_hrd    = $("#id_hrd").val();
 
+                if (currentKategori === 'khusus' && !isPegawaiTetap) {
+                    Swal.fire('Perhatian', 'Fasilitas Cuti Khusus diperuntukkan bagi Pegawai Tetap (PKWTT/PNS).', 'warning');
+                    return;
+                }
+
                 if (!jeniscuti) {
                     notifalert('Jenis Cuti');
                 } else if (!tanggal1) {
@@ -622,19 +748,23 @@
                     var origText = $btn.html();
                     $btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Menyimpan...');
 
+                    var fd = new FormData();
+                    fd.append('_token', $('meta[name=csrf-token]').attr('content'));
+                    fd.append('idedit', idedit);
+                    fd.append('ketedit', ketedit);
+                    fd.append('jeniscuti', jeniscuti);
+                    fd.append('tanggal1', tanggal1);
+                    fd.append('tanggal2', tanggal2);
+                    fd.append('alasan', alasan);
+                    fd.append('id_hrd', id_hrd);
+                    if ($('#file_bukti')[0].files[0]) {
+                        fd.append('file_bukti', $('#file_bukti')[0].files[0]);
+                    }
+
                     pikdiAjax({
                         url: "{!! route('users.cuti.simpan') !!}",
                         type: 'POST',
-                        data: {
-                            _token: $('meta[name=csrf-token]').attr('content'),
-                            'idedit': idedit,
-                            'ketedit': ketedit,
-                            'jeniscuti': jeniscuti,
-                            'tanggal1': tanggal1,
-                            'tanggal2': tanggal2,
-                            'alasan': alasan,
-                            'id_hrd': id_hrd
-                        },
+                        data: fd,
                         onSuccess: function(res) {
                             location.reload();
                         },
@@ -656,6 +786,9 @@
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },
+                    data: function(d) {
+                        d.kategori = currentKategori;
+                    }
                 },
                 columns: [
                     { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, className: 'text-center' },
@@ -664,6 +797,7 @@
                     { data: 'tanggalselesai', name: 'tanggalselesai', className: 'text-center' },
                     { data: 'jumlah', name: 'jumlah', className: 'text-center font-weight-bold' },
                     { data: 'keterangan', name: 'keterangan' },
+                    { data: 'file_bukti', name: 'file_bukti', orderable: false, searchable: false, className: 'text-center' },
                     { data: 'statusatasan', name: 'statusatasan', className: 'text-center' },
                     { data: 'statushrd', name: 'statushrd', className: 'text-center' },
                     { data: 'action', name: 'action', orderable: false, searchable: false, className: 'text-center' },

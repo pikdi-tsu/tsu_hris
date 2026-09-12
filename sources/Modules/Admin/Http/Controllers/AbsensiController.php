@@ -58,54 +58,332 @@ class AbsensiController extends MiddlewareController
 
     /**
      * Helper untuk membaca berkas spreadsheet secara fleksibel
-     * dengan fallback multi-reader (Xlsx, Xls, Html, Csv, Xml)
+     * dengan fallback multi-reader (Xlsx, Xls, BIFF Binary Stream, Html, Csv, Xml, DOM, TSV)
      */
     private function parseSpreadsheetRows($uploadedFile)
     {
         $realPath = $uploadedFile->getRealPath();
+        $origExt = $uploadedFile->getClientOriginalExtension() ?: 'xls';
+
+        // 0. Siapkan copy sementara dengan ekstensi aslinya (beberapa reader PhpOffice mengecek ekstensi)
+        $tempCopy = null;
+        $targetPath = $realPath;
+        if (!empty($origExt)) {
+            $tempCopy = tempnam(sys_get_temp_dir(), 'hris_att_') . '.' . ltrim($origExt, '.');
+            @copy($realPath, $tempCopy);
+            $targetPath = $tempCopy;
+        }
+
         $spreadsheet = null;
 
         // 1. Coba deteksi otomatis via IOFactory::load
         try {
-            $spreadsheet = IOFactory::load($realPath);
-        } catch (\Throwable $e1) {
-            // 2. Coba via Reader spesifik: Xlsx
+            $spreadsheet = IOFactory::load($targetPath);
+        } catch (\Throwable $e) {}
+
+        // 2. Coba via Reader spesifik: Xlsx
+        if (!$spreadsheet) {
             try {
                 $reader = new Xlsx();
                 $reader->setReadDataOnly(true);
-                $spreadsheet = $reader->load($realPath);
-            } catch (\Throwable $e2) {
-                // 3. Coba via Reader spesifik: Xls
+                $spreadsheet = $reader->load($targetPath);
+            } catch (\Throwable $e) {}
+        }
+
+        // 3. Coba via Reader spesifik: Xls (OLE2 Compound Document)
+        if (!$spreadsheet) {
+            try {
+                $reader = new Xls();
+                $reader->setReadDataOnly(true);
+                $spreadsheet = $reader->load($targetPath);
+            } catch (\Throwable $e) {}
+        }
+
+        // 4. Coba Parser Native BIFF Binary Stream (Ekspor mesin presensi yang menghasilkan raw BIFF2/3/4/5/8 tanpa OLE wrapper)
+        $biffRows = $this->parseRawBiffStream($realPath);
+        if (!empty($biffRows)) {
+            if ($tempCopy && file_exists($tempCopy)) {
+                @unlink($tempCopy);
+            }
+            return $biffRows;
+        }
+
+        // 5. Coba via Reader: Html (banyak mesin absensi mengekspor format HTML table dengan ekstensi .xls)
+        if (!$spreadsheet) {
+            try {
+                $reader = new Html();
+                $spreadsheet = $reader->load($targetPath);
+            } catch (\Throwable $e) {}
+        }
+
+        // 6. Coba via Reader: Csv dengan ragam delimiter umum
+        if (!$spreadsheet) {
+            $delimiters = ["\t", ";", ",", "|"];
+            foreach ($delimiters as $delim) {
                 try {
-                    $reader = new Xls();
-                    $reader->setReadDataOnly(true);
-                    $spreadsheet = $reader->load($realPath);
-                } catch (\Throwable $e3) {
-                    // 4. Coba via Reader: Html (fingerprint software sering export format HTML table dengan ekstensi .xls)
-                    try {
-                        $reader = new Html();
-                        $spreadsheet = $reader->load($realPath);
-                    } catch (\Throwable $e4) {
-                        // 5. Coba via Reader: Csv
-                        try {
-                            $reader = new Csv();
-                            $spreadsheet = $reader->load($realPath);
-                        } catch (\Throwable $e5) {
-                            // 6. Coba via Reader: Xml
-                            $reader = new Xml();
-                            $spreadsheet = $reader->load($realPath);
+                    $reader = new Csv();
+                    $reader->setDelimiter($delim);
+                    $ss = $reader->load($targetPath);
+                    $sample = $ss->getActiveSheet()->toArray(null, true, true, false);
+                    if (!empty($sample) && count($sample[0] ?? []) > 1) {
+                        $spreadsheet = $ss;
+                        break;
+                    }
+                } catch (\Throwable $e) {}
+            }
+        }
+
+        // 7. Coba via Reader: Xml (Microsoft Office 2003 XML format)
+        if (!$spreadsheet) {
+            try {
+                $reader = new Xml();
+                $spreadsheet = $reader->load($targetPath);
+            } catch (\Throwable $e) {}
+        }
+
+        if ($tempCopy && file_exists($tempCopy)) {
+            @unlink($tempCopy);
+        }
+
+        if ($spreadsheet) {
+            $worksheet = $spreadsheet->getActiveSheet();
+            $rows = $worksheet->toArray(null, true, true, false);
+            if (!empty($rows)) {
+                return $rows;
+            }
+        }
+
+        // 8. Fallback: Direct Content Inspection & Parsing (HTML Table & TSV/CSV)
+        $rawContent = @file_get_contents($realPath);
+        if ($rawContent !== false && strlen($rawContent) > 0) {
+            // Deteksi & normalisasi encoding (UTF-16LE biometric, Windows-1252, dsb)
+            $encoding = mb_detect_encoding($rawContent, ['UTF-8', 'UTF-16LE', 'UTF-16BE', 'Windows-1252', 'ISO-8859-1'], true);
+            if ($encoding && $encoding !== 'UTF-8') {
+                $rawContent = mb_convert_encoding($rawContent, 'UTF-8', $encoding);
+            }
+
+            // A. HTML Table parsing menggunakan DOMDocument
+            if (stripos($rawContent, '<table') !== false || stripos($rawContent, '<tr') !== false) {
+                libxml_use_internal_errors(true);
+                $dom = new \DOMDocument();
+                $dom->loadHTML('<?xml encoding="UTF-8">' . $rawContent);
+                libxml_clear_errors();
+
+                $extractedRows = [];
+                $trs = $dom->getElementsByTagName('tr');
+                foreach ($trs as $tr) {
+                    $row = [];
+                    $cells = $tr->childNodes;
+                    foreach ($cells as $cell) {
+                        if (in_array(strtolower($cell->nodeName), ['td', 'th'])) {
+                            $row[] = html_entity_decode(trim($cell->textContent), ENT_QUOTES | ENT_HTML5, 'UTF-8');
                         }
                     }
+                    if (!empty($row)) {
+                        $extractedRows[] = $row;
+                    }
+                }
+                if (!empty($extractedRows)) {
+                    return $extractedRows;
+                }
+            }
+
+            // B. Delimited Text (CSV/TSV) parsing
+            $lines = preg_split('/\r\n|\r|\n/', trim($rawContent));
+            if (!empty($lines)) {
+                $bestRows = [];
+                $delimiters = ["\t", ";", ",", "|"];
+                foreach ($delimiters as $delim) {
+                    $parsed = [];
+                    foreach ($lines as $line) {
+                        if (trim($line) === '') continue;
+                        $parsed[] = str_getcsv($line, $delim);
+                    }
+                    if (!empty($parsed) && count($parsed[0] ?? []) > count($bestRows[0] ?? [])) {
+                        $bestRows = $parsed;
+                    }
+                }
+                if (!empty($bestRows) && count($bestRows[0] ?? []) > 1) {
+                    return $bestRows;
                 }
             }
         }
 
-        if (!$spreadsheet) {
-            throw new \Exception('Format berkas tidak didukung atau rusak.');
+        throw new \Exception('Format berkas tidak didukung atau berkas rusak. Pastikan file berformat Excel (.xls / .xlsx) atau CSV valid.');
+    }
+
+    /**
+     * Parser berkas biner BIFF mentah (BIFF2/3/4/5/8) langsung dari stream
+     * Menangani file .xls yang dihasilkan oleh mesin fingerprint/biometric (ZKTeco, Solution, Fingerspot)
+     */
+    private function parseRawBiffStream($filePath)
+    {
+        try {
+            $data = @file_get_contents($filePath);
+            if (!$data || strlen($data) < 8) {
+                return null;
+            }
+
+            $firstType = unpack('v', substr($data, 0, 2))[1];
+            // Cek apakah header BOF BIFF (0x0809, 0x0409, 0x0209, 0x0009)
+            if (!in_array($firstType, [0x0809, 0x0409, 0x0209, 0x0009])) {
+                return null;
+            }
+
+            $len = strlen($data);
+            $offset = 0;
+            $rows = [];
+
+            while ($offset < $len) {
+                if ($offset + 4 > $len) break;
+                $type = unpack('v', substr($data, $offset, 2))[1];
+                $length = unpack('v', substr($data, $offset + 2, 2))[1];
+                $recordData = substr($data, $offset + 4, $length);
+                $offset += 4 + $length;
+
+                // BIFF2/3/4/5/8 LABEL (0x0204 or 0x0004)
+                if ($type === 0x0204 || $type === 0x0004) {
+                    $row = unpack('v', substr($recordData, 0, 2))[1];
+                    $col = unpack('v', substr($recordData, 2, 2))[1];
+                    if ($length >= 8) {
+                        $strLen = unpack('v', substr($recordData, 6, 2))[1];
+                        if ($strLen + 8 <= $length) {
+                            $str = substr($recordData, 8, $strLen);
+                        } elseif ($strLen + 7 <= $length) {
+                            $str = substr($recordData, 7, $strLen);
+                        } else {
+                            $str = trim(substr($recordData, 6));
+                        }
+                    } else {
+                        $str = trim(substr($recordData, 4));
+                    }
+                    $rows[$row][$col] = trim($str);
+                }
+                // RK (0x027E or 0x007E)
+                elseif ($type === 0x027E || $type === 0x007E) {
+                    $row = unpack('v', substr($recordData, 0, 2))[1];
+                    $col = unpack('v', substr($recordData, 2, 2))[1];
+                    $rknum = unpack('V', substr($recordData, 6, 4))[1];
+                    $rows[$row][$col] = $this->decodeBiffRk($rknum);
+                }
+                // NUMBER (0x0203 or 0x0003)
+                elseif ($type === 0x0203 || $type === 0x0003) {
+                    $row = unpack('v', substr($recordData, 0, 2))[1];
+                    $col = unpack('v', substr($recordData, 2, 2))[1];
+                    $num = unpack('d', substr($recordData, 6, 8))[1];
+                    $rows[$row][$col] = $num;
+                }
+                // MULRK (0x00BD or 0x02BD)
+                elseif ($type === 0x00BD || $type === 0x02BD) {
+                    $row = unpack('v', substr($recordData, 0, 2))[1];
+                    $firstCol = unpack('v', substr($recordData, 2, 2))[1];
+                    $numRk = ($length - 6) / 6;
+                    for ($i = 0; $i < $numRk; $i++) {
+                        $col = $firstCol + $i;
+                        $rknum = unpack('V', substr($recordData, 6 + $i * 6 + 2, 4))[1];
+                        $rows[$row][$col] = $this->decodeBiffRk($rknum);
+                    }
+                }
+                // LABELSST (0x00FD or 0x02FD)
+                elseif ($type === 0x00FD || $type === 0x02FD) {
+                    $row = unpack('v', substr($recordData, 0, 2))[1];
+                    $col = unpack('v', substr($recordData, 2, 2))[1];
+                    $sstIndex = unpack('V', substr($recordData, 6, 4))[1];
+                    $rows[$row][$col] = $sstIndex;
+                }
+            }
+
+            if (empty($rows)) {
+                return null;
+            }
+
+            ksort($rows);
+            $result = [];
+            foreach ($rows as $r => $cols) {
+                ksort($cols);
+                $maxCol = !empty($cols) ? max(array_keys($cols)) : 0;
+                $rowArr = [];
+                for ($c = 0; $c <= $maxCol; $c++) {
+                    $rowArr[$c] = $cols[$c] ?? null;
+                }
+                $result[] = $rowArr;
+            }
+            return $result;
+        } catch (\Throwable $e) {
+            return null;
+        }
+    }
+
+    /**
+     * Decode BIFF RK number
+     */
+    private function decodeBiffRk($rk)
+    {
+        if ($rk & 0x02) {
+            $val = ($rk >> 2);
+            if ($rk & 0x80000000) {
+                $val |= 0xC0000000;
+            }
+        } else {
+            $val = unpack('d', pack('VV', 0, $rk & 0xFFFFFFFC))[1];
+        }
+        if ($rk & 0x01) {
+            $val /= 100;
+        }
+        return $val;
+    }
+
+    /**
+     * Deteksi posisi kolom otomatis dari baris header jika tersedia
+     */
+    private function detectColumnMapping(array $row)
+    {
+        $mapping = [
+            'pin' => 0,
+            'nama' => 2,
+            'tanggal' => 6,
+            'scan1' => 7,
+            'scan2' => 8,
+            'scan3' => 9,
+            'scan4' => 10,
+        ];
+
+        $foundHeader = false;
+        $hasExactPin = false;
+
+        foreach ($row as $colIdx => $val) {
+            $val = strtolower(trim((string)$val));
+            if ($val === '') continue;
+
+            if (preg_match('/^(pin|user\s*id|badgenumber|ac-no\.?|enroll\s*id)$/i', $val)) {
+                $mapping['pin'] = $colIdx;
+                $hasExactPin = true;
+                $foundHeader = true;
+            } elseif (!$hasExactPin && preg_match('/^(id|no\.?\s*id|nik|nip)$/i', $val)) {
+                $mapping['pin'] = $colIdx;
+                $foundHeader = true;
+            } elseif (preg_match('/^(nama|nama\s*karyawan|nama\s*pegawai|employee\s*name|name)$/i', $val)) {
+                $mapping['nama'] = $colIdx;
+                $foundHeader = true;
+            } elseif (preg_match('/^(tanggal|tgl|date|att\s*date|waktu)$/i', $val)) {
+                $mapping['tanggal'] = $colIdx;
+                $foundHeader = true;
+            } elseif (preg_match('/^(scan\s*1|masuk|in|jam\s*masuk|checkin|clock\s*in|on\s*duty)$/i', $val)) {
+                $mapping['scan1'] = $colIdx;
+                $foundHeader = true;
+            } elseif (preg_match('/^(scan\s*2|keluar|out|jam\s*pulang|checkout|clock\s*out|off\s*duty)$/i', $val)) {
+                $mapping['scan2'] = $colIdx;
+                $foundHeader = true;
+            } elseif (preg_match('/^(scan\s*3)$/i', $val)) {
+                $mapping['scan3'] = $colIdx;
+                $foundHeader = true;
+            } elseif (preg_match('/^(scan\s*4)$/i', $val)) {
+                $mapping['scan4'] = $colIdx;
+                $foundHeader = true;
+            }
         }
 
-        $worksheet = $spreadsheet->getActiveSheet();
-        return $worksheet->toArray(null, true, true, false);
+        return $foundHeader ? $mapping : null;
     }
 
     /**
@@ -155,13 +433,17 @@ class AbsensiController extends MiddlewareController
 
         $val = trim((string) $val);
 
-        // Coba format umum d-m-Y atau d/m/Y
+        // Coba format umum d-m-Y atau d/m/Y atau Y-m-d atau Y/m/d
         try {
             return Carbon::createFromFormat('d-m-Y', $val)->format('Y-m-d');
         } catch (\Exception $e) {}
 
         try {
             return Carbon::createFromFormat('d/m/Y', $val)->format('Y-m-d');
+        } catch (\Exception $e) {}
+
+        try {
+            return Carbon::createFromFormat('Y-m-d', $val)->format('Y-m-d');
         } catch (\Exception $e) {}
 
         try {
@@ -203,31 +485,55 @@ class AbsensiController extends MiddlewareController
             $totalInvalid = 0;
             $totalDuplicate = 0;
 
+            // Default column index mapping
+            $mapping = [
+                'pin' => 0,
+                'nama' => 2,
+                'tanggal' => 6,
+                'scan1' => 7,
+                'scan2' => 8,
+                'scan3' => 9,
+                'scan4' => 10,
+            ];
+
+            $headerDetected = false;
+
             foreach ($rawRows as $index => $row) {
-                if (empty($row[0])) {
+                // Check if this row is a header row
+                if (!$headerDetected) {
+                    $detected = $this->detectColumnMapping($row);
+                    if ($detected) {
+                        $mapping = $detected;
+                        $headerDetected = true;
+                        continue;
+                    }
+                }
+
+                $pinVal = isset($row[$mapping['pin']]) ? trim((string) $row[$mapping['pin']]) : '';
+                if ($pinVal === '') {
                     continue;
                 }
 
-                // Abaikan header
-                $firstCol = strtoupper(trim((string) $row[0]));
-                if (in_array($firstCol, ['PIN', 'NO', 'NO.', 'ID', 'NIP', 'NIK', 'NAMA'])) {
+                // Abaikan jika baris header manual
+                $firstColUpper = strtoupper($pinVal);
+                if (in_array($firstColUpper, ['PIN', 'NO', 'NO.', 'ID', 'NIP', 'NIK', 'NAMA', 'USER ID', 'BADGENUMBER', 'AC-NO', 'ENROLL ID'])) {
                     continue;
                 }
 
-                // Kolom Tanggal (index 6 pada template mesin)
-                $tanggalRaw = $row[6] ?? null;
+                // Kolom Tanggal
+                $tanggalRaw = $row[$mapping['tanggal']] ?? null;
                 $tanggal = $this->parseTanggalAbsen($tanggalRaw);
 
                 if (!$tanggal) {
                     continue;
                 }
 
-                $pin = (string) $row[0];
-                $namaRaw = $row[2] ?? '-';
-                $scan1 = $this->formatScanTime($row[7] ?? null);
-                $scan2 = $this->formatScanTime($row[8] ?? null);
-                $scan3 = $this->formatScanTime($row[9] ?? null);
-                $scan4 = $this->formatScanTime($row[10] ?? null);
+                $pin = $pinVal;
+                $namaRaw = $row[$mapping['nama']] ?? '-';
+                $scan1 = $this->formatScanTime($row[$mapping['scan1']] ?? null);
+                $scan2 = $this->formatScanTime($row[$mapping['scan2']] ?? null);
+                $scan3 = $this->formatScanTime($row[$mapping['scan3']] ?? null);
+                $scan4 = $this->formatScanTime($row[$mapping['scan4']] ?? null);
 
                 // Cek duplikasi di DB
                 $isDuplicate = DataAbsensi::where('pin', $pin)->where('tanggal_absen', $tanggal)->exists();
@@ -285,7 +591,7 @@ class AbsensiController extends MiddlewareController
             if (empty($previewRows)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Tidak ditemukan baris data presensi yang valid pada file tersebut. Pastikan kolom PIN berada di kolom 1 dan Tanggal di kolom 7.'
+                    'message' => 'Tidak ditemukan baris data presensi yang valid pada file tersebut. Pastikan berkas memiliki kolom PIN dan Tanggal presensi.'
                 ], 422);
             }
 

@@ -192,16 +192,26 @@
 @endsection
 
 @section('content')
-    {{-- TSU Page Header --}}
-    <x-tsu-page-header
-        :title="$title ?? 'Master Data Status Karyawan'"
-        :icon="$menuIcon ?? 'fas fa-id-badge'"
-        :breadcrumb="true"
-    >
-        <x-slot name="actions">
-            @can('admin:master-status-karyawan:create')
-                <button type="button" class="btn btn-sm tsu-btn-primary-action btn-modal mr-2" data-url="{{ route('admin.master-status-karyawan.create') }}" title="Tambah Status Karyawan Baru">
-                    <i class="fas fa-plus mr-1"></i> Tambah Status
+    <x-tsu-master-guide
+        title="Panduan Keterkaitan Master Status Kepegawaian"
+        description="Master Status Karyawan mengatur ikatan kerja pegawai di lingkungan universitas (Tetap Yayasan, Kontrak / PKWT, Paruh Waktu, Dosen Luar Biasa, dan Tenaga Alih Daya)."
+        :connections="[
+            ['label' => 'Data Induk Pegawai', 'route' => 'admin.data-karyawan.index', 'icon' => 'fas fa-user-tag'],
+            ['label' => 'Hak Saldo Cuti', 'route' => 'admin.saldo-cuti.index', 'icon' => 'fas fa-balance-scale'],
+            ['label' => 'Penggajian Payroll', 'route' => 'admin.payroll.index', 'icon' => 'fas fa-money-check-alt'],
+            ['label' => 'Monitoring Masa Kontrak & Pensiun', 'route' => 'admin.pengembangan-sdm.pensiun', 'icon' => 'fas fa-hourglass-half']
+        ]"
+        impact="Status kepegawaian menjadi penentu utama apakah pegawai berhak atas jatah saldo cuti tahunan, eligibility komponen tunjangan tetap, serta jadwal evaluasi perpanjangan kontrak kerja."
+    />
+
+    <div class="card card-primary card-outline">
+        <div class="card-header d-flex align-items-center">
+            <h3 class="card-title mr-4">{{ $title ?? 'Master Data Status Karyawan' }}</h3>
+
+            <div class="d-flex gap-2 ml-auto">
+                <button type="button" class="btn btn-success btn-modal btn-sm"
+                    data-url="{{ route('admin.master-status-karyawan.create') }}" title="Tambah Status Karyawan">
+                    <i class="fas fa-plus"></i> Tambah Status
                 </button>
             @endcan
 

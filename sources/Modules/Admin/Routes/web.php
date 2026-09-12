@@ -40,6 +40,21 @@ use Modules\Admin\Http\Controllers\HonorariumController;
 use Modules\Admin\Http\Controllers\SaldoCutiController;
 use Modules\Admin\Http\Controllers\PengembanganSdmController;
 use Modules\Admin\Http\Controllers\MasterPengembanganSdmController;
+use Modules\Admin\Http\Controllers\MasterJenisDokumenController;
+use Modules\Admin\Http\Controllers\MasterJenisSuratController;
+use Modules\Admin\Http\Controllers\RequestSuratController;
+use Modules\Admin\Http\Controllers\SuratEdaranController;
+use Modules\Admin\Http\Controllers\MasterOnboardingOffboardingController;
+use Modules\Admin\Http\Controllers\OnboardingOffboardingController;
+use Modules\Admin\Http\Controllers\LaporanBkdAdminController;
+use Modules\Admin\Http\Controllers\SuratMasukController;
+use Modules\Admin\Http\Controllers\DisposisiUnitController;
+use Modules\Admin\Http\Controllers\KpiDashboardController;
+use Modules\Admin\Http\Controllers\KpiPeriodeController;
+use Modules\Admin\Http\Controllers\KpiMasterIndikatorController;
+use Modules\Admin\Http\Controllers\KpiMasterPerspektifController;
+use Modules\Admin\Http\Controllers\KpiCascadingController;
+use Modules\Admin\Http\Controllers\KpiMonitoringController;
 
 Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
     Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
@@ -63,6 +78,12 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
             Route::get('/{id}/struktural', [DataKaryawanController::class, 'kelolaStrukturalModal'])->name('kelola-struktural');
             Route::post('/{id}/struktural', [DataKaryawanController::class, 'storeStruktural'])->name('store-struktural');
             Route::delete('/struktural/{struktural_id}', [DataKaryawanController::class, 'destroyStruktural'])->name('destroy-struktural');
+
+            // Route Dokumen Berkas Dinamis
+            Route::post('/{id}/dokumen', [DataKaryawanController::class, 'storeDokumen'])->name('store-dokumen');
+            Route::delete('/dokumen/{dokumen_id}', [DataKaryawanController::class, 'destroyDokumen'])->name('destroy-dokumen');
+            Route::get('/dokumen/{dokumen_id}/preview', [DataKaryawanController::class, 'previewDokumenModal'])->name('preview-dokumen');
+            Route::get('/dokumen/{dokumen_id}/file', [DataKaryawanController::class, 'streamDokumen'])->name('stream-dokumen');
 
             // Route Riwayat Jabatan (Read Only)
             Route::get('/{id}/riwayat', [DataKaryawanController::class, 'riwayatModal'])->name('riwayat');
@@ -174,6 +195,41 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
 
             // Keluarga & Anak
             Route::post('/keluarga/update', [MasterTunjanganController::class, 'updateKeluarga'])->name('keluarga.update');
+        });
+    });
+
+    // --- ROUTE MASTER JENIS DOKUMEN ---
+    Route::middleware(['permission:admin:master-jenis-dokumen:view'])->group(function () {
+        Route::prefix('master-jenis-dokumen')->name('master-jenis-dokumen.')->group(function () {
+            Route::get('/json', [MasterJenisDokumenController::class, 'datatable'])->name('json');
+            Route::resource('/', MasterJenisDokumenController::class)->parameters(['' => 'id'])->except(['show']);
+        });
+    });
+
+    // --- ROUTE MASTER JENIS SURAT SDM ---
+    Route::middleware(['permission:admin:master-jenis-surat:view'])->group(function () {
+        Route::prefix('master-jenis-surat')->name('master-jenis-surat.')->group(function () {
+            Route::get('/json', [MasterJenisSuratController::class, 'datatable'])->name('json');
+            Route::resource('/', MasterJenisSuratController::class)->parameters(['' => 'id'])->except(['show']);
+        });
+    });
+
+    // --- ROUTE MASTER ONBOARDING & OFFBOARDING ---
+    Route::middleware(['permission:admin:data-karyawan:view'])->group(function () {
+        Route::prefix('master-onboarding-offboarding')->name('master-onboarding-offboarding.')->group(function () {
+            Route::get('/json', [MasterOnboardingOffboardingController::class, 'datatable'])->name('json');
+            Route::resource('/', MasterOnboardingOffboardingController::class)->parameters(['' => 'id'])->except(['show']);
+        });
+    });
+
+    // --- ROUTE PELAKSANAAN ONBOARDING & OFFBOARDING PEGAWAI ---
+    Route::middleware(['permission:admin:data-karyawan:view'])->group(function () {
+        Route::prefix('pelaksanaan-onboarding-offboarding')->name('pelaksanaan-onboarding-offboarding.')->group(function () {
+            Route::get('/', [OnboardingOffboardingController::class, 'index'])->name('index');
+            Route::get('/json-onboarding', [OnboardingOffboardingController::class, 'datatableOnboarding'])->name('json-onboarding');
+            Route::get('/json-offboarding', [OnboardingOffboardingController::class, 'datatableOffboarding'])->name('json-offboarding');
+            Route::get('/{id}/detail', [OnboardingOffboardingController::class, 'detail'])->name('detail');
+            Route::post('/toggle', [OnboardingOffboardingController::class, 'toggleItem'])->name('toggle');
         });
     });
 
@@ -408,7 +464,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
 
         // Master Bidang Keilmuan
         Route::prefix('master-bidang-keilmuan')->name('master-bidang-keilmuan.')
-            ->middleware(['permission:admin:pengembangan-sdm:master'])
+            ->middleware(['permission:admin:master-bidang-keilmuan:view'])
             ->group(function () {
                 Route::get('/', [MasterPengembanganSdmController::class, 'bidangIndex'])->name('index');
                 Route::get('/json', [MasterPengembanganSdmController::class, 'bidangJson'])->name('json');
@@ -419,7 +475,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
 
         // Master Sertifikasi
         Route::prefix('master-sertifikasi')->name('master-sertifikasi.')
-            ->middleware(['permission:admin:pengembangan-sdm:master'])
+            ->middleware(['permission:admin:master-sertifikasi:view'])
             ->group(function () {
                 Route::get('/', [MasterPengembanganSdmController::class, 'sertifikasiIndex'])->name('index');
                 Route::get('/json', [MasterPengembanganSdmController::class, 'sertifikasiJson'])->name('json');
@@ -427,5 +483,154 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
                 Route::put('/update/{id}', [MasterPengembanganSdmController::class, 'sertifikasiUpdate'])->name('update');
                 Route::delete('/destroy/{id}', [MasterPengembanganSdmController::class, 'sertifikasiDestroy'])->name('destroy');
             });
+
+        // Master Periode Renstra Pengembangan SDM
+        Route::prefix('master-periode-pengembangan')->name('master-periode-pengembangan.')
+            ->middleware(['permission:admin:master-periode-pengembangan:view'])
+            ->group(function () {
+                Route::get('/', [MasterPengembanganSdmController::class, 'periodeIndex'])->name('index');
+                Route::post('/store', [MasterPengembanganSdmController::class, 'periodeStore'])->name('store');
+                Route::post('/update/{id}', [MasterPengembanganSdmController::class, 'periodeUpdate'])->name('update');
+                Route::post('/set-active/{id}', [MasterPengembanganSdmController::class, 'periodeSetActive'])->name('set-active');
+                Route::delete('/destroy/{id}', [MasterPengembanganSdmController::class, 'periodeDestroy'])->name('destroy');
+            });
+    });
+
+    // --- ROUTE LAYANAN PERSURATAN SDM ---
+    Route::prefix('request-surat')->name('request-surat.')->group(function () {
+        // Self-Service Pegawai (Dosen & Tendik)
+        Route::get('/saya', [RequestSuratController::class, 'userIndex'])->name('user-index');
+        Route::get('/saya/json', [RequestSuratController::class, 'userDataTable'])->name('user-json');
+        Route::get('/create-modal', [RequestSuratController::class, 'userCreateModal'])->name('user-create');
+        Route::post('/store', [RequestSuratController::class, 'userStore'])->name('user-store');
+        Route::get('/{id}/detail', [RequestSuratController::class, 'detail'])->name('detail');
+        Route::get('/{id}/stream-lampiran', [RequestSuratController::class, 'streamLampiran'])->name('stream-lampiran');
+        Route::get('/{id}/stream-hasil', [RequestSuratController::class, 'streamHasil'])->name('stream-hasil');
+
+        // Admin SDM (Kelola & Verifikasi)
+        Route::middleware(['permission:admin:persuratan-sdm:view'])->group(function () {
+            Route::get('/kelola', [RequestSuratController::class, 'adminIndex'])->name('admin-index');
+            Route::get('/kelola/index', [RequestSuratController::class, 'adminIndex'])->name('index');
+            Route::get('/kelola/json', [RequestSuratController::class, 'adminDataTable'])->name('admin-json');
+            Route::post('/{id}/proses', [RequestSuratController::class, 'adminProses'])->name('proses');
+            Route::get('/{id}/modal-teruskan', [RequestSuratController::class, 'adminTeruskanModal'])->name('modal-teruskan');
+            Route::post('/{id}/teruskan', [RequestSuratController::class, 'adminStoreTeruskan'])->name('admin-store-teruskan');
+            Route::get('/{id}/modal-selesai', [RequestSuratController::class, 'adminSelesaiModal'])->name('modal-selesai');
+            Route::post('/{id}/selesai', [RequestSuratController::class, 'adminStoreSelesai'])->name('admin-store-selesai');
+            Route::get('/{id}/modal-tolak', [RequestSuratController::class, 'adminTolakModal'])->name('modal-tolak');
+            Route::post('/{id}/tolak', [RequestSuratController::class, 'adminStoreTolak'])->name('admin-store-tolak');
+        });
+
+        // Sekretariat Rektorat (Kasus 2: Alur Pembuatan SK & Tracking Hardfile)
+        Route::get('/sekretariat', [RequestSuratController::class, 'sekretariatInbox'])->name('sekretariat-inbox');
+        Route::get('/sekretariat/json', [RequestSuratController::class, 'sekretariatDataTable'])->name('sekretariat-json');
+        Route::get('/{id}/modal-sekretariat-selesai', [RequestSuratController::class, 'sekretariatSelesaiModal'])->name('modal-sekretariat-selesai');
+        Route::post('/{id}/sekretariat-selesai', [RequestSuratController::class, 'sekretariatStoreSelesai'])->name('sekretariat-store-selesai');
+        Route::post('/{id}/update-hardfile', [RequestSuratController::class, 'adminUpdateHardfileStatus'])->name('update-hardfile');
+    });
+
+    // --- ROUTE PUSAT SURAT EDARAN & SK SDM ---
+    Route::prefix('surat-edaran')->name('surat-edaran.')->group(function () {
+        Route::get('/', [SuratEdaranController::class, 'index'])->name('index');
+        Route::get('/json', [SuratEdaranController::class, 'datatable'])->name('json');
+        Route::get('/datatable', [SuratEdaranController::class, 'datatable'])->name('datatable');
+        Route::get('/create', [SuratEdaranController::class, 'create'])->name('create');
+        Route::post('/store', [SuratEdaranController::class, 'store'])->name('store')->middleware(['permission:admin:persuratan-sdm:create']);
+        Route::get('/{id}/edit', [SuratEdaranController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [SuratEdaranController::class, 'update'])->name('update');
+        Route::get('/{id}/download', [SuratEdaranController::class, 'download'])->name('download');
+        Route::delete('/{id}', [SuratEdaranController::class, 'destroy'])->name('destroy')->middleware(['permission:admin:persuratan-sdm:delete']);
+    });
+
+    // --- ROUTE MONITORING BKD DOSEN ---
+    Route::prefix('monitoring-bkd')->name('monitoring-bkd.')->group(function () {
+        Route::get('/', [LaporanBkdAdminController::class, 'index'])->name('index');
+        Route::get('/json', [LaporanBkdAdminController::class, 'datatable'])->name('json');
+        Route::get('/{id}/modal-verif', [LaporanBkdAdminController::class, 'modalVerif'])->name('modal-verif');
+        Route::post('/{id}/verif', [LaporanBkdAdminController::class, 'storeVerif'])->name('store-verif');
+        Route::post('/admin-upload', [LaporanBkdAdminController::class, 'storeAdminUpload'])->name('admin-upload');
+        Route::get('/{id}/stream', [LaporanBkdAdminController::class, 'stream'])->name('stream');
+    });
+
+    // --- ROUTE REGISTRASI SURAT MASUK & SIKD (KASUS 1 EKSTERNAL) ---
+    Route::prefix('surat-masuk')->name('surat-masuk.')->group(function () {
+        Route::get('/', [SuratMasukController::class, 'index'])->name('index');
+        Route::get('/json', [SuratMasukController::class, 'dataTable'])->name('json');
+        Route::get('/create-modal', [SuratMasukController::class, 'createModal'])->name('create-modal');
+        Route::post('/store', [SuratMasukController::class, 'store'])->name('store');
+        Route::get('/{id}/detail', [SuratMasukController::class, 'detailModal'])->name('detail');
+        Route::get('/{id}/disposisi-modal', [SuratMasukController::class, 'disposisiModal'])->name('disposisi-modal');
+        Route::post('/{id}/disposisi', [SuratMasukController::class, 'storeDisposisi'])->name('store-disposisi');
+        Route::get('/{id}/stream-file', [SuratMasukController::class, 'streamFile'])->name('stream-file');
+    });
+
+    // --- ROUTE DISPOSISI MASUK UNIT KERJA (PENGADAAN, BAUK, DLL.) ---
+    Route::prefix('disposisi-unit')->name('disposisi-unit.')->group(function () {
+        Route::get('/', [DisposisiUnitController::class, 'index'])->name('index');
+        Route::get('/json', [DisposisiUnitController::class, 'dataTable'])->name('json');
+        Route::post('/{id}/terima', [DisposisiUnitController::class, 'terimaDisposisi'])->name('terima');
+        Route::get('/{id}/tindak-lanjut-modal', [DisposisiUnitController::class, 'tindakLanjutModal'])->name('tindak-lanjut-modal');
+        Route::post('/{id}/tindak-lanjut', [DisposisiUnitController::class, 'storeTindakLanjut'])->name('store-tindak-lanjut');
+        Route::get('/{id}/stream-tindak-lanjut', [DisposisiUnitController::class, 'streamTindakLanjut'])->name('stream-tindak-lanjut');
+    });
+
+    // =========================================================================
+    // MODUL KPI & BALANCED SCORECARD (BSC)
+    // =========================================================================
+    Route::prefix('kpi')->name('kpi.')->group(function () {
+        // Dashboard KPI
+        Route::get('/dashboard', [KpiDashboardController::class, 'index'])->name('dashboard.index');
+
+        // Periode Penilaian KPI
+        Route::prefix('periode')->name('periode.')->group(function () {
+            Route::get('/', [KpiPeriodeController::class, 'index'])->name('index');
+            Route::get('/json', [KpiPeriodeController::class, 'dataTable'])->name('json');
+            Route::post('/store', [KpiPeriodeController::class, 'store'])->name('store');
+            Route::get('/{id}', [KpiPeriodeController::class, 'show'])->name('show');
+            Route::put('/{id}', [KpiPeriodeController::class, 'update'])->name('update');
+            Route::delete('/{id}', [KpiPeriodeController::class, 'destroy'])->name('destroy');
+            Route::post('/{id}/toggle-aktif', [KpiPeriodeController::class, 'toggleAktif'])->name('toggle-aktif');
+            Route::post('/{id}/toggle-kunci', [KpiPeriodeController::class, 'toggleKunci'])->name('toggle-kunci');
+        });
+
+        // Kamus Master Indikator
+        Route::prefix('master-indikator')->name('master-indikator.')->group(function () {
+            Route::get('/', [KpiMasterIndikatorController::class, 'index'])->name('index');
+            Route::get('/json', [KpiMasterIndikatorController::class, 'dataTable'])->name('json');
+            Route::post('/store', [KpiMasterIndikatorController::class, 'store'])->name('store');
+            Route::get('/options/parents', [KpiMasterIndikatorController::class, 'getParentOptions'])->name('parent-options');
+            Route::get('/{id}', [KpiMasterIndikatorController::class, 'show'])->name('show');
+            Route::put('/{id}', [KpiMasterIndikatorController::class, 'update'])->name('update');
+            Route::delete('/{id}', [KpiMasterIndikatorController::class, 'destroy'])->name('destroy');
+        });
+
+        // Master Perspektif BSC
+        Route::prefix('perspektif')->name('perspektif.')->group(function () {
+            Route::get('/', [KpiMasterPerspektifController::class, 'index'])->name('index');
+            Route::get('/json', [KpiMasterPerspektifController::class, 'dataTable'])->name('json');
+            Route::post('/store', [KpiMasterPerspektifController::class, 'store'])->name('store');
+            Route::get('/{id}', [KpiMasterPerspektifController::class, 'show'])->name('show');
+            Route::put('/{id}', [KpiMasterPerspektifController::class, 'update'])->name('update');
+            Route::delete('/{id}', [KpiMasterPerspektifController::class, 'destroy'])->name('destroy');
+        });
+
+        // Cascading KPI Unit Kerja
+        Route::prefix('cascading')->name('cascading.')->group(function () {
+            Route::get('/', [KpiCascadingController::class, 'index'])->name('index');
+            Route::get('/json', [KpiCascadingController::class, 'dataTable'])->name('json');
+            Route::post('/store', [KpiCascadingController::class, 'store'])->name('store');
+            Route::post('/cascade-down', [KpiCascadingController::class, 'cascadeDown'])->name('cascade-down');
+            Route::get('/options/parent-unit-indikators', [KpiCascadingController::class, 'getParentUnitIndikatorOptions'])->name('parent-unit-options');
+            Route::get('/{id}', [KpiCascadingController::class, 'show'])->name('show');
+            Route::put('/{id}', [KpiCascadingController::class, 'update'])->name('update');
+            Route::delete('/{id}', [KpiCascadingController::class, 'destroy'])->name('destroy');
+        });
+
+        // Monitoring & Evaluasi Realisasi KPI
+        Route::prefix('monitoring')->name('monitoring.')->group(function () {
+            Route::get('/', [KpiMonitoringController::class, 'index'])->name('index');
+            Route::get('/json', [KpiMonitoringController::class, 'dataTable'])->name('json');
+            Route::post('/{id}/realisasi', [KpiMonitoringController::class, 'updateRealisasi'])->name('update-realisasi');
+        });
     });
 });

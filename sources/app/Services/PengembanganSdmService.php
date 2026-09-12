@@ -220,6 +220,49 @@ class PengembanganSdmService
             $tendikBreakdown[] = $unitRow;
         }
 
+        // 6. Kalkulasi Agregat Tendik per Tahun (2026 - 2030)
+        $tendikYearlyStats = [];
+        foreach ($tahunRange as $thn) {
+            $tCount = 0;
+            $s2Count = 0;
+            $s1Count = 0;
+            $d3Count = 0;
+            $ssCount = 0;
+            $tssCount = 0;
+
+            foreach ($pesertaTendik as $p) {
+                $tl = $p->timelines->where('tahun', $thn)->first();
+                if ($tl) {
+                    $tCount++;
+                    $st = strtoupper($tl->status_studi);
+                    $act = strtoupper($tl->status_aktif_studi);
+
+                    if (str_contains($st, 'S2')) $s2Count++;
+                    elseif (str_contains($st, 'S1')) $s1Count++;
+                    elseif (str_contains($st, 'D3')) $d3Count++;
+
+                    if ($act === 'SS' || str_contains($st, '+')) {
+                        $ssCount++;
+                    } else {
+                        $tssCount++;
+                    }
+                }
+            }
+
+            $persenS1S2 = $tCount > 0 ? round((($s1Count + $s2Count) / $tCount) * 100, 1) : 0;
+
+            $tendikYearlyStats[$thn] = [
+                'tahun' => $thn,
+                'total_tendik' => $tCount,
+                's2' => $s2Count,
+                's1' => $s1Count,
+                'd3' => $d3Count,
+                'ss' => $ssCount,
+                'tss' => $tssCount,
+                'persen_s1_s2' => $persenS1S2,
+            ];
+        }
+
         // Top KPI
         $baseline2026 = $dosenYearlyStats[2026] ?? ['persen_s3' => 6.9, 'ss' => 14, 's3' => 5];
         $target2030 = $dosenYearlyStats[2030] ?? ['persen_s3' => 53.6, 's3' => 45];
@@ -243,6 +286,7 @@ class PengembanganSdmService
                 'total_ln' => $totalLN,
             ],
             'dosen_yearly_stats' => $dosenYearlyStats,
+            'tendik_yearly_stats' => $tendikYearlyStats,
             'prodi_breakdown' => $prodiBreakdown,
             'tendik_breakdown' => $tendikBreakdown,
         ];

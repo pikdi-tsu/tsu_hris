@@ -7,6 +7,7 @@ use Illuminate\Support\ServiceProvider;
 use Modules\System\View\Components\Layouts\Sidebar;
 use Modules\System\View\Components\TsuPageHeader;
 use Modules\System\View\Components\TsuStatCard;
+use Modules\System\View\Components\TsuMasterGuide;
 
 // use Illuminate\Database\Eloquent\Factory;
 
@@ -44,6 +45,7 @@ class SystemServiceProvider extends ServiceProvider
         // TSU Design System Components
         Blade::component('tsu-page-header', TsuPageHeader::class);
         Blade::component('tsu-stat-card', TsuStatCard::class);
+        Blade::component('tsu-master-guide', TsuMasterGuide::class);
     }
 
     /**

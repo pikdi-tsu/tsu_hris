@@ -71,6 +71,21 @@ class DataDosenTendik extends Authenticatable
         return $this->belongsTo(MasterStatusKaryawan::class, 'status_karyawan_id', 'id');
     }
 
+    public function isPegawaiTetap(): bool
+    {
+        if (!$this->statusKaryawan) {
+            $status = MasterStatusKaryawan::find($this->status_karyawan_id);
+            if (!$status) return false;
+            $nama = strtoupper($status->nama_status);
+        } else {
+            $nama = strtoupper($this->statusKaryawan->nama_status);
+        }
+
+        return in_array($nama, ['PKWTT', 'PNS', 'TETAP', 'PEGAWAI TETAP', 'KETENAGAAN UNS', 'KETENAGAAN AF'])
+            || str_contains($nama, 'TETAP')
+            || str_contains($nama, 'PKWTT');
+    }
+
     public function riwayatJabatans()
     {
         return $this->hasMany(RiwayatJabatan::class, 'data_dosen_tendik_id');
@@ -79,6 +94,11 @@ class DataDosenTendik extends Authenticatable
     public function saldosCuti()
     {
         return $this->hasMany(SaldoCutiKaryawan::class, 'id_user', 'id');
+    }
+
+    public function dokumenBerkas()
+    {
+        return $this->hasMany(KaryawanDokumenBerkas::class, 'data_dosen_tendik_id', 'id')->with('masterJenis')->latest();
     }
 
     protected function namaLengkap(): Attribute
@@ -177,6 +197,18 @@ class DataDosenTendik extends Authenticatable
 
                     ['name' => 'alamat_lengkap', 'label' => 'Alamat Sesuai KTP', 'type' => 'textarea', 'col_size' => 6],
                     ['name' => 'alamat_domisili', 'label' => 'Alamat Domisili Saat Ini', 'type' => 'textarea', 'col_size' => 6],
+
+                    // Sub-seksi Kontak Darurat
+                    ['name' => 'kontak_darurat_nama', 'label' => 'Nama Kontak Darurat', 'type' => 'text', 'col_size' => 4, 'placeholder' => 'Nama keluarga / kerabat terdekat'],
+                    ['name' => 'kontak_darurat_hubungan', 'label' => 'Hubungan Kontak Darurat', 'type' => 'select', 'col_size' => 4, 'options' => [
+                        'Orang Tua' => 'Orang Tua (Ayah/Ibu)',
+                        'Suami / Istri' => 'Suami / Istri',
+                        'Anak' => 'Anak Kandung',
+                        'Saudara Kandung' => 'Saudara Kandung (Kakak/Adik)',
+                        'Kerabat / Lainnya' => 'Kerabat / Lainnya',
+                    ]],
+                    ['name' => 'kontak_darurat_no_hp', 'label' => 'No. HP / WA Darurat', 'type' => 'text', 'col_size' => 4, 'placeholder' => 'Contoh: 081234567890'],
+                    ['name' => 'kontak_darurat_alamat', 'label' => 'Alamat Kontak Darurat', 'type' => 'textarea', 'col_size' => 12, 'placeholder' => 'Alamat domisili kontak darurat'],
                 ]
             ],
 
@@ -219,15 +251,10 @@ class DataDosenTendik extends Authenticatable
                 ]
             ],
 
-            // TAB 4: DOKUMEN
+            // TAB 4: DOKUMEN BERKAS DIGITAL (Dikelola dinamis melalui MasterJenisDokumen & KaryawanDokumenBerkas)
             'tab_dokumen' => [
                 'label' => 'Dokumen Berkas',
-                'fields' => [
-                    ['name' => 'scan_ktp', 'label' => 'Link Scan KTP (URL)', 'type' => 'text', 'col_size' => 12],
-                    ['name' => 'scan_kk', 'label' => 'Link Scan KK (URL)', 'type' => 'text', 'col_size' => 12],
-                    ['name' => 'scan_npwp', 'label' => 'Link Scan NPWP (URL)', 'type' => 'text', 'col_size' => 12],
-                    ['name' => 'scan_ijazah', 'label' => 'Link Scan Ijazah (URL)', 'type' => 'text', 'col_size' => 12],
-                ]
+                'fields' => []
             ],
 
             // TAB 5: PAYROLL & REKENING
@@ -247,5 +274,15 @@ class DataDosenTendik extends Authenticatable
     public function payrollHistories()
     {
         return $this->hasMany(PayrollKaryawan::class, 'data_dosen_tendik_id', 'id');
+    }
+
+    public function laporanBkds()
+    {
+        return $this->hasMany(\App\Models\LaporanBkd::class, 'data_dosen_tendik_id', 'id');
+    }
+
+    public function onboardingOffboardings()
+    {
+        return $this->hasMany(\App\Models\KaryawanOnboardingOffboarding::class, 'karyawan_id', 'id');
     }
 }

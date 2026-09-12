@@ -15,7 +15,7 @@ class MasterPengembanganSdmController extends MiddlewareController
 {
     public function __construct()
     {
-        $this->registerPermissions('admin:pengembangan-sdm');
+        // Permission handling via explicit guard calls
     }
 
     /**
@@ -23,7 +23,7 @@ class MasterPengembanganSdmController extends MiddlewareController
      */
     public function bidangIndex(Request $request)
     {
-        $this->guard('view', 'admin:pengembangan-sdm');
+        $this->guard('view', 'admin:master-bidang-keilmuan');
 
         $stats = [
             'total'      => MasterBidangKeilmuan::count(),
@@ -110,7 +110,7 @@ class MasterPengembanganSdmController extends MiddlewareController
 
     public function bidangStore(Request $request)
     {
-        $this->guard('edit', 'admin:pengembangan-sdm');
+        $this->guard('create', 'admin:master-bidang-keilmuan');
 
         $request->validate([
             'kode_bidang' => 'nullable|string|max:20',
@@ -160,7 +160,7 @@ class MasterPengembanganSdmController extends MiddlewareController
 
     public function bidangDestroy($id)
     {
-        $this->guard('delete', 'admin:pengembangan-sdm');
+        $this->guard('delete', 'admin:master-bidang-keilmuan');
 
         MasterBidangKeilmuan::findOrFail($id)->delete();
         if (request()->ajax()) {
@@ -174,7 +174,7 @@ class MasterPengembanganSdmController extends MiddlewareController
      */
     public function sertifikasiIndex(Request $request)
     {
-        $this->guard('view', 'admin:pengembangan-sdm');
+        $this->guard('view', 'admin:master-sertifikasi');
 
         $stats = [
             'total'      => MasterSertifikasi::count(),
@@ -261,7 +261,7 @@ class MasterPengembanganSdmController extends MiddlewareController
 
     public function sertifikasiStore(Request $request)
     {
-        $this->guard('edit', 'admin:pengembangan-sdm');
+        $this->guard('create', 'admin:master-sertifikasi');
 
         $request->validate([
             'nama_sertifikasi'    => 'required|string|max:150',
@@ -317,12 +317,150 @@ class MasterPengembanganSdmController extends MiddlewareController
 
     public function sertifikasiDestroy($id)
     {
-        $this->guard('delete', 'admin:pengembangan-sdm');
+        $this->guard('delete', 'admin:master-sertifikasi');
 
         MasterSertifikasi::findOrFail($id)->delete();
         if (request()->ajax()) {
             return response()->json(['success' => true, 'message' => 'Sertifikasi kompetensi berhasil dihapus!']);
         }
         return redirect()->back()->with('success', 'Sertifikasi kompetensi berhasil dihapus!');
+    }
+
+    /**
+     * Master Periode Renstra Pengembangan SDM
+     */
+    public function periodeIndex(Request $request)
+    {
+        $this->guard('view', 'admin:master-periode-pengembangan');
+
+        if ($request->ajax()) {
+            $data = MasterPeriodePengembangan::withCount('pesertas')->orderBy('tahun_mulai', 'desc');
+            return DataTables::of($data)
+                ->addIndexColumn()
+                ->editColumn('rentang_tahun', fn($row) => $row->tahun_mulai . ' - ' . $row->tahun_selesai)
+                ->editColumn('target_persen_doktor', fn($row) => number_format($row->target_persen_doktor, 2) . '%')
+                ->editColumn('is_active', function ($row) {
+                    if ($row->is_active) {
+                        return '<span class="badge badge-success px-2 py-1"><i class="fas fa-check-circle mr-1"></i> Aktif</span>';
+                    }
+                    return '<span class="badge badge-secondary px-2 py-1">Tidak Aktif</span>';
+                })
+                ->addColumn('action', function ($row) {
+                    $activeBtn = !$row->is_active 
+                        ? '<button class="btn btn-xs btn-outline-success mr-1 btn-set-active" data-id="' . $row->id . '" title="Set sebagai Periode Aktif"><i class="fas fa-check"></i> Aktifkan</button>' 
+                        : '';
+                    $editBtn = '<button class="btn btn-xs btn-info mr-1 btn-edit-periode" data-id="' . $row->id . '" data-nama="' . htmlspecialchars($row->nama_periode) . '" data-mulai="' . $row->tahun_mulai . '" data-selesai="' . $row->tahun_selesai . '" data-target="' . $row->target_persen_doktor . '" data-active="' . ($row->is_active ? '1' : '0') . '"><i class="fas fa-edit"></i> Edit</button>';
+                    $delBtn = '<button class="btn btn-xs btn-danger btn-delete-periode" data-id="' . $row->id . '"><i class="fas fa-trash"></i></button>';
+                    return $activeBtn . $editBtn . $delBtn;
+                })
+                ->rawColumns(['is_active', 'action'])
+                ->make(true);
+        }
+
+        $periodeList = MasterPeriodePengembangan::withCount('pesertas')->orderBy('tahun_mulai', 'desc')->get();
+        return view('admin::master-pengembangan.periode_index', [
+            'title' => 'Master Periode Pengembangan SDM (Renstra)',
+            'periodeList' => $periodeList,
+        ]);
+    }
+
+    public function periodeStore(Request $request)
+    {
+        $this->guard('create', 'admin:master-periode-pengembangan');
+
+        $request->validate([
+            'nama_periode' => 'required|string|max:150',
+            'tahun_mulai' => 'required|integer|min:2000|max:2100',
+            'tahun_selesai' => 'required|integer|gte:tahun_mulai|max:2100',
+            'target_persen_doktor' => 'required|numeric|min:0|max:100',
+            'is_active' => 'nullable',
+        ]);
+
+        $isActive = $request->boolean('is_active');
+        if ($isActive) {
+            MasterPeriodePengembangan::query()->update(['is_active' => false]);
+        }
+
+        MasterPeriodePengembangan::create([
+            'nama_periode' => $request->nama_periode,
+            'tahun_mulai' => $request->tahun_mulai,
+            'tahun_selesai' => $request->tahun_selesai,
+            'target_persen_doktor' => $request->target_persen_doktor,
+            'is_active' => $isActive,
+        ]);
+
+        if ($request->ajax()) {
+            return response()->json(['success' => true, 'message' => 'Periode pengembangan SDM berhasil ditambahkan!']);
+        }
+        return redirect()->back()->with('success', 'Periode pengembangan SDM berhasil ditambahkan!');
+    }
+
+    public function periodeUpdate(Request $request, $id)
+    {
+        $this->guard('edit', 'admin:master-periode-pengembangan');
+
+        $periode = MasterPeriodePengembangan::findOrFail($id);
+
+        $request->validate([
+            'nama_periode' => 'required|string|max:150',
+            'tahun_mulai' => 'required|integer|min:2000|max:2100',
+            'tahun_selesai' => 'required|integer|gte:tahun_mulai|max:2100',
+            'target_persen_doktor' => 'required|numeric|min:0|max:100',
+            'is_active' => 'nullable',
+        ]);
+
+        $isActive = $request->boolean('is_active');
+        if ($isActive) {
+            MasterPeriodePengembangan::where('id', '!=', $id)->update(['is_active' => false]);
+        }
+
+        $periode->update([
+            'nama_periode' => $request->nama_periode,
+            'tahun_mulai' => $request->tahun_mulai,
+            'tahun_selesai' => $request->tahun_selesai,
+            'target_persen_doktor' => $request->target_persen_doktor,
+            'is_active' => $isActive,
+        ]);
+
+        if ($request->ajax()) {
+            return response()->json(['success' => true, 'message' => 'Periode pengembangan SDM berhasil diperbarui!']);
+        }
+        return redirect()->back()->with('success', 'Periode pengembangan SDM berhasil diperbarui!');
+    }
+
+    public function periodeSetActive($id)
+    {
+        $this->guard('edit', 'admin:master-periode-pengembangan');
+
+        MasterPeriodePengembangan::query()->update(['is_active' => false]);
+        $periode = MasterPeriodePengembangan::findOrFail($id);
+        $periode->update(['is_active' => true]);
+
+        if (request()->ajax()) {
+            return response()->json(['success' => true, 'message' => 'Periode "' . $periode->nama_periode . '" berhasil diset sebagai periode aktif!']);
+        }
+        return redirect()->back()->with('success', 'Periode berhasil diset sebagai periode aktif!');
+    }
+
+    public function periodeDestroy($id)
+    {
+        $this->guard('delete', 'admin:master-periode-pengembangan');
+
+        $periode = MasterPeriodePengembangan::withCount('pesertas')->findOrFail($id);
+        if ($periode->pesertas_count > 0) {
+            if (request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tidak dapat menghapus periode ini karena memiliki ' . $periode->pesertas_count . ' data peserta roadmap terkait.'
+                ], 422);
+            }
+            return redirect()->back()->with('error', 'Tidak dapat menghapus periode ini karena memiliki data peserta roadmap terkait.');
+        }
+
+        $periode->delete();
+        if (request()->ajax()) {
+            return response()->json(['success' => true, 'message' => 'Periode berhasil dihapus!']);
+        }
+        return redirect()->back()->with('success', 'Periode berhasil dihapus!');
     }
 }

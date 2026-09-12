@@ -38,6 +38,20 @@
             </div>
         </div>
     </div>
+    @if($data->file_bukti)
+    <div class="row">
+        <div class="col-md-12">
+            <div class="form-group">
+                <label class="col-sm-12 control-label font-weight-bold"><i class="fas fa-paperclip mr-1 text-info"></i> Berkas Bukti Pendukung Cuti</label>
+                <div class="col-sm-12">
+                    <a href="{{ $data->file_bukti_url }}" target="_blank" download class="btn btn-sm btn-outline-info rounded-pill px-3 py-1 font-weight-bold">
+                        <i class="fas fa-download mr-1"></i> Unduh / Buka Berkas Bukti Cuti
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
     <div class="row">
         <div class="col-md-6">
             <div class="form-group">

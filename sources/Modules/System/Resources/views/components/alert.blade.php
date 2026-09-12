@@ -213,7 +213,7 @@
         };
 
         // Otomatis deteksi FormData
-        if (settings.data instanceof FormData) {
+        if (window.FormData && settings.data instanceof FormData) {
             ajaxConfig.processData = false;
             ajaxConfig.contentType = false;
         }

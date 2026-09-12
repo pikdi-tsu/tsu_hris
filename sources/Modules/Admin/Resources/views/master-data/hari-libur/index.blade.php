@@ -206,17 +206,25 @@
 @endsection
 
 @section('content')
-    {{-- TSU Page Header --}}
-    <x-tsu-page-header
-        :title="$title ?? 'Data Master Hari Libur'"
-        :icon="$menuIcon ?? 'far fa-calendar-alt'"
-        :breadcrumb="true"
-    >
-        <x-slot name="actions">
-            {{-- Tombol Tambah Libur Internal --}}
-            @can('admin:hari-libur:create')
-                <button type="button" class="btn btn-sm tsu-btn-primary-action btn-modal mr-2" data-url="{{ route('admin.hari-libur.create') }}" title="Tambah Hari Libur Khusus Institusi TSU">
-                    <i class="fas fa-plus mr-1"></i> Tambah Libur Internal
+    <x-tsu-master-guide
+        title="Panduan Keterkaitan Master Hari Libur"
+        description="Master Hari Libur mencatat seluruh tanggal merah resmi, cuti bersama nasional (Sync API), serta hari libur khusus internal yayasan/universitas (Dies Natalis, dll.)."
+        :connections="[
+            ['label' => 'Pengajuan Cuti Pegawai', 'route' => 'users.cuti.index', 'icon' => 'fas fa-calendar-alt'],
+            ['label' => 'Validasi Absensi Harian', 'route' => 'admin.absensi.index', 'icon' => 'fas fa-calendar-day'],
+            ['label' => 'Jadwal Piket Satpam/Tendik', 'route' => 'admin.jadwal-piket.index', 'icon' => 'fas fa-shield-alt'],
+            ['label' => 'Lembur Hari Libur', 'route' => 'users.lembur.index', 'icon' => 'fas fa-business-time']
+        ]"
+        impact="Tanggal libur otomatis dilewati (*dikecualikan*) dari pemotongan hari kerja saat pegawai mengajukan cuti, tidak dianggap alpa pada rekap absensi, serta menjadi acuan tarif lembur hari libur."
+    />
+
+    <div class="card card-primary card-outline">
+        <div class="card-header d-flex align-items-center">
+            <h3 class="card-title mr-4">Data Master Hari Libur</h3>
+
+            <div class="d-flex gap-2 ml-auto">
+                <button type="button" class="btn btn-success btn-modal btn-sm" data-url="{{ route('admin.hari-libur.create') }}" title="Buat Libur Internal">
+                    <i class="fas fa-plus"></i> Tambah Libur Internal
                 </button>
             @endcan
 

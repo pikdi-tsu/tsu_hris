@@ -192,16 +192,26 @@
 @endsection
 
 @section('content')
-    {{-- TSU Page Header --}}
-    <x-tsu-page-header
-        :title="$title ?? 'Master Data Shift & Jam Kerja'"
-        :icon="$menuIcon ?? 'fas fa-clock'"
-        :breadcrumb="true"
-    >
-        <x-slot name="actions">
-            @can('admin:master-shift:create')
-                <button type="button" class="btn btn-sm tsu-btn-primary-action btn-modal mr-2" data-url="{{ route('admin.master-shift.create') }}" title="Tambah Pola Shift Baru">
-                    <i class="fas fa-plus mr-1"></i> Tambah Shift
+    <x-tsu-master-guide
+        title="Panduan Keterkaitan Master Shift & Jam Kerja"
+        description="Master Shift mengatur jam operasional kerja harian (Jam Masuk, Jam Pulang, Toleransi Terlambat, dan Waktu Istirahat) untuk pegawai reguler maupun unit shift bergilir (Satpam, Petugas Kebersihan, Staf IT)."
+        :connections="[
+            ['label' => 'Jadwal Piket Satpam/Tendik', 'route' => 'admin.jadwal-piket.index', 'icon' => 'fas fa-calendar-alt'],
+            ['label' => 'Log Mesin Presensi', 'route' => 'admin.absensi.index', 'icon' => 'fas fa-fingerprint'],
+            ['label' => 'Rekapitulasi Absensi', 'route' => 'admin.rekap-absensi.index', 'icon' => 'fas fa-chart-bar'],
+            ['label' => 'Tarif Denda Keterlambatan', 'route' => 'admin.master-komponen-presensi.index', 'icon' => 'fas fa-clock']
+        ]"
+        impact="Konfigurasi rentang jam shift menjadi acuan pencocokan otomatis log absensi mesin fingerprint, penentuan denda terlambat/pulang cepat, serta kalkulasi total jam kerja efektif per bulan."
+    />
+
+    <div class="card card-primary card-outline">
+        <div class="card-header d-flex align-items-center">
+            <h3 class="card-title mr-4">{{ $title ?? 'Master Data Shift & Jam Kerja' }}</h3>
+
+            <div class="d-flex gap-2 ml-auto">
+                <button type="button" class="btn btn-success btn-modal btn-sm"
+                    data-url="{{ route('admin.master-shift.create') }}" title="Tambah Shift & Jam Kerja">
+                    <i class="fas fa-plus"></i> Tambah Shift
                 </button>
             @endcan
 

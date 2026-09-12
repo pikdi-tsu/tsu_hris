@@ -192,16 +192,26 @@
 @endsection
 
 @section('content')
-    {{-- TSU Page Header --}}
-    <x-tsu-page-header
-        :title="$title ?? 'Data Master Izin'"
-        :icon="$menuIcon ?? 'fas fa-envelope-open-text'"
-        :breadcrumb="true"
-    >
-        <x-slot name="actions">
-            @can('admin:master-izin:create')
-                <button type="button" class="btn btn-sm tsu-btn-primary-action btn-modal mr-2" data-url="{{ route('admin.master-izin.create') }}" title="Tambah Jenis Master Izin Baru">
-                    <i class="fas fa-plus mr-1"></i> Tambah Master Izin
+    <x-tsu-master-guide
+        title="Panduan Keterkaitan Master Izin"
+        description="Master Izin mengatur jenis izin tidak masuk kerja sementara atau dispensasi jam dinas (Tugas Luar, Pelatihan, Sakit Ringan, Acara Keluarga, dll.)."
+        :connections="[
+            ['label' => 'Pengajuan Izin Mandiri', 'route' => 'users.izin.index', 'icon' => 'fas fa-user-clock'],
+            ['label' => 'Approval Izin Atasan', 'route' => 'users.approval-izin.index', 'icon' => 'fas fa-user-check'],
+            ['label' => 'Riwayat Cuti & Izin', 'route' => 'admin.riwayat-izincuti.index', 'icon' => 'fas fa-history'],
+            ['label' => 'Rekap Presensi Harian', 'route' => 'admin.rekap-absensi.index', 'icon' => 'fas fa-clipboard-list']
+        ]"
+        impact="Jenis izin menentukan opsi alasan ketidakhadiran sah pada formulir pengajuan izin pegawai, sehingga presensi tidak tercatat alpa (*mangkir*) pada rekapitulasi bulanan."
+    />
+
+    <div class="card card-primary card-outline">
+        <div class="card-header d-flex align-items-center">
+            <h3 class="card-title mr-4">{{ $title ?? 'Data Master Izin' }}</h3>
+
+            <div class="d-flex gap-2 ml-auto">
+                <button type="button" class="btn btn-success btn-modal btn-sm"
+                    data-url="{{ route('admin.master-izin.create') }}" title="Tambah Master Izin">
+                    <i class="fas fa-plus"></i> Tambah Master Izin
                 </button>
             @endcan
 

@@ -215,34 +215,43 @@ class ApprovalCutiController extends Controller
                     }
                 }
             } else if ($checkhrd) {
-                // Option A: Cuti dipotong KETIKA HRD MENYETUJUI
+                // Option A: Cuti dipotong KETIKA HRD MENYETUJUI (hanya untuk cuti yang memotong kuota)
                 if ($approval == 'approved') {
-                    $checksaldo = SaldoCutiKaryawan::lockForUpdate()->where('id_user', $iduserinput)->where('is_active', '1')->first();
+                    $masterCuti = $check->masterCuti;
+                    $memotongKuota = $masterCuti ? (bool)$masterCuti->memotong_kuota : true;
 
-                    if (!$checksaldo) {
-                        DB::rollback();
-                        return $this->sendError('Gagal menyetujui: Karyawan belum memiliki data Saldo Cuti aktif. Silakan hubungi SDM untuk mengatur saldo.');
+                    if ($memotongKuota) {
+                        $checksaldo = SaldoCutiKaryawan::lockForUpdate()->where('id_user', $iduserinput)->where('is_active', '1')->first();
+
+                        if (!$checksaldo) {
+                            DB::rollback();
+                            return $this->sendError('Gagal menyetujui: Karyawan belum memiliki data Saldo Cuti aktif. Silakan hubungi SDM untuk mengatur saldo.');
+                        }
+
+                        if ($checksaldo->sisa < $jumlahHari) {
+                            DB::rollback();
+                            return $this->sendError('Gagal menyetujui: Sisa saldo cuti karyawan (' . $checksaldo->sisa . ' hari) tidak mencukupi untuk jumlah cuti ini (' . $jumlahHari . ' hari kerja).');
+                        }
+
+                        $saldoterpakai = $checksaldo->terpakai + $jumlahHari;
+                        $saldosisa = $checksaldo->sisa - $jumlahHari;
+                        SaldoCutiKaryawan::where('id_user', $iduserinput)->where('is_active', '1')->update([
+                            'terpakai'    => $saldoterpakai,
+                            'sisa'        => $saldosisa,
+                            'updated_at'  => date("Y-m-d H:i:s"),
+                            'updated_by'  => $profile->nik ?? Auth::id()
+                        ]);
+                    } else {
+                        // Cuti Khusus (Melahirkan, Pernikahan, Duka Cita, dll): Kuota tahunan TIDAK berkurang
+                        $checksaldo = SaldoCutiKaryawan::where('id_user', $iduserinput)->where('is_active', '1')->first();
+                        $saldosisa = $checksaldo ? $checksaldo->sisa : '-';
                     }
-
-                    if ($checksaldo->sisa < $jumlahHari) {
-                        DB::rollback();
-                        return $this->sendError('Gagal menyetujui: Sisa saldo cuti karyawan (' . $checksaldo->sisa . ' hari) tidak mencukupi untuk jumlah cuti ini (' . $jumlahHari . ' hari kerja).');
-                    }
-
-                    $saldoterpakai = $checksaldo->terpakai + $jumlahHari;
-                    $saldosisa = $checksaldo->sisa - $jumlahHari;
-                    SaldoCutiKaryawan::where('id_user', $iduserinput)->where('is_active', '1')->update([
-                        'terpakai'    => $saldoterpakai,
-                        'sisa'        => $saldosisa,
-                        'updated_at'  => date("Y-m-d H:i:s"),
-                        'updated_by'  => $profile->nik ?? Auth::id()
-                    ]);
 
                     $update = CutiKaryawan::where('id', $idcutikaryawan)->where('id_user', $iduserinput)->where('id_hrd', $check->id_hrd)->where('is_active', '1')->update([
                         'statushrd'       => $approval,
                         'alasanhrd'       => $ketapproval,
                         'hrdapprovaldate' => date("Y-m-d H:i:s"),
-                        'sisacuti'        => $saldosisa
+                        'sisacuti'        => (string)$saldosisa
                     ]);
                 } else {
                     // HRD Rejected: Saldo never deducted, so no refund needed!

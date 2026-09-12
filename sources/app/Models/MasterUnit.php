@@ -37,4 +37,10 @@ class MasterUnit extends Model
     {
         return $this->hasMany(DataDosenTendik::class, 'unit_id');
     }
+
+    public function kpiIndikators()
+    {
+        return $this->hasMany(KpiUnitIndikator::class, 'master_unit_id', 'id');
+    }
 }
+

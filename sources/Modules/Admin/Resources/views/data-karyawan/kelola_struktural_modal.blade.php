@@ -40,8 +40,19 @@
                         <small class="text-info mt-1 d-block"><i class="fas fa-info-circle"></i> Jabatan ini menempel pada unit tertentu, silakan pilih unit penugasannya.</small>
                     </div>
                 </div>
+                <div class="row">
+                    <div class="col-md-6 form-group">
+                        <label>Nomor SK Pengangkatan</label>
+                        <input type="text" name="sk_jabatan" class="form-control" placeholder="Contoh: 045/SK-REK/TSU/2026">
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label>Unggah Berkas SK (PDF / Gambar)</label>
+                        <input type="file" name="file_sk" class="form-control-file" accept=".pdf,.jpg,.jpeg,.png">
+                        <small class="text-muted">Maksimal 10 MB</small>
+                    </div>
+                </div>
                 <div class="text-right mt-2">
-                    <button type="submit" class="btn btn-dark btn-sm" id="btn-save-str">
+                    <button type="submit" class="btn btn-dark btn-sm font-weight-bold" id="btn-save-str">
                         <i class="fas fa-save mr-1"></i> Simpan Struktural
                     </button>
                 </div>
@@ -110,17 +121,20 @@ $(document).ready(function() {
     // Submit Add Struktural via AJAX
     $('#form-tambah-struktural').on('submit', function(e) {
         e.preventDefault();
-        let form = $(this);
+        let form = this;
+        let formData = new FormData(form);
+
         pikdiAjax({
-            url: form.attr('action'),
+            url: $(form).attr('action'),
             type: 'POST',
-            data: form.serialize(),
+            data: formData,
+            loadingText: 'Menyimpan jabatan struktural...',
             onSuccess: function(res) {
                 if(res.data && res.data.html) {
                     $('#struktural-list-container').html(res.data.html);
                 }
-                form.trigger('reset');
-                form.find('.select2').val('').trigger('change');
+                form.reset();
+                $(form).find('.select2').val('').trigger('change');
                 
                 if($.fn.DataTable.isDataTable('#table-karyawan')){
                     $('#table-karyawan').DataTable().ajax.reload(null, false);

@@ -94,6 +94,7 @@
 </script>
 @include('system::components.alert')
 @yield('script')
+@stack('scripts')
 
 <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/laravel-echo@1.16.1/dist/echo.iife.js"></script>

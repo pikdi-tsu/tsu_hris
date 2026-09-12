@@ -100,9 +100,15 @@ class DashboardController extends Controller
             ]);
         }
 
+        // 3. Ambil 5 riwayat permohonan surat SDM saya
+        $myRecentSurat = \App\Models\RequestSuratSdm::where('user_id', auth()->id())
+            ->orderBy('id', 'desc')
+            ->take(5)
+            ->get();
+
         $data = array(
-            'title'          => 'Dashboard',
-            'menu'           => 'dashboard',
+            'title'          => 'Dashboard HRIS',
+            'menu'           => 'Dashboard',
             'selectedDate'   => $selectedDate,
             'isToday'        => $selectedDate === Carbon::today()->format('Y-m-d'),
             'formattedDate'  => $parsedDate->locale('id')->translatedFormat('l, d F Y'),
@@ -110,6 +116,7 @@ class DashboardController extends Controller
             'totalIzin'      => $izinHariIni->count(),
             'totalAbsen'     => $karyawanAbsen->count(),
             'karyawanAbsen'  => $karyawanAbsen,
+            'myRecentSurat'  => $myRecentSurat,
         );
 
         return view('users::selfservice.dashboard', $data);
@@ -192,6 +199,83 @@ class DashboardController extends Controller
                     ]
                 ];
             }
+        }
+
+        // 3. Tarik data Surat Edaran & SK yang disetel tampil di kalender
+        $dataEdaran = \App\Models\SuratEdaranSdm::where('is_active', true)
+            ->where('tampilkan_di_kalender', true)
+            ->whereNotNull('tanggal_kalender')
+            ->when($start && $end, function ($query) use ($start, $end) {
+                $startDate = Carbon::parse($start)->format('Y-m-d');
+                $endDate = Carbon::parse($end)->format('Y-m-d');
+                return $query->where(function($q) use ($startDate, $endDate) {
+                    $q->whereBetween('tanggal_kalender', [$startDate, $endDate])
+                      ->orWhere(function($sub) use ($startDate, $endDate) {
+                          $sub->whereNotNull('tanggal_kalender_selesai')
+                              ->where('tanggal_kalender', '<=', $endDate)
+                              ->where('tanggal_kalender_selesai', '>=', $startDate);
+                      });
+                });
+            })
+            ->get();
+
+        foreach ($dataEdaran as $edaran) {
+            $startDate = Carbon::parse($edaran->tanggal_kalender)->format('Y-m-d');
+            $endDate = null;
+            if ($edaran->tanggal_kalender_selesai && $edaran->tanggal_kalender_selesai->gt($edaran->tanggal_kalender)) {
+                // FullCalendar 'end' is exclusive for all-day events, so add 1 day
+                $endDate = Carbon::parse($edaran->tanggal_kalender_selesai)->addDay()->format('Y-m-d');
+            }
+
+            // Kategori label dan warna tematik
+            $katLabel = match($edaran->kategori) {
+                'edaran_libur'     => 'Edaran Libur & Cuti',
+                'edaran_jam_kerja' => 'Edaran Jam Kerja',
+                'sk_rektor'        => 'SK Rektorat',
+                'kebijakan_sdm'    => 'Kebijakan SDM',
+                default            => 'Surat Edaran',
+            };
+
+            $bgColor = match($edaran->kategori) {
+                'edaran_libur'     => '#28a745', // Hijau segar untuk libur/cuti
+                'sk_rektor'        => '#6f42c1', // Ungu megah untuk SK Rektor
+                'edaran_jam_kerja' => '#fd7e14', // Oranye untuk jam kerja
+                default            => '#17a2b8', // Teal info untuk edaran umum
+            };
+
+            $eventItem = [
+                'id'              => 'edaran-' . $edaran->id,
+                'title'           => '[' . $katLabel . '] ' . $edaran->perihal,
+                'start'           => $startDate,
+                'backgroundColor' => $bgColor,
+                'borderColor'     => $bgColor,
+                'textColor'       => '#ffffff',
+                'allDay'          => true,
+                'extendedProps'   => [
+                    'type'                 => 'edaran',
+                    'id_edaran'            => $edaran->id,
+                    'nomor_surat'          => $edaran->nomor_surat,
+                    'perihal'              => $edaran->perihal,
+                    'kategori_label'       => $katLabel,
+                    'tanggal_surat'        => $edaran->tanggal_surat ? $edaran->tanggal_surat->locale('id')->translatedFormat('d F Y') : '-',
+                    'tanggal_kalender'     => $edaran->tanggal_kalender ? $edaran->tanggal_kalender->locale('id')->translatedFormat('d F Y') : '-',
+                    'tanggal_selesai'      => $edaran->tanggal_kalender_selesai ? $edaran->tanggal_kalender_selesai->locale('id')->translatedFormat('d F Y') : null,
+                    'target'               => match($edaran->target_audience) {
+                        'dosen'  => 'Khusus Dosen',
+                        'tendik' => 'Khusus Tendik',
+                        default  => 'Semua Civitas (Dosen & Tendik)',
+                    },
+                    'keterangan'           => $edaran->keterangan ?? '-',
+                    'file_url'             => $edaran->file_url,
+                    'download_url'         => route('admin.surat-edaran.download', $edaran->id),
+                ]
+            ];
+
+            if ($endDate) {
+                $eventItem['end'] = $endDate;
+            }
+
+            $events[] = $eventItem;
         }
 
         return response()->json($events);

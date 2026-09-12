@@ -124,7 +124,7 @@ class LaporanBkdAdminController extends MiddlewareController
                        '<small class="text-muted">' . $nidn . htmlspecialchars($prodi) . '</small>';
             })
             ->addColumn('tgl_bergabung_fmt', function ($row) {
-                return $row->tgl_bergabung ? Carbon::parse($row->tgl_bergabung)->format('d M Y') : '-';
+                return $row->tgl_bergabung ? Carbon::parse($row->tgl_bergabung)->translatedFormat('d M Y') : '-';
             })
             ->addColumn('status_bkd', function ($row) use ($refDate) {
                 $tglMasuk = $row->tgl_bergabung ? Carbon::parse($row->tgl_bergabung) : null;
@@ -133,36 +133,36 @@ class LaporanBkdAdminController extends MiddlewareController
                 $laporan = $row->laporanBkds->first();
 
                 if ($laporan) {
-                    $badge = '<span class="badge badge-success px-2 py-1"><i class="fas fa-check-circle mr-1"></i> Sudah Lapor</span>';
+                    $badge = '<span class="badge" style="background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 9999px; font-weight: 600; padding: 4px 10px;">Sudah Lapor</span>';
                     if ($isDosenBaru) {
-                        $badge .= '<br><span class="badge badge-secondary px-2 py-1 mt-1"><i class="fas fa-user-clock mr-1"></i> Dosen Baru</span>';
+                        $badge .= '<div class="mt-1"><span class="badge" style="background: rgba(2, 132, 199, 0.1); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.25); border-radius: 9999px; font-weight: 500; padding: 2px 8px; font-size: 0.75rem;">Dosen Baru</span></div>';
                     }
                     return $badge;
                 }
 
                 if ($isDosenBaru) {
-                    return '<span class="badge badge-secondary px-2 py-1"><i class="fas fa-user-clock mr-1"></i> Dosen Baru (Orientasi)</span><br><small class="text-muted">Masa kerja &lt; 1 thn</small>';
+                    return '<span class="badge" style="background: rgba(2, 132, 199, 0.1); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.25); border-radius: 9999px; font-weight: 600; padding: 4px 10px;">Orientasi</span><div class="small text-muted mt-1">&lt; 1 thn masa kerja</div>';
                 }
 
-                return '<span class="badge badge-danger px-2 py-1"><i class="fas fa-exclamation-triangle mr-1"></i> Belum Lapor</span>';
+                return '<span class="badge" style="background: rgba(239, 68, 68, 0.1); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 9999px; font-weight: 600; padding: 4px 10px;">Belum Lapor</span>';
             })
             ->addColumn('file_laporan', function ($row) {
                 $laporan = $row->laporanBkds->first();
                 if ($laporan) {
                     $size = $laporan->file_size ? ' (' . round($laporan->file_size / 1024) . ' KB)' : '';
-                    return '<a href="' . route('admin.monitoring-bkd.stream', $laporan->id) . '" target="_blank" class="btn btn-xs btn-outline-danger font-weight-bold">
-                        <i class="fas fa-file-pdf mr-1"></i> Lihat PDF ' . $size . '
-                    </a><br><small class="text-muted">' . $laporan->tanggal_upload->format('d/m/Y H:i') . '</small>';
+                    return '<a href="' . route('admin.monitoring-bkd.stream', $laporan->id) . '" target="_blank" class="btn btn-sm btn-outline-danger font-weight-bold" style="border-radius: 6px; padding: 2px 8px; font-size: 0.78rem;">
+                        <i class="fas fa-file-pdf mr-1"></i> PDF' . $size . '
+                    </a><div class="text-muted small mt-1">' . $laporan->tanggal_upload->format('d/m/Y H:i') . '</div>';
                 }
                 return '<span class="text-muted small font-italic">- Belum ada berkas -</span>';
             })
             ->addColumn('aksi', function ($row) use ($periodeId) {
                 $laporan = $row->laporanBkds->first();
-                $btn = '<div class="btn-group btn-group-sm">';
+                $btn = '<div class="d-flex justify-content-center align-items-center" style="gap: 5px;">';
                 if ($laporan) {
-                    $btn .= '<button type="button" class="btn btn-outline-info btn-verif" data-url="' . route('admin.monitoring-bkd.modal-verif', $laporan->id) . '" title="Verifikasi / Beri Catatan"><i class="fas fa-tasks mr-1"></i> Verifikasi</button>';
+                    $btn .= '<button type="button" class="btn btn-sm btn-outline-info btn-verif" data-url="' . route('admin.monitoring-bkd.modal-verif', $laporan->id) . '" title="Verifikasi / Beri Catatan" style="border-radius: 6px; padding: 3px 8px; font-size: 0.8rem;"><i class="fas fa-tasks mr-1"></i> Verifikasi</button>';
                 } else {
-                    $btn .= '<button type="button" class="btn btn-outline-secondary btn-upload-admin" data-dosen-id="' . $row->id . '" data-periode-id="' . $periodeId . '" data-nama="' . htmlspecialchars($row->nama) . '" title="Bantu Upload PDF"><i class="fas fa-upload mr-1"></i> Upload</button>';
+                    $btn .= '<button type="button" class="btn btn-sm btn-outline-secondary btn-upload-admin" data-dosen-id="' . $row->id . '" data-periode-id="' . $periodeId . '" data-nama="' . htmlspecialchars($row->nama) . '" title="Bantu Upload PDF" style="border-radius: 6px; padding: 3px 8px; font-size: 0.8rem;"><i class="fas fa-upload mr-1"></i> Upload</button>';
                 }
                 $btn .= '</div>';
                 return $btn;

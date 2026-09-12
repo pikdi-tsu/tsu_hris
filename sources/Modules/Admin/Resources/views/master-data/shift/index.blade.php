@@ -1,6 +1,18 @@
 @extends('system::template.admin.header')
 
 @section('content')
+    <x-tsu-master-guide
+        title="Panduan Keterkaitan Master Shift & Jam Kerja"
+        description="Master Shift mengatur jam operasional kerja harian (Jam Masuk, Jam Pulang, Toleransi Terlambat, dan Waktu Istirahat) untuk pegawai reguler maupun unit shift bergilir (Satpam, Petugas Kebersihan, Staf IT)."
+        :connections="[
+            ['label' => 'Jadwal Piket Satpam/Tendik', 'route' => 'admin.jadwal-piket.index', 'icon' => 'fas fa-calendar-alt'],
+            ['label' => 'Log Mesin Presensi', 'route' => 'admin.absensi.index', 'icon' => 'fas fa-fingerprint'],
+            ['label' => 'Rekapitulasi Absensi', 'route' => 'admin.rekap-absensi.index', 'icon' => 'fas fa-chart-bar'],
+            ['label' => 'Tarif Denda Keterlambatan', 'route' => 'admin.master-komponen-presensi.index', 'icon' => 'fas fa-clock']
+        ]"
+        impact="Konfigurasi rentang jam shift menjadi acuan pencocokan otomatis log absensi mesin fingerprint, penentuan denda terlambat/pulang cepat, serta kalkulasi total jam kerja efektif per bulan."
+    />
+
     <div class="card card-primary card-outline">
         <div class="card-header d-flex align-items-center">
             <h3 class="card-title mr-4">{{ $title ?? 'Master Data Shift & Jam Kerja' }}</h3>

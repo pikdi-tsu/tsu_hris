@@ -1,6 +1,19 @@
 @extends('system::template.admin.header')
 
 @section('content')
+    <x-tsu-master-guide
+        title="Panduan Keterkaitan Master Cuti"
+        description="Master Cuti mengatur seluruh klasifikasi hak cuti pegawai (Cuti Tahunan, Cuti Melahirkan, Cuti Sakit, Cuti Alasan Penting, dll.) beserta batas kuota maksimal hari."
+        :connections="[
+            ['label' => 'Pengajuan Cuti Mandiri', 'route' => 'users.cuti.index', 'icon' => 'fas fa-calendar-check'],
+            ['label' => 'Approval Cuti Atasan', 'route' => 'users.approval-cuti.index', 'icon' => 'fas fa-user-check'],
+            ['label' => 'Saldo Cuti Tahunan', 'route' => 'admin.saldo-cuti.index', 'icon' => 'fas fa-balance-scale'],
+            ['label' => 'Riwayat Cuti & Izin', 'route' => 'admin.riwayat-izincuti.index', 'icon' => 'fas fa-history'],
+            ['label' => 'Payroll & Presensi', 'route' => 'admin.payroll.index', 'icon' => 'fas fa-money-check-alt']
+        ]"
+        impact="Mengubah kuota hari atau opsi pemotongan cuti tahunan di master ini akan langsung mempengaruhi batas validasi formulir pengajuan cuti pegawai serta kalkulasi pemotongan saldo hak cuti berjalan."
+    />
+
     <div class="card card-primary card-outline">
         <div class="card-header d-flex align-items-center">
             <h3 class="card-title mr-4">{{ $title ?? 'Data Master Cuti' }}</h3>
@@ -17,12 +30,14 @@
             <table id="table-cuti" class="table table-bordered table-striped">
                 <thead>
                     <tr>
-                        <th width="5%">No</th>
+                        <th width="5%" class="text-center">No</th>
                         <th>Jenis Cuti</th>
-                        <th>Durasi Cuti</th>
-                        <th>Minimal Hari Pengajuan</th>
-                        <th width="15%">Status</th>
-                        <th width="15%">Aksi</th>
+                        <th width="15%" class="text-center">Kategori Cuti</th>
+                        <th width="10%" class="text-center">Durasi Maks</th>
+                        <th width="20%">Pengaruh Kuota &amp; Akses</th>
+                        <th width="10%" class="text-center">Min. Hari</th>
+                        <th width="10%" class="text-center">Status</th>
+                        <th width="12%" class="text-center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -52,29 +67,43 @@
                     data: 'DT_RowIndex',
                     name: 'DT_RowIndex',
                     orderable: false,
-                    searchable: false
+                    searchable: false,
+                    className: 'text-center'
                 },
                 {
                     data: 'jeniscuti',
                     name: 'jeniscuti'
                 },
                 {
+                    data: 'kategori_badge',
+                    name: 'kategori_cuti',
+                    className: 'text-center'
+                },
+                {
                     data: 'durasicuti',
-                    name: 'durasicuti'
+                    name: 'durasicuti',
+                    className: 'text-center'
+                },
+                {
+                    data: 'aturan_badge',
+                    name: 'memotong_kuota'
                 },
                 {
                     data: 'minimalhari',
-                    name: 'minimalhari'
+                    name: 'minimalhari',
+                    className: 'text-center'
                 },
                 {
                     data: 'is_active',
-                    name: 'is_active'
+                    name: 'is_active',
+                    className: 'text-center'
                 },
                 {
                     data: 'action',
                     name: 'action',
                     orderable: false,
-                    searchable: false
+                    searchable: false,
+                    className: 'text-center'
                 },
             ]
         });

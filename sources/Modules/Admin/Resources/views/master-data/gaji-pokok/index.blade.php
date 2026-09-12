@@ -1,6 +1,18 @@
 @extends('system::template.admin.header')
 
 @section('content')
+    <x-tsu-master-guide
+        title="Panduan Keterkaitan Master Matriks Gaji Pokok"
+        description="Master Matriks Gaji Pokok mengatur struktur skala upah pokok bulanan pegawai universitas berdasarkan Golongan Ruang, Pangkat, serta Masa Kerja Golongan (MKG)."
+        :connections="[
+            ['label' => 'Penggajian (Payroll)', 'route' => 'admin.payroll.index', 'icon' => 'fas fa-money-check-alt'],
+            ['label' => 'Tunjangan Pegawai', 'route' => 'admin.master-tunjangan.index', 'icon' => 'fas fa-coins'],
+            ['label' => 'Pangkat Data Karyawan', 'route' => 'admin.data-karyawan.index', 'icon' => 'fas fa-layer-group'],
+            ['label' => 'Tarif Dasar Upah Lembur', 'route' => 'users.lembur.index', 'icon' => 'fas fa-calculator']
+        ]"
+        impact="Nilai Gaji Pokok di sini menjadi basis perhitungan formula: Gaji Pokok 100%/80%, Tunjangan Pasangan (10%), Tunjangan Anak (2%/anak), BPJS Kesehatan (4%), Upah Lembur (Gapok / 173), dan Potongan Unpaid Leave."
+    />
+
     <div class="card card-primary card-outline shadow-sm">
         <div class="card-header d-flex flex-wrap align-items-center justify-content-between">
             <h3 class="card-title font-weight-bold">

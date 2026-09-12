@@ -36,13 +36,20 @@
                         <label>Tgl Mulai <span class="text-danger">*</span></label>
                         <input type="date" name="tgl_mulai" class="form-control" required value="{{ date('Y-m-d') }}">
                     </div>
-                    <div class="col-md-2 form-group">
-                        <label>Nomor SK</label>
-                        <input type="text" name="sk_jabatan" class="form-control" placeholder="Opsional">
+                </div>
+                <div class="row">
+                    <div class="col-md-6 form-group">
+                        <label>Nomor SK Pengangkatan / Inpassing</label>
+                        <input type="text" name="sk_jabatan" class="form-control" placeholder="Contoh: 123/LL7/AK/2026">
+                    </div>
+                    <div class="col-md-6 form-group">
+                        <label>Unggah Berkas SK (PDF / Gambar)</label>
+                        <input type="file" name="file_sk" class="form-control-file" accept=".pdf,.jpg,.jpeg,.png">
+                        <small class="text-muted">Maksimal 10 MB</small>
                     </div>
                 </div>
                 <div class="text-right mt-2">
-                    <button type="submit" class="btn btn-primary btn-sm" id="btn-save-fung">
+                    <button type="submit" class="btn btn-primary btn-sm font-weight-bold" id="btn-save-fung">
                         <i class="fas fa-save mr-1"></i> Simpan Fungsional
                     </button>
                 </div>
@@ -99,17 +106,20 @@ $(document).ready(function() {
     // Submit Add Fungsional via AJAX
     $('#form-tambah-fungsional').on('submit', function(e) {
         e.preventDefault();
-        let form = $(this);
+        let form = this;
+        let formData = new FormData(form);
+
         pikdiAjax({
-            url: form.attr('action'),
+            url: $(form).attr('action'),
             type: 'POST',
-            data: form.serialize(),
+            data: formData,
+            loadingText: 'Menyimpan jabatan fungsional...',
             onSuccess: function(res) {
                 if(res.data && res.data.html) {
                     $('#fungsional-list-container').html(res.data.html);
                 }
-                form.trigger('reset');
-                form.find('.select2').val('').trigger('change');
+                form.reset();
+                $(form).find('.select2').val('').trigger('change');
                 
                 // Reload main datatable if exists
                 if($.fn.DataTable.isDataTable('#table-karyawan')){

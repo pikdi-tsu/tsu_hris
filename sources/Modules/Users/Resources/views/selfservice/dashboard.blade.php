@@ -146,6 +146,71 @@
                         </div>
                     </div>
 
+                    <!-- Card Permohonan Surat SDM Saya (Tracking Status) -->
+                    <div class="card border-0 shadow-sm mb-4" style="border-radius: 10px; border-left: 4px solid var(--tsu-teal-deep, #094b54) !important;">
+                        <div class="card-header bg-white py-3 d-flex flex-wrap align-items-center justify-content-between border-bottom">
+                            <div class="d-flex align-items-center">
+                                <span class="d-inline-flex align-items-center justify-content-center rounded-circle mr-2" style="width: 34px; height: 34px; background: rgba(9, 75, 84, 0.1); color: #094b54;">
+                                    <i class="fas fa-envelope-open-text"></i>
+                                </span>
+                                <div>
+                                    <h6 class="font-weight-bold mb-0 text-dark">Permohonan Surat SDM Saya</h6>
+                                    <small class="text-muted">Pantau proses pengajuan surat keterangan aktif, pengantar bank/KPR, visa, dll.</small>
+                                </div>
+                            </div>
+                            <div class="mt-2 mt-sm-0">
+                                <a href="{{ route('admin.request-surat.user-index') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                    <i class="fas fa-list mr-1"></i> Buka Layanan Persuratan
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            @if(isset($myRecentSurat) && $myRecentSurat->count() > 0)
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-striped align-middle mb-0 text-sm">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th style="width: 140px;">No. Tiket</th>
+                                                <th>Jenis Surat</th>
+                                                <th>Keperluan</th>
+                                                <th style="width: 130px;">Tgl Pengajuan</th>
+                                                <th style="width: 130px;" class="text-center">Status</th>
+                                                <th style="width: 100px;" class="text-center">Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($myRecentSurat as $s)
+                                                <tr>
+                                                    <td class="font-weight-bold text-dark align-middle">{{ $s->nomor_tiket }}</td>
+                                                    <td class="align-middle font-weight-500">{{ $s->jenis_surat }}</td>
+                                                    <td class="align-middle text-muted">{{ \Illuminate\Support\Str::limit($s->keperluan, 45) }}</td>
+                                                    <td class="align-middle text-muted">{{ $s->created_at->format('d/m/Y') }}</td>
+                                                    <td class="text-center align-middle">{!! $s->status_badge !!}</td>
+                                                    <td class="text-center align-middle">
+                                                        @if($s->status === 'selesai' && $s->file_hasil_url)
+                                                            <a href="{{ $s->file_hasil_url }}" target="_blank" download class="btn btn-xs btn-success rounded-pill px-2" title="Unduh PDF Resmi">
+                                                                <i class="fas fa-download mr-1"></i> Unduh
+                                                            </a>
+                                                        @else
+                                                            <a href="{{ route('admin.request-surat.user-index') }}" class="btn btn-xs btn-outline-info rounded-pill px-2" title="Lihat Status Detail">
+                                                                <i class="fas fa-eye mr-1"></i> Pantau
+                                                            </a>
+                                                        @endif
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            @else
+                                <div class="p-3 text-center text-muted small">
+                                    <i class="fas fa-info-circle mr-1"></i> Anda belum memiliki riwayat pengajuan surat ke SDM.
+                                    <a href="{{ route('admin.request-surat.user-index') }}" class="font-weight-bold ml-1 text-primary">Ajukan Surat Sekarang &rarr;</a>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
                     <!-- Kalender Agenda & Hari Libur -->
                     <div class="card card-primary card-outline shadow-sm">
                         <div class="row">

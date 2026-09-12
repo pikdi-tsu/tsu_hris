@@ -33,4 +33,20 @@ class KaryawanJabatanStruktural extends Model
     {
         return $this->belongsTo(MasterUnit::class, 'unit_id', 'id');
     }
+
+    public function getFileSkUrlAttribute(): string
+    {
+        $val = $this->file_sk ?: $this->sk_jabatan;
+        if (!$val) {
+            return '';
+        }
+        if (str_starts_with($val, 'http://') || str_starts_with($val, 'https://')) {
+            return $val;
+        }
+        $cleanPath = ltrim($val, '/');
+        if (!str_starts_with($cleanPath, 'public/')) {
+            $cleanPath = 'public/' . $cleanPath;
+        }
+        return asset($cleanPath);
+    }
 }

@@ -43,6 +43,7 @@ Route::prefix('users')->name('users.')->middleware(['auth'])->group(function () 
         Route::post('/datatables', [CutiController::class, 'datatables'])->name('datatables');
         Route::post('/edit', [CutiController::class, 'edit'])->name('edit');
         Route::post('/detail', [CutiController::class, 'detail'])->name('detail');
+        Route::get('/{id}/bukti-file', [CutiController::class, 'streamBukti'])->name('stream-bukti');
     });
 
     //Izin
@@ -52,6 +53,7 @@ Route::prefix('users')->name('users.')->middleware(['auth'])->group(function () 
         Route::post('/datatables', [IzinController::class, 'datatables'])->name('datatables');
         Route::post('/edit', [IzinController::class, 'edit'])->name('edit');
         Route::post('/detail', [IzinController::class, 'detail'])->name('detail');
+        Route::get('/{id}/bukti-file', [IzinController::class, 'streamBukti'])->name('stream-bukti');
     });
 
     // Route Hari Libur (Kalender Dashboard)
@@ -115,5 +117,12 @@ Route::prefix('users')->name('users.')->middleware(['auth'])->group(function () 
         Route::post('/datatables', [\Modules\Users\Http\Controllers\SelfService\MppController::class, 'datatables'])->name('datatables');
         Route::post('/simpan', [\Modules\Users\Http\Controllers\SelfService\MppController::class, 'simpan'])->name('simpan');
         Route::post('/detail', [\Modules\Users\Http\Controllers\SelfService\MppController::class, 'detail'])->name('detail');
+    });
+
+    // BKD (Beban Kinerja Dosen Mandiri)
+    Route::prefix('bkd')->name('bkd.')->group(function () {
+        Route::get('/', [\Modules\Users\Http\Controllers\SelfService\LaporanBkdUserController::class, 'index'])->name('index');
+        Route::post('/store', [\Modules\Users\Http\Controllers\SelfService\LaporanBkdUserController::class, 'store'])->name('store');
+        Route::get('/{id}/stream', [\Modules\Users\Http\Controllers\SelfService\LaporanBkdUserController::class, 'stream'])->name('stream');
     });
 });

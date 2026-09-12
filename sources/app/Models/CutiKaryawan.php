@@ -78,4 +78,18 @@ class CutiKaryawan extends Authenticatable
 
         return $hariEfektif;
     }
+
+    public function getFileBuktiUrlAttribute(): string
+    {
+        if (!$this->file_bukti || !$this->id) return '';
+        if (str_starts_with($this->file_bukti, 'http://') || str_starts_with($this->file_bukti, 'https://')) {
+            return $this->file_bukti;
+        }
+        return route('users.cuti.stream-bukti', $this->id);
+    }
+
+    public function isCutiKhusus(): bool
+    {
+        return $this->masterCuti && $this->masterCuti->kategori_cuti === 'khusus';
+    }
 }

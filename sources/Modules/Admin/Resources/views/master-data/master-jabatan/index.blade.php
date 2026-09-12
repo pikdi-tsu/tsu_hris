@@ -1,6 +1,18 @@
 @extends('system::template.admin.header')
 
 @section('content')
+    <x-tsu-master-guide
+        title="Panduan Keterkaitan Master Jabatan & Pangkat"
+        description="Master Jabatan mengatur klasifikasi Jabatan Struktural (Rektor, Dekan, Kaprodi, Ka. Biro), Jabatan Fungsional Akademik (Asisten Ahli, Lektor, Guru Besar), serta Pangkat Golongan pegawai."
+        :connections="[
+            ['label' => 'Data Pegawai & Mutasi', 'route' => 'admin.data-karyawan.index', 'icon' => 'fas fa-users'],
+            ['label' => 'Bagan Struktur Organisasi', 'route' => 'admin.struktur-organisasi.index', 'icon' => 'fas fa-sitemap'],
+            ['label' => 'Tunjangan Jabatan', 'route' => 'admin.master-tunjangan.index', 'icon' => 'fas fa-coins'],
+            ['label' => 'Garis Approval Pimpinan', 'route' => 'users.approval-cuti.index', 'icon' => 'fas fa-user-shield']
+        ]"
+        impact="Jabatan menentukan garis hirarki atasan langsung untuk verifikasi approval berjenjang, penempatan bagan struktur organisasi universitas, serta dasar hak tunjangan struktural/fungsional."
+    />
+
     <div class="card card-primary card-outline card-outline-tabs">
         <div class="card-header p-0 border-bottom-0">
             <ul class="nav nav-tabs" id="custom-tabs-four-tab" role="tablist">

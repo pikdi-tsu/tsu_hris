@@ -34,6 +34,19 @@
                         {{ $data->keterangan ?: '-' }}
                     </div>
                 </div>
+                @if($data->file_bukti)
+                <div class="mt-2">
+                    <small class="text-muted d-block font-weight-600">Dokumen Bukti Pendukung:</small>
+                    <a href="{{ $data->file_bukti_url }}" target="_blank" download class="btn btn-sm btn-outline-info mt-1 rounded-pill">
+                        <i class="fas fa-paperclip mr-1"></i> Unduh / Buka Berkas Bukti Cuti
+                    </a>
+                </div>
+                @endif
+                @if($data->masterCuti && $data->masterCuti->kategori_cuti === 'khusus')
+                <div class="mt-2">
+                    <span class="badge badge-warning text-dark px-2 py-1"><i class="fas fa-certificate mr-1"></i> Cuti Khusus (Sesuai SE SDM - Tidak Memotong Kuota Tahunan)</span>
+                </div>
+                @endif
             </div>
         </div>
 

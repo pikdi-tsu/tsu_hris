@@ -1,6 +1,18 @@
 @extends('system::template.admin.header')
 
 @section('content')
+    <x-tsu-master-guide
+        title="Panduan Keterkaitan Master Unit Kerja"
+        description="Master Unit mengatur hierarki organisasi universitas (Rektorat, Fakultas, Program Studi, Biro Administrasi Umum & Keuangan, Lembaga, dan Sub-Bagian Unit)."
+        :connections="[
+            ['label' => 'Penempatan Pegawai', 'route' => 'admin.data-karyawan.index', 'icon' => 'fas fa-id-badge'],
+            ['label' => 'Disposisi Surat Masuk', 'route' => 'admin.disposisi-unit.index', 'icon' => 'fas fa-inbox'],
+            ['label' => 'Cascading KPI Scorecard', 'route' => 'admin.kpi.cascading.index', 'icon' => 'fas fa-sitemap'],
+            ['label' => 'Monev Kinerja Unit', 'route' => 'admin.kpi.monitoring.index', 'icon' => 'fas fa-chart-line']
+        ]"
+        impact="Unit kerja menjadi acuan penempatan dosen/tendik, tujuan delegasi lembar disposisi persuratan SIKD, serta pemilik target pembobotan kinerja pada modul Balanced Scorecard."
+    />
+
     <div class="card card-primary card-outline">
         <div class="card-header d-flex align-items-center">
             <h3 class="card-title mr-4">{{ $title ?? 'Master Data Unit' }}</h3>

@@ -299,17 +299,198 @@
             </div>
         </div>
 
-        <!-- 9 Unit Tendik Summary Cards -->
+        <!-- SECTION: ROAD MAP PENGEMBANGAN TENAGA KEPENDIDIKAN (TENDIK) -->
+        <div class="row mb-3 mt-4">
+            <div class="col-12 d-flex justify-content-between align-items-center">
+                <div>
+                    <h4 class="font-weight-bold text-dark mb-1">
+                        <i class="fas fa-users-cog text-info mr-2"></i>Road Map Pengembangan Tenaga Kependidikan (Tendik)
+                    </h4>
+                    <p class="text-muted mb-0">Visualisasi Status Studi Lanjut dan Proyeksi Kualifikasi Pendidikan Tendik (9 Unit Kerja, 2026–2030)</p>
+                </div>
+                <div>
+                    <a href="{{ route('admin.pengembangan-sdm.tendik') }}" class="btn btn-sm btn-info shadow-sm font-weight-bold">
+                        <i class="fas fa-external-link-alt mr-1"></i> Buka Lembar Kerja Tendik
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tendik Charts Row -->
+        <div class="row">
+            <!-- Tendik Status Aktif Studi Bar Chart -->
+            <div class="col-lg-7 col-12 mb-4">
+                <div class="card shadow-sm h-100" style="border-radius: 12px;">
+                    <div class="card-header bg-white border-bottom-0 pt-3 pb-0 d-flex justify-content-between align-items-center">
+                        <h5 class="card-title font-weight-bold text-dark mb-0">
+                            <i class="fas fa-user-clock text-info mr-2"></i>Status Studi Lanjut Tendik (SS vs TSS) per Unit Kerja (2026)
+                        </h5>
+                        <span class="badge badge-info px-2 py-1">{{ count($tendik_breakdown) }} Unit Kerja</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="chartTendikUnit"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tendik Proyeksi Kualifikasi S1 & S2 Line Chart -->
+            <div class="col-lg-5 col-12 mb-4">
+                <div class="card shadow-sm h-100" style="border-radius: 12px;">
+                    <div class="card-header bg-white border-bottom-0 pt-3 pb-0 d-flex justify-content-between align-items-center">
+                        <h5 class="card-title font-weight-bold text-dark mb-0">
+                            <i class="fas fa-chart-line text-primary mr-2"></i>Proyeksi Kualifikasi S1 &amp; S2 Tendik (2026 - 2030)
+                        </h5>
+                        <span class="badge badge-primary px-2 py-1">Renstra Tendik</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="chartTendikProyeksi"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rekapitulasi 9 Unit Kerja Tendik Table -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow-sm" style="border-radius: 12px; overflow: hidden;">
+                    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                        <h5 class="card-title font-weight-bold text-dark mb-0">
+                            <i class="fas fa-table text-info mr-2"></i>Rekapitulasi Road Map 9 Unit Kerja (Tenaga Kependidikan)
+                        </h5>
+                        <div>
+                            <a href="{{ route('admin.pengembangan-sdm.tendik') }}" class="btn btn-sm btn-outline-info font-weight-bold">
+                                <i class="fas fa-external-link-alt mr-1"></i> Buka Lembar Kerja Detail
+                            </a>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover table-bordered table-prodi mb-0">
+                            <thead>
+                                <tr>
+                                    <th rowspan="2" style="width: 40px;">No</th>
+                                    <th rowspan="2">Unit Kerja</th>
+                                    <th rowspan="2" style="width: 70px;">Total Tendik</th>
+                                    <th colspan="3">Kualifikasi 2026</th>
+                                    <th colspan="5">Proyeksi Tendik Magister (S2) per Tahun</th>
+                                    <th colspan="3">Status Studi 2026</th>
+                                    <th rowspan="2" style="width: 100px;">Aksi</th>
+                                </tr>
+                                <tr>
+                                    <th style="background-color: #334155;">D3</th>
+                                    <th style="background-color: #334155;">S1</th>
+                                    <th style="background-color: #0f766e;">S2</th>
+                                    <th style="background-color: #334155;">2026</th>
+                                    <th style="background-color: #334155;">2027</th>
+                                    <th style="background-color: #334155;">2028</th>
+                                    <th style="background-color: #334155;">2029</th>
+                                    <th style="background-color: #0284c7;">2030 (Target)</th>
+                                    <th style="background-color: #166534;">SS</th>
+                                    <th style="background-color: #475569;">TSS</th>
+                                    <th style="background-color: #1e293b;">% SS</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @php
+                                    $totTendik = 0;
+                                    $totD3_26 = 0; $totS1_26 = 0; $totS2_26 = 0;
+                                    $tTot26 = 0; $tTot27 = 0; $tTot28 = 0; $tTot29 = 0; $tTot30 = 0;
+                                    $tTotSS = 0; $tTotTSS = 0;
+                                @endphp
+                                @forelse($tendik_breakdown as $tIdx => $tRow)
+                                    @php
+                                        $totTendik += $tRow['total_tendik'];
+                                        $ty26 = $tRow['yearly'][2026] ?? [];
+                                        $ty27 = $tRow['yearly'][2027] ?? [];
+                                        $ty28 = $tRow['yearly'][2028] ?? [];
+                                        $ty29 = $tRow['yearly'][2029] ?? [];
+                                        $ty30 = $tRow['yearly'][2030] ?? [];
+
+                                        $totD3_26 += ($ty26['d3'] ?? 0);
+                                        $totS1_26 += ($ty26['s1'] ?? 0);
+                                        $totS2_26 += ($ty26['s2'] ?? 0);
+
+                                        $tTot26 += ($ty26['s2'] ?? 0);
+                                        $tTot27 += ($ty27['s2'] ?? 0);
+                                        $tTot28 += ($ty28['s2'] ?? 0);
+                                        $tTot29 += ($ty29['s2'] ?? 0);
+                                        $tTot30 += ($ty30['s2'] ?? 0);
+
+                                        $tTotSS += ($ty26['ss'] ?? 0);
+                                        $tTotTSS += ($ty26['tss'] ?? 0);
+
+                                        $tPersenSS = ($tRow['total_tendik'] > 0) ? round((($ty26['ss'] ?? 0) / $tRow['total_tendik']) * 100, 1) : 0;
+                                    @endphp
+                                    <tr>
+                                        <td class="text-center font-weight-bold">{{ $tIdx + 1 }}</td>
+                                        <td>
+                                            <a href="{{ route('admin.pengembangan-sdm.tendik', ['unit_id' => $tRow['unit_id']]) }}" class="font-weight-bold text-info">
+                                                {{ $tRow['nama_unit'] }}
+                                            </a>
+                                        </td>
+                                        <td class="text-center font-weight-bold">{{ $tRow['total_tendik'] }}</td>
+                                        <td class="text-center">{{ $ty26['d3'] ?? 0 }}</td>
+                                        <td class="text-center">{{ $ty26['s1'] ?? 0 }}</td>
+                                        <td class="text-center font-weight-bold text-success">{{ $ty26['s2'] ?? 0 }}</td>
+                                        <td class="text-center">{{ $ty26['s2'] ?? 0 }}</td>
+                                        <td class="text-center">{{ $ty27['s2'] ?? 0 }}</td>
+                                        <td class="text-center">{{ $ty28['s2'] ?? 0 }}</td>
+                                        <td class="text-center">{{ $ty29['s2'] ?? 0 }}</td>
+                                        <td class="text-center font-weight-bolder target-pill">
+                                            {{ $ty30['s2'] ?? 0 }}
+                                        </td>
+                                        <td class="text-center"><span class="badge badge-ss px-2">{{ $ty26['ss'] ?? 0 }}</span></td>
+                                        <td class="text-center"><span class="badge badge-tss px-2">{{ $ty26['tss'] ?? 0 }}</span></td>
+                                        <td class="text-center font-weight-bold text-success">{{ $tPersenSS }}%</td>
+                                        <td class="text-center">
+                                            <a href="{{ route('admin.pengembangan-sdm.tendik', ['unit_id' => $tRow['unit_id']]) }}" class="btn btn-xs btn-outline-info">
+                                                <i class="fas fa-eye mr-1"></i> Detail
+                                            </a>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
+                                        <td colspan="15" class="text-center text-muted py-4">Belum ada data road map tenaga kependidikan.</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                            @if(count($tendik_breakdown) > 0)
+                            <tfoot class="bg-light font-weight-bold">
+                                <tr>
+                                    <td colspan="2" class="text-center text-uppercase">Total Seluruh Unit Tendik</td>
+                                    <td class="text-center">{{ $totTendik }}</td>
+                                    <td class="text-center">{{ $totD3_26 }}</td>
+                                    <td class="text-center">{{ $totS1_26 }}</td>
+                                    <td class="text-center text-success">{{ $totS2_26 }}</td>
+                                    <td class="text-center">{{ $tTot26 }}</td>
+                                    <td class="text-center">{{ $tTot27 }}</td>
+                                    <td class="text-center">{{ $tTot28 }}</td>
+                                    <td class="text-center">{{ $tTot29 }}</td>
+                                    <td class="text-center text-primary font-weight-bolder">{{ $tTot30 }} ({{ $totTendik > 0 ? round(($tTot30 / $totTendik) * 100, 1) : 0 }}%)</td>
+                                    <td class="text-center text-success">{{ $tTotSS }}</td>
+                                    <td class="text-center text-secondary">{{ $tTotTSS }}</td>
+                                    <td class="text-center text-success">{{ ($tTotSS + $tTotTSS) > 0 ? round(($tTotSS / ($tTotSS + $tTotTSS)) * 100, 1) : 0 }}%</td>
+                                    <td></td>
+                                </tr>
+                            </tfoot>
+                            @endif
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 9 Unit Tendik Quick Cards -->
         <div class="row mb-4">
             <div class="col-12">
                 <div class="card shadow-sm" style="border-radius: 12px;">
                     <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
-                        <h5 class="card-title font-weight-bold text-dark mb-0">
-                            <i class="fas fa-users-cog text-info mr-2"></i>Rekapitulasi Pengembangan Tenaga Kependidikan ({{ count($tendik_breakdown) }} Unit Kerja)
-                        </h5>
-                        <a href="{{ route('admin.pengembangan-sdm.tendik') }}" class="btn btn-sm btn-outline-info font-weight-bold">
-                            <i class="fas fa-external-link-alt mr-1"></i> Buka Lembar Kerja Tendik
-                        </a>
+                        <h6 class="card-title font-weight-bold text-dark mb-0">
+                            <i class="fas fa-th-large text-secondary mr-2"></i>Rincian Kartu Unit Kerja Tendik
+                        </h6>
                     </div>
                     <div class="card-body">
                         <div class="row">
@@ -317,16 +498,20 @@
                                 <div class="col-lg-4 col-md-6 col-12 mb-3">
                                     <div class="card border border-light shadow-none bg-light p-3 h-100" style="border-radius: 10px;">
                                         <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <h6 class="font-weight-bold text-dark mb-0">{{ $tUnit['nama_unit'] }}</h6>
+                                            <h6 class="font-weight-bold text-dark mb-0" style="font-size: 14px;">{{ $tUnit['nama_unit'] }}</h6>
                                             <span class="badge badge-info">{{ $tUnit['total_tendik'] }} Pegawai</span>
                                         </div>
                                         <div class="d-flex justify-content-between text-muted small mt-2">
                                             <span>Sedang Studi (SS):</span>
                                             <span class="font-weight-bold text-dark">{{ $tUnit['yearly'][2026]['ss'] ?? 0 }} Pegawai</span>
                                         </div>
+                                        <div class="d-flex justify-content-between text-muted small mt-1">
+                                            <span>Kualifikasi S2 Saat Ini:</span>
+                                            <span class="font-weight-bold text-success">{{ $tUnit['yearly'][2026]['s2'] ?? 0 }} Pegawai</span>
+                                        </div>
                                         <div class="mt-2 text-right">
                                             <a href="{{ route('admin.pengembangan-sdm.tendik', ['unit_id' => $tUnit['unit_id']]) }}" class="btn btn-xs btn-primary">
-                                                Lihat Rincian <i class="fas fa-arrow-right ml-1"></i>
+                                                Buka Rincian <i class="fas fa-arrow-right ml-1"></i>
                                             </a>
                                         </div>
                                     </div>
@@ -361,13 +546,45 @@
             $years = array_keys($dosen_yearly_stats);
             $persenS3List = array_column($dosen_yearly_stats, 'persen_s3');
             $countS3List = array_column($dosen_yearly_stats, 's3');
+
+            // Tendik Data
+            $tendikUnitNames = array_map(function($t) {
+                $name = $t['nama_unit'];
+                $name = str_replace([
+                    'Biro Administrasi Akademik dan Kemahasiswaan (BAAK)',
+                    'Biro Administrasi Umum dan Keuangan (BAUK)',
+                    'Lembaga Penjaminan Mutu (LPM)',
+                    'Lembaga Penelitian dan Pengabdian Masyarakat (LPPM)',
+                    'Unit Pelaksana Teknis Sistem Informasi (UPT SI)',
+                    'Unit Pelaksana Teknis Perpustakaan',
+                    'Unit Pelaksana Teknis Laboratorium Terpadu',
+                    'Biro Humas, Kerjasama, dan Pemasaran',
+                    'Satuan Pengawas Internal (SPI)'
+                ], [
+                    'BAAK', 'BAUK', 'LPM', 'LPPM', 'UPT SI', 'UPT Perpus', 'UPT Lab', 'Humas', 'SPI'
+                ], $name);
+                return $name;
+            }, $tendik_breakdown);
+
+            $tendikSSList = array_map(function($t) {
+                return $t['yearly'][2026]['ss'] ?? 0;
+            }, $tendik_breakdown);
+
+            $tendikTSSList = array_map(function($t) {
+                return $t['yearly'][2026]['tss'] ?? 0;
+            }, $tendik_breakdown);
+
+            $tendikYears = array_keys($tendik_yearly_stats);
+            $tendikS2List = array_column($tendik_yearly_stats, 's2');
+            $tendikS1List = array_column($tendik_yearly_stats, 's1');
+            $tendikPersenS1S2 = array_column($tendik_yearly_stats, 'persen_s1_s2');
         @endphp
 
         var prodiLabels = {!! json_encode($prodiNames) !!};
         var ssData = {!! json_encode($ssList) !!};
         var tssData = {!! json_encode($tssList) !!};
 
-        // Render Bar Chart: SS vs TSS
+        // Render Bar Chart Dosen: SS vs TSS
         var ctxKesesuaian = document.getElementById('chartKesesuaian').getContext('2d');
         new Chart(ctxKesesuaian, {
             type: 'bar',
@@ -405,7 +622,7 @@
             }
         });
 
-        // Render Area Chart: Proyeksi S3
+        // Render Area Chart Dosen: Proyeksi S3
         var years = {!! json_encode($years) !!};
         var persenS3 = {!! json_encode($persenS3List) !!};
         var totalS3 = {!! json_encode($countS3List) !!};
@@ -445,6 +662,108 @@
                             beginAtZero: true,
                             max: 70,
                             callback: function(value) { return value + '%'; }
+                        }
+                    }]
+                }
+            }
+        });
+
+        // ==========================================
+        // TENDIK CHARTS INITIALIZATION
+        // ==========================================
+        var tendikUnitLabels = {!! json_encode($tendikUnitNames) !!};
+        var tendikSSData = {!! json_encode($tendikSSList) !!};
+        var tendikTSSData = {!! json_encode($tendikTSSList) !!};
+
+        // Render Bar Chart Tendik: SS vs TSS per Unit
+        var ctxTendikUnit = document.getElementById('chartTendikUnit').getContext('2d');
+        new Chart(ctxTendikUnit, {
+            type: 'bar',
+            data: {
+                labels: tendikUnitLabels,
+                datasets: [
+                    {
+                        label: 'Sedang Studi (SS)',
+                        backgroundColor: '#0284c7',
+                        borderColor: '#0369a1',
+                        borderWidth: 1,
+                        data: tendikSSData
+                    },
+                    {
+                        label: 'Tidak Sedang Studi (TSS)',
+                        backgroundColor: '#94a3b8',
+                        borderColor: '#64748b',
+                        borderWidth: 1,
+                        data: tendikTSSData
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    xAxes: [{
+                        stacked: false,
+                        gridLines: { display: false },
+                        ticks: { autoSkip: false, maxRotation: 30, minRotation: 0 }
+                    }],
+                    yAxes: [{
+                        ticks: { beginAtZero: true, stepSize: 1 }
+                    }]
+                }
+            }
+        });
+
+        // Render Line Chart Tendik: Proyeksi Kualifikasi S1 & S2
+        var ctxTendikProyeksi = document.getElementById('chartTendikProyeksi').getContext('2d');
+        new Chart(ctxTendikProyeksi, {
+            type: 'line',
+            data: {
+                labels: {!! json_encode($tendikYears) !!},
+                datasets: [
+                    {
+                        label: 'Tendik S2 (Magister)',
+                        backgroundColor: 'rgba(9, 75, 84, 0.15)',
+                        borderColor: '#094b54',
+                        pointBackgroundColor: '#094b54',
+                        pointBorderColor: '#fff',
+                        pointHoverRadius: 6,
+                        pointRadius: 5,
+                        data: {!! json_encode($tendikS2List) !!},
+                        fill: true,
+                        lineTension: 0.3
+                    },
+                    {
+                        label: 'Tendik S1 (Sarjana)',
+                        backgroundColor: 'transparent',
+                        borderColor: '#0284c7',
+                        borderDash: [5, 5],
+                        pointBackgroundColor: '#0284c7',
+                        pointBorderColor: '#fff',
+                        pointHoverRadius: 6,
+                        pointRadius: 5,
+                        data: {!! json_encode($tendikS1List) !!},
+                        fill: false,
+                        lineTension: 0.3
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                tooltips: {
+                    callbacks: {
+                        label: function(tooltipItem, data) {
+                            var dsLabel = data.datasets[tooltipItem.datasetIndex].label || '';
+                            return ' ' + dsLabel + ': ' + tooltipItem.yLabel + ' Pegawai';
+                        }
+                    }
+                },
+                scales: {
+                    yAxes: [{
+                        ticks: {
+                            beginAtZero: true,
+                            stepSize: 5
                         }
                     }]
                 }

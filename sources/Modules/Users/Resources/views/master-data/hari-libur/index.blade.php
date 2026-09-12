@@ -7,8 +7,11 @@
             <span class="badge badge-danger px-2 py-1 mr-2 font-weight-normal shadow-sm" style="font-size: 0.82rem;">
                 <i class="fas fa-calendar-times mr-1"></i> Hari Libur
             </span>
-            <span class="badge badge-primary px-2 py-1 font-weight-normal shadow-sm" style="font-size: 0.82rem;">
+            <span class="badge badge-primary px-2 py-1 mr-2 font-weight-normal shadow-sm" style="font-size: 0.82rem;">
                 <i class="fas fa-user-clock mr-1"></i> Piket Sabtu
+            </span>
+            <span class="badge badge-info px-2 py-1 font-weight-normal shadow-sm" style="font-size: 0.82rem; background-color: #17a2b8 !important;">
+                <i class="fas fa-bullhorn mr-1"></i> Surat Edaran &amp; SK
             </span>
         </div>
     </div>
@@ -78,6 +81,51 @@
                             icon: 'info',
                             confirmButtonText: 'Tutup',
                             confirmButtonColor: '#007bff'
+                        });
+                    } else if (props.type === 'edaran') {
+                        var tglAgenda = props.tanggal_kalender;
+                        if (props.tanggal_selesai && props.tanggal_selesai !== props.tanggal_kalender) {
+                            tglAgenda += ' s.d ' + props.tanggal_selesai;
+                        }
+                        Swal.fire({
+                            title: '<i class="fas fa-file-invoice text-info mr-1"></i> ' + (props.kategori_label || 'Surat Edaran & SK'),
+                            html: `
+                                <div class="text-left mt-3 p-3 bg-light rounded border text-sm" style="font-size: 0.95rem;">
+                                    <div class="mb-2 pb-2 border-bottom">
+                                        <div class="font-weight-bold text-dark" style="font-size: 1.05rem;">${props.perihal}</div>
+                                        <small class="text-muted"><i class="fas fa-hashtag mr-1"></i>${props.nomor_surat}</small>
+                                    </div>
+                                    <table class="table table-sm table-borderless mb-0">
+                                        <tr>
+                                            <td style="width: 140px;" class="font-weight-bold text-muted">Tanggal Surat:</td>
+                                            <td class="font-weight-bold text-dark"><i class="far fa-calendar-alt text-info mr-1"></i>${props.tanggal_surat} <small class="text-muted font-italic font-weight-normal">(Tgl Terbit)</small></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="font-weight-bold text-muted">Agenda Kalender:</td>
+                                            <td class="font-weight-bold text-success"><i class="far fa-calendar-check mr-1"></i>${tglAgenda}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="font-weight-bold text-muted">Sasaran Dokumen:</td>
+                                            <td><span class="badge badge-light border text-dark">${props.target}</span></td>
+                                        </tr>
+                                        ${props.keterangan && props.keterangan !== '-' ? `
+                                        <tr>
+                                            <td class="font-weight-bold text-muted">Keterangan:</td>
+                                            <td>${props.keterangan}</td>
+                                        </tr>` : ''}
+                                    </table>
+                                </div>
+                            `,
+                            icon: 'info',
+                            showCancelButton: true,
+                            confirmButtonText: '<i class="fas fa-file-pdf mr-1"></i> Unduh / Buka Dokumen',
+                            confirmButtonColor: '#17a2b8',
+                            cancelButtonText: 'Tutup',
+                            cancelButtonColor: '#6c757d'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                window.open(props.download_url, '_blank');
+                            }
                         });
                     } else {
                         // Hari Libur

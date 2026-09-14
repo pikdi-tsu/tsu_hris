@@ -67,13 +67,13 @@ class SuratEdaranController extends MiddlewareController
                 return '<span class="badge badge-light border text-muted"><i class="fas fa-download mr-1"></i> ' . number_format($row->download_count) . 'x</span>';
             })
             ->addColumn('aksi', function ($row) {
-                $btn = '<div class="btn-group btn-group-sm">';
-                $btn .= '<a href="' . route('admin.surat-edaran.download', $row->id) . '" target="_blank" class="btn btn-info" title="Lihat / Unduh Dokumen"><i class="fas fa-download mr-1"></i> Unduh</a>';
+                $btn = '<div class="btn-group">';
+                $btn .= '<a href="' . route('admin.surat-edaran.download', $row->id) . '" target="_blank" class="btn btn-sm btn-primary" title="Lihat / Unduh Dokumen PDF"><i class="fas fa-download mr-1"></i> Unduh</a>';
 
                 // Jika user memiliki wewenang admin:persuratan-sdm:edit
-                if (Auth::user() && (Auth::user()->can('admin:persuratan-sdm:edit') || Auth::user()->hasRole('Super Admin') || Auth::user()->hasRole('Admin SDM'))) {
-                    $btn .= '<button type="button" class="btn btn-outline-secondary btn-modal-edit" data-url="' . route('admin.surat-edaran.edit', $row->id) . '" title="Edit Edaran"><i class="fas fa-pencil-alt"></i></button>';
-                    $btn .= '<button type="button" class="btn btn-outline-danger btn-delete-edaran" data-url="' . route('admin.surat-edaran.destroy', $row->id) . '" title="Hapus"><i class="fas fa-trash"></i></button>';
+                if (Auth::user() && (Auth::user()->can('admin:persuratan-sdm:edit') || Auth::user()->hasRole(['Developer', 'Super Admin', 'Admin SDM', 'SDM']))) {
+                    $btn .= '<button type="button" class="btn btn-sm btn-outline-secondary btn-modal-edit btn-icon-only" data-url="' . route('admin.surat-edaran.edit', $row->id) . '" title="Edit Ketetapan"><i class="fas fa-pencil-alt"></i></button>';
+                    $btn .= '<button type="button" class="btn btn-sm btn-outline-danger btn-delete-edaran btn-icon-only" data-url="' . route('admin.surat-edaran.destroy', $row->id) . '" title="Hapus Dokumen"><i class="fas fa-trash"></i></button>';
                 }
 
                 $btn .= '</div>';

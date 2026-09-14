@@ -162,18 +162,7 @@
         subtitle="Verifikasi dan terbitkan surat resmi bagi permohonan mandiri dosen & tenaga kependidikan"
         :icon="$menuIcon ?? 'fas fa-tasks'"
         :breadcrumb="true"
-    >
-        <x-slot name="actions">
-            <div class="d-flex align-items-center" style="gap: 8px;">
-                <a href="{{ route('admin.request-surat.sekretariat-inbox') }}" class="btn btn-sm btn-outline-secondary" style="border-radius: 8px; font-weight: 600;">
-                    <i class="fas fa-user-shield mr-1"></i> Tugas SK Sekretariat
-                </a>
-                <a href="{{ route('admin.surat-edaran.index') }}" class="btn btn-sm btn-outline-primary" style="border-radius: 8px; font-weight: 600;">
-                    <i class="fas fa-bullhorn mr-1"></i> Pusat Surat Edaran & SK
-                </a>
-            </div>
-        </x-slot>
-    </x-tsu-page-header>
+    />
 
     <section class="content">
         <div class="container-fluid">

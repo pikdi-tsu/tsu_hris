@@ -208,18 +208,7 @@
         subtitle="Kelola permintaan SK Rektorat dari SDM, penerbitan softfile surat resmi, dan tracking hardfile bertandatangan basah"
         :icon="$menuIcon ?? 'fas fa-stamp'"
         :breadcrumb="true"
-    >
-        <x-slot name="actions">
-            <div class="d-flex align-items-center" style="gap: 8px;">
-                <a href="{{ route('admin.request-surat.admin-index') }}" class="btn btn-sm btn-outline-secondary" style="border-radius: 8px; font-weight: 600;">
-                    <i class="fas fa-tasks mr-1"></i> Kelola Permohonan Surat SDM
-                </a>
-                <a href="{{ route('admin.surat-edaran.index') }}" class="btn btn-sm btn-outline-primary" style="border-radius: 8px; font-weight: 600;">
-                    <i class="fas fa-bullhorn mr-1"></i> Pusat Surat Edaran & SK
-                </a>
-            </div>
-        </x-slot>
-    </x-tsu-page-header>
+    />
 
     <section class="content">
         <div class="container-fluid">

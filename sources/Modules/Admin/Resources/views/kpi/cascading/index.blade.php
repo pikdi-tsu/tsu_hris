@@ -201,43 +201,6 @@
     <section class="content">
         <div class="container-fluid">
 
-            <!-- Filter Bar: Unit Kerja & Periode Penilaian -->
-            <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
-                <div class="card-body p-3">
-                    <form method="GET" action="{{ route('admin.kpi.cascading.index') }}" id="filter-form" class="row align-items-center">
-                        <div class="col-md-5 mb-2 mb-md-0">
-                            <label class="font-weight-bold text-dark small mb-1">
-                                <i class="fas fa-building mr-1" style="color: var(--tsu-primary);"></i> Pilih Unit Kerja:
-                            </label>
-                            <select name="unit_id" id="select-unit" class="form-control form-control-sm select2" onchange="this.form.submit()">
-                                @foreach($units as $u)
-                                    <option value="{{ $u->id }}" {{ $currentUnit && $currentUnit->id == $u->id ? 'selected' : '' }}>
-                                        {{ $u->nama_unit }} ({{ $u->kode_unit ?? '-' }})
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-5 mb-2 mb-md-0">
-                            <label class="font-weight-bold text-dark small mb-1">
-                                <i class="fas fa-calendar-alt mr-1" style="color: var(--tsu-teal-accent);"></i> Periode Penilaian:
-                            </label>
-                            <select name="periode_id" id="select-periode" class="form-control form-control-sm select2" onchange="this.form.submit()">
-                                @foreach($periodes as $p)
-                                    <option value="{{ $p->id }}" {{ $currentPeriode && $currentPeriode->id == $p->id ? 'selected' : '' }}>
-                                        Tahun {{ $p->tahun }} - {{ $p->nama_periode }} {{ $p->is_active ? '(Aktif)' : '' }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-2 text-md-right mt-3 mt-md-0 d-flex align-items-end justify-content-md-end">
-                            <button type="button" class="btn tsu-btn-create btn-sm w-100" id="btn-add-kpi-unit-filter" style="margin-top: 22px;">
-                                <i class="fas fa-plus mr-1"></i> Tambah KPI
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
             <!-- Ringkasan Statistik 4 Kartu Context-Aware -->
             <div class="tsu-stat-grid-cascading">
                 <div class="tsu-stat-card tsu-stat-card--unit">
@@ -279,6 +242,43 @@
                 ]"
                 impact="Total akumulasi bobot pada scorecard unit wajib mencapai tepat 100% agar perhitungan capaian kinerja agregat dan indeks efektivitas unit valid saat periode monev berlangsung."
             />
+
+            <!-- Filter Bar: Unit Kerja & Periode Penilaian (Di bawah Panduan) -->
+            <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                <div class="card-body p-3">
+                    <form method="GET" action="{{ route('admin.kpi.cascading.index') }}" id="filter-form" class="row align-items-center">
+                        <div class="col-md-5 mb-2 mb-md-0">
+                            <label class="font-weight-bold text-dark small mb-1">
+                                <i class="fas fa-building mr-1" style="color: var(--tsu-primary);"></i> Pilih Unit Kerja:
+                            </label>
+                            <select name="unit_id" id="select-unit" class="form-control form-control-sm select2" onchange="this.form.submit()">
+                                @foreach($units as $u)
+                                    <option value="{{ $u->id }}" {{ $currentUnit && $currentUnit->id == $u->id ? 'selected' : '' }}>
+                                        {{ $u->nama_unit }} ({{ $u->kode_unit ?? '-' }})
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-5 mb-2 mb-md-0">
+                            <label class="font-weight-bold text-dark small mb-1">
+                                <i class="fas fa-calendar-alt mr-1" style="color: var(--tsu-teal-accent);"></i> Periode Penilaian:
+                            </label>
+                            <select name="periode_id" id="select-periode" class="form-control form-control-sm select2" onchange="this.form.submit()">
+                                @foreach($periodes as $p)
+                                    <option value="{{ $p->id }}" {{ $currentPeriode && $currentPeriode->id == $p->id ? 'selected' : '' }}>
+                                        Tahun {{ $p->tahun }} - {{ $p->nama_periode }} {{ $p->is_active ? '(Aktif)' : '' }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-2 text-md-right mt-3 mt-md-0 d-flex align-items-end justify-content-md-end">
+                            <button type="button" class="btn tsu-btn-create btn-sm w-100" id="btn-add-kpi-unit-filter" style="margin-top: 22px;">
+                                <i class="fas fa-plus mr-1"></i> Tambah KPI
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
 
             <!-- Main Card Container: Table of Unit KPI Cascading -->
             <div class="card border-0 shadow-sm" style="border-radius: 12px; overflow: hidden;">

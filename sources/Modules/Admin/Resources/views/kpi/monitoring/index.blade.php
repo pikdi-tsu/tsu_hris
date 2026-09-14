@@ -1,21 +1,232 @@
 @extends('system::template.admin.header')
 
+@section('link_href')
+    <link rel="stylesheet" href="{{ asset('assets/adminlte/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/adminlte/plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/adminlte/plugins/select2/css/select2.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/adminlte/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/adminlte/plugins/sweetalert2/sweetalert2.min.css') }}">
+    <style>
+        :root {
+            --tsu-primary: #094b54;
+            --tsu-primary-dark: #063339;
+            --tsu-primary-light: #cce6e9;
+            --tsu-teal-accent: #0ea5e9;
+            --tsu-surface: #ffffff;
+            --tsu-bg-subtle: #f8fafc;
+            --tsu-border: #e2e8f0;
+            --tsu-text-main: #0f172a;
+            --tsu-text-muted: #64748b;
+        }
+
+        /* STAT CARDS */
+        .tsu-stat-grid-monitoring {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+        }
+
+        @media (max-width: 991.98px) {
+            .tsu-stat-grid-monitoring {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .tsu-stat-grid-monitoring {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .tsu-stat-card {
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            color: #ffffff;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .tsu-stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .tsu-stat-card--total {
+            background: linear-gradient(135deg, #094b54 0%, #0c6170 100%);
+        }
+
+        .tsu-stat-card--terisi {
+            background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%);
+        }
+
+        .tsu-stat-card--capaian {
+            background: linear-gradient(135deg, #047857 0%, #10b981 100%);
+        }
+
+        .tsu-stat-card--skor {
+            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+        }
+
+        .tsu-stat-card__watermark {
+            position: absolute;
+            right: 1.25rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 3.2rem;
+            opacity: 0.15;
+            pointer-events: none;
+            color: #ffffff;
+        }
+
+        .tsu-stat-card__value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 0.25rem;
+            color: #ffffff;
+        }
+
+        .tsu-stat-card__label {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            margin-bottom: 0;
+            font-weight: 500;
+            color: #ffffff;
+        }
+
+        /* BUTTONS */
+        .tsu-btn-create {
+            background: linear-gradient(135deg, #094b54 0%, #0c6170 100%);
+            border: none;
+            color: #ffffff;
+            border-radius: 8px;
+            font-weight: 600;
+            padding: 0.45rem 1rem;
+            box-shadow: 0 2px 6px rgba(9, 75, 84, 0.25);
+            transition: all 0.2s ease;
+        }
+
+        .tsu-btn-create:hover {
+            background: linear-gradient(135deg, #063339 0%, #094b54 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(9, 75, 84, 0.35);
+            transform: translateY(-1px);
+        }
+
+        /* TABLE STYLING */
+        .tsu-table-modern thead th {
+            background: #f8fafc;
+            color: #334155;
+            font-weight: 700;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 2px solid #e2e8f0;
+            padding: 0.85rem 1rem;
+            vertical-align: middle;
+        }
+
+        .tsu-table-modern tbody td {
+            padding: 0.85rem 1rem;
+            vertical-align: middle;
+            font-size: 0.88rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .tsu-table-modern tbody tr:hover {
+            background-color: #f8fafc;
+        }
+
+        .modal-header-tsu {
+            background: linear-gradient(135deg, #094b54 0%, #0c6170 100%);
+            color: #ffffff;
+            border-bottom: none;
+        }
+
+        .modal-header-tsu .close {
+            color: #ffffff;
+            opacity: 0.85;
+            text-shadow: none;
+        }
+
+        .modal-header-tsu .close:hover {
+            opacity: 1;
+        }
+
+        .select2-container--bootstrap4 .select2-selection--single {
+            height: calc(2.25rem + 2px) !important;
+            border: 1px solid #ced4da;
+            border-radius: 0.35rem;
+        }
+    </style>
+@endsection
+
 @section('content')
     <x-tsu-page-header
         title="Monitoring & Realisasi Kinerja KPI"
-        subtitle="Evaluasi pencapaian target kerja, pengisian realisasi capaian, penghitungan skor otomatis, dan unggah berkas bukti dukung"
+        subtitle="Evaluasi pencapaian target kerja unit, input angka realisasi, kalkulasi skor otomatis, dan unggah berkas bukti dukung"
         :icon="$menuIcon ?? 'fas fa-chart-line'"
         :breadcrumb="true"
     />
 
     <section class="content">
         <div class="container-fluid">
-            <!-- Filter Bar: Unit Kerja & Periode -->
-            <div class="card shadow-sm border-0 mb-4">
-                <div class="card-body py-3">
+
+            <!-- Ringkasan Statistik 4 Kartu Context-Aware -->
+            <div class="tsu-stat-grid-monitoring">
+                <div class="tsu-stat-card tsu-stat-card--total">
+                    <i class="fas fa-tasks tsu-stat-card__watermark"></i>
+                    <div class="tsu-stat-card__value">{{ $totalIndikator }} Indikator</div>
+                    <div class="tsu-stat-card__label">Target Ditugaskan ke Unit</div>
+                </div>
+
+                <div class="tsu-stat-card tsu-stat-card--terisi">
+                    <i class="fas fa-clipboard-check tsu-stat-card__watermark"></i>
+                    <div class="tsu-stat-card__value">{{ $totalTerisi }} / {{ $totalIndikator }}</div>
+                    <div class="tsu-stat-card__label">Indikator Telah Dievaluasi</div>
+                </div>
+
+                <div class="tsu-stat-card tsu-stat-card--capaian">
+                    <i class="fas fa-chart-pie tsu-stat-card__watermark"></i>
+                    <div class="tsu-stat-card__value">{{ $avgCapaian }}%</div>
+                    <div class="tsu-stat-card__label">Rata-Rata Capaian Scorecard</div>
+                </div>
+
+                <div class="tsu-stat-card tsu-stat-card--skor">
+                    <i class="fas fa-trophy tsu-stat-card__watermark"></i>
+                    <div class="tsu-stat-card__value">{{ $totalSkor }}</div>
+                    <div class="tsu-stat-card__label">Akumulasi Skor Kinerja BSC</div>
+                </div>
+            </div>
+
+            <!-- Card Panduan (Placed BELOW Stat Cards) -->
+            <x-tsu-master-guide
+                title="Panduan Monitoring & Evaluasi Capaian Kinerja KPI"
+                description="Modul Monitoring & Realisasi Kinerja digunakan untuk merekam realisasi kuantitatif setiap indikator unit, menghitung persentase capaian dan skor terbobot secara real-time, serta mengunggah berkas bukti dukung (evidence) sebagai dasar audit kinerja universitas."
+                :connections="[
+                    ['label' => 'Dashboard Eksekutif KPI', 'route' => 'admin.kpi.dashboard.index', 'icon' => 'fas fa-tachometer-alt'],
+                    ['label' => 'Cascading KPI Unit Kerja', 'route' => 'admin.kpi.cascading.index', 'icon' => 'fas fa-sitemap'],
+                    ['label' => 'Kamus Master Indikator', 'route' => 'admin.kpi.master-indikator.index', 'icon' => 'fas fa-book-reader'],
+                    ['label' => 'Master Periode Penilaian', 'route' => 'admin.kpi.periode.index', 'icon' => 'fas fa-calendar-alt']
+                ]"
+                impact="Angka realisasi yang disimpan akan otomatis menghitung Capaian (%) sesuai polaritas indikator (Maximize/Minimize) dan mengalikan bobot menjadi Skor BSC unit kerja."
+            />
+
+            <!-- Filter Bar: Unit Kerja, Periode, & Status Akses (Di bawah Panduan) -->
+            <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                <div class="card-body p-3">
                     <form method="GET" action="{{ route('admin.kpi.monitoring.index') }}" id="filter-form" class="row align-items-center">
                         <div class="col-md-5 mb-2 mb-md-0">
-                            <label class="font-weight-bold text-dark small mb-1"><i class="fas fa-university text-primary mr-1"></i> Pilih Unit Kerja:</label>
+                            <label class="font-weight-bold text-dark small mb-1">
+                                <i class="fas fa-building mr-1" style="color: var(--tsu-primary);"></i> Pilih Unit Kerja:
+                            </label>
                             <select name="unit_id" id="select-unit" class="form-control form-control-sm select2" onchange="this.form.submit()">
                                 @foreach($units as $u)
                                     <option value="{{ $u->id }}" {{ $currentUnit && $currentUnit->id == $u->id ? 'selected' : '' }}>
@@ -25,7 +236,9 @@
                             </select>
                         </div>
                         <div class="col-md-5 mb-2 mb-md-0">
-                            <label class="font-weight-bold text-dark small mb-1"><i class="fas fa-calendar-alt text-primary mr-1"></i> Periode Penilaian:</label>
+                            <label class="font-weight-bold text-dark small mb-1">
+                                <i class="fas fa-calendar-alt mr-1" style="color: var(--tsu-teal-accent);"></i> Periode Penilaian:
+                            </label>
                             <select name="periode_id" id="select-periode" class="form-control form-control-sm select2" onchange="this.form.submit()">
                                 @foreach($periodes as $p)
                                     <option value="{{ $p->id }}" {{ $currentPeriode && $currentPeriode->id == $p->id ? 'selected' : '' }}>
@@ -34,82 +247,51 @@
                                 @endforeach
                             </select>
                         </div>
-                        <div class="col-md-2 text-md-right mt-3 mt-md-0">
+                        <div class="col-md-2 text-md-right mt-3 mt-md-0 d-flex align-items-end justify-content-md-end">
                             @if($currentPeriode && $currentPeriode->is_locked)
-                                <span class="badge badge-warning p-2"><i class="fas fa-lock mr-1"></i> Periode Dikunci</span>
+                                <span class="badge badge-pill font-weight-bold px-3 py-2" style="background: rgba(239, 68, 68, 0.1); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.25); font-size: 0.82rem; margin-top: 22px;">
+                                    <i class="fas fa-lock mr-1"></i> Periode Dikunci
+                                </span>
                             @else
-                                <span class="badge badge-success p-2"><i class="fas fa-lock-open mr-1"></i> Pengisian Terbuka</span>
+                                <span class="badge badge-pill font-weight-bold px-3 py-2" style="background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25); font-size: 0.82rem; margin-top: 22px;">
+                                    <i class="fas fa-lock-open mr-1"></i> Pengisian Terbuka
+                                </span>
                             @endif
                         </div>
                     </form>
                 </div>
             </div>
 
-            <!-- Monitoring Metrics Cards -->
-            <div class="row mb-4">
-                <div class="col-xl-3 col-md-6 mb-3">
-                    <div class="card shadow-sm border-0 h-100 bg-white" style="border-radius: 8px; border-left: 4px solid #4e73df !important;">
-                        <div class="card-body py-3">
-                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">Total Indikator Unit</div>
-                            <div class="h4 font-weight-bold text-dark mb-0">{{ $totalIndikator }} Indikator</div>
-                            <small class="text-muted">Target yang harus dicapai</small>
+            <!-- Main Card Container: Table of Unit KPI Monitoring -->
+            <div class="card border-0 shadow-sm" style="border-radius: 12px; overflow: hidden;">
+                <div class="card-header bg-white py-3" style="border-bottom: 1px solid var(--tsu-border);">
+                    <div class="row align-items-center">
+                        <div class="col-md-7">
+                            <h5 class="font-weight-bold text-dark mb-0" style="font-size: 1rem; display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-clipboard-list" style="color: var(--tsu-primary);"></i> Tabel Evaluasi Realisasi Kinerja Unit
+                            </h5>
+                            <small class="text-muted">
+                                Scorecard: <strong>{{ $currentUnit->nama_unit ?? '-' }}</strong> • Periode {{ $currentPeriode->nama_periode ?? '-' }}
+                            </small>
+                        </div>
+                        <div class="col-md-5 text-md-right mt-2 mt-md-0">
+                            <span class="badge badge-pill font-weight-bold px-3 py-2" style="background: rgba(9, 75, 84, 0.1); color: #094b54; border: 1px solid rgba(9, 75, 84, 0.25); font-size: 0.82rem;">
+                                <i class="fas fa-check-circle mr-1"></i> Progres Evaluasi: {{ $totalTerisi }} dari {{ $totalIndikator }} Indikator
+                            </span>
                         </div>
                     </div>
                 </div>
-
-                <div class="col-xl-3 col-md-6 mb-3">
-                    <div class="card shadow-sm border-0 h-100 bg-white" style="border-radius: 8px; border-left: 4px solid #36b9cc !important;">
-                        <div class="card-body py-3">
-                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Sudah Dievaluasi / Terisi</div>
-                            <div class="h4 font-weight-bold text-dark mb-0">{{ $totalTerisi }} / {{ $totalIndikator }}</div>
-                            <div class="progress progress-xs mt-1">
-                                <div class="progress-bar bg-info" style="width: {{ $totalIndikator > 0 ? ($totalTerisi / $totalIndikator) * 100 : 0 }}%"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-xl-3 col-md-6 mb-3">
-                    <div class="card shadow-sm border-0 h-100 bg-white" style="border-radius: 8px; border-left: 4px solid #1cc88a !important;">
-                        <div class="card-body py-3">
-                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Rata-Rata Capaian Unit</div>
-                            <div class="h4 font-weight-bold text-dark mb-0">{{ $avgCapaian }}%</div>
-                            <div class="progress progress-xs mt-1">
-                                <div class="progress-bar bg-success" style="width: {{ min($avgCapaian, 100) }}%"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="col-xl-3 col-md-6 mb-3">
-                    <div class="card shadow-sm border-0 h-100 bg-white" style="border-radius: 8px; border-left: 4px solid #f6c23e !important;">
-                        <div class="card-body py-3">
-                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Total Skor Akumulasi</div>
-                            <div class="h4 font-weight-bold text-dark mb-0">{{ $totalSkor }}</div>
-                            <small class="text-muted">$\sum(\text{Capaian} \times \text{Bobot})$</small>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Monitoring DataTable -->
-            <div class="card card-outline card-primary shadow-sm border-0">
-                <div class="card-header bg-white py-3">
-                    <h6 class="card-title font-weight-bold text-dark mb-0">
-                        <i class="fas fa-clipboard-list mr-2 text-primary"></i> Tabel Evaluasi Realisasi Kinerja Unit
-                    </h6>
-                </div>
-                <div class="card-body">
+                <div class="card-body p-3">
                     <div class="table-responsive">
-                        <table id="table-kpi-monitoring" class="table table-bordered table-striped w-100 align-middle">
-                            <thead class="bg-light">
+                        <table id="table-kpi-monitoring" class="table table-hover tsu-table-modern w-100 align-middle">
+                            <thead>
                                 <tr>
                                     <th width="4%" class="text-center">No</th>
-                                    <th width="8%" class="text-center">Perspektif</th>
+                                    <th width="10%" class="text-center">Perspektif</th>
                                     <th width="24%">Indikator Kinerja</th>
                                     <th width="6%" class="text-center">Bobot</th>
-                                    <th width="12%">Target</th>
-                                    <th width="12%">Realisasi</th>
+                                    <th width="11%">Target</th>
+                                    <th width="11%">Realisasi</th>
                                     <th width="10%" class="text-center">Capaian (%)</th>
                                     <th width="8%" class="text-center">Skor</th>
                                     <th width="8%" class="text-center">Bukti</th>
@@ -126,23 +308,23 @@
 
     <!-- Modal Evaluasi Realisasi & Bukti Dukung -->
     <div class="modal fade" id="modal-evaluasi" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-lg" role="document">
-            <div class="modal-content border-0 shadow">
+        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
                 <form id="form-evaluasi" enctype="multipart/form-data">
                     @csrf
                     <input type="hidden" id="evaluasi-unit-indikator-id" name="id">
 
-                    <div class="modal-header bg-success text-white">
+                    <div class="modal-header modal-header-tsu">
                         <h5 class="modal-title font-weight-bold">
                             <i class="fas fa-clipboard-check mr-2"></i> Input / Evaluasi Realisasi Kinerja
                         </h5>
-                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                             <span aria-hidden="true">&times;</span>
                         </button>
                     </div>
-                    <div class="modal-body">
+                    <div class="modal-body p-4">
                         <!-- Indikator Context Info -->
-                        <div class="p-3 bg-light rounded mb-3 border">
+                        <div class="p-3 mb-3" style="background: rgba(9, 75, 84, 0.05); border: 1px solid rgba(9, 75, 84, 0.15); border-radius: 8px;">
                             <div class="d-flex justify-content-between align-items-start">
                                 <div>
                                     <span id="evaluasi-perspektif-badge">-</span>
@@ -151,12 +333,12 @@
                                 </div>
                                 <div class="text-right">
                                     <div class="small text-muted font-weight-bold">Bobot:</div>
-                                    <span class="badge badge-primary px-2 py-1 font-weight-bold" id="evaluasi-bobot-text" style="font-size: 13px;">0%</span>
+                                    <span class="badge badge-pill font-weight-bold px-2 py-1" id="evaluasi-bobot-text" style="background: rgba(9, 75, 84, 0.1); color: #094b54; border: 1px solid rgba(9, 75, 84, 0.25); font-size: 0.85rem;">0%</span>
                                 </div>
                             </div>
-                            <div class="row mt-3 pt-2 border-top">
+                            <div class="row mt-3 pt-2" style="border-top: 1px solid rgba(9, 75, 84, 0.15);">
                                 <div class="col-md-4">
-                                    <small class="text-muted d-block">Target yang Ditetapkan:</small>
+                                    <small class="text-muted d-block">Target Ditetapkan:</small>
                                     <strong class="text-dark" id="evaluasi-target-text">-</strong>
                                 </div>
                                 <div class="col-md-4">
@@ -173,33 +355,33 @@
                         <!-- Realisasi Input & Live Preview Calculation -->
                         <div class="row">
                             <div class="col-md-6 form-group">
-                                <label class="font-weight-bold text-primary">
+                                <label class="font-weight-bold" style="color: var(--tsu-primary);">
                                     <i class="fas fa-edit mr-1"></i> Realisasi Nilai / Angka <span class="text-danger">*</span>
                                 </label>
-                                <input type="number" step="any" class="form-control form-control-lg font-weight-bold" id="evaluasi-realisasi-angka" name="realisasi_angka" required placeholder="Masukkan angka realisasi...">
-                                <small class="text-muted">Masukkan angka capaian riil di lapangan.</small>
+                                <input type="number" step="any" class="form-control form-control-lg font-weight-bold" id="evaluasi-realisasi-angka" name="realisasi_angka" required placeholder="Contoh: 85, 100, 2">
+                                <small class="text-muted">Masukkan angka capaian riil yang diperoleh unit.</small>
                             </div>
 
                             <div class="col-md-6 form-group">
-                                <div class="p-3 bg-light rounded border h-100 d-flex flex-column justify-content-center">
+                                <div class="p-3 bg-light rounded border h-100 d-flex flex-column justify-content-center" style="border-radius: 8px;">
                                     <div class="d-flex justify-content-between align-items-center mb-1">
                                         <span class="font-weight-bold text-dark small">Prediksi Capaian (%):</span>
                                         <span class="h5 font-weight-bold text-success mb-0" id="preview-capaian">-%</span>
                                     </div>
-                                    <div class="progress progress-xs mb-2">
+                                    <div class="progress progress-xs mb-2" style="height: 6px; border-radius: 4px;">
                                         <div class="progress-bar bg-success" id="preview-progress" style="width: 0%"></div>
                                     </div>
                                     <div class="d-flex justify-content-between align-items-center">
                                         <span class="font-weight-bold text-dark small">Estimasi Skor Kinerja:</span>
-                                        <span class="h5 font-weight-bold text-primary mb-0" id="preview-skor">-</span>
+                                        <span class="h5 font-weight-bold mb-0" style="color: var(--tsu-primary);" id="preview-skor">-</span>
                                     </div>
-                                    <small class="text-muted mt-1" style="font-size: 11px;">Formula BSC: $\text{Capaian} = (\text{Realisasi}/\text{Target}) \times 100\%$, $\text{Skor} = \text{Capaian} \times \text{Bobot}$</small>
+                                    <small class="text-muted mt-1" style="font-size: 11px;">Formula: Capaian = (Realisasi / Target) × 100% | Skor = (Capaian × Bobot) / 100</small>
                                 </div>
                             </div>
                         </div>
 
                         <div class="form-group">
-                            <label class="font-weight-bold">Status Evaluasi Monev <span class="text-danger">*</span></label>
+                            <label class="font-weight-bold text-dark">Status Evaluasi Monev <span class="text-danger">*</span></label>
                             <select class="form-control" id="evaluasi-status-monev" name="status_monev" required>
                                 <option value="Terevaluasi">Terevaluasi (Sudah Diverifikasi)</option>
                                 <option value="Tercapai">Tercapai (Target Terpenuhi)</option>
@@ -209,25 +391,25 @@
                         </div>
 
                         <div class="form-group">
-                            <label class="font-weight-bold">Analisis Capaian / Keterangan Pencapaian</label>
+                            <label class="font-weight-bold text-dark">Analisis Capaian / Keterangan Pencapaian</label>
                             <textarea class="form-control" id="evaluasi-analisis" name="analisis_capaian" rows="2" placeholder="Uraian faktor pendorong keberhasilan atau penyebab realisasi..."></textarea>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 form-group">
-                                <label class="font-weight-bold">Kendala / Masalah yang Dihadapi</label>
+                                <label class="font-weight-bold text-dark">Kendala / Masalah yang Dihadapi</label>
                                 <textarea class="form-control" id="evaluasi-kendala" name="kendala" rows="2" placeholder="Kendala operasional, anggaran, atau sumber daya..."></textarea>
                             </div>
                             <div class="col-md-6 form-group">
-                                <label class="font-weight-bold">Rencana Tindak Lanjut</label>
-                                <textarea class="form-control" id="evaluasi-rtl" name="rencana_tindak_lanjut" rows="2" placeholder="Langkah korektif / perbaikan ke depan..."></textarea>
+                                <label class="font-weight-bold text-dark">Rencana Tindak Lanjut</label>
+                                <textarea class="form-control" id="evaluasi-rtl" name="rencana_tindak_lanjut" rows="2" placeholder="Langkah korektif / rekomendasi perbaikan..."></textarea>
                             </div>
                         </div>
 
                         <!-- Upload File Bukti Dukung -->
                         <div class="form-group mb-0">
-                            <label class="font-weight-bold">
-                                <i class="fas fa-paperclip text-info mr-1"></i> Unggah File Bukti Dukung (Evidence)
+                            <label class="font-weight-bold text-dark">
+                                <i class="fas fa-paperclip mr-1" style="color: var(--tsu-primary);"></i> Unggah File Bukti Dukung (Evidence)
                             </label>
                             <div class="custom-file">
                                 <input type="file" class="custom-file-input" id="evaluasi-file-bukti" name="file_bukti">
@@ -236,9 +418,9 @@
                             <div id="current-file-preview" class="mt-2 text-info small" style="display: none;"></div>
                         </div>
                     </div>
-                    <div class="modal-footer bg-light">
+                    <div class="modal-footer bg-light" style="border-top: 1px solid var(--tsu-border);">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-success font-weight-bold" id="btn-save-evaluasi">
+                        <button type="submit" class="btn tsu-btn-create" id="btn-save-evaluasi">
                             <i class="fas fa-save mr-1"></i> Simpan Evaluasi Realisasi
                         </button>
                     </div>
@@ -263,6 +445,10 @@ $(document).ready(function() {
     var table = $('#table-kpi-monitoring').DataTable({
         processing: true,
         serverSide: true,
+        language: {
+            emptyTable: "Belum ada indikator KPI yang ditugaskan pada unit dan periode ini",
+            processing: '<i class="fas fa-spinner fa-spin mr-2"></i>Memuat data...'
+        },
         ajax: {
             url: "{{ route('admin.kpi.monitoring.json') }}",
             data: function(d) {
@@ -404,11 +590,11 @@ $(document).ready(function() {
                     icon: 'success',
                     title: 'Evaluasi Tersimpan!',
                     text: res.message,
-                    timer: 2000,
+                    timer: 1800,
                     showConfirmButton: false
                 });
                 table.ajax.reload(null, false);
-                setTimeout(function() { window.location.reload(); }, 1500);
+                setTimeout(function() { window.location.reload(); }, 1200);
             },
             error: function(xhr) {
                 btn.prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Simpan Evaluasi Realisasi');

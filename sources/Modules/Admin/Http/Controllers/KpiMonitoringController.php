@@ -72,58 +72,77 @@ class KpiMonitoringController extends MiddlewareController
         return DataTables::of($query)
             ->addIndexColumn()
             ->addColumn('perspektif_badge', function ($row) {
-                return $row->masterIndikator && $row->masterIndikator->perspektif 
-                    ? $row->masterIndikator->perspektif->badge_html 
-                    : '-';
+                if (!$row->masterIndikator || !$row->masterIndikator->perspektif) {
+                    return '-';
+                }
+                $p = $row->masterIndikator->perspektif;
+                $kode = strtoupper($p->kode ?? '');
+                $style = match($kode) {
+                    'FIN' => 'background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25);',
+                    'CUS' => 'background: rgba(2, 132, 199, 0.1); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.25);',
+                    'INT' => 'background: rgba(139, 92, 246, 0.1); color: #7c3aed; border: 1px solid rgba(139, 92, 246, 0.25);',
+                    'LRN' => 'background: rgba(217, 119, 6, 0.1); color: #b45309; border: 1px solid rgba(217, 119, 6, 0.25);',
+                    default => 'background: rgba(9, 75, 84, 0.1); color: #094b54; border: 1px solid rgba(9, 75, 84, 0.25);',
+                };
+                return '<span class="badge badge-pill font-weight-bold px-2 py-1" style="' . $style . ' font-size: 0.78rem;">' . htmlspecialchars($p->nama_perspektif) . '</span>';
             })
             ->addColumn('indikator_info', function ($row) {
                 $mi = $row->masterIndikator;
                 if (!$mi) return '-';
 
-                $html = '<div class="font-weight-bold text-dark">[' . e($mi->kode_indikator) . '] ' . e($mi->nama_indikator) . '</div>';
+                $html = '<div class="font-weight-bold text-dark" style="font-size: 0.9rem;"><span style="color: #094b54; font-family: monospace; font-weight: 700;">[' . e($mi->kode_indikator) . ']</span> ' . e($mi->nama_indikator) . '</div>';
+                $extra = [];
                 if ($mi->level === 'sub') {
-                    $html .= '<span class="badge badge-light-info text-info border border-info px-2 py-0" style="font-size: 11px;"><i class="fas fa-level-down-alt mr-1"></i>Sub-Indikator</span>';
+                    $extra[] = '<span class="badge badge-pill px-2 py-0" style="background: rgba(2, 132, 199, 0.08); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.2); font-size: 0.72rem;"><i class="fas fa-level-down-alt mr-1"></i>Sub</span>';
                 }
-                $html .= ' ' . $mi->polaritas_badge;
+                if ($mi->polaritas) {
+                    $polaritasStyle = $mi->polaritas === 'Maximize'
+                        ? 'background: rgba(16, 185, 129, 0.08); color: #059669; border: 1px solid rgba(16, 185, 129, 0.2);'
+                        : 'background: rgba(217, 119, 6, 0.08); color: #b45309; border: 1px solid rgba(217, 119, 6, 0.2);';
+                    $extra[] = '<span class="badge badge-pill px-2 py-0" style="' . $polaritasStyle . ' font-size: 0.72rem;">' . e($mi->polaritas) . '</span>';
+                }
+                if ($extra) {
+                    $html .= '<div class="mt-1 d-flex flex-wrap" style="gap: 4px;">' . implode('', $extra) . '</div>';
+                }
                 return $html;
             })
             ->addColumn('bobot_formatted', function ($row) {
-                return '<span class="badge badge-secondary px-2 py-1">' . number_format($row->bobot, 1) . '%</span>';
+                return '<span class="badge badge-pill font-weight-bold px-2 py-1" style="background: rgba(9, 75, 84, 0.1); color: #094b54; border: 1px solid rgba(9, 75, 84, 0.25); font-size: 0.82rem;">' . number_format($row->bobot, 1) . '%</span>';
             })
             ->addColumn('target_satuan', function ($row) {
                 $targetVal = $row->target_angka !== null ? rtrim(rtrim(number_format($row->target_angka, 2, '.', ''), '0'), '.') : ($row->target_label ?? '-');
                 $satuan = $row->satuan ?? optional($row->masterIndikator)->satuan ?? '';
-                return '<strong>' . e($targetVal) . '</strong> <small class="text-muted">' . e($satuan) . '</small>';
+                return '<strong class="text-dark" style="font-size: 0.92rem;">' . e($targetVal) . '</strong> <span class="text-muted small">' . e($satuan) . '</span>';
             })
             ->addColumn('realisasi_satuan', function ($row) {
                 if ($row->realisasi_angka === null && !$row->realisasi_label) {
-                    return '<span class="badge badge-light text-muted font-italic">Belum Diisi</span>';
+                    return '<span class="badge badge-pill text-muted font-italic px-2 py-1" style="background: #f8fafc; border: 1px solid #e2e8f0; font-size: 0.75rem;">Belum Diisi</span>';
                 }
                 $realVal = $row->realisasi_angka !== null ? rtrim(rtrim(number_format($row->realisasi_angka, 2, '.', ''), '0'), '.') : $row->realisasi_label;
                 $satuan = $row->satuan ?? optional($row->masterIndikator)->satuan ?? '';
-                return '<strong class="text-primary">' . e($realVal) . '</strong> <small class="text-muted">' . e($satuan) . '</small>';
+                return '<strong style="color: #094b54; font-size: 0.92rem;">' . e($realVal) . '</strong> <span class="text-muted small">' . e($satuan) . '</span>';
             })
             ->addColumn('capaian_badge', function ($row) {
                 return $row->capaian_badge;
             })
             ->addColumn('skor_formatted', function ($row) {
                 if ($row->skor === null) {
-                    return '<span class="text-muted">-</span>';
+                    return '<span class="text-muted small">-</span>';
                 }
-                return '<strong class="text-success" style="font-size: 14px;">' . number_format($row->skor, 2) . '</strong>';
+                return '<strong class="font-weight-bold text-dark" style="font-size: 0.92rem;">' . number_format($row->skor, 2) . '</strong>';
             })
             ->addColumn('bukti_dukung', function ($row) {
                 if ($row->file_bukti) {
                     $url = asset('storage/' . $row->file_bukti);
-                    return '<a href="'.$url.'" target="_blank" class="btn btn-xs btn-outline-info" title="Lihat Bukti Dukung"><i class="fas fa-file-alt mr-1"></i>Bukti</a>';
+                    return '<a href="'.$url.'" target="_blank" class="btn btn-sm btn-outline-info" title="Lihat Bukti Dukung" style="border-radius: 6px; padding: 0.2rem 0.5rem; font-size: 0.75rem;"><i class="fas fa-paperclip mr-1"></i>Bukti</a>';
                 }
-                return '<span class="text-muted small font-italic">Tidak Ada</span>';
+                return '<span class="text-muted small font-italic">-</span>';
             })
             ->addColumn('status_badge', function ($row) {
                 return $row->status_monev_badge;
             })
             ->addColumn('action', function ($row) {
-                $btn = '<button type="button" class="btn btn-sm btn-success btn-evaluasi" data-id="'.$row->id.'" title="Input / Update Realisasi Kinerja"><i class="fas fa-clipboard-check mr-1"></i>Evaluasi</button>';
+                $btn = '<button type="button" class="btn btn-sm btn-outline-primary btn-evaluasi" data-id="'.$row->id.'" title="Input / Update Realisasi Kinerja" style="border-radius: 6px; padding: 0.25rem 0.65rem; font-weight: 600; font-size: 0.8rem;"><i class="fas fa-clipboard-check mr-1"></i>Evaluasi</button>';
                 return $btn;
             })
             ->rawColumns(['perspektif_badge', 'indikator_info', 'bobot_formatted', 'target_satuan', 'realisasi_satuan', 'capaian_badge', 'skor_formatted', 'bukti_dukung', 'status_badge', 'action'])

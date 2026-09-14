@@ -275,19 +275,6 @@
                 </div>
             </div>
 
-            {{-- Card Panduan (Placed Below Stat Cards) --}}
-            <x-tsu-master-guide
-                title="Panduan Tugas SK & Alur Sekretariat Rektorat"
-                description="Halaman kerja Sekretariat Rektorat untuk memproses permohonan dinas yang diteruskan oleh SDM terkait penerbitan Surat Keputusan (SK) Rektor, penomoran resmi surat keluar, pengunggahan dokumen PDF bertandatangan/stempel, serta pelacakan tanda terima berkas fisik asli (hardfile)."
-                :connections="[
-                    ['label' => 'Kelola Permohonan Surat SDM', 'route' => 'admin.request-surat.admin-index', 'icon' => 'fas fa-tasks'],
-                    ['label' => 'Surat Masuk & SIKD', 'route' => 'admin.surat-masuk.index', 'icon' => 'fas fa-inbox'],
-                    ['label' => 'Disposisi Masuk Unit', 'route' => 'admin.disposisi-unit.index', 'icon' => 'fas fa-paper-plane'],
-                    ['label' => 'Pusat Surat Edaran & SK', 'route' => 'admin.surat-edaran.index', 'icon' => 'fas fa-bullhorn']
-                ]"
-                impact="Dokumen SK yang telah selesai dan diunggah akan otomatis dapat diunduh pemohon pada portal mandiri pegawai, dan Admin SDM dapat memantau serah terima berkas fisik asli secara transparan."
-            />
-
             {{-- Table Card: Daftar Permintaan SK Rektorat Masuk --}}
             <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px; overflow: hidden;">
                 <div class="card-header bg-white px-3 py-3 d-flex flex-wrap justify-content-between align-items-center" style="border-bottom: 1px solid var(--tsu-border); gap: 12px;">

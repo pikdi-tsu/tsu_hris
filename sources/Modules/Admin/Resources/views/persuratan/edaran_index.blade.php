@@ -293,19 +293,6 @@
                 </div>
             </div>
 
-            {{-- Card Panduan (Placed Below Stat Cards) --}}
-            <x-tsu-master-guide
-                title="Panduan Pusat Surat Edaran & SK Rektorat"
-                description="Pusat repositori digital resmi penerbitan Surat Edaran, Surat Keputusan (SK) Rektorat/Yayasan, dan Pedoman Kebijakan SDM. Dokumen yang dipublikasikan di sini dapat diakses secara transparan oleh seluruh dosen dan tenaga kependidikan."
-                :connections="[
-                    ['label' => 'Tugas SK Sekretariat', 'route' => 'admin.request-surat.sekretariat-inbox', 'icon' => 'fas fa-user-shield'],
-                    ['label' => 'Registrasi Surat Masuk & SIKD', 'route' => 'admin.surat-masuk.index', 'icon' => 'fas fa-inbox'],
-                    ['label' => 'Disposisi Masuk Unit', 'route' => 'admin.disposisi-unit.index', 'icon' => 'fas fa-paper-plane'],
-                    ['label' => 'Kelola Permohonan SDM', 'route' => 'admin.request-surat.admin-index', 'icon' => 'fas fa-tasks']
-                ]"
-                impact="Surat Edaran bertema hari libur atau jam kerja khusus dapat disinkronkan langsung ke kalender kerja universitas, sehingga sistem presensi dan perhitungan cuti pegawai otomatis menyesuaikan."
-            />
-
             {{-- Table Card: Daftar Surat Edaran & SK Resmi --}}
             <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px; overflow: hidden;">
                 <div class="card-header bg-white px-3 py-3 d-flex flex-wrap justify-content-between align-items-center" style="border-bottom: 1px solid var(--tsu-border); gap: 12px;">

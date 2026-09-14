@@ -332,18 +332,6 @@
                 </div>
             </div>
 
-            {{-- Card Panduan (Placed BELOW Stat Cards) --}}
-            <x-tsu-master-guide
-                title="Panduan Pelaksanaan Onboarding & Offboarding Pegawai"
-                description="Modul Pelaksanaan Onboarding & Offboarding digunakan untuk memantau pemenuhan butir kegiatan orientasi pegawai baru serta protokol serah terima saat terjadi pengunduran diri atau peralihan tugas."
-                :connections="[
-                    ['label' => 'Kelola Master Tugas', 'route' => 'admin.master-onboarding-offboarding.index', 'icon' => 'fas fa-tasks'],
-                    ['label' => 'Data Karyawan', 'route' => 'admin.data-karyawan.index', 'icon' => 'fas fa-users'],
-                    ['label' => 'Struktur Organisasi', 'route' => 'admin.struktur-organisasi.index', 'icon' => 'fas fa-sitemap']
-                ]"
-                impact="Setiap butir checklist yang diverifikasi akan terekam waktu penyelesaiannya dan nama verifikator yang menyetujui, memastikan akuntabilitas proses orientasi dan serah terima aset universitas."
-            />
-
             {{-- Main Underline Tab Card Container --}}
             <div class="card card-primary card-outline card-tabs tsu-card">
                 <div class="card-header p-0 border-bottom-0">

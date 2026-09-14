@@ -229,19 +229,6 @@
                 </div>
             </div>
 
-            {{-- Card Panduan (Placed Below Stat Cards) --}}
-            <x-tsu-master-guide
-                title="Panduan Kelola & Verifikasi Permohonan Surat Pegawai"
-                description="Menu ini memfasilitasi verifikasi berkas, pemrosesan draf, disposisi ke Sekretariat Rektorat (untuk kebutuhan SK / tanda tangan pimpinan), hingga penerbitan surat dinas resmi (Keterangan Kerja, Pengantar Bank/KPR, Izin Studi Lanjut, dll.) yang diajukan oleh dosen dan tenaga kependidikan."
-                :connections="[
-                    ['label' => 'Tugas SK Sekretariat', 'route' => 'admin.request-surat.sekretariat-inbox', 'icon' => 'fas fa-user-shield'],
-                    ['label' => 'Surat Masuk & SIKD', 'route' => 'admin.surat-masuk.index', 'icon' => 'fas fa-inbox'],
-                    ['label' => 'Disposisi Masuk Unit', 'route' => 'admin.disposisi-unit.index', 'icon' => 'fas fa-paper-plane'],
-                    ['label' => 'Pusat Surat Edaran & SK', 'route' => 'admin.surat-edaran.index', 'icon' => 'fas fa-bullhorn']
-                ]"
-                impact="Pemohon menerima notifikasi status real-time pada portal mandiri pegawai. Setelah surat diterbitkan dan diunggah oleh SDM/Sekretariat, dokumen PDF resmi dapat langsung diunduh secara mandiri oleh pemohon."
-            />
-
             {{-- Table Card: Daftar Permohonan Surat Masuk --}}
             <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px; overflow: hidden;">
                 <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center" style="border-bottom: 1px solid var(--tsu-border); gap: 12px;">

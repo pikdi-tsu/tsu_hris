@@ -136,6 +136,22 @@
             transform: translateY(-1px);
         }
 
+        .tsu-btn-outline-back {
+            border-radius: 8px;
+            font-weight: 600;
+            padding: 0.45rem 1rem;
+            border: 1px solid #cbd5e1;
+            color: #475569;
+            background: #ffffff;
+            transition: all 0.2s ease;
+        }
+
+        .tsu-btn-outline-back:hover {
+            background: #f8fafc;
+            color: #0f172a;
+            border-color: #94a3b8;
+        }
+
         /* TABLE STYLING */
         .tsu-table-modern thead th {
             background: #f8fafc;
@@ -192,6 +208,9 @@
         :breadcrumb="true"
     >
         <x-slot name="actions">
+            <a href="{{ route('admin.kpi.dashboard.index') }}" class="btn btn-sm tsu-btn-outline-back mr-2">
+                <i class="fas fa-arrow-left mr-1"></i> Kembali ke Dashboard
+            </a>
             <button type="button" class="btn tsu-btn-create btn-sm" id="btn-add-kpi-unit">
                 <i class="fas fa-plus mr-1"></i> Tambah Indikator ke Unit
             </button>
@@ -229,19 +248,6 @@
                     <div class="tsu-stat-card__label">Indikator KPI Scorecard Unit</div>
                 </div>
             </div>
-
-            <!-- Card Panduan (Placed BELOW Stat Cards) -->
-            <x-tsu-master-guide
-                title="Panduan Cascading KPI & Balanced Scorecard Unit Kerja"
-                description="Cascading KPI adalah proses penurunan sasaran strategis pimpinan universitas ke tingkat unit pelaksana kerja (Fakultas, Program Studi, Biro, Lembaga, UPT). Setiap unit menyusun matriks scorecard kinerja yang memuat target tahunan, roadmap target multi-tahun, dan alur penugasan (Direct, Contribution, Enabler)."
-                :connections="[
-                    ['label' => 'Dashboard Eksekutif KPI', 'route' => 'admin.kpi.dashboard.index', 'icon' => 'fas fa-tachometer-alt'],
-                    ['label' => 'Kamus Master Indikator', 'route' => 'admin.kpi.master-indikator.index', 'icon' => 'fas fa-book-reader'],
-                    ['label' => 'Master Periode Penilaian', 'route' => 'admin.kpi.periode.index', 'icon' => 'fas fa-calendar-alt'],
-                    ['label' => 'Monitoring Realisasi Kinerja', 'route' => 'admin.kpi.monitoring.index', 'icon' => 'fas fa-clipboard-check']
-                ]"
-                impact="Total akumulasi bobot pada scorecard unit wajib mencapai tepat 100% agar perhitungan capaian kinerja agregat dan indeks efektivitas unit valid saat periode monev berlangsung."
-            />
 
             <!-- Filter Bar: Unit Kerja & Periode Penilaian (Di bawah Panduan) -->
             <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">

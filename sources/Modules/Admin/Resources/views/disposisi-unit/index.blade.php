@@ -318,19 +318,6 @@
                 </div>
             </div>
 
-            {{-- Card Panduan (Placed Below Stat Cards) --}}
-            <x-tsu-master-guide
-                title="Panduan Disposisi Masuk Unit Kerja"
-                description="Halaman kerja bagi pimpinan dan staf unit kerja untuk menerima instruksi surat masuk dari Rektorat/Pimpinan, memantau batas waktu tindak lanjut, serta mengunggah dokumen bukti penyelesaian tugas disposisi."
-                :connections="[
-                    ['label' => 'Registrasi Surat Masuk & SIKD', 'route' => 'admin.surat-masuk.index', 'icon' => 'fas fa-inbox'],
-                    ['label' => 'Tugas SK Sekretariat', 'route' => 'admin.request-surat.sekretariat-inbox', 'icon' => 'fas fa-user-shield'],
-                    ['label' => 'Kelola Permohonan SDM', 'route' => 'admin.request-surat.admin-index', 'icon' => 'fas fa-tasks'],
-                    ['label' => 'Pusat Surat Edaran & SK', 'route' => 'admin.surat-edaran.index', 'icon' => 'fas fa-bullhorn']
-                ]"
-                impact="Setelah unit kerja mengonfirmasi penerimaan disposisi dan mengunggah berkas tindak lanjut, status kearsipan di SIKD universitas akan otomatis diperbarui menjadi selesai secara transparan."
-            />
-
             {{-- Table Card: Daftar Surat Disposisi Masuk --}}
             <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px; overflow: hidden;">
                 <div class="card-header bg-white px-3 py-3 d-flex flex-wrap justify-content-between align-items-center" style="border-bottom: 1px solid var(--tsu-border); gap: 12px;">

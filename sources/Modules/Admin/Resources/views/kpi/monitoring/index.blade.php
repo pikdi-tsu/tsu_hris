@@ -165,6 +165,22 @@
             border: 1px solid #ced4da;
             border-radius: 0.35rem;
         }
+
+        .tsu-btn-outline-back {
+            border-radius: 8px;
+            font-weight: 600;
+            padding: 0.45rem 1rem;
+            border: 1px solid #cbd5e1;
+            color: #475569;
+            background: #ffffff;
+            transition: all 0.2s ease;
+        }
+
+        .tsu-btn-outline-back:hover {
+            background: #f8fafc;
+            color: #0f172a;
+            border-color: #94a3b8;
+        }
     </style>
 @endsection
 
@@ -174,7 +190,13 @@
         subtitle="Evaluasi pencapaian target kerja unit, input angka realisasi, kalkulasi skor otomatis, dan unggah berkas bukti dukung"
         :icon="$menuIcon ?? 'fas fa-chart-line'"
         :breadcrumb="true"
-    />
+    >
+        <x-slot name="actions">
+            <a href="{{ route('admin.kpi.dashboard.index') }}" class="btn btn-sm tsu-btn-outline-back">
+                <i class="fas fa-arrow-left mr-1"></i> Kembali ke Dashboard
+            </a>
+        </x-slot>
+    </x-tsu-page-header>
 
     <section class="content">
         <div class="container-fluid">

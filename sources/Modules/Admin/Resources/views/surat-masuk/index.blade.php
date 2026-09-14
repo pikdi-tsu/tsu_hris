@@ -277,19 +277,6 @@
                 </div>
             </div>
 
-            {{-- Card Panduan (Placed Below Stat Cards) --}}
-            <x-tsu-master-guide
-                title="Panduan Registrasi Surat Masuk & Tata Kelola SIKD"
-                description="Sistem Informasi Kearsipan Dinamis (SIKD) Universitas untuk registrasi surat dinas eksternal, penerbitan nomor agenda terpusat, pengunggahan scan dokumen fisik asli (PDF), serta penerbitan lembar disposisi instruksi pimpinan ke unit kerja terkait."
-                :connections="[
-                    ['label' => 'Disposisi Masuk Unit', 'route' => 'admin.disposisi-unit.index', 'icon' => 'fas fa-paper-plane'],
-                    ['label' => 'Tugas SK Sekretariat', 'route' => 'admin.request-surat.sekretariat-inbox', 'icon' => 'fas fa-user-shield'],
-                    ['label' => 'Kelola Permohonan SDM', 'route' => 'admin.request-surat.admin-index', 'icon' => 'fas fa-tasks'],
-                    ['label' => 'Pusat Surat Edaran & SK', 'route' => 'admin.surat-edaran.index', 'icon' => 'fas fa-bullhorn']
-                ]"
-                impact="Surat masuk yang telah didaftarkan dan diunggah akan otomatis memiliki berkas scan digital yang terlindungi, dan dapat langsung diteruskan disposisinya ke unit kerja secara real-time dengan pelacakan batas waktu pengerjaan."
-            />
-
             {{-- Table Card: Daftar Surat Masuk Eksternal --}}
             <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px; overflow: hidden;">
                 <div class="card-header bg-white px-3 py-3 d-flex flex-wrap justify-content-between align-items-center" style="border-bottom: 1px solid var(--tsu-border); gap: 12px;">

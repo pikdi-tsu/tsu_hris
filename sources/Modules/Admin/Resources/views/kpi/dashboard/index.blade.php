@@ -226,19 +226,6 @@
                 </div>
             </div>
 
-            <!-- Card Panduan (Placed BELOW Stat Cards) -->
-            <x-tsu-master-guide
-                title="Panduan Executive Dashboard Balanced Scorecard"
-                description="Dashboard ini menyajikan performa agregat universitas berbasis 4 pilar Balanced Scorecard (Financial, Customer, Internal Process, Learning & Growth), rekapitulasi capaian per unit kerja pelaksana, serta peringatan dini untuk indikator yang membutuhkan perhatian intensif."
-                :connections="[
-                    ['label' => 'Cascading KPI Unit Kerja', 'route' => 'admin.kpi.cascading.index', 'icon' => 'fas fa-sitemap'],
-                    ['label' => 'Monitoring Realisasi Kinerja', 'route' => 'admin.kpi.monitoring.index', 'icon' => 'fas fa-clipboard-check'],
-                    ['label' => 'Kamus Master Indikator', 'route' => 'admin.kpi.master-indikator.index', 'icon' => 'fas fa-book-reader'],
-                    ['label' => 'Master Periode Penilaian', 'route' => 'admin.kpi.periode.index', 'icon' => 'fas fa-calendar-alt']
-                ]"
-                impact="Angka capaian dan skor dihitung secara otomatis dari realisasi yang diisi oleh unit kerja pelaksana pada periode penilaian aktif."
-            />
-
             <!-- Filter Bar: Periode Selection (Di bawah Panduan) -->
             <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
                 <div class="card-body p-3">

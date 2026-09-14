@@ -180,17 +180,6 @@
                 </div>
             </div>
 
-            {{-- Card Panduan (Placed BELOW Stat Cards) --}}
-            <x-tsu-master-guide
-                title="Panduan Monitoring Laporan BKD / LKD Dosen"
-                description="Modul Monitoring BKD digunakan untuk memantau kepatuhan pengunggahan Laporan Kinerja Dosen (LKD) per semester sesuai standar SISTER LLDIKTI bagi seluruh dosen aktif."
-                :connections="[
-                    ['label' => 'Data Karyawan & Dosen', 'route' => 'admin.data-karyawan.index', 'icon' => 'fas fa-chalkboard-teacher'],
-                    ['label' => 'Pengembangan SDM', 'route' => 'admin.pengembangan-sdm.index', 'icon' => 'fas fa-graduation-cap']
-                ]"
-                impact="Verifikasi berkas BKD yang disetujui akan menjadi acuan kelayakan pengajuan kenaikan jabatan fungsional (Jafa) serta pembayaran honorarium beban kerja lebih."
-            />
-
             {{-- Filter Program Studi & Tabel --}}
             <div class="card border-0 shadow-sm" style="border-radius: 12px; overflow: hidden;">
                 <div class="card-header bg-white py-3" style="border-bottom: 1px solid var(--tsu-border);">

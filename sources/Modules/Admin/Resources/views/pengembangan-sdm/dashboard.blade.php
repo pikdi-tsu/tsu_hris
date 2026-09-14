@@ -17,6 +17,16 @@
             --tsu-text-muted: #64748b;
         }
 
+        /* ADMINLTE CLEARFIX & FLEX FIX */
+        .card-header::after,
+        .card-header::before {
+            display: none !important;
+        }
+
+        .card-title {
+            float: none !important;
+        }
+
         /* STAT CARDS */
         .tsu-stat-grid-sdm {
             display: grid;
@@ -267,19 +277,6 @@
                 </div>
             </div>
 
-            <!-- Card Panduan (Placed BELOW Stat Cards) -->
-            <x-tsu-master-guide
-                title="Panduan Dashboard & Road Map Pengembangan SDM"
-                description="Dashboard ini memantau peta jalan (road map) akselerasi kualifikasi pendidikan Dosen (pencapaian gelar Doktor S3) serta perencanaan studi lanjut dan sertifikasi kompetensi Tenaga Kependidikan (Tendik) hingga tahun 2030 di lingkungan universitas."
-                :connections="[
-                    ['label' => 'Road Map Dosen per Prodi', 'route' => 'admin.pengembangan-sdm.dosen', 'icon' => 'fas fa-chalkboard-teacher'],
-                    ['label' => 'Road Map Tendik per Unit', 'route' => 'admin.pengembangan-sdm.tendik', 'icon' => 'fas fa-users-cog'],
-                    ['label' => 'Monitoring Usia Pensiun', 'route' => 'admin.pengembangan-sdm.pensiun', 'icon' => 'fas fa-hourglass-half'],
-                    ['label' => 'Master Periode Renstra', 'route' => 'admin.master-pengembangan.periode.index', 'icon' => 'fas fa-calendar-alt']
-                ]"
-                impact="Data proyeksi kualifikasi menjadi acuan strategis pimpinan dalam penyusunan anggaran beasiswa studi lanjut, alokasi formasi dosen, serta pemenuhan syarat akreditasi program studi."
-            />
-
             <!-- Filter Bar: Periode Selection (Di bawah Panduan) -->
             <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
                 <div class="card-body p-3">
@@ -314,7 +311,7 @@
                             <h5 class="card-title font-weight-bold text-dark mb-0" style="font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
                                 <i class="fas fa-balance-scale" style="color: var(--tsu-primary);"></i> Status Studi Lanjut Dosen (SS vs TSS) per Prodi (2026)
                             </h5>
-                            <span class="badge badge-pill font-weight-bold px-2 py-1" style="background: rgba(9, 75, 84, 0.1); color: #094b54; border: 1px solid rgba(9, 75, 84, 0.25); font-size: 0.78rem;">
+                            <span class="badge badge-pill font-weight-bold px-2 py-1 ml-auto" style="background: rgba(9, 75, 84, 0.1); color: #094b54; border: 1px solid rgba(9, 75, 84, 0.25); font-size: 0.78rem;">
                                 {{ count($prodi_breakdown) }} Program Studi
                             </span>
                         </div>
@@ -333,7 +330,7 @@
                             <h5 class="card-title font-weight-bold text-dark mb-0" style="font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
                                 <i class="fas fa-chart-area text-success"></i> Proyeksi Kualifikasi S3 (2026 - 2030)
                             </h5>
-                            <span class="badge badge-pill font-weight-bold px-2 py-1" style="background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25); font-size: 0.78rem;">
+                            <span class="badge badge-pill font-weight-bold px-2 py-1 ml-auto" style="background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25); font-size: 0.78rem;">
                                 Target Renstra
                             </span>
                         </div>
@@ -357,7 +354,7 @@
                                 </h5>
                                 <small class="text-muted">Proyeksi kualifikasi doktor (S3) multi-tahun dan status aktif studi lanjut dosen</small>
                             </div>
-                            <div>
+                            <div class="ml-auto">
                                 <a href="{{ route('admin.pengembangan-sdm.dosen') }}" class="btn btn-sm btn-outline-primary font-weight-bold" style="border-radius: 8px;">
                                     <i class="fas fa-external-link-alt mr-1"></i> Buka Lembar Kerja Detail
                                 </a>
@@ -486,7 +483,7 @@
                             <h5 class="card-title font-weight-bold text-dark mb-0" style="font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
                                 <i class="fas fa-user-clock text-info"></i> Status Studi Lanjut Tendik (SS vs TSS) per Unit Kerja (2026)
                             </h5>
-                            <span class="badge badge-pill font-weight-bold px-2 py-1" style="background: rgba(2, 132, 199, 0.1); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.25); font-size: 0.78rem;">
+                            <span class="badge badge-pill font-weight-bold px-2 py-1 ml-auto" style="background: rgba(2, 132, 199, 0.1); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.25); font-size: 0.78rem;">
                                 {{ count($tendik_breakdown) }} Unit Kerja
                             </span>
                         </div>
@@ -505,7 +502,7 @@
                             <h5 class="card-title font-weight-bold text-dark mb-0" style="font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
                                 <i class="fas fa-chart-line" style="color: var(--tsu-primary);"></i> Proyeksi Kualifikasi S1 & S2 Tendik (2026 - 2030)
                             </h5>
-                            <span class="badge badge-pill font-weight-bold px-2 py-1" style="background: rgba(9, 75, 84, 0.1); color: #094b54; border: 1px solid rgba(9, 75, 84, 0.25); font-size: 0.78rem;">
+                            <span class="badge badge-pill font-weight-bold px-2 py-1 ml-auto" style="background: rgba(9, 75, 84, 0.1); color: #094b54; border: 1px solid rgba(9, 75, 84, 0.25); font-size: 0.78rem;">
                                 Renstra Tendik
                             </span>
                         </div>
@@ -529,7 +526,7 @@
                                 </h5>
                                 <small class="text-muted">Peta kualifikasi jenjang pendidikan dan status studi lanjut tenaga kependidikan</small>
                             </div>
-                            <div>
+                            <div class="ml-auto">
                                 <a href="{{ route('admin.pengembangan-sdm.tendik') }}" class="btn btn-sm btn-outline-info font-weight-bold" style="border-radius: 8px;">
                                     <i class="fas fa-external-link-alt mr-1"></i> Buka Lembar Kerja Detail
                                 </a>
@@ -662,7 +659,7 @@
                                 </h6>
                                 <small class="text-muted">Pemantauan progres kualifikasi pendidikan, studi lanjut, dan target Renstra per unit operasional</small>
                             </div>
-                            <div class="d-flex align-items-center flex-wrap" style="gap: 8px;">
+                            <div class="d-flex align-items-center flex-wrap ml-auto" style="gap: 8px;">
                                 <span class="badge badge-pill font-weight-bold px-3 py-2" style="background: rgba(9, 75, 84, 0.1); color: #094b54; border: 1px solid rgba(9, 75, 84, 0.25); font-size: 0.8rem;">
                                     <i class="fas fa-building mr-1"></i> 9 Unit Pelaksana (Biro, Lembaga, Fak. & UPT)
                                 </span>

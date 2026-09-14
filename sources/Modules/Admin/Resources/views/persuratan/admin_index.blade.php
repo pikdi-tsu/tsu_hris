@@ -203,7 +203,7 @@
                         </div>
                         <div>
                             <span class="badge badge-pill font-weight-bold px-2 py-1" style="background: rgba(255, 255, 255, 0.2); color: #ffffff; font-size: 0.78rem;">
-                                <i class="fas fa-spinner fa-spin mr-1"></i> Draf / Disposisi Unit
+                                <i class="fas fa-cogs mr-1"></i> Draf / Disposisi Unit
                             </span>
                         </div>
                     </div>
@@ -257,10 +257,10 @@
             <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px; overflow: hidden;">
                 <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center" style="border-bottom: 1px solid var(--tsu-border); gap: 12px;">
                     <div>
-                        <h5 class="card-title font-weight-bold text-dark mb-0" style="font-size: 1rem; display: flex; align-items: center; gap: 8px;">
+                        <h5 class="card-title font-weight-bold text-dark mb-0 float-none" style="font-size: 1rem; display: flex; align-items: center; gap: 8px;">
                             <i class="fas fa-inbox" style="color: var(--tsu-primary);"></i> Daftar Permohonan Surat Masuk Pegawai
                         </h5>
-                        <small class="text-muted">Antrean verifikasi tiket permohonan surat dinas dari dosen dan tenaga kependidikan</small>
+                        <small class="d-block text-muted mt-1">Antrean verifikasi tiket permohonan surat dinas dari dosen dan tenaga kependidikan</small>
                     </div>
                     <div class="d-flex align-items-center flex-wrap" style="gap: 10px;">
                         <div class="d-inline-flex align-items-center" style="gap: 8px;">
@@ -280,7 +280,7 @@
                         </button>
                     </div>
                 </div>
-                <div class="card-body p-0">
+                <div class="card-body p-3">
                     <div class="table-responsive">
                         <table id="table-admin-surat" class="table table-hover table-bordered w-100 mb-0">
                             <thead>

@@ -26,14 +26,27 @@ class UserController extends MiddlewareController
     // Halaman Utama
     public function index()
     {
-        return view('users::user.index', [
-            'title' => 'Monitoring Pengguna Siakad'
-        ]);
+        $this->guard('view', 'users:user');
+
+        $stats = [
+            'total' => User::count(),
+            'tendik' => User::role('tendik')->count(),
+            'dosen' => User::role('dosen')->count(),
+            'admin' => User::role(['super admin hris', 'admin hris testing'])->distinct('id')->count(),
+        ];
+
+        $title = 'Data Pengguna Modul';
+        $menu = 'users';
+        $menuIcon = \Modules\System\Models\MenuSidebar::where('route', 'users.user.index')->value('icon') ?? 'fas fa-users';
+
+        return view('users::user.index', compact('stats', 'title', 'menu', 'menuIcon'));
     }
 
     // JSON DataTables
     public function datatable()
     {
+        $this->guard('view', 'users:user');
+
         // Eager load roles biar performa cepat
         $data = User::query()->with('roles')->orderBy('last_login_at', 'desc');
 
@@ -42,55 +55,70 @@ class UserController extends MiddlewareController
             ->addColumn('avatar', function($row){
                 // Avatar Otomatis dari Inisial Nama
                 $url = $row->profile_photo_url;
-                $fallback = 'https://ui-avatars.com/api/?name=' . urlencode($row->name) . '&color=FFFFFF&background=2d394a';
-                return '<img src="'.$url.'" onerror="this.onerror=null;this.src=\''.$fallback.'\';" class="img-circle elevation-2" style="width: 35px; height: 35px;" alt="User Image">';
+                $fallback = 'https://ui-avatars.com/api/?name=' . urlencode($row->name) . '&color=094B54&background=D0EEF2&bold=true';
+                return '<div class="d-flex justify-content-center align-items-center"><img src="'.$url.'" onerror="this.onerror=null;this.src=\''.$fallback.'\';" class="rounded-circle shadow-sm" style="width: 38px; height: 38px; object-fit: cover; border: 2px solid #ffffff;" alt="User Image"></div>';
+            })
+            ->editColumn('name', function($row) {
+                return '<div class="font-weight-600 text-dark" style="font-size: 0.88rem;">' . e($row->name) . '</div>';
+            })
+            ->editColumn('email', function($row) {
+                return '<span class="text-secondary font-weight-500" style="font-size: 0.84rem;"><i class="far fa-envelope mr-1 text-muted"></i>' . e($row->email) . '</span>';
             })
             ->editColumn('roles', function ($row) {
                 if ($row->roles->isEmpty()) {
-                    return '<span class="badge badge-secondary">User</span>';
+                    return '<span class="badge badge-light border text-muted" style="padding: 0.35rem 0.6rem; border-radius: 6px;">Belum Ada Role</span>';
                 }
-                $badges = '';
+                $badges = '<div class="d-flex flex-wrap gap-1" style="gap: 4px;">';
                 foreach ($row->roles as $role) {
-                    $badges .= '<span class="badge badge-primary mr-1">' . $role->name . '</span>';
+                    $rName = strtolower($role->name);
+                    if ($rName === 'super admin hris') {
+                        $badges .= '<span class="badge" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a; font-weight:600; padding:0.32rem 0.6rem; border-radius:6px;"><i class="fas fa-crown mr-1"></i>' . e($role->name) . '</span>';
+                    } elseif (str_contains($rName, 'admin')) {
+                        $badges .= '<span class="badge" style="background:#cce6e9; color:#094b54; border:1px solid #99cdd3; font-weight:600; padding:0.32rem 0.6rem; border-radius:6px;"><i class="fas fa-user-shield mr-1"></i>' . e($role->name) . '</span>';
+                    } elseif ($rName === 'dosen') {
+                        $badges .= '<span class="badge" style="background:#dcfce7; color:#166534; border:1px solid #bbf7d0; font-weight:600; padding:0.32rem 0.6rem; border-radius:6px;"><i class="fas fa-chalkboard-teacher mr-1"></i>' . e($role->name) . '</span>';
+                    } elseif ($rName === 'tendik') {
+                        $badges .= '<span class="badge" style="background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd; font-weight:600; padding:0.32rem 0.6rem; border-radius:6px;"><i class="fas fa-user-tie mr-1"></i>' . e($role->name) . '</span>';
+                    } else {
+                        $badges .= '<span class="badge badge-light border text-dark" style="font-weight:600; padding:0.32rem 0.6rem; border-radius:6px;">' . e($role->name) . '</span>';
+                    }
                 }
+                $badges .= '</div>';
                 return $badges;
             })
             ->addColumn('action', function ($row) {
                 if ($row->email === config('app.pikdi.email', 'pikdi@tsu.ac.id')) {
-                    return '<div class="text-center"><span class="badge badge-warning shadow-sm"><i class="fas fa-lock"></i> PROTECTED</span></div>';
+                    return '<div class="text-center"><span class="badge px-2 py-1 font-weight-bold" style="background:#fef3c7; color:#92400e; border:1px solid #fde68a; border-radius: 6px;"><i class="fas fa-shield-alt mr-1"></i>PROTECTED</span></div>';
                 }
 
                 if (auth()->id() === $row->id) {
-                    return '<div class="text-center"><span class="badge badge-success shadow-sm"><i class="fas fa-circle text-white" style="font-size: 8px; vertical-align: middle;"></i> Sedang Online</span></div>';
+                    return '<div class="text-center"><span class="badge px-2 py-1 font-weight-bold" style="background:#dcfce7; color:#15803d; border:1px solid #bbf7d0; border-radius: 6px;"><i class="fas fa-circle mr-1" style="font-size: 7px; vertical-align: middle;"></i>Sedang Online</span></div>';
                 }
 
-                $userRoles = $row->roles->pluck('name')->toJson();
                 $editUrl = route('users.user.edit', $row->id);
                 $deleteUrl = route('users.user.destroy', $row->id);
                 $token = csrf_token();
 
-                $btnEdit = '<button type="button" class="btn btn-sm btn-primary btn-edit"
+                $btnEdit = '<button type="button" class="btn btn-sm btn-outline-primary btn-edit px-2 py-1 mr-1"
                                 data-url="'.$editUrl.'"
                                 data-toggle="tooltip"
-                                title="Atur Role Aplikasi">
-                                <i class="fas fa-user-tag"></i>
+                                title="Atur Role Aplikasi" style="border-radius: 6px; font-weight: 600;">
+                                <i class="fas fa-user-tag mr-1"></i> Role
                             </button>';
 
                 $btnDelete = '
                                 <form action="'.$deleteUrl.'" method="POST" style="display:inline-block; margin: 0;">
                                     <input type="hidden" name="_token" value="'.$token.'">
                                     <input type="hidden" name="_method" value="DELETE">
-                                    <button type="button" class="btn btn-sm btn-danger btn-delete" data-toggle="tooltip" data-name="'. htmlspecialchars($row->name) .'" title="Hapus Akses Sistem">
-                                        <i class="fas fa-user-times"></i>
+                                    <button type="button" class="btn btn-sm btn-outline-danger btn-delete px-2 py-1" data-toggle="tooltip" data-name="'. htmlspecialchars($row->name) .'" title="Keluarkan User dari Modul" style="border-radius: 6px;">
+                                        <i class="fas fa-sign-out-alt"></i>
                                     </button>
                                 </form>
                             ';
 
-                return '<div class="text-center" style="white-space: nowrap;">
-                            <div class="btn-group shadow-sm">' . $btnEdit . $btnDelete . '</div>
-                        </div>';
+                return '<div class="text-center" style="white-space: nowrap;">' . $btnEdit . $btnDelete . '</div>';
             })
-            ->rawColumns(['avatar', 'roles', 'action'])
+            ->rawColumns(['avatar', 'name', 'email', 'roles', 'action'])
             ->make(true);
     }
 

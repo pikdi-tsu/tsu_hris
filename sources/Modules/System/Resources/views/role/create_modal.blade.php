@@ -2,12 +2,12 @@
     @csrf
 
     {{-- HEADER --}}
-    <div class="modal-header bg-success text-white">
-        <h5 class="modal-title font-weight-bold">
-            <i class="fas fa-plus-circle mr-1"></i> Buat Role Baru
+    <div class="modal-header" style="background: linear-gradient(135deg, #094b54 0%, #0c6170 100%); color: #ffffff; padding: 1.15rem 1.5rem;">
+        <h5 class="modal-title font-weight-bold d-flex align-items-center" style="font-size: 1.1rem; letter-spacing: -0.01em;">
+            <i class="fas fa-plus-circle mr-2" style="font-size: 1.2rem; opacity: 0.9;"></i> Buat Role Baru
         </h5>
-        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
+        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="opacity: 0.85; outline: none; text-shadow: none;">
+            <span aria-hidden="true" style="font-size: 1.5rem;">&times;</span>
         </button>
     </div>
 
@@ -141,8 +141,8 @@
             <i class="fas fa-check-circle text-success mr-1"></i> Tanda ceklis hijau (<i class="fas fa-check-circle text-success"></i>) menandakan grup memiliki akses aktif.
         </div>
         <div>
-            <button type="button" class="btn btn-secondary font-weight-bold mr-2" data-dismiss="modal">Batal</button>
-            <button type="submit" class="btn btn-success shadow-sm px-4 font-weight-bold">
+            <button type="button" class="btn btn-sm btn-outline-secondary font-weight-bold mr-2" data-dismiss="modal" style="border-radius: 8px;">Batal</button>
+            <button type="submit" class="btn btn-sm px-4 font-weight-bold" style="background: linear-gradient(135deg, #094b54 0%, #0c6170 100%); color: #ffffff; border: none; border-radius: 8px; box-shadow: 0 2px 6px rgba(9, 75, 84, 0.2);">
                 <i class="fas fa-save mr-1"></i> Simpan Role Baru
             </button>
         </div>
@@ -162,7 +162,7 @@
     }
 
     .nav-pills .nav-link.active {
-        background-color: #28a745; /* Hijau Success */
+        background-color: var(--tsu-primary, #094b54);
         color: #fff !important;
     }
 
@@ -175,14 +175,14 @@
     }
 
     .nav-pills .nav-link.active .icon-create-check {
-        color: #28a745 !important;
+        color: var(--tsu-primary, #094b54) !important;
         background-color: #fff;
         border-radius: 50%;
     }
 
     .nav-pills .nav-link.active .badge-success {
         background-color: #fff !important;
-        color: #28a745 !important;
+        color: var(--tsu-primary, #094b54) !important;
     }
 
     .nav-pills .nav-link.active .badge-light {
@@ -197,7 +197,7 @@
 
     .permission-card:hover {
         background-color: #f0fdf4;
-        border-color: #28a745 !important;
+        border-color: var(--tsu-primary, #094b54) !important;
     }
 
     .bg-green-light {
@@ -205,7 +205,7 @@
     }
 
     .border-green {
-        border-color: #28a745 !important;
+        border-color: var(--tsu-primary, #094b54) !important;
     }
 </style>
 

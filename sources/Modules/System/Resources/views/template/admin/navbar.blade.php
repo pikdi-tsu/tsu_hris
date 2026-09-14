@@ -5,8 +5,14 @@
         <li class="nav-item">
             <a class="nav-link" data-widget="pushmenu" href="#" role="button"><i class="fas fa-bars"></i></a>
         </li>
-        <li class="nav-item">
-            <a href="javascript:void(0)" class="nav-link"><i class="fa fa-circle fa-sm text-success"></i> Online</a>
+        <li class="nav-item ml-1 d-flex align-items-center">
+            <button type="button" class="tsu-quick-search-trigger" id="tsuQuickSearchTrigger" title="Cari Menu (Ctrl + K)">
+                <i class="fas fa-search search-icon"></i>
+                <span class="search-text d-none d-md-inline">Cari menu &amp; fitur...</span>
+                <span class="search-shortcut d-none d-lg-inline-flex">
+                    <kbd class="kbd-ctrl">Ctrl</kbd><kbd>K</kbd>
+                </span>
+            </button>
         </li>
     </ul>
 

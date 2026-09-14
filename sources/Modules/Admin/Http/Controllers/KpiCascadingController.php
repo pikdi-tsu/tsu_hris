@@ -78,69 +78,86 @@ class KpiCascadingController extends MiddlewareController
         return DataTables::of($query)
             ->addIndexColumn()
             ->addColumn('perspektif_badge', function ($row) {
-                return $row->masterIndikator && $row->masterIndikator->perspektif 
-                    ? $row->masterIndikator->perspektif->badge_html 
-                    : '-';
+                if (!$row->masterIndikator || !$row->masterIndikator->perspektif) {
+                    return '-';
+                }
+                $p = $row->masterIndikator->perspektif;
+                $kode = strtoupper($p->kode ?? '');
+                $style = match($kode) {
+                    'FIN' => 'background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25);',
+                    'CUS' => 'background: rgba(2, 132, 199, 0.1); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.25);',
+                    'INT' => 'background: rgba(139, 92, 246, 0.1); color: #7c3aed; border: 1px solid rgba(139, 92, 246, 0.25);',
+                    'LRN' => 'background: rgba(217, 119, 6, 0.1); color: #b45309; border: 1px solid rgba(217, 119, 6, 0.25);',
+                    default => 'background: rgba(9, 75, 84, 0.1); color: #094b54; border: 1px solid rgba(9, 75, 84, 0.25);',
+                };
+                return '<span class="badge badge-pill font-weight-bold px-2 py-1" style="' . $style . ' font-size: 0.78rem;">' . htmlspecialchars($p->nama_perspektif) . '</span>';
             })
             ->addColumn('indikator_info', function ($row) {
                 $mi = $row->masterIndikator;
                 if (!$mi) return '-';
 
-                $html = '<div class="font-weight-bold text-dark">[' . e($mi->kode_indikator) . '] ' . e($mi->nama_indikator) . '</div>';
+                $html = '<div class="font-weight-bold text-dark" style="font-size: 0.9rem;"><span style="color: #094b54; font-family: monospace; font-weight: 700;">[' . e($mi->kode_indikator) . ']</span> ' . e($mi->nama_indikator) . '</div>';
                 if ($mi->level === 'sub') {
-                    $html .= '<div><span class="badge badge-light-info text-info border border-info px-2 py-0" style="font-size: 11px;"><i class="fas fa-level-down-alt mr-1"></i>Sub dari: ' . e(optional($mi->parent)->kode_indikator) . '</span></div>';
+                    $html .= '<div class="mt-1"><span class="badge badge-pill px-2 py-0" style="background: rgba(2, 132, 199, 0.08); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.2); font-size: 0.72rem;"><i class="fas fa-level-down-alt mr-1"></i>Sub dari: ' . e(optional($mi->parent)->kode_indikator) . '</span></div>';
                 }
                 if ($row->keterkaitan_iku) {
-                    $html .= '<div class="small text-muted mt-1"><i class="fas fa-bookmark text-primary mr-1"></i>IKU: ' . e($row->keterkaitan_iku) . '</div>';
+                    $html .= '<div class="small text-muted mt-1"><i class="fas fa-bookmark mr-1" style="color: #094b54; font-size: 0.75rem;"></i>IKU: <strong>' . e($row->keterkaitan_iku) . '</strong></div>';
                 }
                 return $html;
             })
             ->addColumn('cascading_info', function ($row) {
-                $html = '<div>' . $row->jenis_cascading_badge . '</div>';
+                $jenis = $row->jenis_cascading ?? 'Direct';
+                $badgeStyle = match($jenis) {
+                    'Direct'       => 'background: rgba(9, 75, 84, 0.1); color: #094b54; border: 1px solid rgba(9, 75, 84, 0.25);',
+                    'Contribution' => 'background: rgba(99, 102, 241, 0.1); color: #4f46e5; border: 1px solid rgba(99, 102, 241, 0.25);',
+                    'Enabler'      => 'background: rgba(100, 116, 139, 0.1); color: #475569; border: 1px solid rgba(100, 116, 139, 0.25);',
+                    default        => 'background: #f1f5f9; color: #475569;',
+                };
+                $html = '<div><span class="badge badge-pill font-weight-bold px-2 py-1" style="' . $badgeStyle . ' font-size: 0.78rem;">' . htmlspecialchars($jenis) . '</span></div>';
                 if ($row->parentUnitIndikator) {
                     $pUnit = optional($row->parentUnitIndikator->unit)->nama_unit ?? 'Pimpinan';
                     $pCode = optional($row->parentUnitIndikator->masterIndikator)->kode_indikator ?? '-';
                     $html .= '<div class="small text-muted mt-1" title="Diturunkan dari: '.$pUnit.'"><i class="fas fa-arrow-up text-secondary mr-1"></i>Dari: <strong>' . e($pUnit) . '</strong> (' . e($pCode) . ')</div>';
                 }
-                if ($row->childUnitIndikators->count() > 0) {
-                    $html .= '<div class="small text-success mt-1"><i class="fas fa-arrow-down mr-1"></i>Diturunkan ke ' . $row->childUnitIndikators->count() . ' unit</div>';
+                if ($row->childUnitIndikators && $row->childUnitIndikators->count() > 0) {
+                    $html .= '<div class="small mt-1 font-weight-semibold" style="color: #059669;"><i class="fas fa-arrow-down mr-1"></i>Diturunkan ke ' . $row->childUnitIndikators->count() . ' unit</div>';
                 }
                 return $html;
             })
             ->addColumn('target_satuan', function ($row) {
                 $targetVal = $row->target_angka !== null ? rtrim(rtrim(number_format($row->target_angka, 2, '.', ''), '0'), '.') : ($row->target_label ?? '-');
                 $satuan = $row->satuan ?? optional($row->masterIndikator)->satuan ?? '';
-                return '<strong>' . e($targetVal) . '</strong> <span class="text-muted">' . e($satuan) . '</span>';
+                return '<strong class="text-dark" style="font-size: 0.95rem;">' . e($targetVal) . '</strong> <span class="text-muted small">' . e($satuan) . '</span>';
             })
             ->addColumn('roadmap_targets', function ($row) {
                 if (!$row->target_2026 && !$row->target_2027 && !$row->target_2028 && !$row->target_2029) {
-                    return '<span class="text-muted small">Tahunan</span>';
+                    return '<span class="text-muted small font-italic">Tahunan</span>';
                 }
-                $html = '<div class="small" style="line-height: 1.4;">';
-                if ($row->target_2026) $html .= '<span class="badge badge-light text-dark mr-1">\'26: <b>'.e($row->target_2026).'</b></span>';
-                if ($row->target_2027) $html .= '<span class="badge badge-light text-dark mr-1">\'27: <b>'.e($row->target_2027).'</b></span>';
-                if ($row->target_2028) $html .= '<span class="badge badge-light text-dark mr-1">\'28: <b>'.e($row->target_2028).'</b></span>';
-                if ($row->target_2029) $html .= '<span class="badge badge-light text-dark">\'29: <b>'.e($row->target_2029).'</b></span>';
+                $html = '<div class="d-flex flex-wrap" style="gap: 4px; font-size: 0.75rem;">';
+                if ($row->target_2026) $html .= '<span class="badge badge-light border text-dark">\'26: <b>'.e($row->target_2026).'</b></span>';
+                if ($row->target_2027) $html .= '<span class="badge badge-light border text-dark">\'27: <b>'.e($row->target_2027).'</b></span>';
+                if ($row->target_2028) $html .= '<span class="badge badge-light border text-dark">\'28: <b>'.e($row->target_2028).'</b></span>';
+                if ($row->target_2029) $html .= '<span class="badge badge-light border text-dark">\'29: <b>'.e($row->target_2029).'</b></span>';
                 $html .= '</div>';
                 return $html;
             })
             ->addColumn('bobot_formatted', function ($row) {
-                return '<span class="badge badge-primary px-2 py-1" style="font-size: 13px;">' . number_format($row->bobot, 1) . '%</span>';
+                return '<span class="badge badge-pill font-weight-bold px-2 py-1" style="background: rgba(9, 75, 84, 0.1); color: #094b54; border: 1px solid rgba(9, 75, 84, 0.25); font-size: 0.85rem;">' . number_format($row->bobot, 1) . '%</span>';
             })
             ->addColumn('pic_info', function ($row) {
                 $pic = $row->pic_data ?? '-';
                 $unitTerkait = $row->unit_terkait ?? '';
                 $html = '<div class="small"><strong>' . e($pic) . '</strong></div>';
                 if ($unitTerkait) {
-                    $html .= '<div class="small text-muted">' . e($unitTerkait) . '</div>';
+                    $html .= '<div class="small text-muted" style="font-size: 0.75rem;">' . e($unitTerkait) . '</div>';
                 }
                 return $html;
             })
             ->addColumn('action', function ($row) {
-                $btn = '<div class="btn-group btn-group-sm" role="group">';
-                $btn .= '<button type="button" class="btn btn-outline-info btn-cascade-down" data-id="'.$row->id.'" title="Turunkan ke Sub-Unit (Cascading)"><i class="fas fa-sitemap"></i></button>';
-                $btn .= '<button type="button" class="btn btn-primary btn-edit" data-id="'.$row->id.'" title="Edit Target & Bobot"><i class="fas fa-edit"></i></button>';
-                $btn .= '<button type="button" class="btn btn-danger btn-delete" data-id="'.$row->id.'" title="Hapus"><i class="fas fa-trash"></i></button>';
+                $btn = '<div class="d-flex justify-content-center align-items-center" style="gap: 4px;">';
+                $btn .= '<button type="button" class="btn btn-sm btn-outline-info btn-cascade-down" data-id="'.$row->id.'" title="Turunkan ke Sub-Unit (Cascading)" style="border-radius: 6px; padding: 0.25rem 0.5rem;"><i class="fas fa-sitemap"></i></button>';
+                $btn .= '<button type="button" class="btn btn-sm btn-outline-primary btn-edit" data-id="'.$row->id.'" title="Edit Target & Bobot" style="border-radius: 6px; padding: 0.25rem 0.5rem;"><i class="fas fa-pencil-alt"></i></button>';
+                $btn .= '<button type="button" class="btn btn-sm btn-outline-danger btn-delete" data-id="'.$row->id.'" title="Hapus" style="border-radius: 6px; padding: 0.25rem 0.5rem;"><i class="fas fa-trash-alt"></i></button>';
                 $btn .= '</div>';
                 return $btn;
             })

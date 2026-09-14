@@ -19,6 +19,7 @@ use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 
 use App\Models\DataDosenTendik;
 use App\Models\DataAbsensi;
+use App\Models\MasterShift;
 
 class AbsensiController extends MiddlewareController
 {
@@ -38,10 +39,20 @@ class AbsensiController extends MiddlewareController
     public function index()
     {
         $bulan = $this->getBulan();
+        $currentM = (int) date('n');
+        $currentY = (int) date('Y');
+
+        $stats = [
+            'total_employees' => DataDosenTendik::where('is_active', true)->count(),
+            'total_logs' => DataAbsensi::count(),
+            'current_month_logs' => DataAbsensi::where('periode_bulan', $currentM)->where('periode_tahun', $currentY)->count(),
+            'total_shifts' => MasterShift::count(),
+        ];
 
         return view('admin::absensi.index', [
-            'title' => 'Upload Presensi',
+            'title' => 'Upload Raw Data Presensi',
             'bulan' => $bulan,
+            'stats' => $stats,
         ]);
     }
 

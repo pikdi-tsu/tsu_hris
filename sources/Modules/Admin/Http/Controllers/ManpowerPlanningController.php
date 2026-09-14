@@ -14,6 +14,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use App\Models\DataDosenTendik;
 use App\Traits\ApiResponseTrait;
+use Modules\System\Models\MenuSidebar;
 
 class ManpowerPlanningController extends MiddlewareController
 {
@@ -37,13 +38,17 @@ class ManpowerPlanningController extends MiddlewareController
             'waiting' => ManpowerPlanning::where('tahun', $tahun)->where('status', 'waiting')->sum('jumlah_kebutuhan'),
             'approved' => ManpowerPlanning::where('tahun', $tahun)->where('status', 'approved')->sum('jumlah_kebutuhan'),
             'rejected' => ManpowerPlanning::where('tahun', $tahun)->where('status', 'rejected')->sum('jumlah_kebutuhan'),
+            'count_waiting' => ManpowerPlanning::where('tahun', $tahun)->where('status', 'waiting')->count(),
+            'count_history' => ManpowerPlanning::where('tahun', $tahun)->whereIn('status', ['approved', 'rejected'])->count(),
         ];
         
-        $units = MasterUnit::all();
+        $units = MasterUnit::orderBy('nama_unit', 'asc')->get();
 
-        $title = 'Kelola Manpower Planning';
+        $title = 'Manpower Planning';
         $menu = 'manpower_planning';
-        return view('admin::mpp.index', compact('stats', 'tahun', 'units', 'title', 'menu'));
+        $menuIcon = MenuSidebar::where('route', 'admin.mpp.index')->value('icon') ?? 'fas fa-users-cog';
+
+        return view('admin::mpp.index', compact('stats', 'tahun', 'units', 'title', 'menu', 'menuIcon'));
     }
 
     public function datatables(Request $request)
@@ -68,27 +73,36 @@ class ManpowerPlanningController extends MiddlewareController
         return DataTables::of($query)
             ->addIndexColumn()
             ->addColumn('unit', function ($row) {
-                return $row->unit ? $row->unit->nama_unit : '-';
+                if (!$row->unit) return '-';
+                return '<div class="d-flex align-items-center"><i class="fas fa-building text-secondary mr-2"></i><span class="font-weight-600 text-dark">' . e($row->unit->nama_unit) . '</span></div>';
             })
             ->addColumn('jabatan', function ($row) {
-                return $row->jabatan ? $row->jabatan->nama_jabatan : '-';
+                if (!$row->jabatan) return '-';
+                return '<span class="font-weight-bold" style="color: var(--tsu-primary, #094b54);">' . e($row->jabatan->nama_jabatan) . '</span>';
             })
-            ->addColumn('pengaju', function ($row) {
-                return $row->pengaju ? $row->pengaju->nama : '-';
+            ->editColumn('jumlah_kebutuhan', function ($row) {
+                return '<span class="badge badge-light border font-weight-bold px-2 py-1" style="font-size: 0.85rem;"><i class="fas fa-user-plus text-primary mr-1"></i>' . $row->jumlah_kebutuhan . ' Orang</span>';
+            })
+            ->editColumn('tipe_pengajuan', function ($row) {
+                $badgeClass = $row->tipe_pengajuan == 'Baru' ? 'badge-info' : 'badge-secondary';
+                return '<span class="badge ' . $badgeClass . ' px-2 py-1">' . e($row->tipe_pengajuan) . '</span>';
             })
             ->addColumn('status', function ($row) {
-                if ($row->status == 'waiting') return '<span class="badge badge-warning">Menunggu</span>';
-                if ($row->status == 'approved') return '<span class="badge badge-success">Disetujui</span>';
-                if ($row->status == 'rejected') return '<span class="badge badge-danger">Ditolak</span>';
+                if ($row->status == 'waiting') {
+                    return '<span class="badge badge-warning px-2 py-1"><i class="fas fa-clock mr-1"></i>Menunggu</span>';
+                }
+                if ($row->status == 'approved') {
+                    return '<span class="badge badge-success px-2 py-1"><i class="fas fa-check-circle mr-1"></i>Disetujui</span>';
+                }
+                if ($row->status == 'rejected') {
+                    return '<span class="badge badge-danger px-2 py-1"><i class="fas fa-times-circle mr-1"></i>Ditolak</span>';
+                }
                 return '-';
             })
             ->addColumn('action', function ($row) {
-                $btn = '<div class="btn-group">';
-                $btn .= '<button type="button" class="btn btn-sm btn-info" onclick="detail(\'' . $row->id . '\')" title="Detail/Tinjau"><i class="fas fa-eye"></i> Tinjau</button>';
-                $btn .= '</div>';
-                return $btn;
+                return '<button type="button" class="btn btn-sm btn-outline-primary font-weight-600 px-3" style="border-radius: 6px;" onclick="detail(\'' . $row->id . '\')" title="Detail & Tinjau Usulan"><i class="fas fa-clipboard-check mr-1"></i> Tinjau</button>';
             })
-            ->rawColumns(['status', 'action'])
+            ->rawColumns(['unit', 'jabatan', 'jumlah_kebutuhan', 'tipe_pengajuan', 'status', 'action'])
             ->make(true);
     }
 

@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 use App\Models\MasterJabatanStruktural;
 use App\Models\MasterJabatanFungsional;
 use App\Models\MasterPangkatGolongan;
+use Modules\System\Models\MenuSidebar;
 use Yajra\DataTables\Facades\DataTables;
 use App\Services\TsuErrorHandlerService;
 
@@ -24,7 +25,21 @@ class MasterJabatanController extends MiddlewareController
 
     public function index()
     {
-        return view('admin::master-data.master-jabatan.index', ['title' => 'Master Data Jabatan']);
+        $stats = [
+            'total_jabatan' => MasterJabatanStruktural::count() + MasterJabatanFungsional::count(),
+            'struktural'    => MasterJabatanStruktural::count(),
+            'fungsional'    => MasterJabatanFungsional::count(),
+            'pangkat'       => MasterPangkatGolongan::count(),
+        ];
+
+        $menuIcon = MenuSidebar::where('route', 'admin.master-jabatan.index')->value('icon') ?? 'fas fa-sitemap';
+
+        return view('admin::master-data.master-jabatan.index', [
+            'title'    => 'Master Data Jabatan',
+            'menu'     => 'master-jabatan',
+            'menuIcon' => $menuIcon,
+            'stats'    => $stats,
+        ]);
     }
 
     // =========================================================================
@@ -36,20 +51,48 @@ class MasterJabatanController extends MiddlewareController
 
         return DataTables::of($data)
             ->addIndexColumn()
+            ->editColumn('nama_jabatan', function($row) {
+                $badge = '';
+                if ($row->is_unit_specific === 'Y') {
+                    $badge = ' <span class="badge ml-1" style="background: rgba(9, 75, 84, 0.08); color: #094b54; font-size: 0.7rem; font-weight: 600; border-radius: 4px;">Unit Spesifik</span>';
+                }
+                return '<span class="font-weight-bold text-dark" style="font-size: 0.88rem;">' . e($row->nama_jabatan) . '</span>' . $badge;
+            })
             ->addColumn('periode', function ($row) {
-                return $row->periode_jabatan ? $row->periode_jabatan . ' Bulan' : '-';
+                return $row->periode_jabatan ? '<span class="badge badge-light border font-weight-600">' . $row->periode_jabatan . ' Bulan</span>' : '<span class="text-muted text-xs">-</span>';
+            })
+            ->editColumn('keterangan', function($row) {
+                return $row->keterangan ? '<span class="text-dark" style="font-size: 0.85rem;">' . e($row->keterangan) . '</span>' : '<span class="text-muted text-xs font-italic">-</span>';
             })
             ->addColumn('jumlah_karyawan', function($row) {
-                return '<span class="badge badge-info">'.$row->karyawan_aktifs_count.' Pegawai</span>';
+                return '<span class="badge" style="background: rgba(2, 132, 199, 0.12); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.25); font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.75rem;">'.$row->karyawan_aktifs_count.' Pegawai</span>';
             })
             ->addColumn('action', function ($row) {
-                return $this->getActionButtons($row, 'admin:master-jabatan', [
-                    'use_modal'  => true,
-                    'edit_url' => route('admin.master-jabatan.struktural.edit', $row->id),
-                    'delete_url' => route('admin.master-jabatan.struktural.destroy', $row->id),
-                ]);
+                $canEdit   = auth()->user()->can('admin:master-jabatan:edit');
+                $canDelete = auth()->user()->can('admin:master-jabatan:delete');
+
+                $btn = '<div class="d-flex align-items-center justify-content-center" style="gap: 0.35rem;">';
+
+                if ($canEdit) {
+                    $btn .= '<button type="button" data-url="'.route('admin.master-jabatan.struktural.edit', $row->id).'" class="btn btn-sm btn-edit" style="background: #fffbeb; color: #d97706; border: 1px solid #fde68a; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; transition: all 0.2s;" title="Edit Jabatan">
+                                <i class="fas fa-pen"></i>
+                            </button>';
+                } else {
+                    $btn .= '<button type="button" class="btn btn-sm" disabled style="background: #f1f5f9; color: #94a3b8; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; cursor: not-allowed; opacity: 0.6;" title="No Access"><i class="fas fa-lock"></i></button>';
+                }
+
+                if ($canDelete) {
+                    $btn .= '<button type="button" data-url="'.route('admin.master-jabatan.struktural.destroy', $row->id).'" class="btn btn-sm btn-delete" style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; transition: all 0.2s;" title="Hapus Jabatan">
+                                <i class="fas fa-trash"></i>
+                            </button>';
+                } else {
+                    $btn .= '<button type="button" class="btn btn-sm" disabled style="background: #f1f5f9; color: #94a3b8; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; cursor: not-allowed; opacity: 0.6;" title="No Access"><i class="fas fa-lock"></i></button>';
+                }
+
+                $btn .= '</div>';
+                return $btn;
             })
-            ->rawColumns(['action', 'jumlah_karyawan'])
+            ->rawColumns(['nama_jabatan', 'periode', 'keterangan', 'jumlah_karyawan', 'action'])
             ->make(true);
     }
 
@@ -168,20 +211,44 @@ class MasterJabatanController extends MiddlewareController
 
         return DataTables::of($data)
             ->addIndexColumn()
+            ->editColumn('nama_jabatan', function($row) {
+                return '<span class="font-weight-bold text-dark" style="font-size: 0.88rem;">' . e($row->nama_jabatan) . '</span>';
+            })
             ->addColumn('periode', function ($row) {
-                return $row->periode_jabatan ? $row->periode_jabatan . ' Bulan' : '-';
+                return $row->periode_jabatan ? '<span class="badge badge-light border font-weight-600">' . $row->periode_jabatan . ' Bulan</span>' : '<span class="text-muted text-xs">-</span>';
+            })
+            ->editColumn('keterangan', function($row) {
+                return $row->keterangan ? '<span class="text-dark" style="font-size: 0.85rem;">' . e($row->keterangan) . '</span>' : '<span class="text-muted text-xs font-italic">-</span>';
             })
             ->addColumn('jumlah_karyawan', function($row) {
-                return '<span class="badge badge-info">'.$row->karyawan_aktifs_count.' Pegawai</span>';
+                return '<span class="badge" style="background: rgba(180, 83, 9, 0.12); color: #b45309; border: 1px solid rgba(180, 83, 9, 0.25); font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.75rem;">' . $row->karyawan_aktifs_count . ' Pegawai</span>';
             })
             ->addColumn('action', function ($row) {
-                return $this->getActionButtons($row, 'admin:master-jabatan', [
-                    'use_modal'  => true,
-                    'edit_url' => route('admin.master-jabatan.fungsional.edit', $row->id),
-                    'delete_url' => route('admin.master-jabatan.fungsional.destroy', $row->id),
-                ]);
+                $canEdit   = auth()->user()->can('admin:master-jabatan:edit');
+                $canDelete = auth()->user()->can('admin:master-jabatan:delete');
+
+                $btn = '<div class="d-flex align-items-center justify-content-center" style="gap: 0.35rem;">';
+
+                if ($canEdit) {
+                    $btn .= '<button type="button" data-url="'.route('admin.master-jabatan.fungsional.edit', $row->id).'" class="btn btn-sm btn-edit" style="background: #fffbeb; color: #d97706; border: 1px solid #fde68a; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; transition: all 0.2s;" title="Edit Jabatan">
+                                <i class="fas fa-pen"></i>
+                            </button>';
+                } else {
+                    $btn .= '<button type="button" class="btn btn-sm" disabled style="background: #f1f5f9; color: #94a3b8; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; cursor: not-allowed; opacity: 0.6;" title="No Access"><i class="fas fa-lock"></i></button>';
+                }
+
+                if ($canDelete) {
+                    $btn .= '<button type="button" data-url="'.route('admin.master-jabatan.fungsional.destroy', $row->id).'" class="btn btn-sm btn-delete" style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; transition: all 0.2s;" title="Hapus Jabatan">
+                                <i class="fas fa-trash"></i>
+                            </button>';
+                } else {
+                    $btn .= '<button type="button" class="btn btn-sm" disabled style="background: #f1f5f9; color: #94a3b8; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; cursor: not-allowed; opacity: 0.6;" title="No Access"><i class="fas fa-lock"></i></button>';
+                }
+
+                $btn .= '</div>';
+                return $btn;
             })
-            ->rawColumns(['action', 'jumlah_karyawan'])
+            ->rawColumns(['nama_jabatan', 'periode', 'keterangan', 'jumlah_karyawan', 'action'])
             ->make(true);
     }
 
@@ -296,17 +363,41 @@ class MasterJabatanController extends MiddlewareController
 
         return DataTables::of($data)
             ->addIndexColumn()
+            ->editColumn('nama_pangkat_golongan', function($row) {
+                return '<span class="font-weight-bold text-dark" style="font-size: 0.88rem;">' . e($row->nama_pangkat_golongan) . '</span>';
+            })
+            ->editColumn('keterangan', function($row) {
+                return $row->keterangan ? '<span class="text-dark" style="font-size: 0.85rem;">' . e($row->keterangan) . '</span>' : '<span class="text-muted text-xs font-italic">-</span>';
+            })
             ->addColumn('jumlah_karyawan', function($row) {
-                return '<span class="badge badge-info">'.$row->karyawan_aktifs_count.' Pegawai</span>';
+                return '<span class="badge" style="background: rgba(4, 120, 87, 0.12); color: #047857; border: 1px solid rgba(4, 120, 87, 0.25); font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.75rem;">' . $row->karyawan_aktifs_count . ' Pegawai</span>';
             })
             ->addColumn('action', function ($row) {
-                return $this->getActionButtons($row, 'admin:master-jabatan', [
-                    'use_modal'  => true,
-                    'edit_url' => route('admin.master-jabatan.pangkat.edit', $row->id),
-                    'delete_url' => route('admin.master-jabatan.pangkat.destroy', $row->id),
-                ]);
+                $canEdit   = auth()->user()->can('admin:master-jabatan:edit');
+                $canDelete = auth()->user()->can('admin:master-jabatan:delete');
+
+                $btn = '<div class="d-flex align-items-center justify-content-center" style="gap: 0.35rem;">';
+
+                if ($canEdit) {
+                    $btn .= '<button type="button" data-url="'.route('admin.master-jabatan.pangkat.edit', $row->id).'" class="btn btn-sm btn-edit" style="background: #fffbeb; color: #d97706; border: 1px solid #fde68a; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; transition: all 0.2s;" title="Edit Pangkat/Golongan">
+                                <i class="fas fa-pen"></i>
+                            </button>';
+                } else {
+                    $btn .= '<button type="button" class="btn btn-sm" disabled style="background: #f1f5f9; color: #94a3b8; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; cursor: not-allowed; opacity: 0.6;" title="No Access"><i class="fas fa-lock"></i></button>';
+                }
+
+                if ($canDelete) {
+                    $btn .= '<button type="button" data-url="'.route('admin.master-jabatan.pangkat.destroy', $row->id).'" class="btn btn-sm btn-delete" style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; transition: all 0.2s;" title="Hapus Pangkat/Golongan">
+                                <i class="fas fa-trash"></i>
+                            </button>';
+                } else {
+                    $btn .= '<button type="button" class="btn btn-sm" disabled style="background: #f1f5f9; color: #94a3b8; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; cursor: not-allowed; opacity: 0.6;" title="No Access"><i class="fas fa-lock"></i></button>';
+                }
+
+                $btn .= '</div>';
+                return $btn;
             })
-            ->rawColumns(['action', 'jumlah_karyawan'])
+            ->rawColumns(['nama_pangkat_golongan', 'keterangan', 'jumlah_karyawan', 'action'])
             ->make(true);
     }
 

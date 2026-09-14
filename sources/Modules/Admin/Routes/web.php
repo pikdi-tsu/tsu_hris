@@ -467,7 +467,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
             ->middleware(['permission:admin:master-bidang-keilmuan:view'])
             ->group(function () {
                 Route::get('/', [MasterPengembanganSdmController::class, 'bidangIndex'])->name('index');
+                Route::get('/json', [MasterPengembanganSdmController::class, 'bidangJson'])->name('json');
                 Route::post('/store', [MasterPengembanganSdmController::class, 'bidangStore'])->name('store');
+                Route::put('/update/{id}', [MasterPengembanganSdmController::class, 'bidangUpdate'])->name('update');
                 Route::delete('/destroy/{id}', [MasterPengembanganSdmController::class, 'bidangDestroy'])->name('destroy');
             });
 
@@ -476,7 +478,9 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
             ->middleware(['permission:admin:master-sertifikasi:view'])
             ->group(function () {
                 Route::get('/', [MasterPengembanganSdmController::class, 'sertifikasiIndex'])->name('index');
+                Route::get('/json', [MasterPengembanganSdmController::class, 'sertifikasiJson'])->name('json');
                 Route::post('/store', [MasterPengembanganSdmController::class, 'sertifikasiStore'])->name('store');
+                Route::put('/update/{id}', [MasterPengembanganSdmController::class, 'sertifikasiUpdate'])->name('update');
                 Route::delete('/destroy/{id}', [MasterPengembanganSdmController::class, 'sertifikasiDestroy'])->name('destroy');
             });
 

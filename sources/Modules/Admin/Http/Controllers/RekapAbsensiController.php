@@ -46,6 +46,13 @@ class RekapAbsensiController extends MiddlewareController
         $defaultBulan = $latest ? $latest->periode_bulan : date('n');
         $defaultTahun = $latest ? $latest->periode_tahun : date('Y');
 
+        $stats = [
+            'total_karyawan_pin' => DataDosenTendik::whereNotNull('pin_absensi')->where('pin_absensi', '!=', '')->count(),
+            'total_logs' => DataAbsensi::count(),
+            'nominal_transport' => $defaultNominal,
+            'total_shifts' => $shifts->count(),
+        ];
+
         return view('admin::rekap-absensi.index', [
             'title' => 'Rekap Data Absensi',
             'bulan' => $bulan,
@@ -53,6 +60,7 @@ class RekapAbsensiController extends MiddlewareController
             'shifts' => $shifts,
             'defaultBulan' => $defaultBulan,
             'defaultTahun' => $defaultTahun,
+            'stats' => $stats,
         ]);
     }
 
@@ -170,26 +178,26 @@ class RekapAbsensiController extends MiddlewareController
         return DataTables::of(collect($rows))
             ->addIndexColumn()
             ->addColumn('nama_karyawan', function ($row) {
-                return '<strong>' . $row->nama . '</strong><br><small class="text-muted">' . $row->unit . ' | ' . $row->shift_name . '</small>';
+                return '<div class="font-weight-bold text-dark">' . $row->nama . '</div><small class="text-muted">' . $row->unit . ' &bull; ' . $row->shift_name . '</small>';
             })
             ->addColumn('validasi_badge', function ($row) {
-                return '<span class="badge badge-success px-2 py-1 font-weight-bold" style="font-size: 0.95rem;"><i class="fas fa-check-circle mr-1"></i>' . $row->akumulasi_validasi . ' Hari</span>';
+                return '<span class="tsu-badge-soft tsu-badge-valid">' . $row->akumulasi_validasi . ' Hari</span>';
             })
             ->addColumn('cuti_badge', function ($row) {
                 if ($row->cuti > 0) {
-                    return '<span class="badge badge-primary px-2 py-1 font-weight-bold" style="font-size: 0.95rem;">' . $row->cuti . ' Hari</span>';
+                    return '<span class="tsu-badge-soft tsu-badge-cuti">' . $row->cuti . ' Hari</span>';
                 }
                 return '<span class="text-muted">0</span>';
             })
             ->addColumn('izin_badge', function ($row) {
                 if ($row->izin > 0) {
-                    return '<span class="badge badge-purple px-2 py-1 font-weight-bold text-white" style="font-size: 0.95rem; background-color: #6f42c1;">' . $row->izin . ' Hari</span>';
+                    return '<span class="tsu-badge-soft tsu-badge-izin">' . $row->izin . ' Hari</span>';
                 }
                 return '<span class="text-muted">0</span>';
             })
             ->addColumn('alpha_badge', function ($row) {
                 if ($row->alpha > 0) {
-                    return '<span class="badge badge-danger px-2 py-1 font-weight-bold" style="font-size: 0.95rem;">' . $row->alpha . ' Hari</span>';
+                    return '<span class="tsu-badge-soft tsu-badge-alpha">' . $row->alpha . ' Hari</span>';
                 }
                 return '<span class="text-muted">0</span>';
             })
@@ -201,8 +209,8 @@ class RekapAbsensiController extends MiddlewareController
                     'end_date' => $row->end_date,
                 ]);
 
-                $btnDetail = '<button type="button" class="btn btn-xs btn-info btn-detail-rekap mr-1" data-pin="' . $row->pin . '" data-id="' . $row->id_user . '" data-nama="' . addslashes($row->nama) . '" title="Rincian Hari Presensi"><i class="fas fa-calendar-alt mr-1"></i> Detail</button>';
-                $btnPdf = '<a href="' . route('admin.rekap-absensi.downloadslip', $row->pin) . '?' . $params . '" class="btn btn-xs btn-danger" target="_blank" title="Cetak Slip PDF"><i class="fas fa-file-pdf mr-1"></i> Slip PDF</a>';
+                $btnDetail = '<button type="button" class="btn btn-xs tsu-btn-detail btn-detail-rekap mr-1" data-pin="' . $row->pin . '" data-id="' . $row->id_user . '" data-nama="' . addslashes($row->nama) . '" title="Rincian Hari Presensi"><i class="fas fa-calendar-alt mr-1"></i> Detail</button>';
+                $btnPdf = '<a href="' . route('admin.rekap-absensi.downloadslip', $row->pin) . '?' . $params . '" class="btn btn-xs tsu-btn-pdf" target="_blank" title="Cetak Slip PDF"><i class="fas fa-file-pdf mr-1"></i> Slip PDF</a>';
 
                 return '<div class="text-center">' . $btnDetail . $btnPdf . '</div>';
             })

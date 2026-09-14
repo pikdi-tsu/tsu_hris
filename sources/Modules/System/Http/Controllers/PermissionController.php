@@ -19,25 +19,58 @@ class PermissionController extends MiddlewareController
 
     public function index()
     {
-        return view('system::permission.index', ['title' => 'Manajemen Permission (Hak Akses)']);
+        $this->guard('view', 'system:permission');
+
+        $allPerms = Permission::all();
+        $stats = [
+            'total' => $allPerms->count(),
+            'admin' => $allPerms->filter(fn($p) => str_starts_with($p->name, 'admin:'))->count(),
+            'users' => $allPerms->filter(fn($p) => str_starts_with($p->name, 'users:'))->count(),
+            'system' => $allPerms->filter(fn($p) => str_starts_with($p->name, 'system:'))->count(),
+        ];
+
+        $title = 'Role Permissions';
+        $menu = 'role_permissions';
+        $menuIcon = \Modules\System\Models\MenuSidebar::where('route', 'system.permission.index')->value('icon') ?? 'fas fa-file-shield';
+
+        return view('system::permission.index', compact('stats', 'title', 'menu', 'menuIcon'));
     }
 
     public function datatable()
     {
+        $this->guard('view', 'system:permission');
+
         // Ambil permission lokal
-        $data = Permission::query()->orderBy('created_at', 'desc');
+        $data = Permission::query()->orderBy('name', 'asc');
 
         return DataTables::of($data)
             ->addIndexColumn()
+            ->editColumn('name', function($row) {
+                $parts = explode(':', $row->name);
+                $modul = $parts[0] ?? '';
+                $badgeStyle = 'background:#f1f5f9; color:#475569; border:1px solid #cbd5e1;';
+                if ($modul === 'admin') {
+                    $badgeStyle = 'background:#e0f2fe; color:#0369a1; border:1px solid #bae6fd;';
+                } elseif ($modul === 'users') {
+                    $badgeStyle = 'background:#dcfce7; color:#166534; border:1px solid #bbf7d0;';
+                } elseif ($modul === 'system') {
+                    $badgeStyle = 'background:#fef3c7; color:#92400e; border:1px solid #fde68a;';
+                }
+
+                return '<div class="d-flex align-items-center flex-wrap" style="gap: 6px;">
+                            <span class="badge font-weight-700" style="' . $badgeStyle . ' font-size: 0.73rem; padding: 0.25rem 0.5rem; border-radius: 4px;">' . e(strtoupper($modul)) . '</span>
+                            <code class="font-weight-600 px-2 py-1" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:4px; font-size:0.83rem; color:var(--tsu-primary-dark, #094b54);">' . e($row->name) . '</code>
+                        </div>';
+            })
             ->addColumn('guard_name', function($row){
-                return '<span class="badge badge-secondary">'.$row->guard_name.'</span>';
+                return '<span class="badge badge-light border text-secondary font-weight-600" style="padding: 0.3rem 0.6rem; border-radius: 6px;"><i class="fas fa-shield-alt mr-1 text-primary"></i>'.$row->guard_name.'</span>';
             })
             ->addColumn('action', function ($row) {
                 return $this->getActionButtons($row, 'system:permission', [
                     'delete_url' => route('system.permission.destroy', $row->id),
                 ]);
             })
-            ->rawColumns(['guard_name', 'action'])
+            ->rawColumns(['name', 'guard_name', 'action'])
             ->make(true);
     }
 

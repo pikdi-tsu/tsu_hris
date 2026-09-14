@@ -1,5 +1,165 @@
 @extends('system::template.admin.header')
 
+@section('link_href')
+    <link rel="stylesheet" href="{{ asset('assets/adminlte/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/adminlte/plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/adminlte/plugins/sweetalert2/sweetalert2.min.css') }}">
+    <style>
+        :root {
+            --tsu-primary: #094b54;
+            --tsu-primary-dark: #063339;
+            --tsu-primary-light: #cce6e9;
+            --tsu-teal-accent: #0ea5e9;
+            --tsu-surface: #ffffff;
+            --tsu-bg-subtle: #f8fafc;
+            --tsu-border: #e2e8f0;
+            --tsu-text-main: #0f172a;
+            --tsu-text-muted: #64748b;
+        }
+
+        /* STAT CARDS */
+        .tsu-stat-grid-onoff {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+        }
+
+        @media (max-width: 991.98px) {
+            .tsu-stat-grid-onoff {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .tsu-stat-card {
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            color: #ffffff;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            min-height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .tsu-stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .tsu-stat-card--total {
+            background: linear-gradient(135deg, #094b54 0%, #0c6170 100%);
+        }
+
+        .tsu-stat-card--onboard {
+            background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%);
+        }
+
+        .tsu-stat-card--offboard {
+            background: linear-gradient(135deg, #b45309 0%, #d97706 100%);
+        }
+
+        .tsu-stat-card__watermark {
+            position: absolute;
+            right: 1.25rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 3.2rem;
+            opacity: 0.15;
+            pointer-events: none;
+            color: #ffffff;
+        }
+
+        .tsu-stat-card__value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 0.25rem;
+            color: #ffffff;
+        }
+
+        .tsu-stat-card__label {
+            font-size: 0.85rem;
+            opacity: 0.9;
+            margin-bottom: 0;
+            font-weight: 500;
+            color: #ffffff;
+        }
+
+        /* UNDERLINE NAV TABS */
+        .tsu-tab-nav {
+            border-bottom: 2px solid var(--tsu-border);
+            display: flex;
+            gap: 1.5rem;
+            padding: 0 1rem;
+            background: #ffffff;
+            border-top-left-radius: 12px;
+            border-top-right-radius: 12px;
+        }
+
+        .tsu-tab-nav .nav-link {
+            border: none;
+            background: transparent;
+            color: var(--tsu-text-muted);
+            font-weight: 600;
+            font-size: 0.9rem;
+            padding: 1rem 0.25rem;
+            position: relative;
+            transition: color 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+
+        .tsu-tab-nav .nav-link:hover {
+            color: var(--tsu-primary);
+        }
+
+        .tsu-tab-nav .nav-link.active {
+            color: var(--tsu-primary);
+        }
+
+        .tsu-tab-nav .nav-link.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--tsu-primary);
+            border-radius: 3px 3px 0 0;
+        }
+
+        /* TABLE STYLING */
+        .tsu-table-modern thead th {
+            background: #f8fafc;
+            color: #334155;
+            font-weight: 700;
+            font-size: 0.78rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 2px solid #e2e8f0;
+            padding: 0.85rem 1rem;
+            vertical-align: middle;
+        }
+
+        .tsu-table-modern tbody td {
+            padding: 0.85rem 1rem;
+            vertical-align: middle;
+            font-size: 0.88rem;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .tsu-table-modern tbody tr:hover {
+            background-color: #f8fafc;
+        }
+    </style>
+@endsection
+
 @section('content')
     <x-tsu-page-header
         title="Master Onboarding & Offboarding"
@@ -17,6 +177,25 @@
 
     <section class="content">
         <div class="container-fluid">
+            {{-- Ringkasan Statistik --}}
+            <div class="tsu-stat-grid-onoff">
+                <div class="tsu-stat-card tsu-stat-card--total">
+                    <i class="fas fa-tasks tsu-stat-card__watermark"></i>
+                    <div class="tsu-stat-card__value" id="stat-total">{{ $counts['total'] ?? 0 }}</div>
+                    <div class="tsu-stat-card__label">Total Master Tugas</div>
+                </div>
+                <div class="tsu-stat-card tsu-stat-card--onboard">
+                    <i class="fas fa-user-plus tsu-stat-card__watermark"></i>
+                    <div class="tsu-stat-card__value" id="stat-onboarding">{{ $counts['onboarding'] ?? 0 }}</div>
+                    <div class="tsu-stat-card__label">Checklist Onboarding</div>
+                </div>
+                <div class="tsu-stat-card tsu-stat-card--offboard">
+                    <i class="fas fa-user-minus tsu-stat-card__watermark"></i>
+                    <div class="tsu-stat-card__value" id="stat-offboarding">{{ $counts['offboarding'] ?? 0 }}</div>
+                    <div class="tsu-stat-card__label">Checklist Offboarding</div>
+                </div>
+            </div>
+
             <x-tsu-master-guide
                 title="Panduan Keterkaitan Master Onboarding & Offboarding"
                 description="Master Onboarding & Offboarding mengatur butir checklist tugas orientasi pegawai baru (Onboarding) serta protokol pengembalian aset dan serah terima tugas saat pegawai berhenti (Offboarding)."
@@ -27,59 +206,28 @@
                 impact="Checklist yang dibuat di master ini otomatis ditugaskan kepada pegawai baru yang didaftarkan ke sistem serta memicu verifikasi serah terima inventaris kampus saat proses offboarding."
             />
 
-            {{-- Ringkasan Statistik --}}
-            <div class="row mb-3">
-                <div class="col-md-4 col-sm-6 col-12">
-                    <div class="info-box shadow-sm border">
-                        <span class="info-box-icon bg-info elevation-1"><i class="fas fa-tasks"></i></span>
-                        <div class="info-box-content">
-                            <span class="info-box-text text-muted font-weight-bold">Total Master Tugas</span>
-                            <span class="info-box-number h4 mb-0 text-dark font-weight-bold" id="stat-total">{{ $counts['total'] ?? 0 }}</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4 col-sm-6 col-12">
-                    <div class="info-box shadow-sm border">
-                        <span class="info-box-icon bg-success elevation-1"><i class="fas fa-user-plus"></i></span>
-                        <div class="info-box-content">
-                            <span class="info-box-text text-muted font-weight-bold">Checklist Onboarding</span>
-                            <span class="info-box-number h4 mb-0 text-success font-weight-bold" id="stat-onboarding">{{ $counts['onboarding'] ?? 0 }}</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-4 col-sm-6 col-12">
-                    <div class="info-box shadow-sm border">
-                        <span class="info-box-icon bg-warning elevation-1 text-white"><i class="fas fa-user-minus"></i></span>
-                        <div class="info-box-content">
-                            <span class="info-box-text text-muted font-weight-bold">Checklist Offboarding</span>
-                            <span class="info-box-number h4 mb-0 text-warning font-weight-bold" id="stat-offboarding">{{ $counts['offboarding'] ?? 0 }}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card card-outline card-info shadow-sm">
-                <div class="card-header p-2">
-                    <ul class="nav nav-pills" id="tab-kategori-filter">
+            <div class="card border-0 shadow-sm" style="border-radius: 12px; overflow: hidden;">
+                <div class="p-0 bg-white">
+                    <ul class="nav tsu-tab-nav" id="tab-kategori-filter">
                         <li class="nav-item">
-                            <a class="nav-link active font-weight-bold filter-kategori" href="#" data-kategori="">
-                                <i class="fas fa-layer-group mr-1"></i> Semua Kategori
+                            <a class="nav-link active filter-kategori" href="#" data-kategori="">
+                                <i class="fas fa-layer-group"></i> Semua Kategori
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link font-weight-bold filter-kategori text-success" href="#" data-kategori="onboarding">
-                                <i class="fas fa-user-plus mr-1"></i> Onboarding Pegawai Baru
+                            <a class="nav-link filter-kategori" href="#" data-kategori="onboarding">
+                                <i class="fas fa-user-plus text-info"></i> Onboarding Pegawai Baru
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link font-weight-bold filter-kategori text-warning" href="#" data-kategori="offboarding">
-                                <i class="fas fa-user-minus mr-1"></i> Offboarding Pegawai Resign
+                            <a class="nav-link filter-kategori" href="#" data-kategori="offboarding">
+                                <i class="fas fa-user-minus text-warning"></i> Offboarding Pegawai Resign
                             </a>
                         </li>
                     </ul>
                 </div>
-                <div class="card-body">
-                    <table id="table-onboarding-offboarding" class="table table-bordered table-striped w-100">
+                <div class="card-body p-3">
+                    <table id="table-onboarding-offboarding" class="table table-hover tsu-table-modern w-100">
                         <thead>
                             <tr>
                                 <th width="5%" class="text-center">No</th>
@@ -102,7 +250,7 @@
     {{-- MODAL CONTAINER --}}
     <div class="modal fade" id="modal-onoff" tabindex="-1" role="dialog" aria-hidden="true">
         <div class="modal-dialog modal-md modal-dialog-centered">
-            <div class="modal-content" id="modal-onoff-content">
+            <div class="modal-content" id="modal-onoff-content" style="border-radius: 12px; overflow: hidden; border: none; box-shadow: 0 10px 30px rgba(0,0,0,0.15);">
                 {{-- Dynamic form loaded here --}}
             </div>
         </div>
@@ -110,6 +258,10 @@
 @endsection
 
 @section('script')
+    <script src="{{ asset('assets/adminlte/plugins/datatables/jquery.dataTables.min.js') }}"></script>
+    <script src="{{ asset('assets/adminlte/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
+    <script src="{{ asset('assets/adminlte/plugins/datatables-responsive/js/dataTables.responsive.min.js') }}"></script>
+    <script src="{{ asset('assets/adminlte/plugins/sweetalert2/sweetalert2.all.min.js') }}"></script>
     <script>
         $(document).ready(function() {
             let activeKategori = '';
@@ -117,6 +269,23 @@
             let dtTable = $('#table-onboarding-offboarding').DataTable({
                 processing: true,
                 serverSide: true,
+                responsive: true,
+                language: {
+                    processing: '<div class="spinner-border spinner-border-sm text-primary" role="status"></div> Sedang memuat...',
+                    search: "Cari:",
+                    lengthMenu: "Tampilkan _MENU_ entri",
+                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ entri",
+                    infoEmpty: "Menampilkan 0 sampai 0 dari 0 entri",
+                    infoFiltered: "(disaring dari _MAX_ total entri)",
+                    zeroRecords: "Tidak ada data yang ditemukan",
+                    emptyTable: "Belum ada data checklist",
+                    paginate: {
+                        first: "Pertama",
+                        previous: "Sebelumnya",
+                        next: "Berikutnya",
+                        last: "Terakhir"
+                    }
+                },
                 ajax: {
                     url: "{{ route('admin.master-onboarding-offboarding.json') }}",
                     data: function(d) {
@@ -130,7 +299,7 @@
                         data: 'nama_tugas', 
                         name: 'nama_tugas',
                         render: function(data, type, row) {
-                            let desc = row.keterangan ? `<div class="text-muted small">${row.keterangan}</div>` : '';
+                            let desc = row.keterangan ? `<div class="text-muted small mt-1">${row.keterangan}</div>` : '';
                             return `<div class="font-weight-bold text-dark">${data}</div>${desc}`;
                         }
                     },
@@ -208,7 +377,7 @@
                     text: 'Data tugas ini akan dihapus dari daftar master.',
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonColor: '#d33',
+                    confirmButtonColor: '#dc2626',
                     cancelButtonColor: '#6c757d',
                     confirmButtonText: '<i class="fas fa-trash mr-1"></i> Ya, Hapus',
                     cancelButtonText: 'Batal'

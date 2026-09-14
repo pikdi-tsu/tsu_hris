@@ -117,17 +117,17 @@ class PayrollPeriod extends Model
     {
         switch ($this->status) {
             case 'draft':
-                return '<span class="badge badge-secondary px-2 py-1"><i class="fas fa-pencil-alt mr-1"></i> DRAFT</span>';
+                return '<span class="badge badge-secondary px-2 py-1">DRAFT</span>';
             case 'pending_val_1':
-                return '<span class="badge badge-info px-2 py-1"><i class="fas fa-hourglass-half mr-1"></i> Menunggu Validator 1</span>';
+                return '<span class="badge badge-info px-2 py-1">Menunggu Validator 1</span>';
             case 'pending_val_2':
-                return '<span class="badge badge-primary px-2 py-1"><i class="fas fa-hourglass-half mr-1"></i> Menunggu Validator 2</span>';
+                return '<span class="badge badge-primary px-2 py-1">Menunggu Validator 2</span>';
             case 'pending_approval':
-                return '<span class="badge badge-warning px-2 py-1 text-dark"><i class="fas fa-user-check mr-1"></i> Menunggu Approval Final</span>';
+                return '<span class="badge badge-warning px-2 py-1 text-dark">Menunggu Approval</span>';
             case 'revision_requested':
-                return '<span class="badge badge-danger px-2 py-1"><i class="fas fa-exclamation-circle mr-1"></i> Perlu Revisi</span>';
+                return '<span class="badge badge-danger px-2 py-1">Perlu Revisi</span>';
             case 'locked':
-                return '<span class="badge badge-success px-2 py-1"><i class="fas fa-lock mr-1"></i> LOCKED (FINAL)</span>';
+                return '<span class="badge badge-success px-2 py-1">LOCKED (FINAL)</span>';
             default:
                 return '<span class="badge badge-light">' . e($this->status) . '</span>';
         }

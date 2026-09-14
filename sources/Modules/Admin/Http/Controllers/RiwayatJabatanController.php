@@ -12,6 +12,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\RiwayatJabatanExport;
 use App\Traits\ApiResponseTrait;
 use App\Services\TsuErrorHandlerService;
+use Modules\System\Models\MenuSidebar;
 
 class RiwayatJabatanController extends MiddlewareController
 {
@@ -24,15 +25,34 @@ class RiwayatJabatanController extends MiddlewareController
 
     public function index()
     {
+        $this->guard('view', 'admin:riwayat-jabatan');
+
         $karyawans = DataDosenTendik::orderBy('nama', 'asc')->get();
+        
+        $menuData = MenuSidebar::where('route', 'admin.riwayat-jabatan.index')->first();
+        $menuIcon = $menuData->icon ?? 'fas fa-history';
+        $title = $menuData->name ?? 'Riwayat Jabatan';
+
+        $totalRiwayat = RiwayatJabatan::count();
+        $totalStruktural = RiwayatJabatan::where('tipe_jabatan', 'struktural')->count();
+        $totalFungsional = RiwayatJabatan::where('tipe_jabatan', 'fungsional')->count();
+        $totalPegawai = RiwayatJabatan::distinct('data_dosen_tendik_id')->count('data_dosen_tendik_id');
+
         return view('admin::riwayat-jabatan.index', [
-            'title' => 'Manajemen Riwayat Jabatan',
-            'karyawans' => $karyawans
+            'title'           => $title,
+            'menuIcon'        => $menuIcon,
+            'karyawans'       => $karyawans,
+            'totalRiwayat'    => $totalRiwayat,
+            'totalStruktural' => $totalStruktural,
+            'totalFungsional' => $totalFungsional,
+            'totalPegawai'    => $totalPegawai
         ]);
     }
 
     public function datatable(Request $request)
     {
+        $this->guard('view', 'admin:riwayat-jabatan');
+
         $query = RiwayatJabatan::with(['dataDosenTendik', 'jabatanStruktural', 'jabatanFungsional', 'pangkatGolongan'])
             ->orderBy('created_at', 'desc');
 
@@ -43,44 +63,49 @@ class RiwayatJabatanController extends MiddlewareController
         return DataTables::of($query)
             ->addIndexColumn()
             ->addColumn('pegawai', function ($row) {
-                $nama = $row->dataDosenTendik->nama ?? 'Unknown';
-                $nik = $row->dataDosenTendik->nik ?? '-';
-                return "<strong>{$nama}</strong><br><small class='text-muted'>NIK: {$nik}</small>";
+                $nama = $row->dataDosenTendik ? htmlspecialchars($row->dataDosenTendik->nama) : 'Unknown';
+                $nik = $row->dataDosenTendik && $row->dataDosenTendik->nik 
+                    ? '<small class="text-muted d-block mt-1"><i class="fas fa-id-card mr-1"></i>' . htmlspecialchars($row->dataDosenTendik->nik) . '</small>' 
+                    : '';
+                return "<div><strong class='text-dark' style='font-size:0.9rem;'>{$nama}</strong>{$nik}</div>";
             })
             ->addColumn('tipe_jabatan', function ($row) {
                 if ($row->tipe_jabatan === 'struktural') {
-                    return '<span class="badge badge-dark">STRUKTURAL</span>';
+                    return '<span class="badge badge-dark" style="font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.76rem;"><i class="fas fa-sitemap mr-1"></i>STRUKTURAL</span>';
                 }
-                return '<span class="badge badge-info">FUNGSIONAL</span>';
+                return '<span class="badge badge-info" style="font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.76rem;"><i class="fas fa-user-tie mr-1"></i>FUNGSIONAL</span>';
             })
             ->addColumn('jabatan', function ($row) {
                 if ($row->tipe_jabatan === 'struktural') {
-                    return $row->jabatanStruktural->nama_jabatan ?? '-';
+                    return '<strong style="font-size:0.88rem;">' . htmlspecialchars($row->jabatanStruktural->nama_jabatan ?? '-') . '</strong>';
                 }
-                $nama = $row->jabatanFungsional->nama_jabatan ?? '-';
+                $nama = '<strong style="font-size:0.88rem;">' . htmlspecialchars($row->jabatanFungsional->nama_jabatan ?? '-') . '</strong>';
                 if ($row->pangkatGolongan) {
-                    $nama .= ' <br><small class="text-muted">(' . $row->pangkatGolongan->nama_pangkat . ' - Gol. ' . $row->pangkatGolongan->golongan . ')</small>';
+                    $nama .= '<br><small class="text-muted"><i class="fas fa-medal mr-1" style="color:var(--tsu-primary,#094b54);"></i>' . htmlspecialchars($row->pangkatGolongan->nama_pangkat . ' - Gol. ' . $row->pangkatGolongan->golongan) . '</small>';
                 }
                 return $nama;
             })
             ->addColumn('masa_jabatan', function ($row) {
-                $mulai = $row->tgl_mulai ? Carbon::parse($row->tgl_mulai)->format('d M Y') : '-';
-                $selesai = $row->tgl_selesai ? Carbon::parse($row->tgl_selesai)->format('d M Y') : 'Sekarang';
+                $mulai = $row->tgl_mulai ? Carbon::parse($row->tgl_mulai)->translatedFormat('d M Y') : '-';
+                $selesai = $row->tgl_selesai ? Carbon::parse($row->tgl_selesai)->translatedFormat('d M Y') : 'Sekarang';
                 $durasi = $row->lama_menjabat_bulan ? $row->lama_menjabat_bulan . ' Bln' : '< 1 Bln';
-                return "{$mulai} &mdash; {$selesai}<br><small class='text-muted'><i class='far fa-clock'></i> {$durasi}</small>";
+                return "<div><span style='font-weight:600;font-size:0.85rem;'>{$mulai}</span> &mdash; <span style='font-weight:600;font-size:0.85rem;'>{$selesai}</span></div><div class='mt-1'><span class='badge badge-light border text-muted' style='font-size:0.75rem;'><i class='fas fa-clock mr-1' style='color:var(--tsu-primary,#094b54);'></i>{$durasi}</span></div>";
+            })
+            ->addColumn('keterangan', function ($row) {
+                return $row->keterangan ? htmlspecialchars($row->keterangan) : '<span class="text-muted font-italic">-</span>';
             })
             ->addColumn('aksi', function ($row) {
                 $editUrl = route('admin.riwayat-jabatan.edit', $row->id);
                 $deleteUrl = route('admin.riwayat-jabatan.destroy', $row->id);
                 $token = csrf_token();
 
-                $btnEdit = '<button type="button" class="btn btn-sm btn-warning btn-edit text-dark mx-1" data-url="'.$editUrl.'" title="Edit Riwayat"><i class="fas fa-pencil-alt"></i></button>';
+                $btnEdit = '<button type="button" class="btn btn-sm btn-warning btn-edit text-dark mr-1" data-url="'.$editUrl.'" title="Edit Riwayat" style="border-radius: 6px; font-size: 0.78rem; padding: 0.25rem 0.55rem;"><i class="fas fa-pencil-alt"></i></button>';
                 
                 $btnDelete = '
-                    <form action="'.$deleteUrl.'" method="POST" style="display:inline-block; margin: 0;" class="mx-1">
+                    <form action="'.$deleteUrl.'" method="POST" style="display:inline-block; margin: 0;">
                         <input type="hidden" name="_token" value="'.$token.'">
                         <input type="hidden" name="_method" value="DELETE">
-                        <button type="button" class="btn btn-sm btn-danger btn-delete-riwayat" title="Hapus Riwayat">
+                        <button type="button" class="btn btn-sm btn-danger btn-delete-riwayat" title="Hapus Riwayat" style="border-radius: 6px; font-size: 0.78rem; padding: 0.25rem 0.55rem;">
                             <i class="fas fa-trash"></i>
                         </button>
                     </form>
@@ -88,7 +113,7 @@ class RiwayatJabatanController extends MiddlewareController
 
                 return '<div class="d-flex justify-content-center align-items-center">' . $btnEdit . $btnDelete . '</div>';
             })
-            ->rawColumns(['pegawai', 'tipe_jabatan', 'jabatan', 'masa_jabatan', 'aksi'])
+            ->rawColumns(['pegawai', 'tipe_jabatan', 'jabatan', 'masa_jabatan', 'keterangan', 'aksi'])
             ->make(true);
     }
 
@@ -96,7 +121,7 @@ class RiwayatJabatanController extends MiddlewareController
     {
         $this->guard('edit', 'admin:riwayat-jabatan');
         $riwayat = RiwayatJabatan::with(['dataDosenTendik', 'jabatanStruktural', 'jabatanFungsional'])->findOrFail($id);
-        return view('admin::data-karyawan.edit_riwayat_modal', compact('riwayat')); // Reusing the modal view we created earlier
+        return view('admin::data-karyawan.edit_riwayat_modal', compact('riwayat'));
     }
 
     public function update(Request $request, $id)

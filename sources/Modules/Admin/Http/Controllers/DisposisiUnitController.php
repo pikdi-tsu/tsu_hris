@@ -31,9 +31,33 @@ class DisposisiUnitController extends MiddlewareController
      */
     public function index()
     {
+        $user = Auth::user();
         $karyawan = $this->getLoggedInKaryawan();
         $myUnit = $karyawan && $karyawan->unit ? $karyawan->unit : null;
         $units = MasterUnit::orderBy('nama_unit', 'asc')->get();
+
+        $isAdmin = $user && ($user->isAdmin()
+            || $user->hasRole(['super admin hris', 'admin hris testing', 'Super Admin', 'Admin SDM'])
+            || $user->can('admin:persuratan-sdm'));
+
+        $queryCounts = DisposisiSuratMasuk::query();
+        if (!$isAdmin) {
+            $queryCounts->where(function ($q) use ($karyawan) {
+                if ($karyawan) {
+                    $q->where('ke_unit_id', $karyawan->unit_id)
+                      ->orWhere('ke_pegawai_id', $karyawan->id);
+                } else {
+                    $q->where('ke_unit_id', 'none');
+                }
+            });
+        }
+
+        $counts = [
+            'total'    => (clone $queryCounts)->count(),
+            'menunggu' => (clone $queryCounts)->where('status_tindak_lanjut', 'menunggu')->count(),
+            'diproses' => (clone $queryCounts)->whereIn('status_tindak_lanjut', ['diterima', 'diproses'])->count(),
+            'selesai'  => (clone $queryCounts)->where('status_tindak_lanjut', 'selesai')->count(),
+        ];
 
         return view('admin::disposisi-unit.index', [
             'title'    => 'Disposisi Masuk Unit Kerja',
@@ -41,6 +65,7 @@ class DisposisiUnitController extends MiddlewareController
             'karyawan' => $karyawan,
             'myUnit'   => $myUnit,
             'units'    => $units,
+            'counts'   => $counts,
         ]);
     }
 
@@ -107,31 +132,34 @@ class DisposisiUnitController extends MiddlewareController
                 return $row->status_badge;
             })
             ->addColumn('aksi', function ($row) {
-                $btn = '<div class="btn-group btn-group-sm">';
+                $html = '<div class="btn-group">';
 
-                // Tombol Lihat Surat Scan
+                // 1. Dokumen Scan Surat Masuk (Ikon PDF ringkas dengan tooltip)
                 if ($row->suratMasuk && $row->suratMasuk->file_url) {
-                    $btn .= '<a href="' . $row->suratMasuk->file_url . '" target="_blank" class="btn btn-outline-danger" title="Lihat Surat Masuk PDF"><i class="fas fa-file-pdf mr-1"></i> Surat</a>';
+                    $html .= '<a href="' . $row->suratMasuk->file_url . '" target="_blank" class="btn btn-outline-danger btn-icon-only" title="Buka Dokumen Surat Masuk (PDF)"><i class="fas fa-file-pdf"></i></a>';
                 }
 
-                // Tombol Terima Disposisi (jika masih status menunggu)
+                // 2. Tombol Aksi Utama Berdasarkan Status Disposisi
                 if ($row->status_tindak_lanjut === 'menunggu') {
-                    $btn .= '<button type="button" class="btn btn-warning btn-terima-disp" data-url="' . route('admin.disposisi-unit.terima', $row->id) . '" title="Konfirmasi Terima Disposisi"><i class="fas fa-check mr-1"></i> Terima</button>';
-                }
-
-                // Tombol Tindak Lanjut / Penyelesaian
-                if ($row->status_tindak_lanjut !== 'selesai') {
-                    $btn .= '<button type="button" class="btn btn-primary btn-tindak-lanjut" data-url="' . route('admin.disposisi-unit.tindak-lanjut-modal', $row->id) . '" title="Tindak Lanjuti / Selesaikan"><i class="fas fa-edit mr-1"></i> Tindak Lanjut</button>';
+                    // Konfirmasi Terima Disposisi (Tombol Primer)
+                    $html .= '<button type="button" class="btn btn-warning btn-terima-disp font-weight-bold" data-url="' . route('admin.disposisi-unit.terima', $row->id) . '" title="Konfirmasi Terima Surat Masuk"><i class="fas fa-check mr-1"></i> Terima</button>';
+                    // Ikon ringkas form tindak lanjut cepat
+                    $html .= '<button type="button" class="btn btn-outline-primary btn-icon-only btn-tindak-lanjut" data-url="' . route('admin.disposisi-unit.tindak-lanjut-modal', $row->id) . '" title="Form Tindak Lanjut"><i class="fas fa-edit"></i></button>';
+                } elseif ($row->status_tindak_lanjut === 'selesai') {
+                    // Detail Selesai
+                    $html .= '<button type="button" class="btn btn-outline-success font-weight-bold btn-tindak-lanjut" data-url="' . route('admin.disposisi-unit.tindak-lanjut-modal', $row->id) . '" title="Lihat Hasil & Catatan Penyelesaian"><i class="fas fa-check-double mr-1"></i> Detail Selesai</button>';
                 } else {
-                    $btn .= '<button type="button" class="btn btn-success btn-tindak-lanjut" data-url="' . route('admin.disposisi-unit.tindak-lanjut-modal', $row->id) . '" title="Lihat Hasil Tindak Lanjut"><i class="fas fa-check-double mr-1"></i> Selesai</button>';
+                    // Tindak Lanjut (Status: Diterima / Sedang Diproses)
+                    $html .= '<button type="button" class="btn btn-primary font-weight-bold btn-tindak-lanjut" data-url="' . route('admin.disposisi-unit.tindak-lanjut-modal', $row->id) . '" title="Proses & Unggah Bukti Tindak Lanjut"><i class="fas fa-tasks mr-1"></i> Tindak Lanjut</button>';
                 }
 
+                // 3. Unduh Bukti Penyelesaian jika sudah diunggah
                 if ($row->file_tindak_lanjut_url) {
-                    $btn .= '<a href="' . $row->file_tindak_lanjut_url . '" target="_blank" class="btn btn-outline-info" title="Unduh Bukti Tindak Lanjut"><i class="fas fa-paperclip mr-1"></i> Bukti</a>';
+                    $html .= '<a href="' . $row->file_tindak_lanjut_url . '" target="_blank" class="btn btn-outline-info btn-icon-only" title="Unduh Berkas Bukti Tindak Lanjut"><i class="fas fa-paperclip"></i></a>';
                 }
 
-                $btn .= '</div>';
-                return $btn;
+                $html .= '</div>';
+                return $html;
             })
             ->rawColumns(['surat_info', 'unit_info', 'instruksi_info', 'status_badge', 'aksi'])
             ->make(true);

@@ -19,9 +19,18 @@ class KpiPeriodeController extends MiddlewareController
 
     public function index()
     {
+        $active = KpiPeriode::where('is_active', 1)->first();
+        $counts = [
+            'total'     => KpiPeriode::count(),
+            'aktif'     => $active ? 'Tahun ' . $active->tahun : '-',
+            'locked'    => $active ? ($active->is_locked ? 'Terkunci' : 'Terbuka') : '-',
+            'indikator' => \App\Models\KpiMasterIndikator::count(),
+        ];
+
         return view('admin::kpi.periode.index', [
             'title'    => 'Master Periode Penilaian KPI',
             'menuIcon' => 'fas fa-calendar-alt',
+            'counts'   => $counts,
         ]);
     }
 
@@ -38,31 +47,36 @@ class KpiPeriodeController extends MiddlewareController
                 return $row->kunci_badge;
             })
             ->addColumn('rentang_tanggal', function ($row) {
-                return ($row->tanggal_mulai ? date('d M Y', strtotime($row->tanggal_mulai)) : '-') 
+                if (!$row->tanggal_mulai && !$row->tanggal_selesai) {
+                    return '<span class="text-muted">-</span>';
+                }
+                return '<div class="small font-weight-bold text-dark">' . 
+                    ($row->tanggal_mulai ? date('d M Y', strtotime($row->tanggal_mulai)) : '-') 
                     . ' s/d ' . 
-                    ($row->tanggal_selesai ? date('d M Y', strtotime($row->tanggal_selesai)) : '-');
+                    ($row->tanggal_selesai ? date('d M Y', strtotime($row->tanggal_selesai)) : '-')
+                    . '</div>';
             })
             ->addColumn('action', function ($row) {
-                $btn = '<div class="btn-group btn-group-sm" role="group">';
+                $btn = '<div class="d-flex justify-content-center align-items-center" style="gap: 5px;">';
                 
                 // Toggle Aktif
                 if (!$row->is_active) {
-                    $btn .= '<button type="button" class="btn btn-outline-success btn-toggle-active" data-id="'.$row->id.'" title="Setel Sebagai Periode Aktif"><i class="fas fa-check-circle"></i></button>';
+                    $btn .= '<button type="button" class="btn btn-sm btn-outline-success btn-toggle-active" data-id="'.$row->id.'" title="Setel Sebagai Periode Aktif" style="border-radius: 6px; padding: 3px 8px; font-size: 0.8rem;"><i class="fas fa-check-circle"></i></button>';
                 }
 
                 // Toggle Kunci
                 if ($row->is_locked) {
-                    $btn .= '<button type="button" class="btn btn-outline-warning btn-toggle-lock" data-id="'.$row->id.'" title="Buka Kunci Pengisian"><i class="fas fa-lock-open"></i></button>';
+                    $btn .= '<button type="button" class="btn btn-sm btn-outline-warning btn-toggle-lock" data-id="'.$row->id.'" title="Buka Kunci Pengisian" style="border-radius: 6px; padding: 3px 8px; font-size: 0.8rem;"><i class="fas fa-lock-open"></i></button>';
                 } else {
-                    $btn .= '<button type="button" class="btn btn-outline-secondary btn-toggle-lock" data-id="'.$row->id.'" title="Kunci Pengisian"><i class="fas fa-lock"></i></button>';
+                    $btn .= '<button type="button" class="btn btn-sm btn-outline-secondary btn-toggle-lock" data-id="'.$row->id.'" title="Kunci Pengisian" style="border-radius: 6px; padding: 3px 8px; font-size: 0.8rem;"><i class="fas fa-lock"></i></button>';
                 }
 
-                $btn .= '<button type="button" class="btn btn-primary btn-edit" data-id="'.$row->id.'" title="Edit"><i class="fas fa-edit"></i></button>';
-                $btn .= '<button type="button" class="btn btn-danger btn-delete" data-id="'.$row->id.'" title="Hapus"><i class="fas fa-trash"></i></button>';
+                $btn .= '<button type="button" class="btn btn-sm btn-outline-primary btn-edit" data-id="'.$row->id.'" title="Edit" style="border-radius: 6px; padding: 3px 8px; font-size: 0.8rem;"><i class="fas fa-pencil-alt"></i></button>';
+                $btn .= '<button type="button" class="btn btn-sm btn-outline-danger btn-delete" data-id="'.$row->id.'" title="Hapus" style="border-radius: 6px; padding: 3px 8px; font-size: 0.8rem;"><i class="fas fa-trash"></i></button>';
                 $btn .= '</div>';
                 return $btn;
             })
-            ->rawColumns(['status_badge', 'kunci_badge', 'action'])
+            ->rawColumns(['status_badge', 'kunci_badge', 'rentang_tanggal', 'action'])
             ->make(true);
     }
 

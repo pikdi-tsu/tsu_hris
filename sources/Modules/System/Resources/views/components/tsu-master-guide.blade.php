@@ -1,5 +1,24 @@
 <div class="card border-0 shadow-sm mb-4 tsu-master-guide" style="border-left: 4px solid #4e73df !important; border-radius: 8px; background-color: #f8faff;">
-    <div class="card-header bg-transparent py-2 px-3 border-0 d-flex justify-content-between align-items-center" style="cursor: pointer;" @if($collapsible) data-toggle="collapse" data-target="#{{ $guideId }}" aria-expanded="true" @endif>
+    <style>
+        .tsu-master-guide .card-header::after,
+        .tsu-master-guide .card-header::before {
+            display: none !important;
+            content: none !important;
+        }
+        .tsu-master-guide .guide-toggle-btn {
+            margin-left: auto !important;
+            color: #64748b;
+            text-decoration: none !important;
+            transition: transform 0.2s ease, color 0.2s ease;
+        }
+        .tsu-master-guide .guide-toggle-btn:hover {
+            color: #094b54;
+        }
+        .tsu-master-guide [aria-expanded="false"] .guide-toggle-icon {
+            transform: rotate(-90deg);
+        }
+    </style>
+    <div class="card-header bg-transparent py-2 px-3 border-0 d-flex justify-content-between align-items-center w-100" style="cursor: pointer;" @if($collapsible) data-toggle="collapse" data-target="#{{ $guideId }}" aria-expanded="true" @endif>
         <div class="d-flex align-items-center">
             <span class="p-2 rounded-circle mr-2 text-primary" style="background: rgba(78, 115, 223, 0.1);">
                 <i class="fas fa-network-wired"></i>
@@ -12,7 +31,7 @@
             </div>
         </div>
         @if($collapsible)
-            <button type="button" class="btn btn-sm btn-link text-muted p-0" title="Buka / Tutup Panduan">
+            <button type="button" class="btn btn-sm btn-link text-muted p-0 guide-toggle-btn" title="Buka / Tutup Panduan">
                 <i class="fas fa-chevron-down guide-toggle-icon"></i>
             </button>
         @endif

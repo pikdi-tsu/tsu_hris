@@ -1,64 +1,77 @@
+<div class="modal-header text-white" style="background: linear-gradient(135deg, #094b54 0%, #0c6170 100%); padding: 1.1rem 1.4rem;">
+    <h5 class="modal-title font-weight-bold" style="font-size: 1.05rem;">
+        <i class="fas fa-edit mr-2 text-warning"></i> Edit Menu: {{ $menu->name }}
+    </h5>
+    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="opacity: 0.85;">
+        <span aria-hidden="true">&times;</span>
+    </button>
+</div>
+
 <form action="{{ route('system.menu.update', $menu->id) }}" method="POST">
     @csrf
     @method('PUT')
 
-    <div class="modal-body">
-        <div class="form-group">
-            <label>Nama Menu <span class="text-danger">*</span></label>
-            <input type="text" name="name" class="form-control" value="{{ $menu->name }}" required>
+    <div class="modal-body p-4">
+        <div class="form-group mb-3">
+            <label class="font-weight-bold text-sm text-dark">Nama Menu <span class="text-danger">*</span></label>
+            <input type="text" name="name" class="form-control" value="{{ $menu->name }}" required style="border-radius: 8px;">
         </div>
 
         <div class="row">
             <div class="col-md-6">
-                <div class="form-group">
-                    <label>Icon Class</label>
+                <div class="form-group mb-3">
+                    <label class="font-weight-bold text-sm text-dark">Icon Class (FontAwesome)</label>
                     <div class="input-group">
                         <div class="input-group-prepend">
-                            <span class="input-group-text"><i class="{{ $menu->icon }}"></i></span>
+                            <span class="input-group-text" style="border-top-left-radius: 8px; border-bottom-left-radius: 8px; background: #f8fafc;">
+                                <i class="{{ $menu->icon ?: 'fas fa-box' }} text-primary"></i>
+                            </span>
                         </div>
-                        <input type="text" name="icon" class="form-control" value="{{ $menu->icon }}" placeholder="Icon Kosong">
+                        <input type="text" name="icon" class="form-control" value="{{ $menu->icon }}" placeholder="Contoh: fas fa-box" style="border-top-right-radius: 8px; border-bottom-right-radius: 8px;">
                     </div>
-                    <small class="text-muted d-block mt-1">
-                        Kosongkan untuk default: <i class="fas fa-box mx-1"></i><code>fas fa-box</code>
-                    </small>
-                    <small>
-                        <a href="https://fontawesome.com/search?ic=free-collection" target="_blank" class="text-info">
-                            <i class="fas fa-external-link-alt mr-1"></i> Lihat Referensi Icon Disini
-                        </a>
-                    </small>
+                    <div class="d-flex justify-content-between align-items-center mt-1">
+                        <small class="text-muted">
+                            Default: <code>fas fa-box</code>
+                        </small>
+                        <small>
+                            <a href="https://fontawesome.com/search?ic=free-collection" target="_blank" class="text-info font-weight-bold">
+                                <i class="fas fa-external-link-alt mr-1"></i> Referensi Icon
+                            </a>
+                        </small>
+                    </div>
                 </div>
             </div>
             <div class="col-md-6">
-                <div class="form-group">
-                    <label>Route Laravel</label>
-                    <input type="text" name="route" id="edit_route" class="form-control" value="{{ $menu->route }}" placeholder="users.users.index">
-                    <small class="text-muted">Isi <code>#</code> atau kosongkan jika ini menu Parent (Dropdown).</small>
+                <div class="form-group mb-3">
+                    <label class="font-weight-bold text-sm text-dark">Route Laravel</label>
+                    <input type="text" name="route" id="edit_route" class="form-control" value="{{ $menu->route }}" placeholder="users.users.index" style="border-radius: 8px;">
+                    <small class="text-muted d-block mt-1">Isi <code>#</code> atau kosongkan jika berupa Menu Induk (Dropdown).</small>
                 </div>
             </div>
         </div>
 
         <div class="row">
             <div class="col-md-6">
-                <div class="form-group">
-                    <label>Permission</label>
+                <div class="form-group mb-3">
+                    <label class="font-weight-bold text-sm text-dark">Permission Kunci</label>
                     <select name="permission_name" id="edit_permission" class="form-control select2-edit" style="width: 100%;">
-                        <option value="">-- Public --</option>
+                        <option value="">-- Public (Bebas Akses) --</option>
                         @foreach($permissions as $perm)
                             <option value="{{ $perm }}" {{ $menu->permission_name === $perm ? 'selected' : '' }}>
                                 {{ $perm }}
                             </option>
                         @endforeach
                     </select>
-                    <small id="edit_help_permission" class="text-danger" style="display: none;">
-                        <i class="fas fa-ban"></i> Permission dimatikan untuk Menu Induk (Folder).
+                    <small id="edit_help_permission" class="text-danger mt-1 font-weight-bold" style="display: none;">
+                        <i class="fas fa-ban mr-1"></i> Permission dinonaktifkan untuk Menu Folder / Induk.
                     </small>
                 </div>
             </div>
             <div class="col-md-6">
-                <div class="form-group">
-                    <label>Parent Menu</label>
+                <div class="form-group mb-3">
+                    <label class="font-weight-bold text-sm text-dark">Parent Menu (Induk)</label>
                     <select name="parent_id" id="edit_parent" class="form-control select2-edit" style="width: 100%;">
-                        <option value="">-- Jadikan Utama --</option>
+                        <option value="">-- Jadikan Menu Utama (Root) --</option>
                         @foreach($parents as $id => $name)
                             <option value="{{ $id }}" {{ $menu->parent_id === $id ? 'selected' : '' }}>
                                 {{ $name }}
@@ -71,33 +84,43 @@
 
         <div class="row">
             <div class="col-md-6">
-                <div class="form-group">
-                    <label>Urutan</label>
-                    <input type="number" name="order" class="form-control" value="{{ $menu->order }}">
+                <div class="form-group mb-0">
+                    <label class="font-weight-bold text-sm text-dark">Urutan Tampil (Order)</label>
+                    <input type="number" name="order" class="form-control" value="{{ $menu->order }}" style="border-radius: 8px;">
+                    <small class="text-muted">Angka lebih kecil tampil lebih atas.</small>
                 </div>
             </div>
             <div class="col-md-6">
-                <div class="form-group">
-                    <label>Status</label>
+                <div class="form-group mb-0">
+                    <label class="font-weight-bold text-sm text-dark">Status Visibilitas</label>
                     <div class="custom-control custom-switch pt-2">
                         <input type="checkbox" class="custom-control-input" id="edit_isactive" name="isactive" value="1" {{ $menu->isactive ? 'checked' : '' }}>
-                        <label class="custom-control-label" for="edit_isactive">Aktif</label>
+                        <label class="custom-control-label font-weight-bold text-sm text-success" for="edit_isactive">Aktif (Tampil di Sidebar)</label>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="modal-footer">
-        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-        <button type="submit" class="btn btn-warning">Update Perubahan</button>
+    <div class="modal-footer justify-content-between p-3" style="background: #f8fafc; border-top: 1px solid #e2e8f0;">
+        <button type="button" class="btn btn-secondary px-3" data-dismiss="modal" style="border-radius: 8px; font-weight: 600;">
+            <i class="fas fa-times mr-1"></i> Batal
+        </button>
+        <button type="submit" class="btn tsu-btn-primary-action px-4">
+            <i class="fas fa-save mr-1"></i> Update Perubahan
+        </button>
     </div>
 </form>
 
 <script>
     $(document).ready(function() {
-        // Re-init Select2
-        $('.select2-edit').select2();
+        // Re-init Select2 di dalam modal edit
+        if ($.fn.select2) {
+            $('.select2-edit').select2({
+                dropdownParent: $('#modal-edit'),
+                width: '100%'
+            });
+        }
 
         // Logika Auto-Disable (Edit)
         function adjustEditPermission() {
@@ -106,21 +129,16 @@
             var permInput = $('#edit_permission');
             var helpText  = $('#edit_help_permission');
 
-            //  Parent Kosong dan Route #/Kosong
             if ( (parentVal === '' || parentVal == null) && (routeVal === '' || routeVal === '#') ) {
-                // Disable
                 permInput.val('').trigger('change');
                 permInput.prop('disabled', true);
                 helpText.show();
-
             } else {
-                // Enable
                 permInput.prop('disabled', false);
                 helpText.hide();
             }
         }
 
-        // Event Listeners
         $('#edit_route').on('keyup change', function() {
             adjustEditPermission();
         });
@@ -129,11 +147,9 @@
             adjustEditPermission();
         });
 
-        // Jalankan saat modal terbuka pertama kali (Load state awal)
         adjustEditPermission();
 
-        // Enable sebelum submit agar data terkirim
-        $('form').on('submit', function() {
+        $('#modal-edit form').on('submit', function() {
             $('#edit_permission').prop('disabled', false);
         });
     });

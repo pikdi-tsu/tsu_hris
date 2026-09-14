@@ -88,8 +88,19 @@ class HonorariumController extends MiddlewareController
 
     public function index()
     {
+        $periods = PayrollPeriod::where('tipe', 'honorarium')->get();
+        $latest = PayrollPeriod::where('tipe', 'honorarium')->orderByDesc('created_at')->first();
+
+        $stats = [
+            'total_periods' => $periods->count(),
+            'total_locked'  => $periods->where('status', 'locked')->count(),
+            'total_draft'   => $periods->whereIn('status', ['draft', 'revision_requested'])->count(),
+            'latest_payout' => $latest ? $latest->total_gaji_bersih : 0,
+        ];
+
         return view('admin::honorarium.index', [
             'title' => 'Honorarium Dosen & Tenaga Pengajar',
+            'stats' => $stats,
         ]);
     }
 
@@ -109,7 +120,7 @@ class HonorariumController extends MiddlewareController
         return DataTables::of($query)
             ->addIndexColumn()
             ->addColumn('kategori_badge', function ($row) {
-                return '<span class="badge badge-primary px-2 py-1"><i class="fas fa-layer-group mr-1"></i> Honorarium Terpadu</span>';
+                return '<span class="tsu-badge-tipe">Honorarium Terpadu</span>';
             })
             ->addColumn('periode_info', function ($row) {
                 $code = '<small class="text-muted d-block font-monospace">' . e($row->kode_periode) . '</small>';
@@ -134,31 +145,31 @@ class HonorariumController extends MiddlewareController
                        '</div>';
             })
             ->addColumn('total_pegawai_formatted', function ($row) {
-                return '<div class="text-center font-weight-bold">' . number_format($row->total_pegawai, 0) . ' Dosen</div>';
+                return '<div class="text-center font-weight-bold"><span class="tsu-badge-pegawai">' . number_format($row->total_pegawai, 0) . ' Dosen</span></div>';
             })
             ->addColumn('total_gaji_bersih_formatted', function ($row) {
                 return '<div class="text-right font-weight-bold text-success" style="font-size: 0.95rem;">Rp ' . number_format($row->total_gaji_bersih, 0, ',', '.') . '</div>';
             })
             ->addColumn('action', function ($row) {
-                $btnShow = '<a href="' . route('admin.honorarium.show', $row->id) . '" class="btn btn-xs btn-primary mr-1" title="Buka Lembar Kroscek"><i class="fas fa-eye mr-1"></i> Buka Kroscek</a>';
+                $btnShow = '<a href="' . route('admin.honorarium.show', $row->id) . '" class="btn btn-xs tsu-btn-action tsu-btn-action--show mr-1" title="Buka Lembar Kroscek"><i class="fas fa-search mr-1"></i> Buka</a>';
                 
                 $dropdown = '';
                 if ($row->is_locked || ($row->created_by == Auth::id() && in_array($row->status, ['draft', 'revision_requested']))) {
                     $dropdown = '
                     <div class="btn-group">
-                        <button type="button" class="btn btn-xs btn-outline-secondary dropdown-toggle" data-toggle="dropdown" title="Download Laporan">
-                            <i class="fas fa-download"></i>
+                        <button type="button" class="btn btn-xs tsu-btn-action tsu-btn-action--menu dropdown-toggle" data-toggle="dropdown" title="Download Laporan">
+                            <i class="fas fa-ellipsis-v"></i>
                         </button>
-                        <div class="dropdown-menu dropdown-menu-right">
-                            <a class="dropdown-item" href="' . route('admin.honorarium.export-excel', $row->id) . '"><i class="fas fa-file-excel mr-2 text-success"></i> Rekap Excel</a>
-                            <a class="dropdown-item" href="' . route('admin.honorarium.export-bank', $row->id) . '"><i class="fas fa-university mr-2 text-primary"></i> Transfer Bank</a>
-                            <a class="dropdown-item" href="' . route('admin.honorarium.download-all-slip', $row->id) . '"><i class="fas fa-file-archive mr-2 text-danger"></i> Semua Slip (ZIP)</a>
+                        <div class="dropdown-menu dropdown-menu-right shadow border-0" style="border-radius: 8px;">
+                            <a class="dropdown-item py-2" href="' . route('admin.honorarium.export-excel', $row->id) . '"><i class="fas fa-file-excel mr-2 text-success"></i> Rekap Excel</a>
+                            <a class="dropdown-item py-2" href="' . route('admin.honorarium.export-bank', $row->id) . '"><i class="fas fa-university mr-2 text-primary"></i> Transfer Bank</a>
+                            <a class="dropdown-item py-2" href="' . route('admin.honorarium.download-all-slip', $row->id) . '"><i class="fas fa-file-archive mr-2 text-danger"></i> Semua Slip (ZIP)</a>
                         </div>
                     </div>';
                 }
 
                 $btnDel = ($row->status === 'draft' && $row->created_by == Auth::id())
-                    ? '<button type="button" class="btn btn-xs btn-danger btn-delete-period ml-1" data-url="' . route('admin.honorarium.destroy', $row->id) . '" data-name="' . e($row->nama_periode) . '" title="Hapus Draft"><i class="fas fa-trash"></i></button>'
+                    ? '<button type="button" class="btn btn-xs tsu-btn-action tsu-btn-action--delete btn-delete-period ml-1" data-url="' . route('admin.honorarium.destroy', $row->id) . '" data-name="' . e($row->nama_periode) . '" title="Hapus Draft"><i class="fas fa-trash-alt"></i></button>'
                     : '';
                 return '<div class="text-center text-nowrap">' . $btnShow . $dropdown . $btnDel . '</div>';
             })

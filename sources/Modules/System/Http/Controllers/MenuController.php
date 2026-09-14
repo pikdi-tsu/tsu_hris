@@ -24,10 +24,22 @@ class MenuController extends MiddlewareController
         $permissions = Permission::query()->orderBy('name')->pluck('name', 'name');
         $parents = $this->getHierarchicalParents();
 
+        $stats = [
+            'total'  => MenuSidebar::count(),
+            'root'   => MenuSidebar::whereNull('parent_id')->count(),
+            'sub'    => MenuSidebar::whereNotNull('parent_id')->count(),
+            'active' => MenuSidebar::where('isactive', 1)->count(),
+        ];
+
+        $menuIcon = MenuSidebar::where('route', 'system.menu.index')->value('icon') ?? 'fas fa-bars';
+
         return view('system::menu.index', [
-            'title' => 'Manajemen Menu Sidebar',
+            'title'       => 'Manajemen Menu Sidebar',
+            'menu'        => 'menu',
+            'menuIcon'    => $menuIcon,
+            'stats'       => $stats,
             'permissions' => $permissions,
-            'parents' => $parents
+            'parents'     => $parents
         ]);
     }
 
@@ -78,32 +90,50 @@ class MenuController extends MiddlewareController
             ->addIndexColumn()
             ->editColumn('name', function ($d) {
                 // VISUALISASI HIERARKI (POHON)
-                $padding = $d->depth * 25;
-                $iconPohon = '';
+                $padding = $d->depth * 22;
+                $branch = '';
                 if ($d->depth > 0) {
-                    $iconPohon = '<i class="fas fa-level-up-alt fa-rotate-90 text-gray mr-2" style="font-size: 0.8rem; margin-left: -15px;"></i>';
+                    $branch = '<i class="fas fa-level-up-alt fa-rotate-90 mr-2" style="font-size: 0.75rem; color: #94a3b8; margin-left: -12px;"></i>';
                 }
-                $colorClass = match ((int)$d->depth) {
-                    0 => 'text-dark font-weight-bold',
-                    1 => 'text-primary',
-                    default => 'text-muted',
+                
+                $styleTitle = match ((int)$d->depth) {
+                    0 => 'font-weight: 700; color: #094b54; font-size: 0.88rem;',
+                    1 => 'font-weight: 600; color: #1d7a87; font-size: 0.84rem;',
+                    default => 'font-weight: 500; color: #475569; font-size: 0.82rem;',
                 };
-                return '<div style="padding-left: '.$padding.'px;" class="'.$colorClass.'">' . $iconPohon . $d->name . '</div>';
+
+                $typeBadge = '';
+                if ($d->depth === 0 && (!$d->route || $d->route === '#')) {
+                    $typeBadge = ' <span class="badge ml-1" style="background: rgba(9, 75, 84, 0.08); color: #094b54; font-size: 0.68rem; font-weight: 600; padding: 2px 6px; border-radius: 4px;">Folder</span>';
+                }
+
+                return '<div style="padding-left: '.$padding.'px; '.$styleTitle.'" class="d-inline-flex align-items-center">' . $branch . '<span>' . e($d->name) . '</span>' . $typeBadge . '</div>';
+            })
+            ->editColumn('icon', function ($d) {
+                if (!$d->icon) {
+                    return '<div class="text-center text-muted" style="font-size: 0.85rem;">-</div>';
+                }
+                return '<div class="text-center">
+                            <div class="d-inline-flex align-items-center justify-content-center shadow-xs" style="width: 32px; height: 32px; border-radius: 8px; background: rgba(9, 75, 84, 0.08); color: #094b54; font-size: 0.9rem;" title="'.e($d->icon).'">
+                                <i class="'.e($d->icon).'"></i>
+                            </div>
+                        </div>';
             })
             ->editColumn('route', function($d) {
                 return $d->route && $d->route !== '#'
-                    ? '<code class="text-dark">'.$d->route.'</code>'
-                    : '<span class="text-muted text-xs font-italic">Label / Group</span>';
+                    ? '<code style="background: #f8fafc; color: #0f172a; padding: 3px 8px; border-radius: 6px; font-size: 0.8rem; border: 1px solid #e2e8f0; font-family: SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-weight: 600;">'.e($d->route).'</code>'
+                    : '<span class="badge" style="background: #f1f5f9; color: #94a3b8; border: 1px dashed #cbd5e1; font-weight: 500; font-size: 0.75rem; padding: 4px 8px; border-radius: 6px;"><i class="fas fa-folder mr-1"></i> Label / Group</span>';
             })
             ->addColumn('permission', function ($d) {
                 return $d->permission_name
-                    ? '<span class="badge badge-info"><i class="fas fa-lock text-xs mr-1"></i> '.$d->permission_name.'</span>'
-                    : '<span class="badge badge-light border">Public</span>';
+                    ? '<span class="badge" style="background: rgba(2, 132, 199, 0.12); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.25); font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.75rem;"><i class="fas fa-key mr-1" style="font-size: 0.7rem;"></i> '.e($d->permission_name).'</span>'
+                    : '<span class="badge" style="background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.75rem;"><i class="fas fa-globe mr-1" style="font-size: 0.7rem;"></i> Public</span>';
             })
             ->addColumn('status', function ($d) {
-                $warna = $d->isactive ? 'success' : 'secondary';
-                $text  = $d->isactive ? 'Aktif' : 'Non-Aktif';
-                return '<span class="badge badge-'.$warna.'">'.$text.'</span>';
+                if ($d->isactive) {
+                    return '<div class="text-center"><span class="badge" style="background: rgba(16, 185, 129, 0.12); color: #047857; border: 1px solid rgba(16, 185, 129, 0.25); font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.75rem;"><i class="fas fa-check-circle mr-1"></i> Aktif</span></div>';
+                }
+                return '<div class="text-center"><span class="badge" style="background: rgba(100, 116, 139, 0.12); color: #475569; border: 1px solid rgba(100, 116, 139, 0.25); font-weight: 600; padding: 0.35rem 0.65rem; border-radius: 6px; font-size: 0.75rem;"><i class="fas fa-times-circle mr-1"></i> Non-Aktif</span></div>';
             })
             ->addColumn('action', function ($row) {
                 $canEdit   = auth()->user()->can('system:menu:edit');
@@ -112,45 +142,46 @@ class MenuController extends MiddlewareController
 
                 if (!$canEdit && !$canDelete) {
                     return '<div class="text-center">
-                                <span class="badge badge-secondary p-1 shadow-sm" style="cursor: not-allowed; opacity:0.7" title="Akses Dibatasi">
+                                <span class="badge" style="background: #f1f5f9; color: #94a3b8; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.35rem 0.65rem; font-size: 0.75rem;" title="Akses Dibatasi">
                                     <i class="fas fa-lock mr-1"></i> Locked
                                 </span>
                             </div>';
                 }
 
-                $btn = '<div class="text-center">';
+                $btn = '<div class="d-flex align-items-center justify-content-center" style="gap: 0.35rem;">';
 
                 if ($canEdit) {
-                    $btn .= '<a href="'.route('system.menu.edit', $row->id).'" class="btn btn-xs btn-warning btn-edit mr-1" title="Edit">
-                                <i class="fas fa-pencil-alt"></i>
+                    $btn .= '<a href="'.route('system.menu.edit', $row->id).'" class="btn btn-sm btn-edit" style="background: #fffbeb; color: #d97706; border: 1px solid #fde68a; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; transition: all 0.2s;" title="Edit Menu">
+                                <i class="fas fa-pen"></i>
                             </a>';
                 } else {
-                    $btn .= '<button type="button" class="btn btn-secondary btn-sm mr-1" disabled style="cursor:not-allowed; opacity:0.6" title="No Access">
+                    $btn .= '<button type="button" class="btn btn-sm" disabled style="background: #f1f5f9; color: #94a3b8; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; cursor: not-allowed; opacity: 0.6;" title="No Access">
                                 <i class="fas fa-lock"></i>
                              </button>';
                 }
 
                 if ($canDelete) {
                     if ($isSystemCore) {
-                        $btn .= '<button class="btn btn-xs btn-secondary" disabled title="System Core"><i class="fas fa-lock"></i></button>';
+                        $btn .= '<button class="btn btn-sm" disabled style="background: #f1f5f9; color: #94a3b8; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; cursor: not-allowed;" title="Menu Inti Sistem (Terkunci)"><i class="fas fa-lock"></i></button>';
                     } else {
                         $btn .= '<form action="'.route('system.menu.destroy', $row->id).'" method="POST" style="display:inline;">
                                         '.csrf_field().' '.method_field('DELETE').'
-                                        <button type="submit" class="btn btn-xs btn-danger btn-delete" title="Hapus"><i class="fas fa-trash"></i></button>
+                                        <button type="submit" class="btn btn-sm btn-delete" style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; transition: all 0.2s;" title="Hapus Menu"><i class="fas fa-trash"></i></button>
                                     </form>';
                     }
                 } else {
-                    $btn .= '<button type="button" class="btn btn-secondary btn-sm" disabled style="cursor:not-allowed; opacity:0.6" title="No Access">
+                    $btn .= '<button type="button" class="btn btn-sm" disabled style="background: #f1f5f9; color: #94a3b8; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0.3rem 0.6rem; font-size: 0.8rem; cursor: not-allowed; opacity: 0.6;" title="No Access">
                                 <i class="fas fa-lock"></i>
                              </button>';
                 }
 
+                $btn .= '</div>';
                 return $btn;
             })
             ->setRowClass(function ($d) {
-                return $d->depth === 0 ? 'table-secondary' : '';
+                return $d->depth === 0 ? 'tsu-row-root' : '';
             })
-            ->rawColumns(['name', 'route', 'permission', 'status', 'action'])
+            ->rawColumns(['name', 'icon', 'route', 'permission', 'status', 'action'])
             ->make(true);
     }
 

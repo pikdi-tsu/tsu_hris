@@ -27,10 +27,18 @@ class SuratMasukController extends MiddlewareController
     public function index()
     {
         $masterUnits = MasterUnit::orderBy('nama_unit', 'asc')->get();
+        $counts = [
+            'total'       => SuratMasuk::count(),
+            'terdaftar'   => SuratMasuk::where('status', 'terdaftar')->count(),
+            'didisposisi' => SuratMasuk::whereIn('status', ['didisposisi', 'proses_unit'])->count(),
+            'selesai'     => SuratMasuk::where('status', 'selesai')->count(),
+        ];
+
         return view('admin::surat-masuk.index', [
             'title'       => 'Registrasi Surat Masuk & SIKD',
             'menuIcon'    => 'fas fa-inbox',
             'masterUnits' => $masterUnits,
+            'counts'      => $counts,
         ]);
     }
 
@@ -83,18 +91,31 @@ class SuratMasukController extends MiddlewareController
                 return $list;
             })
             ->addColumn('aksi', function ($row) {
-                $btn = '<div class="btn-group btn-group-sm">';
-                $btn .= '<button type="button" class="btn btn-outline-info btn-detail-sm" data-url="' . route('admin.surat-masuk.detail', $row->id) . '" title="Lihat Detail & Timeline Disposisi"><i class="fas fa-eye mr-1"></i> Detail</button>';
-                
-                if ($row->status !== 'selesai') {
-                    $btn .= '<button type="button" class="btn btn-primary btn-disposisi-sm" data-url="' . route('admin.surat-masuk.disposisi-modal', $row->id) . '" title="Teruskan Disposisi ke Unit"><i class="fas fa-share mr-1"></i> Disposisi</button>';
+                $html = '<div class="btn-group">';
+
+                // 1. Dokumen Scan Surat Masuk (Ikon PDF ringkas dengan tooltip)
+                if ($row->file_url) {
+                    $html .= '<a href="' . $row->file_url . '" target="_blank" class="btn btn-outline-danger btn-icon-only" title="Buka Dokumen Surat Masuk (PDF)"><i class="fas fa-file-pdf"></i></a>';
                 }
 
-                if ($row->file_url) {
-                    $btn .= '<a href="' . $row->file_url . '" target="_blank" class="btn btn-outline-danger" title="Lihat Scan Surat PDF"><i class="fas fa-file-pdf mr-1"></i> File</a>';
+                // 2. Tombol Aksi Utama Berdasarkan Status Surat Masuk
+                if ($row->status === 'terdaftar') {
+                    // Belum didisposisikan: Aksi utama = Disposisi ke Unit
+                    $html .= '<button type="button" class="btn btn-primary font-weight-bold btn-disposisi-sm" data-url="' . route('admin.surat-masuk.disposisi-modal', $row->id) . '" title="Buat Lembar Disposisi ke Unit"><i class="fas fa-share mr-1"></i> Disposisi</button>';
+                    // Ikon ringkas detail informasi
+                    $html .= '<button type="button" class="btn btn-outline-info btn-icon-only btn-detail-sm" data-url="' . route('admin.surat-masuk.detail', $row->id) . '" title="Lihat Detail Surat"><i class="fas fa-eye"></i></button>';
+                } elseif ($row->status === 'selesai') {
+                    // Selesai: Semua tindak lanjut disposisi selesai
+                    $html .= '<button type="button" class="btn btn-outline-success font-weight-bold btn-detail-sm" data-url="' . route('admin.surat-masuk.detail', $row->id) . '" title="Lihat Hasil & Catatan Penyelesaian"><i class="fas fa-check-double mr-1"></i> Detail Selesai</button>';
+                } else {
+                    // Sedang didisposisikan / proses unit
+                    $html .= '<button type="button" class="btn btn-info font-weight-bold btn-disposisi-sm" data-url="' . route('admin.surat-masuk.disposisi-modal', $row->id) . '" title="Kelola / Tambah Disposisi Unit"><i class="fas fa-share-alt mr-1"></i> Disposisi Unit</button>';
+                    // Ikon ringkas timeline detail
+                    $html .= '<button type="button" class="btn btn-outline-primary btn-icon-only btn-detail-sm" data-url="' . route('admin.surat-masuk.detail', $row->id) . '" title="Lihat Detail & Timeline Disposisi"><i class="fas fa-eye"></i></button>';
                 }
-                $btn .= '</div>';
-                return $btn;
+
+                $html .= '</div>';
+                return $html;
             })
             ->rawColumns(['status_badge', 'sifat_badge', 'ringkasan_disposisi', 'aksi'])
             ->make(true);

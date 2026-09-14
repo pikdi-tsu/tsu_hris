@@ -1,48 +1,108 @@
 <style>
+    /* Reset & Spacing */
     .nav-sidebar .nav-treeview {
-        padding-left: 0; margin-left: 0;
+        padding-left: 0;
+        margin-left: 0;
     }
 
-    /* Styling indikator */
+    .nav-sidebar .nav-link {
+        display: flex;
+        align-items: center;
+        padding-left: var(--nav-pad-left, 0.8rem) !important;
+        padding-right: 0.8rem;
+        border-radius: 8px;
+        margin: 2px 6px;
+        transition: background-color 0.2s ease, color 0.2s ease;
+        color: #d1e7ea;
+    }
+
+    .nav-sidebar .nav-link:hover {
+        background-color: rgba(255, 255, 255, 0.1) !important;
+        color: #ffffff !important;
+    }
+
+    /* Styling indikator (chevron / minus) */
     .nav-indicator {
-        font-size: 0.75rem;
+        font-size: 0.72rem;
         width: 1rem;
         text-align: center;
         transition: transform 0.3s ease;
-        color: #adb5bd; /* Warna abu-abu */
+        color: #8bbec6;
+        flex-shrink: 0;
     }
 
-    /* Strip (-) */
     .nav-indicator.fa-minus {
-        font-size: 0.6rem;
-        opacity: 0.7;
+        font-size: 0.55rem;
+        opacity: 0.6;
     }
 
     /* Menu Open */
     .nav-sidebar .nav-item.menu-open > .nav-link {
-        color: yellow !important;
+        color: #f8c12a !important;
     }
     .nav-sidebar .nav-item.menu-open > .nav-link .nav-indicator.fa-chevron-right {
         transform: rotate(90deg);
-        color: yellow;
+        color: #f8c12a;
     }
 
     /* Active State for Sidebar */
     .nav-sidebar .nav-link.active {
-        background-color: teal !important;
-        color: yellow !important;
+        background: linear-gradient(135deg, #0e6a77 0%, #167e8d 100%) !important;
+        color: #f8c12a !important;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
     }
     .nav-sidebar .nav-link.active > .nav-indicator {
-        color: yellow !important;
+        color: #f8c12a !important;
         opacity: 1;
+    }
+    .nav-sidebar .nav-link.active > .nav-icon {
+        color: #f8c12a !important;
     }
 
     .nav-sidebar .nav-link > .nav-icon {
         margin-left: 0 !important;
-        margin-right: 0.6rem !important;
+        margin-right: 0.65rem !important;
         font-size: 1rem;
-        width: 1.2rem;
+        width: 1.25rem;
         text-align: center;
+        flex-shrink: 0;
+    }
+
+    /* ============================================================
+       SIDEBAR COLLAPSED / HIDE (MODE MINI)
+       Tampilan ramping, presisi, dan terpusat di tengah
+       ============================================================ */
+    body.sidebar-collapse:not(.sidebar-focused) .main-sidebar:not(:hover) .nav-indicator {
+        display: none !important;
+    }
+
+    body.sidebar-collapse:not(.sidebar-focused) .main-sidebar:not(:hover) .nav-link p {
+        display: none !important;
+    }
+
+    body.sidebar-collapse:not(.sidebar-focused) .main-sidebar:not(:hover) .nav-treeview {
+        display: none !important;
+    }
+
+    body.sidebar-collapse:not(.sidebar-focused) .main-sidebar:not(:hover) .nav-sidebar .nav-link {
+        padding: 0 !important;
+        margin: 4px auto !important;
+        width: 42px !important;
+        height: 40px !important;
+        justify-content: center !important;
+        align-items: center !important;
+        border-radius: 8px !important;
+    }
+
+    body.sidebar-collapse:not(.sidebar-focused) .main-sidebar:not(:hover) .nav-sidebar .nav-link > .nav-icon {
+        margin: 0 !important;
+        font-size: 1.15rem !important;
+        width: auto !important;
+        text-align: center !important;
+    }
+
+    body.sidebar-collapse:not(.sidebar-focused) .main-sidebar:not(:hover) .nav-header {
+        display: none !important;
     }
 </style>
 

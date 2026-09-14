@@ -92,7 +92,8 @@
 
     <a href="{{ $href }}"
        class="nav-link {{ $isActive ? 'active' : '' }}"
-       style="padding-left: {{ $paddingLeft }}rem !important; display: flex; align-items: center;">
+       style="--nav-pad-left: {{ $paddingLeft }}rem;"
+       title="{{ $menu->name }}">
         <i class="nav-indicator {{ $indicator }} mr-2"></i>
         <i class="nav-icon {{ $mainIcon }} mr-2"></i>
         <p class="mb-0" style="flex: 1;">

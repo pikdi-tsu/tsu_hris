@@ -184,8 +184,9 @@
         .dataTables_wrapper .dataTables_length select {
             border-radius: 6px !important;
             border: 1px solid #cbd5e1 !important;
-            height: 31px !important;
-            padding: 2px 8px !important;
+            height: 32px !important;
+            min-width: 80px !important;
+            padding: 2px 28px 2px 10px !important;
         }
 
         .dataTables_wrapper .dataTables_filter input {

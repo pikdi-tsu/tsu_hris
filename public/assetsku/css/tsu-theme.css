@@ -545,19 +545,83 @@ table.dataTable.table-striped tbody tr:nth-of-type(odd) > * {
 }
 
 /* DataTable Controls */
-.dataTables_wrapper .dataTables_length select,
-.dataTables_wrapper .dataTables_filter input {
-    border: 1px solid var(--tsu-primary-light);
-    border-radius: var(--tsu-radius);
-    padding: 0.3rem 0.6rem;
-    font-size: 0.85rem;
-    transition: border-color 0.2s;
+.dataTables_wrapper .dataTables_length {
+    margin-bottom: 0.75rem;
 }
 
-.dataTables_wrapper .dataTables_filter input:focus {
-    border-color: var(--tsu-primary);
-    outline: none;
-    box-shadow: 0 0 0 3px rgba(29, 122, 135, 0.15);
+.dataTables_wrapper .dataTables_length label {
+    font-weight: 500;
+    color: #475569;
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0;
+}
+
+.dataTables_wrapper .dataTables_length select,
+div.dataTables_wrapper div.dataTables_length select {
+    display: inline-block !important;
+    width: auto !important;
+    min-width: 80px !important;
+    height: 32px !important;
+    line-height: 1.5 !important;
+    padding: 2px 28px 2px 10px !important;
+    font-size: 0.85rem !important;
+    font-weight: 500 !important;
+    color: #334155 !important;
+    background-color: #ffffff !important;
+    border: 1px solid #cbd5e1 !important;
+    border-radius: var(--tsu-radius, 6px) !important;
+    cursor: pointer;
+    text-align: left;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    appearance: none !important;
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3e%3cpath fill='none' stroke='%23094b54' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m1 1 4 4 4-4'/%3e%3c/svg%3e") !important;
+    background-repeat: no-repeat !important;
+    background-position: right 10px center !important;
+    background-size: 10px 6px !important;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.dataTables_wrapper .dataTables_length select:focus,
+div.dataTables_wrapper div.dataTables_length select:focus {
+    border-color: var(--tsu-primary, #094b54) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(9, 75, 84, 0.15) !important;
+}
+
+.dataTables_wrapper .dataTables_filter {
+    margin-bottom: 0.75rem;
+}
+
+.dataTables_wrapper .dataTables_filter label {
+    font-weight: 500;
+    color: #475569;
+    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0;
+}
+
+.dataTables_wrapper .dataTables_filter input,
+div.dataTables_wrapper div.dataTables_filter input {
+    border: 1px solid #cbd5e1 !important;
+    border-radius: var(--tsu-radius, 6px) !important;
+    height: 32px !important;
+    padding: 0.25rem 0.75rem !important;
+    font-size: 0.85rem !important;
+    background-color: #ffffff !important;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.dataTables_wrapper .dataTables_filter input:focus,
+div.dataTables_wrapper div.dataTables_filter input:focus {
+    border-color: var(--tsu-primary, #094b54) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(9, 75, 84, 0.15) !important;
 }
 
 /* Pagination */

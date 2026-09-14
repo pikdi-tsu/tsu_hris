@@ -33,8 +33,8 @@
 
 <script>
 (function() {
-    // Menu Index Cache & LocalStorage Key
-    const RECENT_STORAGE_KEY = 'tsu_hris_recent_menus';
+    // Menu Index Cache & LocalStorage Key (Isolasi per User ID agar riwayat tidak tertukar antar user)
+    const RECENT_STORAGE_KEY = 'tsu_hris_recent_menus_{{ auth()->id() ?? 0 }}';
     const MAX_RECENTS = 5;
 
     let tsuMenuItems = [];

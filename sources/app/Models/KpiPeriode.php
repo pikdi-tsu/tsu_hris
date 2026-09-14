@@ -14,25 +14,23 @@ class KpiPeriode extends Model
     protected $fillable = [
         'tahun',
         'nama_periode',
-        'tgl_mulai_target',
-        'tgl_selesai_target',
-        'tgl_mulai_realisasi',
-        'tgl_selesai_realisasi',
-        'status',
+        'tanggal_mulai',
+        'tanggal_selesai',
+        'is_active',
+        'is_locked',
         'keterangan',
-        'created_by',
-        'updated_by',
     ];
 
     protected $casts = [
-        'tgl_mulai_target'     => 'date',
-        'tgl_selesai_target'   => 'date',
-        'tgl_mulai_realisasi'   => 'date',
-        'tgl_selesai_realisasi' => 'date',
+        'tanggal_mulai'   => 'date',
+        'tanggal_selesai' => 'date',
+        'is_active'       => 'boolean',
+        'is_locked'       => 'boolean',
     ];
 
     protected $appends = [
         'status_badge',
+        'kunci_badge',
     ];
 
     public function unitIndikators()
@@ -42,17 +40,23 @@ class KpiPeriode extends Model
 
     public function getStatusBadgeAttribute(): string
     {
-        return match($this->status) {
-            'draft'    => '<span class="badge badge-secondary px-2 py-1"><i class="fas fa-pencil-alt mr-1"></i> Draft</span>',
-            'aktif'    => '<span class="badge badge-success px-2 py-1"><i class="fas fa-check-circle mr-1"></i> Aktif</span>',
-            'terkunci' => '<span class="badge badge-danger px-2 py-1"><i class="fas fa-lock mr-1"></i> Terkunci</span>',
-            default    => '<span class="badge badge-light px-2 py-1">' . htmlspecialchars(ucfirst($this->status)) . '</span>',
-        };
+        if ($this->is_active) {
+            return '<span class="badge" style="background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 9999px; font-weight: 600; padding: 4px 10px;">Periode Aktif</span>';
+        }
+        return '<span class="badge" style="background: rgba(100, 116, 139, 0.1); color: #475569; border: 1px solid rgba(100, 116, 139, 0.25); border-radius: 9999px; font-weight: 600; padding: 4px 10px;">Nonaktif</span>';
+    }
+
+    public function getKunciBadgeAttribute(): string
+    {
+        if ($this->is_locked) {
+            return '<span class="badge" style="background: rgba(239, 68, 68, 0.1); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 9999px; font-weight: 600; padding: 4px 10px;"><i class="fas fa-lock mr-1"></i>Terkunci</span>';
+        }
+        return '<span class="badge" style="background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 9999px; font-weight: 600; padding: 4px 10px;"><i class="fas fa-lock-open mr-1"></i>Terbuka</span>';
     }
 
     public static function getActivePeriode()
     {
-        return self::where('status', 'aktif')->orderBy('tahun', 'desc')->first()
+        return self::where('is_active', 1)->orderBy('tahun', 'desc')->first()
             ?? self::orderBy('tahun', 'desc')->first();
     }
 }

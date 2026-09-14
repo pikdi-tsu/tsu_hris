@@ -27,10 +27,18 @@ class SuratMasukController extends MiddlewareController
     public function index()
     {
         $masterUnits = MasterUnit::orderBy('nama_unit', 'asc')->get();
+        $counts = [
+            'total'       => SuratMasuk::count(),
+            'terdaftar'   => SuratMasuk::where('status', 'terdaftar')->count(),
+            'didisposisi' => SuratMasuk::whereIn('status', ['didisposisi', 'proses_unit'])->count(),
+            'selesai'     => SuratMasuk::where('status', 'selesai')->count(),
+        ];
+
         return view('admin::surat-masuk.index', [
             'title'       => 'Registrasi Surat Masuk & SIKD',
             'menuIcon'    => 'fas fa-inbox',
             'masterUnits' => $masterUnits,
+            'counts'      => $counts,
         ]);
     }
 

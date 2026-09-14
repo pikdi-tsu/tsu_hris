@@ -90,6 +90,62 @@
                 window.location.hash = e.target.hash;
             }
         });
+
+        // --- GLOBAL: Auto scroll sidebar view ke menu yang sedang dibuka & aktif ---
+        function scrollToActiveMenu() {
+            var $sidebar = $('.main-sidebar .sidebar');
+            if (!$sidebar.length) return;
+
+            // Cari nav-link yang aktif di dalam sidebar
+            var $activeLinks = $sidebar.find('.nav-sidebar .nav-link.active');
+            if (!$activeLinks.length) return;
+
+            // Prioritaskan link aktif yang berada di dalam treeview (child paling dalam)
+            var $target = $activeLinks.filter(function () {
+                return $(this).closest('.nav-treeview').length > 0;
+            }).last();
+
+            if (!$target.length) {
+                $target = $activeLinks.last();
+            }
+
+            // Pastikan semua parent treeview terbuka
+            $target.parents('.nav-item').each(function () {
+                var $parentItem = $(this);
+                if ($parentItem.children('.nav-treeview').length) {
+                    $parentItem.addClass('menu-open');
+                    $parentItem.children('.nav-treeview').css('display', 'block');
+                }
+            });
+
+            var targetEl = $target[0];
+            if (!targetEl) return;
+
+            // Cek apakah plugin overlayScrollbars aktif di sidebar
+            var osInstance = typeof $sidebar.overlayScrollbars === 'function' ? $sidebar.overlayScrollbars() : null;
+            if (osInstance && typeof osInstance.scroll === 'function') {
+                osInstance.scroll({ el: targetEl, scroll: { y: 'center' } }, 350);
+            } else {
+                // Fallback ke container .os-viewport atau native sidebar scroll
+                var $viewport = $sidebar.find('.os-viewport');
+                var $container = $viewport.length ? $viewport : $sidebar;
+                if ($container.length && $container[0].scrollHeight > $container[0].clientHeight) {
+                    var containerOffset = $container.offset().top;
+                    var targetOffset = $target.offset().top;
+                    var currentScroll = $container.scrollTop();
+                    var targetScroll = currentScroll + (targetOffset - containerOffset) - ($container.height() / 2) + ($target.outerHeight() / 2);
+                    $container.stop().animate({ scrollTop: Math.max(0, targetScroll) }, 350);
+                } else if (typeof targetEl.scrollIntoView === 'function') {
+                    targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }
+        }
+
+        // Panggil setelah DOM ready dengan delay agar AdminLTE selesai inisialisasi accordion/treeview
+        setTimeout(scrollToActiveMenu, 150);
+        $(window).on('load', function () {
+            setTimeout(scrollToActiveMenu, 100);
+        });
     });
 </script>
 @include('system::components.alert')

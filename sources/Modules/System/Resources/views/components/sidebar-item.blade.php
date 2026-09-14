@@ -101,7 +101,7 @@
     </a>
 
     @if($hasChildren)
-        <ul class="nav nav-treeview">
+        <ul class="nav nav-treeview" style="{{ $isActive ? 'display: block;' : '' }}">
             @foreach ($visibleChildren as $child)
                 @include('system::components.sidebar-item', ['menu' => $child, 'level' => $currentLevel + 1])
             @endforeach

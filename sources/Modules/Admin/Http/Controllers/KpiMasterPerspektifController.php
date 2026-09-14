@@ -19,9 +19,17 @@ class KpiMasterPerspektifController extends MiddlewareController
 
     public function index()
     {
+        $counts = [
+            'total'      => KpiMasterPerspektif::count(),
+            'aktif'      => KpiMasterPerspektif::where('is_active', 1)->count(),
+            'indikator'  => \App\Models\KpiMasterIndikator::count(),
+            'induk'      => \App\Models\KpiMasterIndikator::where('level', 'induk')->count(),
+        ];
+
         return view('admin::kpi.perspektif.index', [
             'title'    => 'Master Perspektif Balanced Scorecard (BSC)',
             'menuIcon' => 'fas fa-layer-group',
+            'counts'   => $counts,
         ]);
     }
 
@@ -31,22 +39,41 @@ class KpiMasterPerspektifController extends MiddlewareController
 
         return DataTables::of($query)
             ->addIndexColumn()
+            ->addColumn('nama_perspektif_fmt', function ($row) {
+                $countText = $row->indikators_count . ' Indikator KPI';
+                return '<div><span class="font-weight-bold text-dark">' . htmlspecialchars($row->nama_perspektif) . '</span></div>' .
+                       '<small class="text-muted"><i class="fas fa-link mr-1"></i>' . $countText . '</small>';
+            })
             ->addColumn('badge_preview', function ($row) {
-                return $row->badge_html;
+                $kode = strtoupper($row->kode ?? '');
+                $style = match($kode) {
+                    'FIN' => 'background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25);',
+                    'CUS' => 'background: rgba(2, 132, 199, 0.1); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.25);',
+                    'INT' => 'background: rgba(139, 92, 246, 0.1); color: #7c3aed; border: 1px solid rgba(139, 92, 246, 0.25);',
+                    'LRN' => 'background: rgba(217, 119, 6, 0.1); color: #b45309; border: 1px solid rgba(217, 119, 6, 0.25);',
+                    default => match($row->warna_badge) {
+                        'success' => 'background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25);',
+                        'info'    => 'background: rgba(2, 132, 199, 0.1); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.25);',
+                        'warning' => 'background: rgba(217, 119, 6, 0.1); color: #b45309; border: 1px solid rgba(217, 119, 6, 0.25);',
+                        'danger'  => 'background: rgba(239, 68, 68, 0.1); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.25);',
+                        default   => 'background: rgba(9, 75, 84, 0.1); color: #094b54; border: 1px solid rgba(9, 75, 84, 0.25);',
+                    }
+                };
+                return '<span class="badge" style="' . $style . ' border-radius: 9999px; font-weight: 600; padding: 4px 10px;">' . htmlspecialchars($row->nama_perspektif) . '</span>';
             })
             ->addColumn('status_badge', function ($row) {
                 return $row->is_active 
-                    ? '<span class="badge badge-success px-2 py-1"><i class="fas fa-check-circle mr-1"></i>Aktif</span>'
-                    : '<span class="badge badge-secondary px-2 py-1"><i class="fas fa-times-circle mr-1"></i>Non-Aktif</span>';
+                    ? '<span class="badge" style="background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 9999px; font-weight: 600; padding: 4px 10px;">Aktif</span>'
+                    : '<span class="badge" style="background: rgba(239, 68, 68, 0.1); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 9999px; font-weight: 600; padding: 4px 10px;">Nonaktif</span>';
             })
             ->addColumn('action', function ($row) {
-                $btn = '<div class="btn-group btn-group-sm" role="group">';
-                $btn .= '<button type="button" class="btn btn-primary btn-edit" data-id="'.$row->id.'" title="Edit"><i class="fas fa-edit"></i></button>';
-                $btn .= '<button type="button" class="btn btn-danger btn-delete" data-id="'.$row->id.'" title="Hapus"><i class="fas fa-trash"></i></button>';
+                $btn = '<div class="d-flex justify-content-center align-items-center" style="gap: 5px;">';
+                $btn .= '<button type="button" class="btn btn-sm btn-outline-primary btn-edit" data-id="'.$row->id.'" title="Edit" style="border-radius: 6px; padding: 3px 8px; font-size: 0.8rem;"><i class="fas fa-pencil-alt"></i></button>';
+                $btn .= '<button type="button" class="btn btn-sm btn-outline-danger btn-delete" data-id="'.$row->id.'" title="Hapus" style="border-radius: 6px; padding: 3px 8px; font-size: 0.8rem;"><i class="fas fa-trash"></i></button>';
                 $btn .= '</div>';
                 return $btn;
             })
-            ->rawColumns(['badge_preview', 'status_badge', 'action'])
+            ->rawColumns(['nama_perspektif_fmt', 'badge_preview', 'status_badge', 'action'])
             ->make(true);
     }
 

@@ -161,6 +161,7 @@
     });
 </script>
 @include('system::components.alert')
+@include('system::template/admin/quick-search')
 @yield('script')
 @stack('scripts')
 

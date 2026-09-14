@@ -25,11 +25,19 @@ class KpiMasterIndikatorController extends MiddlewareController
             ->orderBy('kode_indikator', 'asc')
             ->get();
 
+        $counts = [
+            'total'      => KpiMasterIndikator::count(),
+            'induk'      => KpiMasterIndikator::where('level', 'induk')->count(),
+            'sub'        => KpiMasterIndikator::where('level', 'sub')->count(),
+            'perspektif' => KpiMasterPerspektif::count(),
+        ];
+
         return view('admin::kpi.master-indikator.index', [
             'title'           => 'Kamus Master Indikator KPI',
             'menuIcon'        => 'fas fa-book-reader',
             'perspektifs'     => $perspektifs,
             'indukIndikators' => $indukIndikators,
+            'counts'          => $counts,
         ]);
     }
 
@@ -51,28 +59,41 @@ class KpiMasterIndikatorController extends MiddlewareController
         return DataTables::of($query)
             ->addIndexColumn()
             ->addColumn('perspektif_badge', function ($row) {
-                return $row->perspektif ? $row->perspektif->badge_html : '-';
+                if (!$row->perspektif) return '-';
+                $kode = strtoupper($row->perspektif->kode ?? '');
+                $style = match($kode) {
+                    'FIN' => 'background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25);',
+                    'CUS' => 'background: rgba(2, 132, 199, 0.1); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.25);',
+                    'INT' => 'background: rgba(139, 92, 246, 0.1); color: #7c3aed; border: 1px solid rgba(139, 92, 246, 0.25);',
+                    'LRN' => 'background: rgba(217, 119, 6, 0.1); color: #b45309; border: 1px solid rgba(217, 119, 6, 0.25);',
+                    default => 'background: rgba(9, 75, 84, 0.1); color: #094b54; border: 1px solid rgba(9, 75, 84, 0.25);',
+                };
+                return '<span class="badge" style="' . $style . ' border-radius: 9999px; font-weight: 600; padding: 4px 10px;">' . htmlspecialchars($row->perspektif->nama_perspektif) . '</span>';
             })
             ->addColumn('level_badge', function ($row) {
                 if ($row->level === 'sub') {
-                    return '<span class="badge badge-info"><i class="fas fa-level-down-alt mr-1"></i>Sub-Indikator</span>';
+                    return '<span class="badge" style="background: rgba(99, 102, 241, 0.1); color: #6366f1; border: 1px solid rgba(99, 102, 241, 0.25); border-radius: 9999px; font-weight: 600; padding: 4px 10px;">Sub-Indikator</span>';
                 }
-                return '<span class="badge badge-primary"><i class="fas fa-folder mr-1"></i>Induk (' . $row->sub_indikators_count . ' sub)</span>';
+                return '<span class="badge" style="background: rgba(9, 75, 84, 0.1); color: #094b54; border: 1px solid rgba(9, 75, 84, 0.25); border-radius: 9999px; font-weight: 600; padding: 4px 10px;">Induk (' . $row->sub_indikators_count . ' sub)</span>';
             })
             ->addColumn('parent_name', function ($row) {
                 if ($row->parent) {
-                    return '<small class="text-muted"><i class="fas fa-arrow-up mr-1"></i>' . e($row->parent->kode_indikator) . ' - ' . e($row->parent->nama_indikator) . '</small>';
+                    return '<div class="small font-weight-bold text-dark">[' . e($row->parent->kode_indikator) . ']</div><div class="small text-muted">' . e($row->parent->nama_indikator) . '</div>';
                 }
                 return '<span class="text-muted">-</span>';
             })
             ->addColumn('polaritas_badge', function ($row) {
-                return $row->polaritas_badge;
+                return match(strtolower($row->polaritas ?? 'maximize')) {
+                    'minimize' => '<span class="badge" style="background: rgba(217, 119, 6, 0.1); color: #b45309; border: 1px solid rgba(217, 119, 6, 0.25); border-radius: 9999px; font-weight: 600; padding: 4px 10px;">Minimize</span>',
+                    'stabilize'=> '<span class="badge" style="background: rgba(100, 116, 139, 0.1); color: #475569; border: 1px solid rgba(100, 116, 139, 0.25); border-radius: 9999px; font-weight: 600; padding: 4px 10px;">Stabilize</span>',
+                    default    => '<span class="badge" style="background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 9999px; font-weight: 600; padding: 4px 10px;">Maximize</span>',
+                };
             })
             ->addColumn('action', function ($row) {
-                $btn = '<div class="btn-group btn-group-sm" role="group">';
-                $btn .= '<button type="button" class="btn btn-info btn-detail" data-id="'.$row->id.'" title="Detail"><i class="fas fa-eye"></i></button>';
-                $btn .= '<button type="button" class="btn btn-primary btn-edit" data-id="'.$row->id.'" title="Edit"><i class="fas fa-edit"></i></button>';
-                $btn .= '<button type="button" class="btn btn-danger btn-delete" data-id="'.$row->id.'" title="Hapus"><i class="fas fa-trash"></i></button>';
+                $btn = '<div class="d-flex justify-content-center align-items-center" style="gap: 5px;">';
+                $btn .= '<button type="button" class="btn btn-sm btn-outline-info btn-detail" data-id="'.$row->id.'" title="Detail" style="border-radius: 6px; padding: 3px 8px; font-size: 0.8rem;"><i class="fas fa-eye"></i></button>';
+                $btn .= '<button type="button" class="btn btn-sm btn-outline-primary btn-edit" data-id="'.$row->id.'" title="Edit" style="border-radius: 6px; padding: 3px 8px; font-size: 0.8rem;"><i class="fas fa-pencil-alt"></i></button>';
+                $btn .= '<button type="button" class="btn btn-sm btn-outline-danger btn-delete" data-id="'.$row->id.'" title="Hapus" style="border-radius: 6px; padding: 3px 8px; font-size: 0.8rem;"><i class="fas fa-trash"></i></button>';
                 $btn .= '</div>';
                 return $btn;
             })

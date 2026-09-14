@@ -133,13 +133,27 @@
         }
 
         /* Action Buttons */
+        #table-surat-masuk .btn-group {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
         #table-surat-masuk .btn-group .btn {
             border-radius: 6px !important;
-            margin: 0 2px;
             font-weight: 600;
             font-size: 0.76rem;
-            padding: 4px 9px;
+            height: 31px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 9px;
             transition: all 0.2s ease;
+        }
+
+        #table-surat-masuk .btn-group .btn-icon-only {
+            width: 31px;
+            padding: 0 !important;
         }
 
         #table-surat-masuk .btn-group .btn:hover {

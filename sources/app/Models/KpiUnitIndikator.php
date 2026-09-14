@@ -90,21 +90,21 @@ class KpiUnitIndikator extends Model
     public function getJenisCascadingBadgeAttribute(): string
     {
         return match($this->jenis_cascading) {
-            'Direct'       => '<span class="badge badge-success px-2 py-1"><i class="fas fa-bullseye mr-1"></i> Direct</span>',
-            'Contribution' => '<span class="badge badge-info px-2 py-1"><i class="fas fa-hands-helping mr-1"></i> Contribution</span>',
-            'Enabler'      => '<span class="badge badge-secondary px-2 py-1"><i class="fas fa-tools mr-1"></i> Enabler</span>',
-            default        => '<span class="badge badge-light px-2 py-1">' . htmlspecialchars($this->jenis_cascading ?? 'Direct') . '</span>',
+            'Direct'       => '<span class="badge badge-pill font-weight-bold px-2 py-1" style="background: rgba(9, 75, 84, 0.1); color: #094b54; border: 1px solid rgba(9, 75, 84, 0.25); font-size: 0.78rem;">Direct</span>',
+            'Contribution' => '<span class="badge badge-pill font-weight-bold px-2 py-1" style="background: rgba(99, 102, 241, 0.1); color: #4f46e5; border: 1px solid rgba(99, 102, 241, 0.25); font-size: 0.78rem;">Contribution</span>',
+            'Enabler'      => '<span class="badge badge-pill font-weight-bold px-2 py-1" style="background: rgba(100, 116, 139, 0.1); color: #475569; border: 1px solid rgba(100, 116, 139, 0.25); font-size: 0.78rem;">Enabler</span>',
+            default        => '<span class="badge badge-pill font-weight-bold px-2 py-1" style="background: #f1f5f9; color: #475569; font-size: 0.78rem;">' . htmlspecialchars($this->jenis_cascading ?? 'Direct') . '</span>',
         };
     }
 
     public function getStatusMonevBadgeAttribute(): string
     {
         return match($this->status_monev) {
-            'Terevaluasi'   => '<span class="badge badge-success px-2 py-1"><i class="fas fa-check-double mr-1"></i> Terevaluasi</span>',
-            'Tercapai'      => '<span class="badge badge-primary px-2 py-1"><i class="fas fa-check-circle mr-1"></i> Tercapai</span>',
-            'Tidak Tercapai' => '<span class="badge badge-danger px-2 py-1"><i class="fas fa-times-circle mr-1"></i> Tidak Tercapai</span>',
-            'Draft'         => '<span class="badge badge-warning px-2 py-1 text-dark"><i class="fas fa-pencil-alt mr-1"></i> Draft</span>',
-            default         => '<span class="badge badge-light border text-muted px-2 py-1"><i class="fas fa-clock mr-1"></i> Belum Mengisi</span>',
+            'Terevaluasi'   => '<span class="badge badge-pill font-weight-bold px-2 py-1" style="background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25); font-size: 0.78rem;">Terevaluasi</span>',
+            'Tercapai'      => '<span class="badge badge-pill font-weight-bold px-2 py-1" style="background: rgba(2, 132, 199, 0.1); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.25); font-size: 0.78rem;">Tercapai</span>',
+            'Tidak Tercapai' => '<span class="badge badge-pill font-weight-bold px-2 py-1" style="background: rgba(239, 68, 68, 0.1); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.25); font-size: 0.78rem;">Tidak Tercapai</span>',
+            'Draft'         => '<span class="badge badge-pill font-weight-bold px-2 py-1" style="background: rgba(217, 119, 6, 0.1); color: #b45309; border: 1px solid rgba(217, 119, 6, 0.25); font-size: 0.78rem;">Draft</span>',
+            default         => '<span class="badge badge-pill font-weight-bold px-2 py-1" style="background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; font-size: 0.78rem;">Belum Mengisi</span>',
         };
     }
 
@@ -116,13 +116,13 @@ class KpiUnitIndikator extends Model
 
         $val = number_format($this->capaian_persen, 1);
         if ($this->capaian_persen >= 100) {
-            return '<span class="badge badge-success px-2 py-1 font-weight-bold" style="font-size: 13px;">' . $val . '%</span>';
+            return '<span class="badge badge-pill font-weight-bold px-2 py-1" style="background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25); font-size: 0.82rem;">' . $val . '%</span>';
         } elseif ($this->capaian_persen >= 80) {
-            return '<span class="badge badge-info px-2 py-1 font-weight-bold" style="font-size: 13px;">' . $val . '%</span>';
+            return '<span class="badge badge-pill font-weight-bold px-2 py-1" style="background: rgba(2, 132, 199, 0.1); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.25); font-size: 0.82rem;">' . $val . '%</span>';
         } elseif ($this->capaian_persen >= 60) {
-            return '<span class="badge badge-warning text-dark px-2 py-1 font-weight-bold" style="font-size: 13px;">' . $val . '%</span>';
+            return '<span class="badge badge-pill font-weight-bold px-2 py-1" style="background: rgba(217, 119, 6, 0.1); color: #b45309; border: 1px solid rgba(217, 119, 6, 0.25); font-size: 0.82rem;">' . $val . '%</span>';
         } else {
-            return '<span class="badge badge-danger px-2 py-1 font-weight-bold" style="font-size: 13px;">' . $val . '%</span>';
+            return '<span class="badge badge-pill font-weight-bold px-2 py-1" style="background: rgba(239, 68, 68, 0.1); color: #dc2626; border: 1px solid rgba(239, 68, 68, 0.25); font-size: 0.82rem;">' . $val . '%</span>';
         }
     }
 

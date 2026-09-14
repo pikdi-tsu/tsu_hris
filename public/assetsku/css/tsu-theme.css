@@ -2103,6 +2103,34 @@ body.tsu-search-modal-open {
     padding: 0.35rem 0.65rem 0.45rem;
 }
 
+.tsu-search-section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.35rem 0.65rem 0.45rem;
+}
+
+.tsu-search-section-header .tsu-search-section-label {
+    padding: 0;
+}
+
+.tsu-search-clear-history-btn {
+    background: transparent;
+    border: none;
+    color: #8da4a8;
+    font-size: 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 0;
+    transition: color 0.15s ease;
+    outline: none !important;
+}
+
+.tsu-search-clear-history-btn:hover {
+    color: #dc2626;
+    text-decoration: underline;
+}
+
 /* Result Items */
 .tsu-search-item {
     display: flex;
@@ -2172,6 +2200,21 @@ body.tsu-search-modal-open {
 
 .tsu-search-item:hover .tsu-item-active-badge,
 .tsu-search-item.is-selected .tsu-item-active-badge {
+    background: rgba(255, 255, 255, 0.25);
+    color: #f8c12a;
+}
+
+.tsu-item-recent-badge {
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 10px;
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.tsu-search-item:hover .tsu-item-recent-badge,
+.tsu-search-item.is-selected .tsu-item-recent-badge {
     background: rgba(255, 255, 255, 0.25);
     color: #f8c12a;
 }

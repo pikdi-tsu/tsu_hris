@@ -33,7 +33,10 @@
 
 <script>
 (function() {
-    // Menu Index Cache
+    // Menu Index Cache & LocalStorage Key
+    const RECENT_STORAGE_KEY = 'tsu_hris_recent_menus';
+    const MAX_RECENTS = 5;
+
     let tsuMenuItems = [];
     let isIndexed = false;
     let selectedIndex = 0;
@@ -45,6 +48,45 @@
     let $clearBtn = null;
     let $resultsWrapper = null;
     let $triggerBtn = null;
+
+    // Helper: LocalStorage Management untuk Terakhir Dibuka
+    function getRecentMenus() {
+        try {
+            let data = localStorage.getItem(RECENT_STORAGE_KEY);
+            return data ? JSON.parse(data) : [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function saveRecentMenu(item) {
+        if (!item || !item.url) return;
+        let recents = getRecentMenus();
+        // Hapus duplikat berdasarkan URL
+        recents = recents.filter(function(r) {
+            return r.url !== item.url;
+        });
+        // Sisipkan di posisi teratas
+        recents.unshift({
+            title: item.title,
+            url: item.url,
+            category: item.category,
+            icon: item.icon,
+            timestamp: Date.now()
+        });
+        if (recents.length > MAX_RECENTS) {
+            recents = recents.slice(0, MAX_RECENTS);
+        }
+        try {
+            localStorage.setItem(RECENT_STORAGE_KEY, JSON.stringify(recents));
+        } catch (e) {}
+    }
+
+    function clearRecentMenus() {
+        try {
+            localStorage.removeItem(RECENT_STORAGE_KEY);
+        } catch (e) {}
+    }
 
     function initQuickSearch() {
         $modal = $('#tsuQuickSearchModal');
@@ -61,6 +103,9 @@
         if (isMac) {
             $('.kbd-ctrl').text('⌘');
         }
+
+        // Index menu awal dan rekam halaman yang sedang dibuka saat ini
+        indexSidebarMenus();
 
         // Event trigger tombol navbar
         $triggerBtn.on('click', function(e) {
@@ -91,10 +136,23 @@
             renderResults('');
         });
 
+        // Delegated click pada tombol Hapus Riwayat
+        $resultsWrapper.on('click', '#tsuClearHistoryBtn', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            clearRecentMenus();
+            renderResults($input.val());
+        });
+
         // Delegated click pada item hasil pencarian
         $resultsWrapper.on('click', '.tsu-search-item', function(e) {
             e.preventDefault();
             let url = $(this).data('url');
+            let itemIndex = $(this).data('index');
+            let item = findItemByUrl(url);
+            if (item) {
+                saveRecentMenu(item);
+            }
             if (url) {
                 window.location.href = url;
             }
@@ -104,7 +162,7 @@
         $resultsWrapper.on('mouseenter', '.tsu-search-item', function() {
             $resultsWrapper.find('.tsu-search-item').removeClass('is-selected');
             $(this).addClass('is-selected');
-            selectedIndex = $(this).data('index');
+            selectedIndex = parseInt($(this).attr('data-index')) || 0;
         });
 
         // Global Keyboard Shortcut: Ctrl + K (or Cmd + K) & Escape & Navigasi
@@ -136,6 +194,10 @@
                     let $selected = $resultsWrapper.find('.tsu-search-item.is-selected');
                     if ($selected.length) {
                         let url = $selected.data('url');
+                        let item = findItemByUrl(url);
+                        if (item) {
+                            saveRecentMenu(item);
+                        }
                         if (url) {
                             window.location.href = url;
                         }
@@ -143,6 +205,14 @@
                 }
             }
         });
+    }
+
+    function findItemByUrl(url) {
+        if (!url) return null;
+        for (let i = 0; i < tsuMenuItems.length; i++) {
+            if (tsuMenuItems[i].url === url) return tsuMenuItems[i];
+        }
+        return null;
     }
 
     // Index menu dari DOM Sidebar (Zero-Latency, Hak Akses RBAC Otomatis Terpenuhi)
@@ -185,7 +255,6 @@
             let iconClass = 'fas fa-circle-notch';
             let $icon = $a.find('.nav-icon');
             if ($icon.length) {
-                // Ambil kelas ikon
                 let cls = $icon.attr('class') || '';
                 cls = cls.replace('nav-icon', '').replace('mr-2', '').trim();
                 if (cls) iconClass = cls;
@@ -193,13 +262,20 @@
 
             let isActive = $a.hasClass('active');
 
-            tsuMenuItems.push({
+            let menuItem = {
                 title: title,
                 url: href,
                 category: category,
                 icon: iconClass,
                 isActive: isActive
-            });
+            };
+
+            tsuMenuItems.push(menuItem);
+
+            // Jika menu ini adalah halaman yang sedang dibuka saat ini, simpan ke recent menus
+            if (isActive) {
+                saveRecentMenu(menuItem);
+            }
         });
 
         isIndexed = true;
@@ -240,7 +316,7 @@
         }
 
         $items.removeClass('is-selected');
-        let $currentItem = $items.eq(selectedIndex).addClass('is-selected');
+        let $currentItem = $items.filter(`[data-index="${selectedIndex}"]`).addClass('is-selected');
 
         // Scroll to active item jika di luar view
         if ($currentItem.length) {
@@ -276,24 +352,121 @@
         query = (query || '').trim().toLowerCase();
         selectedIndex = 0;
 
-        let filtered = [];
+        let html = '';
+        let globalIndex = 0;
 
         if (!query) {
-            // Kondisi Awal: Tampilkan menu yang sedang aktif + menu rekomendasi
-            // Urutkan: menu aktif dulu, lalu menu umum/frequent
-            let activeItems = tsuMenuItems.filter(item => item.isActive);
-            let otherItems = tsuMenuItems.filter(item => !item.isActive);
-            filtered = activeItems.concat(otherItems).slice(0, 12);
+            // === KONDISI AWAL (BELUM NGETIK) ===
+            // 1. Ambil Menu Terakhir Dibuka dari LocalStorage
+            let rawRecents = getRecentMenus();
+            let validRecents = [];
+            let recentUrls = {};
+
+            rawRecents.forEach(function(r) {
+                let found = findItemByUrl(r.url);
+                if (found) {
+                    validRecents.push({
+                        title: found.title,
+                        url: found.url,
+                        category: found.category,
+                        icon: found.icon,
+                        isActive: found.isActive,
+                        isRecent: true
+                    });
+                    recentUrls[found.url] = true;
+                }
+            });
+
+            // Bagian A: Menu Terakhir Dibuka (Jika Ada)
+            if (validRecents.length > 0) {
+                html += `
+                    <div class="tsu-search-section-header">
+                        <div class="tsu-search-section-label">
+                            <i class="far fa-clock mr-1 text-warning"></i> Terakhir Dibuka
+                        </div>
+                        <button type="button" class="tsu-search-clear-history-btn" id="tsuClearHistoryBtn" title="Hapus riwayat menu terakhir dibuka">
+                            <i class="fas fa-trash-alt mr-1"></i> Hapus Riwayat
+                        </button>
+                    </div>
+                `;
+
+                validRecents.forEach(function(item) {
+                    let isSelectedClass = globalIndex === 0 ? 'is-selected' : '';
+                    let badgeHtml = item.isActive 
+                        ? '<span class="tsu-item-active-badge">Sedang Dibuka</span>' 
+                        : '<span class="tsu-item-recent-badge"><i class="far fa-clock mr-1"></i> Riwayat</span>';
+
+                    html += `
+                        <a href="${item.url}" class="tsu-search-item ${isSelectedClass}" data-index="${globalIndex}" data-url="${item.url}">
+                            <div class="tsu-search-item-icon">
+                                <i class="${item.icon}"></i>
+                            </div>
+                            <div class="tsu-search-item-info">
+                                <div class="tsu-search-item-title">
+                                    ${escapeHtml(item.title)}
+                                    ${badgeHtml}
+                                </div>
+                                <div class="tsu-search-item-category">
+                                    ${escapeHtml(item.category)}
+                                </div>
+                            </div>
+                            <div class="tsu-search-item-action">
+                                <span class="tsu-item-enter-hint"><kbd>↵</kbd></span>
+                            </div>
+                        </a>
+                    `;
+                    globalIndex++;
+                });
+            }
+
+            // Bagian B: Menu Rekomendasi / Menu Lainnya
+            let otherItems = tsuMenuItems.filter(function(item) {
+                return !recentUrls[item.url];
+            }).slice(0, validRecents.length > 0 ? 6 : 10);
+
+            if (otherItems.length > 0) {
+                let otherLabel = validRecents.length > 0 
+                    ? '<i class="fas fa-compass mr-1 text-info"></i> Menu Rekomendasi' 
+                    : '<i class="fas fa-star mr-1 text-warning"></i> Menu Rekomendasi & Akses Cepat';
+
+                html += `<div class="tsu-search-section-label ${validRecents.length > 0 ? 'mt-2' : ''}">${otherLabel}</div>`;
+
+                otherItems.forEach(function(item) {
+                    let isSelectedClass = globalIndex === 0 ? 'is-selected' : '';
+                    let badgeHtml = item.isActive ? '<span class="tsu-item-active-badge">Sedang Dibuka</span>' : '';
+
+                    html += `
+                        <a href="${item.url}" class="tsu-search-item ${isSelectedClass}" data-index="${globalIndex}" data-url="${item.url}">
+                            <div class="tsu-search-item-icon">
+                                <i class="${item.icon}"></i>
+                            </div>
+                            <div class="tsu-search-item-info">
+                                <div class="tsu-search-item-title">
+                                    ${escapeHtml(item.title)}
+                                    ${badgeHtml}
+                                </div>
+                                <div class="tsu-search-item-category">
+                                    ${escapeHtml(item.category)}
+                                </div>
+                            </div>
+                            <div class="tsu-search-item-action">
+                                <span class="tsu-item-enter-hint"><kbd>↵</kbd></span>
+                            </div>
+                        </a>
+                    `;
+                    globalIndex++;
+                });
+            }
         } else {
-            // Pencarian fuzzy/substring
-            filtered = tsuMenuItems.filter(item => {
+            // === KONDISI SEDANG MENGETIK KATA KUNCI ===
+            let filtered = tsuMenuItems.filter(function(item) {
                 let matchTitle = item.title.toLowerCase().indexOf(query) !== -1;
                 let matchCategory = item.category.toLowerCase().indexOf(query) !== -1;
                 return matchTitle || matchCategory;
             });
 
             // Ranking: Yang judulnya diawali kata kunci ditaruh di atas
-            filtered.sort((a, b) => {
+            filtered.sort(function(a, b) {
                 let aStarts = a.title.toLowerCase().indexOf(query) === 0 ? 1 : 0;
                 let bStarts = b.title.toLowerCase().indexOf(query) === 0 ? 1 : 0;
                 if (aStarts !== bStarts) return bStarts - aStarts;
@@ -302,46 +475,46 @@
                 let bTitleMatch = b.title.toLowerCase().indexOf(query) !== -1 ? 1 : 0;
                 return bTitleMatch - aTitleMatch;
             });
-        }
 
-        if (filtered.length === 0) {
-            $resultsWrapper.html(`
-                <div class="tsu-search-empty">
-                    <div class="tsu-empty-icon"><i class="fas fa-search-minus"></i></div>
-                    <div class="tsu-empty-title">Menu tidak ditemukan</div>
-                    <div class="tsu-empty-desc">Tidak ada menu yang sesuai dengan kata kunci "<strong>${escapeHtml(query)}</strong>". Coba kata kunci lain atau periksa hak akses menu Anda.</div>
-                </div>
-            `);
-            return;
-        }
-
-        let sectionLabel = query ? `Hasil Pencarian (${filtered.length} menu)` : 'Menu Rekomendasi & Akses Cepat';
-        let html = `<div class="tsu-search-section-label">${sectionLabel}</div>`;
-
-        filtered.forEach((item, index) => {
-            let isSelectedClass = index === 0 ? 'is-selected' : '';
-            let activeBadge = item.isActive ? '<span class="tsu-item-active-badge">Sedang Dibuka</span>' : '';
-
-            html += `
-                <a href="${item.url}" class="tsu-search-item ${isSelectedClass}" data-index="${index}" data-url="${item.url}">
-                    <div class="tsu-search-item-icon">
-                        <i class="${item.icon}"></i>
+            if (filtered.length === 0) {
+                $resultsWrapper.html(`
+                    <div class="tsu-search-empty">
+                        <div class="tsu-empty-icon"><i class="fas fa-search-minus"></i></div>
+                        <div class="tsu-empty-title">Menu tidak ditemukan</div>
+                        <div class="tsu-empty-desc">Tidak ada menu yang sesuai dengan kata kunci "<strong>${escapeHtml(query)}</strong>". Coba kata kunci lain atau periksa hak akses menu Anda.</div>
                     </div>
-                    <div class="tsu-search-item-info">
-                        <div class="tsu-search-item-title">
-                            ${highlightText(item.title, query)}
-                            ${activeBadge}
+                `);
+                return;
+            }
+
+            html += `<div class="tsu-search-section-label"><i class="fas fa-search mr-1 text-info"></i> Hasil Pencarian (${filtered.length} menu)</div>`;
+
+            filtered.forEach(function(item) {
+                let isSelectedClass = globalIndex === 0 ? 'is-selected' : '';
+                let activeBadge = item.isActive ? '<span class="tsu-item-active-badge">Sedang Dibuka</span>' : '';
+
+                html += `
+                    <a href="${item.url}" class="tsu-search-item ${isSelectedClass}" data-index="${globalIndex}" data-url="${item.url}">
+                        <div class="tsu-search-item-icon">
+                            <i class="${item.icon}"></i>
                         </div>
-                        <div class="tsu-search-item-category">
-                            ${highlightText(item.category, query)}
+                        <div class="tsu-search-item-info">
+                            <div class="tsu-search-item-title">
+                                ${highlightText(item.title, query)}
+                                ${activeBadge}
+                            </div>
+                            <div class="tsu-search-item-category">
+                                ${highlightText(item.category, query)}
+                            </div>
                         </div>
-                    </div>
-                    <div class="tsu-search-item-action">
-                        <span class="tsu-item-enter-hint"><kbd>↵</kbd></span>
-                    </div>
-                </a>
-            `;
-        });
+                        <div class="tsu-search-item-action">
+                            <span class="tsu-item-enter-hint"><kbd>↵</kbd></span>
+                        </div>
+                    </a>
+                `;
+                globalIndex++;
+            });
+        }
 
         $resultsWrapper.html(html);
     }

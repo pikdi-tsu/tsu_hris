@@ -146,6 +146,18 @@
         $(window).on('load', function () {
             setTimeout(scrollToActiveMenu, 100);
         });
+
+        // --- GLOBAL: Dynamic shadow for sticky page header on scroll ---
+        var $pageHeader = $('.tsu-page-header, .content-header');
+        if ($pageHeader.length) {
+            $(window).on('scroll', function () {
+                if ($(window).scrollTop() > 10) {
+                    $pageHeader.addClass('is-stuck');
+                } else {
+                    $pageHeader.removeClass('is-stuck');
+                }
+            });
+        }
     });
 </script>
 @include('system::components.alert')

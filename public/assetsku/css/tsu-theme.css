@@ -50,14 +50,36 @@
 /* ============================================================
    2. PAGE HEADER (.tsu-page-header)
    Menggantikan/override .content-header AdminLTE
+   Sticky Header Layout di bawah Top Navbar AdminLTE
    ============================================================ */
 .content-header,
 .tsu-page-header {
-    background: #ffffff;
+    position: -webkit-sticky;
+    position: sticky;
+    top: 0;
+    z-index: 1020;
+    background: #ffffff !important;
     border-bottom: 2px solid var(--tsu-primary-light);
-    padding: 1rem 1.5rem !important;
+    padding: 0.85rem 1.5rem !important;
     margin-bottom: 1.5rem !important;
-    box-shadow: 0 2px 6px rgba(9, 75, 84, 0.06);
+    box-shadow: 0 3px 10px rgba(9, 75, 84, 0.07);
+    transition: box-shadow 0.25s ease, padding 0.25s ease;
+}
+
+body.layout-navbar-fixed .content-header,
+body.layout-navbar-fixed .tsu-page-header {
+    top: calc(3.5rem + 1px);
+}
+
+.tsu-page-header.is-stuck {
+    box-shadow: 0 4px 16px rgba(9, 75, 84, 0.13) !important;
+}
+
+@media (max-width: 575.98px) {
+    .content-header,
+    .tsu-page-header {
+        padding: 0.75rem 1rem !important;
+    }
 }
 
 .tsu-page-header__title {

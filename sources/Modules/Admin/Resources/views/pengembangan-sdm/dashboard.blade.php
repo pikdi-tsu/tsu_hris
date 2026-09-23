@@ -27,6 +27,37 @@
             float: none !important;
         }
 
+        /* TSU DASHBOARD NAV PILLS */
+        .tsu-nav-pills-wrap {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 6px;
+            border: 1px solid var(--tsu-border);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+            margin-bottom: 1.5rem;
+        }
+
+        .tsu-nav-pills-wrap .nav-pills .nav-link {
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--tsu-text-muted);
+            padding: 0.65rem 1.5rem;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        .tsu-nav-pills-wrap .nav-pills .nav-link.active {
+            background: linear-gradient(135deg, #094b54 0%, #0c6170 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(9, 75, 84, 0.25);
+        }
+
+        .tsu-nav-pills-wrap .nav-pills .nav-link:hover:not(.active) {
+            background: #f1f5f9;
+            color: var(--tsu-text-main);
+        }
+
         /* STAT CARDS */
         .tsu-stat-grid-sdm {
             display: grid;
@@ -82,6 +113,10 @@
             background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
         }
 
+        .tsu-stat-card--jafung {
+            background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+        }
+
         .tsu-stat-card__watermark {
             position: absolute;
             right: 1.25rem;
@@ -107,6 +142,81 @@
             margin-bottom: 0;
             font-weight: 500;
             color: #ffffff;
+        }
+
+        /* JABFUNG STATUS CARDS */
+        .jabfung-status-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+        }
+
+        @media (max-width: 991.98px) {
+            .jabfung-status-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 575.98px) {
+            .jabfung-status-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .jabfung-status-card {
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            padding: 1rem 1.25rem;
+            background: #ffffff;
+            transition: all 0.2s ease;
+            position: relative;
+            cursor: pointer;
+        }
+
+        .jabfung-status-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.06);
+        }
+
+        .jabfung-status-card--kuning {
+            border-left: 5px solid #eab308;
+            background: linear-gradient(180deg, #fefce8 0%, #ffffff 100%);
+        }
+
+        .jabfung-status-card--orange {
+            border-left: 5px solid #f97316;
+            background: linear-gradient(180deg, #fff7ed 0%, #ffffff 100%);
+        }
+
+        .jabfung-status-card--merah {
+            border-left: 5px solid #ef4444;
+            background: linear-gradient(180deg, #fef2f2 0%, #ffffff 100%);
+        }
+
+        .jabfung-status-card--hijau {
+            border-left: 5px solid #10b981;
+            background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 100%);
+        }
+
+        .jabfung-status-card__count {
+            font-size: 1.7rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .jabfung-status-card__label {
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .jabfung-status-card__desc {
+            font-size: 0.76rem;
+            color: #64748b;
+            line-height: 1.35;
+            margin-top: 0.35rem;
         }
 
         /* BUTTONS */
@@ -204,18 +314,18 @@
 
 @section('content')
     <x-tsu-page-header
-        title="Dashboard & Rekapitulasi Pengembangan SDM"
-        subtitle="Road Map Pengembangan Kualifikasi & Kompetensi Dosen & Tendik (2026 - 2030)"
+        title="Dashboard Development"
+        subtitle="Road Map & Pemantauan Kualifikasi, Jabatan Fungsional, & Kompetensi (Dosen & Tendik)"
         icon="fas fa-chart-line"
         :breadcrumb="true"
     >
         <x-slot name="actions">
             <div class="d-flex align-items-center" style="gap: 8px;">
                 <a href="{{ route('admin.pengembangan-sdm.dosen') }}" class="btn btn-sm btn-outline-secondary" style="border-radius: 8px; font-weight: 600;">
-                    <i class="fas fa-chalkboard-teacher mr-1"></i> Road Map Dosen
+                    <i class="fas fa-chalkboard-teacher mr-1"></i> Roadmap Dosen
                 </a>
                 <a href="{{ route('admin.pengembangan-sdm.tendik') }}" class="btn btn-sm tsu-btn-create">
-                    <i class="fas fa-users-cog mr-1"></i> Road Map Tendik
+                    <i class="fas fa-users-cog mr-1"></i> Roadmap Tendik
                 </a>
             </div>
         </x-slot>
@@ -224,60 +334,7 @@
     <section class="content">
         <div class="container-fluid">
 
-            <!-- Top KPI Cards (4 Signature TSU Stat Cards) -->
-            <div class="tsu-stat-grid-sdm">
-                <div class="tsu-stat-card tsu-stat-card--dosen">
-                    <i class="fas fa-user-graduate tsu-stat-card__watermark"></i>
-                    <span class="tsu-stat-card__label text-uppercase font-weight-bold" style="letter-spacing: 0.5px;">Total Dosen Tetap</span>
-                    <div class="tsu-stat-card__value mt-1 mb-1">
-                        {{ $kpi['total_dosen'] ?? 0 }} <small style="font-size: 1.1rem; opacity: 0.9;">Dosen</small>
-                    </div>
-                    <div>
-                        <span class="badge badge-pill font-weight-bold px-2 py-1" style="background: rgba(255, 255, 255, 0.2); color: #ffffff; font-size: 0.78rem;">
-                            {{ $kpi['total_prodi'] ?? 10 }} Program Studi
-                        </span>
-                    </div>
-                </div>
-
-                <div class="tsu-stat-card tsu-stat-card--target-s3">
-                    <i class="fas fa-award tsu-stat-card__watermark"></i>
-                    <span class="tsu-stat-card__label text-uppercase font-weight-bold" style="letter-spacing: 0.5px;">Target Doktor (S3) 2030</span>
-                    <div class="tsu-stat-card__value mt-1 mb-1">
-                        {{ $kpi['dosen_s3_2030'] ?? 0 }} <small style="font-size: 1.1rem; opacity: 0.9;">({{ $kpi['persen_s3_2030'] ?? 0 }}%)</small>
-                    </div>
-                    <small style="opacity: 0.95; font-size: 0.8rem;">
-                        <i class="fas fa-arrow-up mr-1"></i> Saat Ini (2026): {{ $kpi['dosen_s3_2026'] ?? 0 }} ({{ $kpi['persen_s3_2026'] ?? 0 }}%)
-                    </small>
-                </div>
-
-                <div class="tsu-stat-card tsu-stat-card--tendik">
-                    <i class="fas fa-user-tie tsu-stat-card__watermark"></i>
-                    <span class="tsu-stat-card__label text-uppercase font-weight-bold" style="letter-spacing: 0.5px;">Total Tendik</span>
-                    <div class="tsu-stat-card__value mt-1 mb-1">
-                        {{ $kpi['total_tendik'] ?? 0 }} <small style="font-size: 1.1rem; opacity: 0.9;">Pegawai</small>
-                    </div>
-                    <div>
-                        <span class="badge badge-pill font-weight-bold px-2 py-1" style="background: rgba(255, 255, 255, 0.2); color: #ffffff; font-size: 0.78rem;">
-                            {{ count($tendik_breakdown) }} Unit Kerja
-                        </span>
-                    </div>
-                </div>
-
-                <div class="tsu-stat-card tsu-stat-card--studi">
-                    <i class="fas fa-book-reader tsu-stat-card__watermark"></i>
-                    <span class="tsu-stat-card__label text-uppercase font-weight-bold" style="letter-spacing: 0.5px;">Dosen Sedang Studi (SS)</span>
-                    <div class="tsu-stat-card__value mt-1 mb-1">
-                        {{ $kpi['dosen_ss_2026'] ?? 0 }} <small style="font-size: 1.1rem; opacity: 0.9;">Dosen</small>
-                    </div>
-                    <div>
-                        <span class="badge badge-pill font-weight-bold px-2 py-1" style="background: rgba(255, 255, 255, 0.2); color: #ffffff; font-size: 0.78rem;">
-                            {{ $kpi['total_dn'] ?? 0 }} DN / {{ $kpi['total_ln'] ?? 0 }} LN
-                        </span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Filter Bar: Periode Selection (Di bawah Panduan) -->
+            <!-- Filter Bar: Periode Selection -->
             <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
                 <div class="card-body p-3">
                     <form method="GET" action="{{ route('admin.pengembangan-sdm.dashboard') }}" class="row align-items-center justify-content-between">
@@ -302,495 +359,700 @@
                 </div>
             </div>
 
-            <!-- Charts Row: Dosen -->
-            <div class="row">
-                <!-- Status Aktif Studi Bar Chart -->
-                <div class="col-lg-7 col-12 mb-4">
-                    <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden;">
-                        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center" style="border-bottom: 1px solid var(--tsu-border);">
-                            <h5 class="card-title font-weight-bold text-dark mb-0" style="font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
-                                <i class="fas fa-balance-scale" style="color: var(--tsu-primary);"></i> Status Studi Lanjut Dosen (SS vs TSS) per Prodi (2026)
-                            </h5>
-                            <span class="badge badge-pill font-weight-bold px-2 py-1 ml-auto" style="background: rgba(9, 75, 84, 0.1); color: #094b54; border: 1px solid rgba(9, 75, 84, 0.25); font-size: 0.78rem;">
-                                {{ count($prodi_breakdown) }} Program Studi
-                            </span>
-                        </div>
-                        <div class="card-body p-3">
-                            <div class="chart-container">
-                                <canvas id="chartKesesuaian"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Proyeksi S3 Area Chart -->
-                <div class="col-lg-5 col-12 mb-4">
-                    <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden;">
-                        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center" style="border-bottom: 1px solid var(--tsu-border);">
-                            <h5 class="card-title font-weight-bold text-dark mb-0" style="font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
-                                <i class="fas fa-chart-area text-success"></i> Proyeksi Kualifikasi S3 (2026 - 2030)
-                            </h5>
-                            <span class="badge badge-pill font-weight-bold px-2 py-1 ml-auto" style="background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25); font-size: 0.78rem;">
-                                Target Renstra
-                            </span>
-                        </div>
-                        <div class="card-body p-3">
-                            <div class="chart-container">
-                                <canvas id="chartProyeksiS3"></canvas>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <!-- TABS NAV: Dosen vs Tendik -->
+            <div class="tsu-nav-pills-wrap">
+                <ul class="nav nav-pills" id="dashboardDevTab" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="dosen-tab" data-toggle="pill" href="#tab-dosen" role="tab" aria-controls="tab-dosen" aria-selected="true">
+                            <i class="fas fa-chalkboard-teacher mr-2"></i> Roadmap & Kualifikasi Dosen
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="tendik-tab" data-toggle="pill" href="#tab-tendik" role="tab" aria-controls="tab-tendik" aria-selected="false">
+                            <i class="fas fa-users-cog mr-2"></i> Roadmap & Kualifikasi Tenaga Kependidikan (Tendik)
+                        </a>
+                    </li>
+                </ul>
             </div>
 
-            <!-- 10 Program Studi Breakdown Table -->
-            <div class="row mb-4">
-                <div class="col-12">
-                    <div class="card border-0 shadow-sm" style="border-radius: 12px; overflow: hidden;">
-                        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center" style="border-bottom: 1px solid var(--tsu-border);">
+            <div class="tab-content" id="dashboardDevTabContent">
+
+                <!-- ========================================== -->
+                <!-- TAB 1: DOSEN -->
+                <!-- ========================================== -->
+                <div class="tab-pane fade show active" id="tab-dosen" role="tabpanel" aria-labelledby="dosen-tab">
+
+                    <!-- Top KPI Cards Dosen -->
+                    <div class="tsu-stat-grid-sdm">
+                        <div class="tsu-stat-card tsu-stat-card--dosen">
+                            <i class="fas fa-user-graduate tsu-stat-card__watermark"></i>
+                            <span class="tsu-stat-card__label text-uppercase font-weight-bold" style="letter-spacing: 0.5px;">Total Dosen Tetap</span>
+                            <div class="tsu-stat-card__value mt-1 mb-1">
+                                {{ $kpi['total_dosen'] ?? 0 }} <small style="font-size: 1.1rem; opacity: 0.9;">Dosen</small>
+                            </div>
                             <div>
-                                <h5 class="card-title font-weight-bold text-dark mb-0" style="font-size: 1rem; display: flex; align-items: center; gap: 8px;">
-                                    <i class="fas fa-university" style="color: var(--tsu-primary);"></i> Rekapitulasi Road Map 10 Program Studi (Dosen)
-                                </h5>
-                                <small class="text-muted">Proyeksi kualifikasi doktor (S3) multi-tahun dan status aktif studi lanjut dosen</small>
-                            </div>
-                            <div class="ml-auto">
-                                <a href="{{ route('admin.pengembangan-sdm.dosen') }}" class="btn btn-sm btn-outline-primary font-weight-bold" style="border-radius: 8px;">
-                                    <i class="fas fa-external-link-alt mr-1"></i> Buka Lembar Kerja Detail
-                                </a>
+                                <span class="badge badge-pill font-weight-bold px-2 py-1" style="background: rgba(255, 255, 255, 0.2); color: #ffffff; font-size: 0.78rem;">
+                                    {{ $kpi['total_prodi'] ?? 10 }} Program Studi
+                                </span>
                             </div>
                         </div>
-                        <div class="table-responsive">
-                            <table class="table table-hover table-bordered table-prodi mb-0">
-                                <thead>
-                                    <tr>
-                                        <th rowspan="2" style="width: 40px;">No</th>
-                                        <th rowspan="2">Program Studi</th>
-                                        <th rowspan="2" style="width: 80px;">Total Dosen</th>
-                                        <th colspan="5">Proyeksi Dosen Bergelar Doktor (S3) per Tahun</th>
-                                        <th colspan="3">Status Studi 2026</th>
-                                        <th rowspan="2" style="width: 90px;">Aksi</th>
-                                    </tr>
-                                    <tr class="table-prodi-subheader">
-                                        <th style="background-color: #334155;">2026</th>
-                                        <th style="background-color: #334155;">2027</th>
-                                        <th style="background-color: #334155;">2028</th>
-                                        <th style="background-color: #334155;">2029</th>
-                                        <th style="background-color: #094b54;">2030 (Target)</th>
-                                        <th style="background-color: #047857;">SS</th>
-                                        <th style="background-color: #64748b;">TSS</th>
-                                        <th style="background-color: #1e293b;">% SS</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @php
-                                        $totDosen = 0;
-                                        $tot2026 = 0; $tot2027 = 0; $tot2028 = 0; $tot2029 = 0; $tot2030 = 0;
-                                        $totSS = 0; $totTSS = 0;
-                                    @endphp
-                                    @forelse($prodi_breakdown as $index => $row)
-                                        @php
-                                            $totDosen += $row['total_dosen'];
-                                            $y26 = $row['yearly'][2026] ?? [];
-                                            $y27 = $row['yearly'][2027] ?? [];
-                                            $y28 = $row['yearly'][2028] ?? [];
-                                            $y29 = $row['yearly'][2029] ?? [];
-                                            $y30 = $row['yearly'][2030] ?? [];
 
-                                            $tot2026 += ($y26['s3'] ?? 0);
-                                            $tot2027 += ($y27['s3'] ?? 0);
-                                            $tot2028 += ($y28['s3'] ?? 0);
-                                            $tot2029 += ($y29['s3'] ?? 0);
-                                            $tot2030 += ($y30['s3'] ?? 0);
-
-                                            $totSS += ($y26['ss'] ?? 0);
-                                            $totTSS += ($y26['tss'] ?? 0);
-                                        @endphp
-                                        <tr>
-                                            <td class="text-center font-weight-bold">{{ $index + 1 }}</td>
-                                            <td>
-                                                <a href="{{ route('admin.pengembangan-sdm.dosen', ['unit_id' => $row['unit_id']]) }}" class="font-weight-bold" style="color: var(--tsu-primary);">
-                                                    {{ $row['nama_prodi'] }}
-                                                </a>
-                                            </td>
-                                            <td class="text-center font-weight-bold text-dark">{{ $row['total_dosen'] }}</td>
-                                            <td class="text-center">{{ $y26['s3'] ?? 0 }} <small class="text-muted">({{ $y26['persen_s3'] ?? 0 }}%)</small></td>
-                                            <td class="text-center">{{ $y27['s3'] ?? 0 }}</td>
-                                            <td class="text-center">{{ $y28['s3'] ?? 0 }}</td>
-                                            <td class="text-center">{{ $y29['s3'] ?? 0 }}</td>
-                                            <td class="text-center font-weight-bold target-pill">
-                                                {{ $y30['s3'] ?? 0 }} <small>({{ $y30['persen_s3'] ?? 0 }}%)</small>
-                                            </td>
-                                            <td class="text-center"><span class="badge badge-ss px-2 py-1">{{ $y26['ss'] ?? 0 }}</span></td>
-                                            <td class="text-center"><span class="badge badge-tss px-2 py-1">{{ $y26['tss'] ?? 0 }}</span></td>
-                                            <td class="text-center font-weight-bold" style="color: #059669;">{{ $y26['persen_ss'] ?? 0 }}%</td>
-                                            <td class="text-center">
-                                                <a href="{{ route('admin.pengembangan-sdm.dosen', ['unit_id' => $row['unit_id']]) }}" class="btn btn-sm btn-outline-primary" style="border-radius: 6px; padding: 0.2rem 0.5rem; font-size: 0.78rem;">
-                                                    <i class="fas fa-eye mr-1"></i> Detail
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="12" class="text-center text-muted py-4">Belum ada data road map dosen.</td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                                @if(count($prodi_breakdown) > 0)
-                                <tfoot class="bg-light font-weight-bold">
-                                    <tr>
-                                        <td colspan="2" class="text-center text-uppercase">Total Universitas</td>
-                                        <td class="text-center">{{ $totDosen }}</td>
-                                        <td class="text-center">{{ $tot2026 }}</td>
-                                        <td class="text-center">{{ $tot2027 }}</td>
-                                        <td class="text-center">{{ $tot2028 }}</td>
-                                        <td class="text-center">{{ $tot2029 }}</td>
-                                        <td class="text-center font-weight-bold" style="color: var(--tsu-primary);">{{ $tot2030 }} ({{ $totDosen > 0 ? round(($tot2030 / $totDosen) * 100, 1) : 0 }}%)</td>
-                                        <td class="text-center" style="color: #059669;">{{ $totSS }}</td>
-                                        <td class="text-center text-secondary">{{ $totTSS }}</td>
-                                        <td class="text-center" style="color: #059669;">{{ ($totSS + $totTSS) > 0 ? round(($totSS / ($totSS + $totTSS)) * 100, 1) : 0 }}%</td>
-                                        <td></td>
-                                    </tr>
-                                </tfoot>
-                                @endif
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- SECTION: ROAD MAP PENGEMBANGAN TENAGA KEPENDIDIKAN (TENDIK) -->
-            <div class="d-flex justify-content-between align-items-center mb-3 mt-4">
-                <div>
-                    <h4 class="font-weight-bold text-dark mb-1" style="font-size: 1.15rem; display: flex; align-items: center; gap: 8px;">
-                        <i class="fas fa-users-cog" style="color: var(--tsu-teal-accent);"></i> Road Map Pengembangan Tenaga Kependidikan (Tendik)
-                    </h4>
-                    <p class="text-muted small mb-0">Visualisasi status studi lanjut dan proyeksi kualifikasi pendidikan Tendik (9 Unit Kerja, 2026–2030)</p>
-                </div>
-                <div>
-                    <a href="{{ route('admin.pengembangan-sdm.tendik') }}" class="btn btn-sm btn-outline-secondary font-weight-bold" style="border-radius: 8px;">
-                        <i class="fas fa-external-link-alt mr-1"></i> Buka Lembar Kerja Tendik
-                    </a>
-                </div>
-            </div>
-
-            <!-- Tendik Charts Row -->
-            <div class="row">
-                <!-- Tendik Status Aktif Studi Bar Chart -->
-                <div class="col-lg-7 col-12 mb-4">
-                    <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden;">
-                        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center" style="border-bottom: 1px solid var(--tsu-border);">
-                            <h5 class="card-title font-weight-bold text-dark mb-0" style="font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
-                                <i class="fas fa-user-clock text-info"></i> Status Studi Lanjut Tendik (SS vs TSS) per Unit Kerja (2026)
-                            </h5>
-                            <span class="badge badge-pill font-weight-bold px-2 py-1 ml-auto" style="background: rgba(2, 132, 199, 0.1); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.25); font-size: 0.78rem;">
-                                {{ count($tendik_breakdown) }} Unit Kerja
-                            </span>
-                        </div>
-                        <div class="card-body p-3">
-                            <div class="chart-container">
-                                <canvas id="chartTendikUnit"></canvas>
+                        <div class="tsu-stat-card tsu-stat-card--target-s3">
+                            <i class="fas fa-award tsu-stat-card__watermark"></i>
+                            <span class="tsu-stat-card__label text-uppercase font-weight-bold" style="letter-spacing: 0.5px;">Target Doktor (S3) 2030</span>
+                            <div class="tsu-stat-card__value mt-1 mb-1">
+                                {{ $kpi['dosen_s3_2030'] ?? 0 }} <small style="font-size: 1.1rem; opacity: 0.9;">({{ $kpi['persen_s3_2030'] ?? 0 }}%)</small>
                             </div>
+                            <small style="opacity: 0.95; font-size: 0.8rem;">
+                                <i class="fas fa-arrow-up mr-1"></i> Saat Ini (2026): {{ $kpi['dosen_s3_2026'] ?? 0 }} ({{ $kpi['persen_s3_2026'] ?? 0 }}%)
+                            </small>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Tendik Proyeksi Kualifikasi S1 & S2 Line Chart -->
-                <div class="col-lg-5 col-12 mb-4">
-                    <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden;">
-                        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center" style="border-bottom: 1px solid var(--tsu-border);">
-                            <h5 class="card-title font-weight-bold text-dark mb-0" style="font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
-                                <i class="fas fa-chart-line" style="color: var(--tsu-primary);"></i> Proyeksi Kualifikasi S1 & S2 Tendik (2026 - 2030)
-                            </h5>
-                            <span class="badge badge-pill font-weight-bold px-2 py-1 ml-auto" style="background: rgba(9, 75, 84, 0.1); color: #094b54; border: 1px solid rgba(9, 75, 84, 0.25); font-size: 0.78rem;">
-                                Renstra Tendik
-                            </span>
-                        </div>
-                        <div class="card-body p-3">
-                            <div class="chart-container">
-                                <canvas id="chartTendikProyeksi"></canvas>
+                        <div class="tsu-stat-card tsu-stat-card--studi">
+                            <i class="fas fa-book-reader tsu-stat-card__watermark"></i>
+                            <span class="tsu-stat-card__label text-uppercase font-weight-bold" style="letter-spacing: 0.5px;">Dosen Sedang Studi (SS)</span>
+                            <div class="tsu-stat-card__value mt-1 mb-1">
+                                {{ $kpi['dosen_ss_2026'] ?? 0 }} <small style="font-size: 1.1rem; opacity: 0.9;">Dosen</small>
                             </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Rekapitulasi 9 Unit Kerja Tendik Table -->
-            <div class="row mb-4">
-                <div class="col-12">
-                    <div class="card border-0 shadow-sm" style="border-radius: 12px; overflow: hidden;">
-                        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center" style="border-bottom: 1px solid var(--tsu-border);">
                             <div>
-                                <h5 class="card-title font-weight-bold text-dark mb-0" style="font-size: 1rem; display: flex; align-items: center; gap: 8px;">
-                                    <i class="fas fa-table" style="color: var(--tsu-teal-accent);"></i> Rekapitulasi Road Map 9 Unit Kerja (Tenaga Kependidikan)
-                                </h5>
-                                <small class="text-muted">Peta kualifikasi jenjang pendidikan dan status studi lanjut tenaga kependidikan</small>
-                            </div>
-                            <div class="ml-auto">
-                                <a href="{{ route('admin.pengembangan-sdm.tendik') }}" class="btn btn-sm btn-outline-info font-weight-bold" style="border-radius: 8px;">
-                                    <i class="fas fa-external-link-alt mr-1"></i> Buka Lembar Kerja Detail
-                                </a>
+                                <span class="badge badge-pill font-weight-bold px-2 py-1" style="background: rgba(255, 255, 255, 0.2); color: #ffffff; font-size: 0.78rem;">
+                                    {{ $kpi['total_dn'] ?? 0 }} Dalam Negeri / {{ $kpi['total_ln'] ?? 0 }} Luar Negeri
+                                </span>
                             </div>
                         </div>
-                        <div class="table-responsive">
-                            <table class="table table-hover table-bordered table-prodi mb-0">
-                                <thead>
-                                    <tr>
-                                        <th rowspan="2" style="width: 40px;">No</th>
-                                        <th rowspan="2">Unit Kerja</th>
-                                        <th rowspan="2" style="width: 80px;">Total Tendik</th>
-                                        <th colspan="3">Kualifikasi 2026</th>
-                                        <th colspan="5">Proyeksi Tendik Magister (S2) per Tahun</th>
-                                        <th colspan="3">Status Studi 2026</th>
-                                        <th rowspan="2" style="width: 90px;">Aksi</th>
-                                    </tr>
-                                    <tr class="table-prodi-subheader">
-                                        <th style="background-color: #334155;">D3</th>
-                                        <th style="background-color: #334155;">S1</th>
-                                        <th style="background-color: #0f766e;">S2</th>
-                                        <th style="background-color: #334155;">2026</th>
-                                        <th style="background-color: #334155;">2027</th>
-                                        <th style="background-color: #334155;">2028</th>
-                                        <th style="background-color: #334155;">2029</th>
-                                        <th style="background-color: #0284c7;">2030 (Target)</th>
-                                        <th style="background-color: #047857;">SS</th>
-                                        <th style="background-color: #64748b;">TSS</th>
-                                        <th style="background-color: #1e293b;">% SS</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @php
-                                        $totTendik = 0;
-                                        $totD3_26 = 0; $totS1_26 = 0; $totS2_26 = 0;
-                                        $tTot26 = 0; $tTot27 = 0; $tTot28 = 0; $tTot29 = 0; $tTot30 = 0;
-                                        $tTotSS = 0; $tTotTSS = 0;
-                                    @endphp
-                                    @forelse($tendik_breakdown as $tIdx => $tRow)
-                                        @php
-                                            $totTendik += $tRow['total_tendik'];
-                                            $ty26 = $tRow['yearly'][2026] ?? [];
-                                            $ty27 = $tRow['yearly'][2027] ?? [];
-                                            $ty28 = $tRow['yearly'][2028] ?? [];
-                                            $ty29 = $tRow['yearly'][2029] ?? [];
-                                            $ty30 = $tRow['yearly'][2030] ?? [];
 
-                                            $totD3_26 += ($ty26['d3'] ?? 0);
-                                            $totS1_26 += ($ty26['s1'] ?? 0);
-                                            $totS2_26 += ($ty26['s2'] ?? 0);
-
-                                            $tTot26 += ($ty26['s2'] ?? 0);
-                                            $tTot27 += ($ty27['s2'] ?? 0);
-                                            $tTot28 += ($ty28['s2'] ?? 0);
-                                            $tTot29 += ($ty29['s2'] ?? 0);
-                                            $tTot30 += ($ty30['s2'] ?? 0);
-
-                                            $tTotSS += ($ty26['ss'] ?? 0);
-                                            $tTotTSS += ($ty26['tss'] ?? 0);
-
-                                            $tPersenSS = ($tRow['total_tendik'] > 0) ? round((($ty26['ss'] ?? 0) / $tRow['total_tendik']) * 100, 1) : 0;
-                                        @endphp
-                                        <tr>
-                                            <td class="text-center font-weight-bold">{{ $tIdx + 1 }}</td>
-                                            <td>
-                                                <a href="{{ route('admin.pengembangan-sdm.tendik', ['unit_id' => $tRow['unit_id']]) }}" class="font-weight-bold text-dark">
-                                                    {{ $tRow['nama_unit'] }}
-                                                </a>
-                                            </td>
-                                            <td class="text-center font-weight-bold text-dark">{{ $tRow['total_tendik'] }}</td>
-                                            <td class="text-center">{{ $ty26['d3'] ?? 0 }}</td>
-                                            <td class="text-center">{{ $ty26['s1'] ?? 0 }}</td>
-                                            <td class="text-center font-weight-bold text-success">{{ $ty26['s2'] ?? 0 }}</td>
-                                            <td class="text-center">{{ $ty26['s2'] ?? 0 }}</td>
-                                            <td class="text-center">{{ $ty27['s2'] ?? 0 }}</td>
-                                            <td class="text-center">{{ $ty28['s2'] ?? 0 }}</td>
-                                            <td class="text-center">{{ $ty29['s2'] ?? 0 }}</td>
-                                            <td class="text-center font-weight-bold target-pill">
-                                                {{ $ty30['s2'] ?? 0 }}
-                                            </td>
-                                            <td class="text-center"><span class="badge badge-ss px-2 py-1">{{ $ty26['ss'] ?? 0 }}</span></td>
-                                            <td class="text-center"><span class="badge badge-tss px-2 py-1">{{ $ty26['tss'] ?? 0 }}</span></td>
-                                            <td class="text-center font-weight-bold" style="color: #059669;">{{ $tPersenSS }}%</td>
-                                            <td class="text-center">
-                                                <a href="{{ route('admin.pengembangan-sdm.tendik', ['unit_id' => $tRow['unit_id']]) }}" class="btn btn-sm btn-outline-info" style="border-radius: 6px; padding: 0.2rem 0.5rem; font-size: 0.78rem;">
-                                                    <i class="fas fa-eye mr-1"></i> Detail
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    @empty
-                                        <tr>
-                                            <td colspan="15" class="text-center text-muted py-4">Belum ada data road map tenaga kependidikan.</td>
-                                        </tr>
-                                    @endforelse
-                                </tbody>
-                                @if(count($tendik_breakdown) > 0)
-                                <tfoot class="bg-light font-weight-bold">
-                                    <tr>
-                                        <td colspan="2" class="text-center text-uppercase">Total Seluruh Unit Tendik</td>
-                                        <td class="text-center">{{ $totTendik }}</td>
-                                        <td class="text-center">{{ $totD3_26 }}</td>
-                                        <td class="text-center">{{ $totS1_26 }}</td>
-                                        <td class="text-center text-success">{{ $totS2_26 }}</td>
-                                        <td class="text-center">{{ $tTot26 }}</td>
-                                        <td class="text-center">{{ $tTot27 }}</td>
-                                        <td class="text-center">{{ $tTot28 }}</td>
-                                        <td class="text-center">{{ $tTot29 }}</td>
-                                        <td class="text-center font-weight-bold text-primary">{{ $tTot30 }} ({{ $totTendik > 0 ? round(($tTot30 / $totTendik) * 100, 1) : 0 }}%)</td>
-                                        <td class="text-center" style="color: #059669;">{{ $tTotSS }}</td>
-                                        <td class="text-center text-secondary">{{ $tTotTSS }}</td>
-                                        <td class="text-center" style="color: #059669;">{{ ($tTotSS + $tTotTSS) > 0 ? round(($tTotSS / ($tTotSS + $tTotTSS)) * 100, 1) : 0 }}%</td>
-                                        <td></td>
-                                    </tr>
-                                </tfoot>
-                                @endif
-                            </table>
+                        <div class="tsu-stat-card tsu-stat-card--jafung">
+                            <i class="fas fa-id-badge tsu-stat-card__watermark"></i>
+                            <span class="tsu-stat-card__label text-uppercase font-weight-bold" style="letter-spacing: 0.5px;">Memiliki Jabatan Fungsional</span>
+                            <div class="tsu-stat-card__value mt-1 mb-1">
+                                {{ ($jafungSummary['counts']['hijau'] ?? 0) + ($jafungSummary['counts']['kuning'] ?? 0) + ($jafungSummary['counts']['orange'] ?? 0) + ($jafungSummary['counts']['merah'] ?? 0) }} <small style="font-size: 1.1rem; opacity: 0.9;">Dosen</small>
+                            </div>
+                            <div>
+                                <span class="badge badge-pill font-weight-bold px-2 py-1" style="background: rgba(255, 255, 255, 0.2); color: #ffffff; font-size: 0.78rem;">
+                                    {{ $jafungSummary['counts']['hijau'] ?? 0 }} Sesuai Aturan
+                                </span>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </div>
 
-            <!-- 9 Unit Tendik Quick Cards (Elevated & Informative) -->
-            <div class="row mb-4">
-                <div class="col-12">
-                    <div class="card border-0 shadow-sm" style="border-radius: 12px; overflow: hidden;">
+                    <!-- ========================================================================= -->
+                    <!-- RANGKUMAN STATUS JABATAN FUNGSIONAL DOSEN (Kuning, Orange, Merah, Hijau) -->
+                    <!-- ========================================================================= -->
+                    <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px; overflow: hidden;">
                         <div class="card-header bg-white py-3 d-flex flex-wrap justify-content-between align-items-center" style="border-bottom: 1px solid var(--tsu-border); gap: 10px;">
                             <div>
-                                <h6 class="card-title font-weight-bold text-dark mb-0" style="font-size: 0.98rem; display: flex; align-items: center; gap: 8px;">
-                                    <i class="fas fa-th-large" style="color: var(--tsu-primary);"></i> Rincian Distribusi & Status 9 Unit Kerja Tendik
-                                </h6>
-                                <small class="text-muted">Pemantauan progres kualifikasi pendidikan, studi lanjut, dan target Renstra per unit operasional</small>
+                                <h5 class="card-title font-weight-bold text-dark mb-0" style="font-size: 1rem; display: flex; align-items: center; gap: 8px;">
+                                    <i class="fas fa-user-tag text-primary"></i> Rangkuman Status Kenaikan Jabatan Fungsional Dosen (JabFung)
+                                </h5>
+                                <small class="text-muted">Early warning pemantauan berkala masa jabatan fungsional dosen universitas</small>
                             </div>
-                            <div class="d-flex align-items-center flex-wrap ml-auto" style="gap: 8px;">
-                                <span class="badge badge-pill font-weight-bold px-3 py-2" style="background: rgba(9, 75, 84, 0.1); color: #094b54; border: 1px solid rgba(9, 75, 84, 0.25); font-size: 0.8rem;">
-                                    <i class="fas fa-building mr-1"></i> 9 Unit Pelaksana (Biro, Lembaga, Fak. & UPT)
-                                </span>
-                                <span class="badge badge-pill font-weight-bold px-3 py-2" style="background: rgba(2, 132, 199, 0.1); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.25); font-size: 0.8rem;">
-                                    <i class="fas fa-users mr-1"></i> {{ $kpi['total_tendik'] ?? $totTendik }} Total Pegawai
-                                </span>
-                                <span class="badge badge-pill font-weight-bold px-3 py-2" style="background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25); font-size: 0.8rem;">
-                                    <i class="fas fa-user-graduate mr-1"></i> {{ $tTotSS }} Sedang Studi ({{ ($kpi['total_tendik'] ?? $totTendik) > 0 ? round(($tTotSS / ($kpi['total_tendik'] ?? $totTendik)) * 100, 1) : 0 }}%)
-                                </span>
+                            <div>
+                                <button type="button" class="btn btn-sm btn-outline-primary font-weight-bold" style="border-radius: 8px;" data-toggle="modal" data-target="#modalDetailJabfung">
+                                    <i class="fas fa-list-ul mr-1"></i> Buka Daftar Lengkap Dosen
+                                </button>
                             </div>
                         </div>
-                        <div class="card-body p-3" style="background: #f8fafc;">
-                            <div class="row">
-                                @foreach($tendik_breakdown as $tUnit)
-                                    @php
-                                        $uTotal = $tUnit['total_tendik'] ?? 0;
-                                        $uSS = $tUnit['yearly'][2026]['ss'] ?? 0;
-                                        $uTSS = $tUnit['yearly'][2026]['tss'] ?? 0;
-                                        $uS2 = $tUnit['yearly'][2026]['s2'] ?? 0;
-                                        $uS2_30 = $tUnit['yearly'][2030]['s2'] ?? 0;
-                                        $pctSS = $uTotal > 0 ? round(($uSS / $uTotal) * 100, 1) : 0;
-                                        $pctS2 = $uTotal > 0 ? round(($uS2 / $uTotal) * 100, 1) : 0;
-                                        
-                                        // Unit icon category
-                                        $uName = $tUnit['nama_unit'];
-                                        $uIcon = 'fas fa-building';
-                                        if (str_contains($uName, 'Akademik') || str_contains($uName, 'BAAK')) $uIcon = 'fas fa-graduation-cap';
-                                        elseif (str_contains($uName, 'Keuangan') || str_contains($uName, 'BAUK')) $uIcon = 'fas fa-file-invoice-dollar';
-                                        elseif (str_contains($uName, 'Mutu') || str_contains($uName, 'LPM')) $uIcon = 'fas fa-clipboard-check';
-                                        elseif (str_contains($uName, 'LPPM') || str_contains($uName, 'Penelitian')) $uIcon = 'fas fa-microscope';
-                                        elseif (str_contains($uName, 'Fakultas')) $uIcon = 'fas fa-university';
-                                        elseif (str_contains($uName, 'Vokasi')) $uIcon = 'fas fa-tools';
-                                        elseif (str_contains($uName, 'Sekretariat')) $uIcon = 'fas fa-user-shield';
-                                        elseif (str_contains($uName, 'Perpustakaan')) $uIcon = 'fas fa-book';
-                                        elseif (str_contains($uName, 'Sistem Informasi')) $uIcon = 'fas fa-laptop-code';
-                                    @endphp
-                                    <div class="col-lg-4 col-md-6 col-12 mb-3">
-                                        <div class="card h-100 border shadow-none" style="border-radius: 12px; background: #ffffff; border-color: #e2e8f0 !important; transition: all 0.2s ease-in-out; overflow: hidden;">
-                                            <div class="p-3" style="border-bottom: 1px solid #f1f5f9; background: #ffffff;">
-                                                <div class="d-flex justify-content-between align-items-start" style="gap: 8px;">
-                                                    <div class="d-flex align-items-center" style="gap: 10px;">
-                                                        <div class="d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; border-radius: 8px; background: rgba(9, 75, 84, 0.08); color: var(--tsu-primary); font-size: 1rem; flex-shrink: 0;">
-                                                            <i class="{{ $uIcon }}"></i>
-                                                        </div>
-                                                        <div>
-                                                            <h6 class="font-weight-bold text-dark mb-0" style="font-size: 0.88rem; line-height: 1.3;" title="{{ $tUnit['nama_unit'] }}">
-                                                                {{ $tUnit['nama_unit'] }}
-                                                            </h6>
-                                                            <span class="text-muted small" style="font-size: 0.73rem;">Unit Kerja Pelaksana</span>
-                                                        </div>
-                                                    </div>
-                                                    <span class="badge badge-pill font-weight-bold px-2 py-1 flex-shrink-0" style="background: rgba(2, 132, 199, 0.1); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.25); font-size: 0.75rem;">
-                                                        <i class="fas fa-users mr-1"></i> {{ $uTotal }} Pegawai
-                                                    </span>
-                                                </div>
+                        <div class="card-body p-3">
+                            <div class="jabfung-status-grid">
+                                <!-- 1. KUNING: Persiapan Naik JabFung -->
+                                <div class="jabfung-status-card jabfung-status-card--kuning" onclick="filterJabfungModal('kuning')" data-toggle="modal" data-target="#modalDetailJabfung" title="Klik untuk lihat daftar dosen">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <div class="jabfung-status-card__label text-warning" style="color: #b45309 !important;">
+                                                <i class="fas fa-clock mr-1"></i> Kuning
                                             </div>
-                                            
-                                            <div class="p-3">
-                                                <!-- Status Sedang Studi (SS) -->
-                                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                                    <span class="text-muted small" style="font-size: 0.8rem;">
-                                                        <i class="fas fa-user-graduate mr-1" style="color: #059669;"></i> Sedang Studi (SS):
-                                                    </span>
-                                                    @if($uSS > 0)
-                                                        <span class="badge badge-pill font-weight-bold px-2 py-1" style="background: rgba(16, 185, 129, 0.12); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25); font-size: 0.75rem;">
-                                                            {{ $uSS }} Pegawai ({{ $pctSS }}%)
-                                                        </span>
-                                                    @else
-                                                        <span class="badge badge-pill font-weight-normal text-muted px-2 py-1" style="background: #f1f5f9; border: 1px solid #e2e8f0; font-size: 0.75rem;">
-                                                            0 Pegawai (0%)
-                                                        </span>
-                                                    @endif
-                                                </div>
-
-                                                <!-- Kualifikasi S2 Saat Ini -->
-                                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                                    <span class="text-muted small" style="font-size: 0.8rem;">
-                                                        <i class="fas fa-award mr-1" style="color: var(--tsu-primary);"></i> Kualifikasi S2 (2026):
-                                                    </span>
-                                                    @if($uS2 > 0)
-                                                        <span class="badge badge-pill font-weight-bold px-2 py-1" style="background: rgba(9, 75, 84, 0.1); color: #094b54; border: 1px solid rgba(9, 75, 84, 0.25); font-size: 0.75rem;">
-                                                            {{ $uS2 }} Magister ({{ $pctS2 }}%)
-                                                        </span>
-                                                    @else
-                                                        <span class="badge badge-pill font-weight-normal text-muted px-2 py-1" style="background: #f1f5f9; border: 1px solid #e2e8f0; font-size: 0.75rem;">
-                                                            0 Magister
-                                                        </span>
-                                                    @endif
-                                                </div>
-
-                                                <!-- Target 2030 Row -->
-                                                <div class="d-flex justify-content-between align-items-center mb-3">
-                                                    <span class="text-muted small" style="font-size: 0.8rem;">
-                                                        <i class="fas fa-bullseye mr-1" style="color: #d97706;"></i> Target S2 (2030):
-                                                    </span>
-                                                    <span class="badge badge-pill font-weight-bold px-2 py-1" style="background: rgba(245, 158, 11, 0.12); color: #b45309; border: 1px solid rgba(245, 158, 11, 0.25); font-size: 0.75rem;">
-                                                        {{ $uS2_30 }} Magister
-                                                    </span>
-                                                </div>
-
-                                                <!-- Progress Mini Bar -->
-                                                <div class="mb-3">
-                                                    <div class="d-flex justify-content-between text-muted" style="font-size: 0.72rem; margin-bottom: 4px;">
-                                                        <span>Rasio Kualifikasi S2 & SS</span>
-                                                        <span class="font-weight-bold text-dark">{{ $uTotal > 0 ? round((($uS2 + $uSS) / $uTotal) * 100) : 0 }}%</span>
-                                                    </div>
-                                                    <div class="progress" style="height: 6px; border-radius: 4px; background: #e2e8f0;">
-                                                        <div class="progress-bar" role="progressbar" style="width: {{ $uTotal > 0 ? min(100, round((($uS2 + $uSS) / $uTotal) * 100)) : 0 }}%; background: linear-gradient(90deg, #094b54, #0d9488); border-radius: 4px;"></div>
-                                                    </div>
-                                                </div>
-
-                                                <div class="pt-2 border-top d-flex justify-content-between align-items-center">
-                                                    <span class="text-muted small" style="font-size: 0.74rem;">
-                                                        <i class="fas fa-briefcase mr-1"></i> Tendik Unit
-                                                    </span>
-                                                    <a href="{{ route('admin.pengembangan-sdm.tendik', ['unit_id' => $tUnit['unit_id']]) }}" class="btn btn-sm btn-outline-primary font-weight-bold" style="border-radius: 6px; font-size: 0.75rem; padding: 3px 10px;">
-                                                        Buka Rincian <i class="fas fa-arrow-right ml-1"></i>
-                                                    </a>
-                                                </div>
-                                            </div>
+                                            <div class="font-weight-bold text-dark mt-1" style="font-size: 0.88rem;">Persiapan Naik JabFung</div>
+                                        </div>
+                                        <div class="jabfung-status-card__count text-warning" style="color: #b45309 !important;">
+                                            {{ $jafungSummary['counts']['kuning'] ?? 0 }}
                                         </div>
                                     </div>
-                                @endforeach
+                                    <div class="jabfung-status-card__desc">
+                                        Masa jabatan tersisa 3–12 bulan / persiapan berkas usulan PAK baru.
+                                    </div>
+                                    <div class="mt-2 text-right">
+                                        <span class="badge badge-pill font-weight-bold" style="background: rgba(245, 158, 11, 0.15); color: #b45309; font-size: 0.72rem;">
+                                            Lihat Dosen <i class="fas fa-arrow-right ml-1"></i>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- 2. ORANGE: Harus Sudah Pengajuan -->
+                                <div class="jabfung-status-card jabfung-status-card--orange" onclick="filterJabfungModal('orange')" data-toggle="modal" data-target="#modalDetailJabfung" title="Klik untuk lihat daftar dosen">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <div class="jabfung-status-card__label text-orange" style="color: #c2410c !important;">
+                                                <i class="fas fa-exclamation-circle mr-1"></i> Orange
+                                            </div>
+                                            <div class="font-weight-bold text-dark mt-1" style="font-size: 0.88rem;">Harus Sudah Pengajuan</div>
+                                        </div>
+                                        <div class="jabfung-status-card__count text-orange" style="color: #c2410c !important;">
+                                            {{ $jafungSummary['counts']['orange'] ?? 0 }}
+                                        </div>
+                                    </div>
+                                    <div class="jabfung-status-card__desc">
+                                        Masa periode tersisa &le; 3 bulan / berkas wajib segera disubmit ke LLDIKTI.
+                                    </div>
+                                    <div class="mt-2 text-right">
+                                        <span class="badge badge-pill font-weight-bold" style="background: rgba(249, 115, 22, 0.15); color: #c2410c; font-size: 0.72rem;">
+                                            Lihat Dosen <i class="fas fa-arrow-right ml-1"></i>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- 3. MERAH: JabFung Telat Naik Pangkat -->
+                                <div class="jabfung-status-card jabfung-status-card--merah" onclick="filterJabfungModal('merah')" data-toggle="modal" data-target="#modalDetailJabfung" title="Klik untuk lihat daftar dosen">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <div class="jabfung-status-card__label text-danger" style="color: #dc2626 !important;">
+                                                <i class="fas fa-exclamation-triangle mr-1"></i> Merah
+                                            </div>
+                                            <div class="font-weight-bold text-dark mt-1" style="font-size: 0.88rem;">Telat Naik Pangkat</div>
+                                        </div>
+                                        <div class="jabfung-status-card__count text-danger" style="color: #dc2626 !important;">
+                                            {{ $jafungSummary['counts']['merah'] ?? 0 }}
+                                        </div>
+                                    </div>
+                                    <div class="jabfung-status-card__desc">
+                                        Masa periode SK telah terlewati / butuh pendampingan intensif & percepatan.
+                                    </div>
+                                    <div class="mt-2 text-right">
+                                        <span class="badge badge-pill font-weight-bold" style="background: rgba(239, 68, 68, 0.15); color: #dc2626; font-size: 0.72rem;">
+                                            Lihat Dosen <i class="fas fa-arrow-right ml-1"></i>
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <!-- 4. HIJAU: Sesuai dengan Aturan -->
+                                <div class="jabfung-status-card jabfung-status-card--hijau" onclick="filterJabfungModal('hijau')" data-toggle="modal" data-target="#modalDetailJabfung" title="Klik untuk lihat daftar dosen">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <div class="jabfung-status-card__label text-success" style="color: #059669 !important;">
+                                                <i class="fas fa-check-circle mr-1"></i> Hijau
+                                            </div>
+                                            <div class="font-weight-bold text-dark mt-1" style="font-size: 0.88rem;">Sesuai Aturan</div>
+                                        </div>
+                                        <div class="jabfung-status-card__count text-success" style="color: #059669 !important;">
+                                            {{ $jafungSummary['counts']['hijau'] ?? 0 }}
+                                        </div>
+                                    </div>
+                                    <div class="jabfung-status-card__desc">
+                                        JabFung aktif, periode aman (&gt; 1 tahun), dosen baru, atau Guru Besar.
+                                    </div>
+                                    <div class="mt-2 text-right">
+                                        <span class="badge badge-pill font-weight-bold" style="background: rgba(16, 185, 129, 0.15); color: #059669; font-size: 0.72rem;">
+                                            Lihat Dosen <i class="fas fa-arrow-right ml-1"></i>
+                                        </span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
+
+                    <!-- Charts Row: Dosen -->
+                    <div class="row">
+                        <!-- Status Aktif Studi Bar Chart -->
+                        <div class="col-lg-7 col-12 mb-4">
+                            <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden;">
+                                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center" style="border-bottom: 1px solid var(--tsu-border);">
+                                    <h5 class="card-title font-weight-bold text-dark mb-0" style="font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                                        <i class="fas fa-balance-scale" style="color: var(--tsu-primary);"></i> Status Studi Lanjut Dosen (SS vs TSS) per Prodi (2026)
+                                    </h5>
+                                    <span class="badge badge-pill font-weight-bold px-2 py-1 ml-auto" style="background: rgba(9, 75, 84, 0.1); color: #094b54; border: 1px solid rgba(9, 75, 84, 0.25); font-size: 0.78rem;">
+                                        {{ count($prodi_breakdown) }} Program Studi
+                                    </span>
+                                </div>
+                                <div class="card-body p-3">
+                                    <div class="chart-container">
+                                        <canvas id="chartKesesuaian"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Proyeksi S3 Area Chart -->
+                        <div class="col-lg-5 col-12 mb-4">
+                            <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden;">
+                                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center" style="border-bottom: 1px solid var(--tsu-border);">
+                                    <h5 class="card-title font-weight-bold text-dark mb-0" style="font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                                        <i class="fas fa-chart-area text-success"></i> Proyeksi Kualifikasi S3 (2026 - 2030)
+                                    </h5>
+                                    <span class="badge badge-pill font-weight-bold px-2 py-1 ml-auto" style="background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25); font-size: 0.78rem;">
+                                        Target Renstra
+                                    </span>
+                                </div>
+                                <div class="card-body p-3">
+                                    <div class="chart-container">
+                                        <canvas id="chartProyeksiS3"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 10 Program Studi Breakdown Table -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card border-0 shadow-sm" style="border-radius: 12px; overflow: hidden;">
+                                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center" style="border-bottom: 1px solid var(--tsu-border);">
+                                    <div>
+                                        <h5 class="card-title font-weight-bold text-dark mb-0" style="font-size: 1rem; display: flex; align-items: center; gap: 8px;">
+                                            <i class="fas fa-university" style="color: var(--tsu-primary);"></i> Rekapitulasi Road Map 10 Program Studi (Dosen)
+                                        </h5>
+                                        <small class="text-muted">Proyeksi kualifikasi doktor (S3) multi-tahun dan status aktif studi lanjut dosen</small>
+                                    </div>
+                                    <div class="ml-auto">
+                                        <a href="{{ route('admin.pengembangan-sdm.dosen') }}" class="btn btn-sm btn-outline-primary font-weight-bold" style="border-radius: 8px;">
+                                            <i class="fas fa-external-link-alt mr-1"></i> Buka Lembar Kerja Detail
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-bordered table-prodi mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th rowspan="2" style="width: 40px;">No</th>
+                                                <th rowspan="2">Program Studi</th>
+                                                <th rowspan="2" style="width: 80px;">Total Dosen</th>
+                                                <th colspan="5">Proyeksi Dosen Bergelar Doktor (S3) per Tahun</th>
+                                                <th colspan="3">Status Studi 2026</th>
+                                                <th rowspan="2" style="width: 90px;">Aksi</th>
+                                            </tr>
+                                            <tr class="table-prodi-subheader">
+                                                <th style="background-color: #334155;">2026</th>
+                                                <th style="background-color: #334155;">2027</th>
+                                                <th style="background-color: #334155;">2028</th>
+                                                <th style="background-color: #334155;">2029</th>
+                                                <th style="background-color: #094b54;">2030 (Target)</th>
+                                                <th style="background-color: #047857;">SS</th>
+                                                <th style="background-color: #64748b;">TSS</th>
+                                                <th style="background-color: #1e293b;">% SS</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @php
+                                                $totDosen = 0;
+                                                $tot2026 = 0; $tot2027 = 0; $tot2028 = 0; $tot2029 = 0; $tot2030 = 0;
+                                                $totSS = 0; $totTSS = 0;
+                                            @endphp
+                                            @forelse($prodi_breakdown as $index => $row)
+                                                @php
+                                                    $totDosen += $row['total_dosen'];
+                                                    $y26 = $row['yearly'][2026] ?? [];
+                                                    $y27 = $row['yearly'][2027] ?? [];
+                                                    $y28 = $row['yearly'][2028] ?? [];
+                                                    $y29 = $row['yearly'][2029] ?? [];
+                                                    $y30 = $row['yearly'][2030] ?? [];
+
+                                                    $tot2026 += ($y26['s3'] ?? 0);
+                                                    $tot2027 += ($y27['s3'] ?? 0);
+                                                    $tot2028 += ($y28['s3'] ?? 0);
+                                                    $tot2029 += ($y29['s3'] ?? 0);
+                                                    $tot2030 += ($y30['s3'] ?? 0);
+
+                                                    $totSS += ($y26['ss'] ?? 0);
+                                                    $totTSS += ($y26['tss'] ?? 0);
+                                                @endphp
+                                                <tr>
+                                                    <td class="text-center font-weight-bold">{{ $index + 1 }}</td>
+                                                    <td>
+                                                        <a href="{{ route('admin.pengembangan-sdm.dosen', ['unit_id' => $row['unit_id']]) }}" class="font-weight-bold" style="color: var(--tsu-primary);">
+                                                            {{ $row['nama_prodi'] }}
+                                                        </a>
+                                                    </td>
+                                                    <td class="text-center font-weight-bold text-dark">{{ $row['total_dosen'] }}</td>
+                                                    <td class="text-center">{{ $y26['s3'] ?? 0 }} <small class="text-muted">({{ $y26['persen_s3'] ?? 0 }}%)</small></td>
+                                                    <td class="text-center">{{ $y27['s3'] ?? 0 }}</td>
+                                                    <td class="text-center">{{ $y28['s3'] ?? 0 }}</td>
+                                                    <td class="text-center">{{ $y29['s3'] ?? 0 }}</td>
+                                                    <td class="text-center font-weight-bold target-pill">
+                                                        {{ $y30['s3'] ?? 0 }} <small>({{ $y30['persen_s3'] ?? 0 }}%)</small>
+                                                    </td>
+                                                    <td class="text-center"><span class="badge badge-ss px-2 py-1">{{ $y26['ss'] ?? 0 }}</span></td>
+                                                    <td class="text-center"><span class="badge badge-tss px-2 py-1">{{ $y26['tss'] ?? 0 }}</span></td>
+                                                    <td class="text-center font-weight-bold" style="color: #059669;">{{ $y26['persen_ss'] ?? 0 }}%</td>
+                                                    <td class="text-center">
+                                                        <a href="{{ route('admin.pengembangan-sdm.dosen', ['unit_id' => $row['unit_id']]) }}" class="btn btn-sm btn-outline-primary" style="border-radius: 6px; padding: 0.2rem 0.5rem; font-size: 0.78rem;">
+                                                            <i class="fas fa-eye mr-1"></i> Detail
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="12" class="text-center text-muted py-4">Belum ada data road map dosen.</td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                        @if(count($prodi_breakdown) > 0)
+                                        <tfoot class="bg-light font-weight-bold">
+                                            <tr>
+                                                <td colspan="2" class="text-center text-uppercase">Total Universitas</td>
+                                                <td class="text-center">{{ $totDosen }}</td>
+                                                <td class="text-center">{{ $tot2026 }}</td>
+                                                <td class="text-center">{{ $tot2027 }}</td>
+                                                <td class="text-center">{{ $tot2028 }}</td>
+                                                <td class="text-center">{{ $tot2029 }}</td>
+                                                <td class="text-center font-weight-bold" style="color: var(--tsu-primary);">{{ $tot2030 }} ({{ $totDosen > 0 ? round(($tot2030 / $totDosen) * 100, 1) : 0 }}%)</td>
+                                                <td class="text-center" style="color: #059669;">{{ $totSS }}</td>
+                                                <td class="text-center text-secondary">{{ $totTSS }}</td>
+                                                <td class="text-center" style="color: #059669;">{{ ($totSS + $totTSS) > 0 ? round(($totSS / ($totSS + $totTSS)) * 100, 1) : 0 }}%</td>
+                                                <td></td>
+                                            </tr>
+                                        </tfoot>
+                                        @endif
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
+
+                <!-- ========================================== -->
+                <!-- TAB 2: TENAGA KEPENDIDIKAN (TENDIK) -->
+                <!-- ========================================== -->
+                <div class="tab-pane fade" id="tab-tendik" role="tabpanel" aria-labelledby="tendik-tab">
+
+                    <!-- Top KPI Cards Tendik -->
+                    <div class="tsu-stat-grid-sdm">
+                        <div class="tsu-stat-card tsu-stat-card--tendik">
+                            <i class="fas fa-user-tie tsu-stat-card__watermark"></i>
+                            <span class="tsu-stat-card__label text-uppercase font-weight-bold" style="letter-spacing: 0.5px;">Total Tendik</span>
+                            <div class="tsu-stat-card__value mt-1 mb-1">
+                                {{ $kpi['total_tendik'] ?? 0 }} <small style="font-size: 1.1rem; opacity: 0.9;">Pegawai</small>
+                            </div>
+                            <div>
+                                <span class="badge badge-pill font-weight-bold px-2 py-1" style="background: rgba(255, 255, 255, 0.2); color: #ffffff; font-size: 0.78rem;">
+                                    {{ count($tendik_breakdown) }} Unit Kerja
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="tsu-stat-card tsu-stat-card--target-s3">
+                            <i class="fas fa-user-graduate tsu-stat-card__watermark"></i>
+                            <span class="tsu-stat-card__label text-uppercase font-weight-bold" style="letter-spacing: 0.5px;">Target Magister (S2) 2030</span>
+                            <div class="tsu-stat-card__value mt-1 mb-1">
+                                {{ end($tendik_yearly_stats)['s2'] ?? 0 }} <small style="font-size: 1.1rem; opacity: 0.9;">Magister</small>
+                            </div>
+                            <small style="opacity: 0.95; font-size: 0.8rem;">
+                                <i class="fas fa-bullseye mr-1"></i> Akselerasi Kualifikasi Tendik
+                            </small>
+                        </div>
+
+                        <div class="tsu-stat-card tsu-stat-card--studi">
+                            <i class="fas fa-book-reader tsu-stat-card__watermark"></i>
+                            <span class="tsu-stat-card__label text-uppercase font-weight-bold" style="letter-spacing: 0.5px;">Tendik Sedang Studi (SS)</span>
+                            <div class="tsu-stat-card__value mt-1 mb-1">
+                                {{ $tendik_yearly_stats[2026]['ss'] ?? 0 }} <small style="font-size: 1.1rem; opacity: 0.9;">Pegawai</small>
+                            </div>
+                            <div>
+                                <span class="badge badge-pill font-weight-bold px-2 py-1" style="background: rgba(255, 255, 255, 0.2); color: #ffffff; font-size: 0.78rem;">
+                                    {{ ($kpi['total_tendik'] ?? 0) > 0 ? round((($tendik_yearly_stats[2026]['ss'] ?? 0) / $kpi['total_tendik']) * 100, 1) : 0 }}% Sedang Studi
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="tsu-stat-card tsu-stat-card--dosen">
+                            <i class="fas fa-building tsu-stat-card__watermark"></i>
+                            <span class="tsu-stat-card__label text-uppercase font-weight-bold" style="letter-spacing: 0.5px;">Unit Kerja Pelaksana</span>
+                            <div class="tsu-stat-card__value mt-1 mb-1">
+                                {{ count($tendik_breakdown) }} <small style="font-size: 1.1rem; opacity: 0.9;">Unit</small>
+                            </div>
+                            <div>
+                                <span class="badge badge-pill font-weight-bold px-2 py-1" style="background: rgba(255, 255, 255, 0.2); color: #ffffff; font-size: 0.78rem;">
+                                    Biro, Lembaga, Fak. & UPT
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tendik Charts Row -->
+                    <div class="row">
+                        <!-- Tendik Status Aktif Studi Bar Chart -->
+                        <div class="col-lg-7 col-12 mb-4">
+                            <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden;">
+                                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center" style="border-bottom: 1px solid var(--tsu-border);">
+                                    <h5 class="card-title font-weight-bold text-dark mb-0" style="font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                                        <i class="fas fa-user-clock text-info"></i> Status Studi Lanjut Tendik (SS vs TSS) per Unit Kerja (2026)
+                                    </h5>
+                                    <span class="badge badge-pill font-weight-bold px-2 py-1 ml-auto" style="background: rgba(2, 132, 199, 0.1); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.25); font-size: 0.78rem;">
+                                        {{ count($tendik_breakdown) }} Unit Kerja
+                                    </span>
+                                </div>
+                                <div class="card-body p-3">
+                                    <div class="chart-container">
+                                        <canvas id="chartTendikUnit"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tendik Proyeksi Kualifikasi S1 & S2 Line Chart -->
+                        <div class="col-lg-5 col-12 mb-4">
+                            <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden;">
+                                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center" style="border-bottom: 1px solid var(--tsu-border);">
+                                    <h5 class="card-title font-weight-bold text-dark mb-0" style="font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+                                        <i class="fas fa-chart-line" style="color: var(--tsu-primary);"></i> Proyeksi Kualifikasi S1 & S2 Tendik (2026 - 2030)
+                                    </h5>
+                                    <span class="badge badge-pill font-weight-bold px-2 py-1 ml-auto" style="background: rgba(9, 75, 84, 0.1); color: #094b54; border: 1px solid rgba(9, 75, 84, 0.25); font-size: 0.78rem;">
+                                        Renstra Tendik
+                                    </span>
+                                </div>
+                                <div class="card-body p-3">
+                                    <div class="chart-container">
+                                        <canvas id="chartTendikProyeksi"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Rekapitulasi 9 Unit Kerja Tendik Table -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card border-0 shadow-sm" style="border-radius: 12px; overflow: hidden;">
+                                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center" style="border-bottom: 1px solid var(--tsu-border);">
+                                    <div>
+                                        <h5 class="card-title font-weight-bold text-dark mb-0" style="font-size: 1rem; display: flex; align-items: center; gap: 8px;">
+                                            <i class="fas fa-table" style="color: var(--tsu-teal-accent);"></i> Rekapitulasi Road Map 9 Unit Kerja (Tenaga Kependidikan)
+                                        </h5>
+                                        <small class="text-muted">Peta kualifikasi jenjang pendidikan dan status studi lanjut tenaga kependidikan</small>
+                                    </div>
+                                    <div class="ml-auto">
+                                        <a href="{{ route('admin.pengembangan-sdm.tendik') }}" class="btn btn-sm btn-outline-info font-weight-bold" style="border-radius: 8px;">
+                                            <i class="fas fa-external-link-alt mr-1"></i> Buka Lembar Kerja Detail
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="table-responsive">
+                                    <table class="table table-hover table-bordered table-prodi mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th rowspan="2" style="width: 40px;">No</th>
+                                                <th rowspan="2">Unit Kerja</th>
+                                                <th rowspan="2" style="width: 80px;">Total Tendik</th>
+                                                <th colspan="3">Kualifikasi 2026</th>
+                                                <th colspan="5">Proyeksi Tendik Magister (S2) per Tahun</th>
+                                                <th colspan="3">Status Studi 2026</th>
+                                                <th rowspan="2" style="width: 90px;">Aksi</th>
+                                            </tr>
+                                            <tr class="table-prodi-subheader">
+                                                <th style="background-color: #334155;">D3</th>
+                                                <th style="background-color: #334155;">S1</th>
+                                                <th style="background-color: #0f766e;">S2</th>
+                                                <th style="background-color: #334155;">2026</th>
+                                                <th style="background-color: #334155;">2027</th>
+                                                <th style="background-color: #334155;">2028</th>
+                                                <th style="background-color: #334155;">2029</th>
+                                                <th style="background-color: #0284c7;">2030 (Target)</th>
+                                                <th style="background-color: #047857;">SS</th>
+                                                <th style="background-color: #64748b;">TSS</th>
+                                                <th style="background-color: #1e293b;">% SS</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @php
+                                                $totTendik = 0;
+                                                $totD3_26 = 0; $totS1_26 = 0; $totS2_26 = 0;
+                                                $tTot26 = 0; $tTot27 = 0; $tTot28 = 0; $tTot29 = 0; $tTot30 = 0;
+                                                $tTotSS = 0; $tTotTSS = 0;
+                                            @endphp
+                                            @forelse($tendik_breakdown as $tIdx => $tRow)
+                                                @php
+                                                    $totTendik += $tRow['total_tendik'];
+                                                    $ty26 = $tRow['yearly'][2026] ?? [];
+                                                    $ty27 = $tRow['yearly'][2027] ?? [];
+                                                    $ty28 = $tRow['yearly'][2028] ?? [];
+                                                    $ty29 = $tRow['yearly'][2029] ?? [];
+                                                    $ty30 = $tRow['yearly'][2030] ?? [];
+
+                                                    $totD3_26 += ($ty26['d3'] ?? 0);
+                                                    $totS1_26 += ($ty26['s1'] ?? 0);
+                                                    $totS2_26 += ($ty26['s2'] ?? 0);
+
+                                                    $tTot26 += ($ty26['s2'] ?? 0);
+                                                    $tTot27 += ($ty27['s2'] ?? 0);
+                                                    $tTot28 += ($ty28['s2'] ?? 0);
+                                                    $tTot29 += ($ty29['s2'] ?? 0);
+                                                    $tTot30 += ($ty30['s2'] ?? 0);
+
+                                                    $tTotSS += ($ty26['ss'] ?? 0);
+                                                    $tTotTSS += ($ty26['tss'] ?? 0);
+
+                                                    $tPersenSS = ($tRow['total_tendik'] > 0) ? round((($ty26['ss'] ?? 0) / $tRow['total_tendik']) * 100, 1) : 0;
+                                                @endphp
+                                                <tr>
+                                                    <td class="text-center font-weight-bold">{{ $tIdx + 1 }}</td>
+                                                    <td>
+                                                        <a href="{{ route('admin.pengembangan-sdm.tendik', ['unit_id' => $tRow['unit_id']]) }}" class="font-weight-bold text-dark">
+                                                            {{ $tRow['nama_unit'] }}
+                                                        </a>
+                                                    </td>
+                                                    <td class="text-center font-weight-bold text-dark">{{ $tRow['total_tendik'] }}</td>
+                                                    <td class="text-center">{{ $ty26['d3'] ?? 0 }}</td>
+                                                    <td class="text-center">{{ $ty26['s1'] ?? 0 }}</td>
+                                                    <td class="text-center font-weight-bold text-success">{{ $ty26['s2'] ?? 0 }}</td>
+                                                    <td class="text-center">{{ $ty26['s2'] ?? 0 }}</td>
+                                                    <td class="text-center">{{ $ty27['s2'] ?? 0 }}</td>
+                                                    <td class="text-center">{{ $ty28['s2'] ?? 0 }}</td>
+                                                    <td class="text-center">{{ $ty29['s2'] ?? 0 }}</td>
+                                                    <td class="text-center font-weight-bold target-pill">
+                                                        {{ $ty30['s2'] ?? 0 }}
+                                                    </td>
+                                                    <td class="text-center"><span class="badge badge-ss px-2 py-1">{{ $ty26['ss'] ?? 0 }}</span></td>
+                                                    <td class="text-center"><span class="badge badge-tss px-2 py-1">{{ $ty26['tss'] ?? 0 }}</span></td>
+                                                    <td class="text-center font-weight-bold" style="color: #059669;">{{ $tPersenSS }}%</td>
+                                                    <td class="text-center">
+                                                        <a href="{{ route('admin.pengembangan-sdm.tendik', ['unit_id' => $tRow['unit_id']]) }}" class="btn btn-sm btn-outline-info" style="border-radius: 6px; padding: 0.2rem 0.5rem; font-size: 0.78rem;">
+                                                            <i class="fas fa-eye mr-1"></i> Detail
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            @empty
+                                                <tr>
+                                                    <td colspan="15" class="text-center text-muted py-4">Belum ada data road map tenaga kependidikan.</td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                        @if(count($tendik_breakdown) > 0)
+                                        <tfoot class="bg-light font-weight-bold">
+                                            <tr>
+                                                <td colspan="2" class="text-center text-uppercase">Total Seluruh Unit Tendik</td>
+                                                <td class="text-center">{{ $totTendik }}</td>
+                                                <td class="text-center">{{ $totD3_26 }}</td>
+                                                <td class="text-center">{{ $totS1_26 }}</td>
+                                                <td class="text-center text-success">{{ $totS2_26 }}</td>
+                                                <td class="text-center">{{ $tTot26 }}</td>
+                                                <td class="text-center">{{ $tTot27 }}</td>
+                                                <td class="text-center">{{ $tTot28 }}</td>
+                                                <td class="text-center">{{ $tTot29 }}</td>
+                                                <td class="text-center font-weight-bold text-primary">{{ $tTot30 }} ({{ $totTendik > 0 ? round(($tTot30 / $totTendik) * 100, 1) : 0 }}%)</td>
+                                                <td class="text-center" style="color: #059669;">{{ $tTotSS }}</td>
+                                                <td class="text-center text-secondary">{{ $tTotTSS }}</td>
+                                                <td class="text-center" style="color: #059669;">{{ ($tTotSS + $tTotTSS) > 0 ? round(($tTotSS / ($tTotSS + $tTotTSS)) * 100, 1) : 0 }}%</td>
+                                                <td></td>
+                                            </tr>
+                                        </tfoot>
+                                        @endif
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+
             </div>
 
         </div>
     </section>
+
+    <!-- ========================================================== -->
+    <!-- MODAL DETAIL STATUS JABATAN FUNGSIONAL DOSEN -->
+    <!-- ========================================================== -->
+    <div class="modal fade" id="modalDetailJabfung" tabindex="-1" role="dialog" aria-labelledby="modalDetailJabfungLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered" role="document">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 14px; overflow: hidden;">
+                <div class="modal-header py-3" style="background: linear-gradient(135deg, #094b54 0%, #0c6170 100%); color: #ffffff;">
+                    <h5 class="modal-title font-weight-bold" id="modalDetailJabfungLabel" style="font-size: 1.05rem;">
+                        <i class="fas fa-user-tag mr-2"></i> Rincian Status Jabatan Fungsional Dosen (Early Warning)
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close" style="opacity: 0.9;">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body p-4" style="background: #f8fafc;">
+                    <!-- Filter Buttons Inside Modal -->
+                    <div class="d-flex flex-wrap align-items-center mb-3" style="gap: 8px;">
+                        <span class="font-weight-bold text-dark small mr-2">Filter Kategori:</span>
+                        <button type="button" class="btn btn-sm btn-outline-secondary font-weight-bold active" id="btnFilterAll" onclick="filterJabfungTable('all')" style="border-radius: 6px;">
+                            Semua ({{ $jafungSummary['total_dosen'] ?? 0 }})
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-warning font-weight-bold" id="btnFilterKuning" onclick="filterJabfungTable('kuning')" style="border-radius: 6px; color: #b45309; border-color: #f59e0b;">
+                            <i class="fas fa-clock mr-1"></i> Kuning: Persiapan ({{ $jafungSummary['counts']['kuning'] ?? 0 }})
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-danger font-weight-bold" id="btnFilterOrange" onclick="filterJabfungTable('orange')" style="border-radius: 6px; color: #c2410c; border-color: #ea580c;">
+                            <i class="fas fa-exclamation-circle mr-1"></i> Orange: Harus Pengajuan ({{ $jafungSummary['counts']['orange'] ?? 0 }})
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-danger font-weight-bold" id="btnFilterMerah" onclick="filterJabfungTable('merah')" style="border-radius: 6px;">
+                            <i class="fas fa-exclamation-triangle mr-1"></i> Merah: Telat Naik ({{ $jafungSummary['counts']['merah'] ?? 0 }})
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-success font-weight-bold" id="btnFilterHijau" onclick="filterJabfungTable('hijau')" style="border-radius: 6px;">
+                            <i class="fas fa-check-circle mr-1"></i> Hijau: Sesuai Aturan ({{ $jafungSummary['counts']['hijau'] ?? 0 }})
+                        </button>
+                    </div>
+
+                    <!-- Search Input Inside Modal -->
+                    <div class="mb-3">
+                        <input type="text" id="searchJabfungInput" class="form-control form-control-sm" placeholder="Cari nama dosen, prodi, atau jabatan fungsional..." onkeyup="searchJabfungTable()" style="border-radius: 8px;">
+                    </div>
+
+                    <!-- Table List -->
+                    <div class="table-responsive bg-white shadow-sm" style="border-radius: 10px; max-height: 480px; overflow-y: auto;">
+                        <table class="table table-hover table-bordered mb-0" id="tableJabfungDetail">
+                            <thead class="bg-light" style="position: sticky; top: 0; z-index: 2;">
+                                <tr>
+                                    <th style="width: 45px; text-align: center;">No</th>
+                                    <th>Nama Dosen & NIDN</th>
+                                    <th>Program Studi</th>
+                                    <th>Jabatan Fungsional Saat Ini</th>
+                                    <th>Periode Aktif SK</th>
+                                    <th>Status & Rekomendasi Tindakan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @php $rowNum = 1; @endphp
+                                @foreach(['merah', 'orange', 'kuning', 'hijau'] as $catKey)
+                                    @foreach($jafungSummary['details'][$catKey] ?? [] as $item)
+                                        <tr class="jabfung-row" data-status="{{ $item['status'] }}">
+                                            <td class="text-center font-weight-bold text-muted">{{ $rowNum++ }}</td>
+                                            <td>
+                                                <div class="font-weight-bold text-dark">{{ $item['nama'] }}</div>
+                                                <small class="text-muted">NIDN: {{ $item['nidn'] }}</small>
+                                            </td>
+                                            <td>{{ $item['prodi'] }}</td>
+                                            <td>
+                                                <span class="badge badge-light border px-2 py-1 font-weight-bold" style="font-size: 0.82rem;">
+                                                    {{ $item['jafung'] }}
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <small class="text-muted d-block">Mulai: {{ $item['tgl_mulai'] }}</small>
+                                                <small class="font-weight-bold text-dark d-block">Batas: {{ $item['tgl_akhir'] }}</small>
+                                            </td>
+                                            <td>
+                                                @if($item['status'] === 'merah')
+                                                    <span class="badge badge-pill badge-danger px-2 py-1 font-weight-bold" style="font-size: 0.78rem;">
+                                                        <i class="fas fa-exclamation-triangle mr-1"></i> Merah: Telat Naik Pangkat
+                                                    </span>
+                                                @elseif($item['status'] === 'orange')
+                                                    <span class="badge badge-pill font-weight-bold px-2 py-1" style="background: #f97316; color: #ffffff; font-size: 0.78rem;">
+                                                        <i class="fas fa-exclamation-circle mr-1"></i> Orange: Harus Pengajuan
+                                                    </span>
+                                                @elseif($item['status'] === 'kuning')
+                                                    <span class="badge badge-pill font-weight-bold px-2 py-1" style="background: #eab308; color: #ffffff; font-size: 0.78rem;">
+                                                        <i class="fas fa-clock mr-1"></i> Kuning: Persiapan Naik
+                                                    </span>
+                                                @else
+                                                    <span class="badge badge-pill badge-success px-2 py-1 font-weight-bold" style="font-size: 0.78rem;">
+                                                        <i class="fas fa-check-circle mr-1"></i> Hijau: Sesuai Aturan
+                                                    </span>
+                                                @endif
+                                                <div class="small text-muted mt-1" style="font-size: 0.76rem;">{{ $item['status_desc'] }}</div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer bg-white py-2">
+                    <button type="button" class="btn btn-sm btn-secondary font-weight-bold px-3" data-dismiss="modal" style="border-radius: 6px;">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('script')
@@ -814,24 +1076,15 @@
             $years = array_keys($dosen_yearly_stats);
             $persenS3List = array_column($dosen_yearly_stats, 'persen_s3');
             $countS3List = array_column($dosen_yearly_stats, 's3');
+            $targetRenstraList = array_fill(0, count($years), (float)($periode->target_persen_doktor ?? 53.6));
 
             // Tendik Data
             $tendikUnitNames = array_map(function($t) {
                 $name = $t['nama_unit'];
-                $name = str_replace([
-                    'Biro Administrasi Akademik dan Kemahasiswaan (BAAK)',
-                    'Biro Administrasi Umum dan Keuangan (BAUK)',
-                    'Lembaga Penjaminan Mutu (LPM)',
-                    'Lembaga Penelitian dan Pengabdian Masyarakat (LPPM)',
-                    'Unit Pelaksana Teknis Sistem Informasi (UPT SI)',
-                    'Unit Pelaksana Teknis Perpustakaan',
-                    'Unit Pelaksana Teknis Laboratorium Terpadu',
-                    'Biro Humas, Kerjasama, dan Pemasaran',
-                    'Satuan Pengawas Internal (SPI)'
-                ], [
-                    'BAAK', 'BAUK', 'LPM', 'LPPM', 'UPT SI', 'UPT Perpus', 'UPT Lab', 'Humas', 'SPI'
-                ], $name);
-                return $name;
+                if (preg_match('/\((.*?)\)/', $name, $matches)) {
+                    return $matches[1];
+                }
+                return str_replace(['Fakultas ', 'Unit Pelaksana Teknis '], ['Fak. ', 'UPT '], $name);
             }, $tendik_breakdown);
 
             $tendikSSList = array_map(function($t) {
@@ -852,298 +1105,322 @@
         var ssData = {!! json_encode($ssList) !!};
         var tssData = {!! json_encode($tssList) !!};
 
-        // ==========================================
-        // 1. Bar Chart Dosen: SS vs TSS per Prodi
-        // ==========================================
-        // Filosofi Warna:
-        // - Sedang Studi (SS): TSU Deep Teal (#094b54) melambangkan akselerasi kualifikasi dosen yang aktif menempuh studi lanjut.
-        // - Tidak Sedang Studi (TSS): Refined Neutral Slate (rgba(148, 163, 184, 0.45)) melambangkan stabilitas operasional pengajaran aktif di kampus.
-        var ctxKesesuaian = document.getElementById('chartKesesuaian').getContext('2d');
-        new Chart(ctxKesesuaian, {
-            type: 'bar',
-            data: {
-                labels: prodiLabels,
-                datasets: [
-                    {
-                        label: 'Sedang Studi (SS)',
-                        backgroundColor: '#094b54',
-                        borderColor: '#042f35',
-                        borderWidth: 1.5,
-                        hoverBackgroundColor: '#0d9488',
-                        data: ssData
-                    },
-                    {
-                        label: 'Tidak Sedang Studi (TSS)',
-                        backgroundColor: 'rgba(148, 163, 184, 0.45)',
-                        borderColor: '#94a3b8',
-                        borderWidth: 1,
-                        hoverBackgroundColor: 'rgba(148, 163, 184, 0.75)',
-                        data: tssData
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                legend: {
-                    position: 'top',
-                    labels: {
-                        boxWidth: 12,
-                        fontColor: '#334155',
-                        fontStyle: '600',
-                        fontSize: 11
-                    }
-                },
-                scales: {
-                    xAxes: [{
-                        stacked: false,
-                        gridLines: { display: false },
-                        ticks: { autoSkip: false, maxRotation: 35, minRotation: 0, fontColor: '#64748b', fontSize: 10 }
-                    }],
-                    yAxes: [{
-                        gridLines: { color: '#f1f5f9', zeroLineColor: '#e2e8f0' },
-                        ticks: { beginAtZero: true, stepSize: 2, fontColor: '#64748b' }
-                    }]
+        var chartDosenSS = null;
+        var chartDosenS3 = null;
+        var chartTendikSS = null;
+        var chartTendikProyeksiS1S2 = null;
+        var tendikChartsRendered = false;
+
+        // 1 & 2: Render Dosen Tab Charts
+        function renderDosenCharts() {
+            try {
+                var canvasBar = document.getElementById('chartKesesuaian');
+                if (canvasBar && !chartDosenSS) {
+                    var ctxBar = canvasBar.getContext('2d');
+                    chartDosenSS = new Chart(ctxBar, {
+                        type: 'bar',
+                        data: {
+                            labels: prodiLabels,
+                            datasets: [
+                                {
+                                    label: 'Sedang Studi (SS)',
+                                    data: ssData,
+                                    backgroundColor: '#094b54',
+                                    borderColor: '#063339',
+                                    borderWidth: 1,
+                                    barPercentage: 0.75,
+                                    categoryPercentage: 0.8
+                                },
+                                {
+                                    label: 'Tidak Sedang Studi (TSS)',
+                                    data: tssData,
+                                    backgroundColor: 'rgba(148, 163, 184, 0.45)',
+                                    borderColor: '#94a3b8',
+                                    borderWidth: 1,
+                                    barPercentage: 0.75,
+                                    categoryPercentage: 0.8
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            legend: {
+                                position: 'top',
+                                labels: { boxWidth: 14, fontSize: 11, fontStyle: 'bold' }
+                            },
+                            scales: {
+                                xAxes: [{
+                                    stacked: true,
+                                    gridLines: { display: false },
+                                    ticks: { fontSize: 10, fontStyle: 'bold', maxRotation: 35, minRotation: 0 }
+                                }],
+                                yAxes: [{
+                                    stacked: true,
+                                    ticks: { beginAtZero: true, stepSize: 2, fontSize: 11 },
+                                    gridLines: { color: 'rgba(226, 232, 240, 0.6)' }
+                                }]
+                            }
+                        }
+                    });
                 }
+
+                var canvasArea = document.getElementById('chartProyeksiS3');
+                if (canvasArea && !chartDosenS3) {
+                    var ctxArea = canvasArea.getContext('2d');
+                    var gradientS3 = ctxArea.createLinearGradient(0, 0, 0, 260);
+                    gradientS3.addColorStop(0, 'rgba(16, 185, 129, 0.35)');
+                    gradientS3.addColorStop(1, 'rgba(16, 185, 129, 0.02)');
+
+                    chartDosenS3 = new Chart(ctxArea, {
+                        type: 'line',
+                        data: {
+                            labels: {!! json_encode($years) !!},
+                            datasets: [
+                                {
+                                    label: '% Doktor (S3)',
+                                    data: {!! json_encode($persenS3List) !!},
+                                    borderColor: '#059669',
+                                    backgroundColor: gradientS3,
+                                    borderWidth: 3,
+                                    fill: true,
+                                    lineTension: 0.35,
+                                    pointBackgroundColor: '#059669',
+                                    pointBorderColor: '#ffffff',
+                                    pointBorderWidth: 2,
+                                    pointRadius: 5
+                                },
+                                {
+                                    label: 'Target Doktor (Renstra {{ $periode->target_persen_doktor ?? 53.6 }}%)',
+                                    data: {!! json_encode($targetRenstraList) !!},
+                                    borderColor: '#dc2626',
+                                    borderWidth: 2,
+                                    borderDash: [6, 4],
+                                    fill: false,
+                                    pointRadius: 0
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            legend: {
+                                position: 'top',
+                                labels: { boxWidth: 14, fontSize: 11 }
+                            },
+                            scales: {
+                                xAxes: [{
+                                    gridLines: { display: false },
+                                    ticks: { fontStyle: 'bold', fontSize: 11 }
+                                }],
+                                yAxes: [{
+                                    gridLines: { color: 'rgba(226, 232, 240, 0.6)' },
+                                    ticks: {
+                                        beginAtZero: true,
+                                        max: 100,
+                                        stepSize: 20,
+                                        fontSize: 10,
+                                        callback: function(value) { return value + '%'; }
+                                    }
+                                }]
+                            }
+                        }
+                    });
+                }
+            } catch (err) {
+                console.error("Error rendering Dosen charts:", err);
             }
-        });
+        }
 
-        // ==========================================
-        // 2. Area Chart Dosen: Proyeksi Kualifikasi S3 (2026 - 2030)
-        // ==========================================
-        // Filosofi Warna:
-        // - Garis kurva TSU Deep Teal (#094b54) dengan gradient fill halus merefleksikan roadmap akselerasi keunggulan institusi.
-        // - Titik Capaian Amber Gold (#f59e0b) dengan border putih melambangkan medali emas gelar Doktor (S3) sebagai standar tertinggi.
-        var years = {!! json_encode($years) !!};
-        var persenS3 = {!! json_encode($persenS3List) !!};
-        var totalS3 = {!! json_encode($countS3List) !!};
-
-        var ctxProyeksi = document.getElementById('chartProyeksiS3').getContext('2d');
-        var gradientS3 = ctxProyeksi.createLinearGradient(0, 0, 0, 260);
-        gradientS3.addColorStop(0, 'rgba(9, 75, 84, 0.28)');
-        gradientS3.addColorStop(1, 'rgba(9, 75, 84, 0.01)');
-
-        new Chart(ctxProyeksi, {
-            type: 'line',
-            data: {
-                labels: years,
-                datasets: [{
-                    label: '% Dosen Bergelar Doktor (S3)',
-                    backgroundColor: gradientS3,
-                    borderColor: '#094b54',
-                    borderWidth: 3,
-                    pointBackgroundColor: '#f59e0b',
-                    pointBorderColor: '#ffffff',
-                    pointBorderWidth: 2,
-                    pointHoverRadius: 8,
-                    pointHoverBackgroundColor: '#d97706',
-                    pointHoverBorderColor: '#ffffff',
-                    pointHoverBorderWidth: 2,
-                    pointRadius: 6,
-                    data: persenS3,
-                    fill: true,
-                    lineTension: 0.35
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                legend: {
-                    position: 'top',
-                    labels: {
-                        boxWidth: 12,
-                        fontColor: '#334155',
-                        fontStyle: '600',
-                        fontSize: 11
-                    }
-                },
-                tooltips: {
-                    backgroundColor: '#1e293b',
-                    titleFontSize: 12,
-                    bodyFontSize: 12,
-                    cornerRadius: 6,
-                    xPadding: 10,
-                    yPadding: 10,
-                    callbacks: {
-                        label: function(tooltipItem, data) {
-                            var index = tooltipItem.index;
-                            return ' Proyeksi Doktor S3: ' + tooltipItem.yLabel + '% (' + totalS3[index] + ' Orang S3)';
+        // 3 & 4: Render Tendik Tab Charts
+        function renderTendikCharts() {
+            if (tendikChartsRendered) return;
+            try {
+                var canvasTendikUnit = document.getElementById('chartTendikUnit');
+                if (canvasTendikUnit && !chartTendikSS) {
+                    var ctxTendik = canvasTendikUnit.getContext('2d');
+                    chartTendikSS = new Chart(ctxTendik, {
+                        type: 'bar',
+                        data: {
+                            labels: {!! json_encode($tendikUnitNames) !!},
+                            datasets: [
+                                {
+                                    label: 'Sedang Studi (SS)',
+                                    data: {!! json_encode($tendikSSList) !!},
+                                    backgroundColor: '#0284c7',
+                                    borderColor: '#0369a1',
+                                    borderWidth: 1,
+                                    barPercentage: 0.75,
+                                    categoryPercentage: 0.8
+                                },
+                                {
+                                    label: 'Tidak Sedang Studi (TSS)',
+                                    data: {!! json_encode($tendikTSSList) !!},
+                                    backgroundColor: 'rgba(148, 163, 184, 0.45)',
+                                    borderColor: '#94a3b8',
+                                    borderWidth: 1,
+                                    barPercentage: 0.75,
+                                    categoryPercentage: 0.8
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            legend: {
+                                position: 'top',
+                                labels: { boxWidth: 14, fontSize: 11, fontStyle: 'bold' }
+                            },
+                            scales: {
+                                xAxes: [{
+                                    stacked: true,
+                                    gridLines: { display: false },
+                                    ticks: { fontSize: 10, fontStyle: 'bold', maxRotation: 30, minRotation: 0 }
+                                }],
+                                yAxes: [{
+                                    stacked: true,
+                                    ticks: { beginAtZero: true, stepSize: 2, fontSize: 11 },
+                                    gridLines: { color: 'rgba(226, 232, 240, 0.6)' }
+                                }]
+                            }
                         }
-                    }
-                },
-                scales: {
-                    xAxes: [{
-                        gridLines: { display: false },
-                        ticks: { fontColor: '#64748b' }
-                    }],
-                    yAxes: [{
-                        gridLines: { color: '#f1f5f9', zeroLineColor: '#e2e8f0' },
-                        ticks: {
-                            beginAtZero: true,
-                            max: 70,
-                            fontColor: '#64748b',
-                            callback: function(value) { return value + '%'; }
-                        }
-                    }]
+                    });
                 }
+
+                var canvasTendikProyeksi = document.getElementById('chartTendikProyeksi');
+                if (canvasTendikProyeksi && !chartTendikProyeksiS1S2) {
+                    var ctxTendikProyeksi = canvasTendikProyeksi.getContext('2d');
+                    var gradientTendik = ctxTendikProyeksi.createLinearGradient(0, 0, 0, 260);
+                    gradientTendik.addColorStop(0, 'rgba(2, 132, 199, 0.35)');
+                    gradientTendik.addColorStop(1, 'rgba(2, 132, 199, 0.02)');
+
+                    chartTendikProyeksiS1S2 = new Chart(ctxTendikProyeksi, {
+                        type: 'line',
+                        data: {
+                            labels: {!! json_encode($tendikYears) !!},
+                            datasets: [
+                                {
+                                    label: 'Tendik Magister (S2)',
+                                    data: {!! json_encode($tendikS2List) !!},
+                                    borderColor: '#0284c7',
+                                    backgroundColor: gradientTendik,
+                                    borderWidth: 3,
+                                    fill: true,
+                                    lineTension: 0.35,
+                                    pointBackgroundColor: '#0284c7',
+                                    pointBorderColor: '#ffffff',
+                                    pointBorderWidth: 2,
+                                    pointRadius: 5
+                                },
+                                {
+                                    label: 'Tendik Sarjana (S1)',
+                                    data: {!! json_encode($tendikS1List) !!},
+                                    borderColor: '#094b54',
+                                    backgroundColor: 'transparent',
+                                    borderWidth: 2,
+                                    borderDash: [4, 4],
+                                    pointBackgroundColor: '#094b54',
+                                    pointRadius: 4
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            legend: {
+                                position: 'top',
+                                labels: { boxWidth: 14, fontSize: 11 }
+                            },
+                            scales: {
+                                xAxes: [{
+                                    gridLines: { display: false },
+                                    ticks: { fontStyle: 'bold', fontSize: 11 }
+                                }],
+                                yAxes: [{
+                                    ticks: { beginAtZero: true, stepSize: 2, fontSize: 10 },
+                                    gridLines: { color: 'rgba(226, 232, 240, 0.6)' }
+                                }]
+                            }
+                        }
+                    });
+                }
+
+                tendikChartsRendered = true;
+            } catch (err) {
+                console.error("Error rendering Tendik charts:", err);
             }
-        });
+        }
 
-        // ==========================================
-        // 3. Bar Chart Tendik: SS vs TSS per Unit Kerja (2026)
-        // ==========================================
-        // Filosofi Warna:
-        // - Sedang Studi (SS): Oceanic Blue (#0284c7) melambangkan transformasi inovatif dan peningkatan kompetensi profesional tendik.
-        // - Tidak Sedang Studi (TSS): Refined Neutral Slate (rgba(148, 163, 184, 0.45)) melambangkan kontinuitas pelayanan prima harian unit kerja.
-        var tendikUnitLabels = {!! json_encode($tendikUnitNames) !!};
-        var tendikSSData = {!! json_encode($tendikSSList) !!};
-        var tendikTSSData = {!! json_encode($tendikTSSList) !!};
+        // Render Dosen tab charts immediately on load
+        renderDosenCharts();
+        setTimeout(function() {
+            if (chartDosenSS) { chartDosenSS.resize(); }
+            if (chartDosenS3) { chartDosenS3.resize(); }
+        }, 150);
 
-        var ctxTendikUnit = document.getElementById('chartTendikUnit').getContext('2d');
-        new Chart(ctxTendikUnit, {
-            type: 'bar',
-            data: {
-                labels: tendikUnitLabels,
-                datasets: [
-                    {
-                        label: 'Sedang Studi (SS)',
-                        backgroundColor: '#0284c7',
-                        borderColor: '#0369a1',
-                        borderWidth: 1.5,
-                        hoverBackgroundColor: '#0369a1',
-                        data: tendikSSData
-                    },
-                    {
-                        label: 'Tidak Sedang Studi (TSS)',
-                        backgroundColor: 'rgba(148, 163, 184, 0.45)',
-                        borderColor: '#94a3b8',
-                        borderWidth: 1,
-                        hoverBackgroundColor: 'rgba(148, 163, 184, 0.75)',
-                        data: tendikTSSData
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                legend: {
-                    position: 'top',
-                    labels: {
-                        boxWidth: 12,
-                        fontColor: '#334155',
-                        fontStyle: '600',
-                        fontSize: 11
-                    }
-                },
-                scales: {
-                    xAxes: [{
-                        stacked: false,
-                        gridLines: { display: false },
-                        ticks: { autoSkip: false, maxRotation: 30, minRotation: 0, fontColor: '#64748b', fontSize: 10 }
-                    }],
-                    yAxes: [{
-                        gridLines: { color: '#f1f5f9', zeroLineColor: '#e2e8f0' },
-                        ticks: { beginAtZero: true, stepSize: 1, fontColor: '#64748b' }
-                    }]
+        // If Tendik tab is active initially
+        if ($('#tab-tendik').hasClass('active') || $('#tab-tendik').hasClass('show')) {
+            renderTendikCharts();
+        }
+
+        // Handle Tab Switching: Render Tendik charts when tab becomes visible and resize
+        $('a[data-toggle="pill"], a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+            var target = $(e.target).attr('href');
+            if (target === '#tab-tendik') {
+                if (!tendikChartsRendered) {
+                    renderTendikCharts();
                 }
-            }
-        });
-
-        // ==========================================
-        // 4. Line Chart Tendik: Proyeksi Kualifikasi S1 & S2 (2026 - 2030)
-        // ==========================================
-        // Filosofi Warna:
-        // - Tendik S2 (Magister): TSU Deep Teal (#094b54) solid line dengan gradient fill melambangkan akselerasi kualifikasi magister sebagai target utama.
-        // - Tendik S1 (Sarjana): Warm Amber Gold (#f59e0b) garis putus-putus melambangkan transformasi staf sarjana menuju kualifikasi magister.
-        var ctxTendikProyeksi = document.getElementById('chartTendikProyeksi').getContext('2d');
-        var gradientTendikS2 = ctxTendikProyeksi.createLinearGradient(0, 0, 0, 260);
-        gradientTendikS2.addColorStop(0, 'rgba(9, 75, 84, 0.22)');
-        gradientTendikS2.addColorStop(1, 'rgba(9, 75, 84, 0.01)');
-
-        new Chart(ctxTendikProyeksi, {
-            type: 'line',
-            data: {
-                labels: {!! json_encode($tendikYears) !!},
-                datasets: [
-                    {
-                        label: 'Tendik S2 (Magister)',
-                        backgroundColor: gradientTendikS2,
-                        borderColor: '#094b54',
-                        borderWidth: 3,
-                        pointBackgroundColor: '#094b54',
-                        pointBorderColor: '#ffffff',
-                        pointBorderWidth: 2,
-                        pointHoverRadius: 8,
-                        pointHoverBackgroundColor: '#0d9488',
-                        pointHoverBorderColor: '#ffffff',
-                        pointHoverBorderWidth: 2,
-                        pointRadius: 6,
-                        data: {!! json_encode($tendikS2List) !!},
-                        fill: true,
-                        lineTension: 0.35
-                    },
-                    {
-                        label: 'Tendik S1 (Sarjana)',
-                        backgroundColor: 'transparent',
-                        borderColor: '#f59e0b',
-                        borderWidth: 2.5,
-                        borderDash: [6, 4],
-                        pointBackgroundColor: '#f59e0b',
-                        pointBorderColor: '#ffffff',
-                        pointBorderWidth: 2,
-                        pointHoverRadius: 7,
-                        pointHoverBackgroundColor: '#d97706',
-                        pointHoverBorderColor: '#ffffff',
-                        pointHoverBorderWidth: 2,
-                        pointRadius: 5,
-                        data: {!! json_encode($tendikS1List) !!},
-                        fill: false,
-                        lineTension: 0.35
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                legend: {
-                    position: 'top',
-                    labels: {
-                        boxWidth: 12,
-                        fontColor: '#334155',
-                        fontStyle: '600',
-                        fontSize: 11
-                    }
-                },
-                tooltips: {
-                    backgroundColor: '#1e293b',
-                    titleFontSize: 12,
-                    bodyFontSize: 12,
-                    cornerRadius: 6,
-                    xPadding: 10,
-                    yPadding: 10,
-                    callbacks: {
-                        label: function(tooltipItem, data) {
-                            var dsLabel = data.datasets[tooltipItem.datasetIndex].label || '';
-                            return ' ' + dsLabel + ': ' + tooltipItem.yLabel + ' Pegawai';
-                        }
-                    }
-                },
-                scales: {
-                    xAxes: [{
-                        gridLines: { display: false },
-                        ticks: { fontColor: '#64748b' }
-                    }],
-                    yAxes: [{
-                        gridLines: { color: '#f1f5f9', zeroLineColor: '#e2e8f0' },
-                        ticks: {
-                            beginAtZero: true,
-                            stepSize: 5,
-                            fontColor: '#64748b'
-                        }
-                    }]
-                }
+                setTimeout(function() {
+                    if (chartTendikSS) { chartTendikSS.resize(); chartTendikSS.update(); }
+                    if (chartTendikProyeksiS1S2) { chartTendikProyeksiS1S2.resize(); chartTendikProyeksiS1S2.update(); }
+                }, 60);
+            } else if (target === '#tab-dosen') {
+                setTimeout(function() {
+                    if (chartDosenSS) { chartDosenSS.resize(); chartDosenSS.update(); }
+                    if (chartDosenS3) { chartDosenS3.resize(); chartDosenS3.update(); }
+                }, 60);
             }
         });
     });
+
+    // Helper Filter Inside Modal
+    function filterJabfungTable(category) {
+        $('.jabfung-row').each(function() {
+            var rowCat = $(this).data('status');
+            if (category === 'all' || rowCat === category) {
+                $(this).show();
+            } else {
+                $(this).hide();
+            }
+        });
+
+        // Update active button state
+        $('#modalDetailJabfung button[id^="btnFilter"]').removeClass('active');
+        if (category === 'all') $('#btnFilterAll').addClass('active');
+        else if (category === 'kuning') $('#btnFilterKuning').addClass('active');
+        else if (category === 'orange') $('#btnFilterOrange').addClass('active');
+        else if (category === 'merah') $('#btnFilterMerah').addClass('active');
+        else if (category === 'hijau') $('#btnFilterHijau').addClass('active');
+    }
+
+    // Modal Trigger From Card Click
+    function filterJabfungModal(category) {
+        setTimeout(function() {
+            filterJabfungTable(category);
+        }, 150);
+    }
+
+    // Search inside Modal
+    function searchJabfungTable() {
+        var query = $('#searchJabfungInput').val().toLowerCase();
+        $('.jabfung-row').each(function() {
+            var text = $(this).text().toLowerCase();
+            if (text.indexOf(query) > -1) {
+                $(this).show();
+            } else {
+                $(this).hide();
+            }
+        });
+    }
 </script>
 @endsection

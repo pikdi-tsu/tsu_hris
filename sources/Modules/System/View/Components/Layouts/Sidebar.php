@@ -18,9 +18,17 @@ class Sidebar extends Component
         // Kita eager load 'children' biar query-nya efisien
         $this->menus = MenuSidebar::query()->whereNull('parent_id')
             ->where('isactive', 1)
-            ->with(['children' => function ($query) {
-                $query->where('isactive', 1)->orderBy('order');
-            }])
+            ->with([
+                'children' => function ($query) {
+                    $query->where('isactive', 1)->orderBy('order');
+                },
+                'children.children' => function ($query) {
+                    $query->where('isactive', 1)->orderBy('order');
+                },
+                'children.children.children' => function ($query) {
+                    $query->where('isactive', 1)->orderBy('order');
+                }
+            ])
             ->orderBy('order')
             ->get();
     }

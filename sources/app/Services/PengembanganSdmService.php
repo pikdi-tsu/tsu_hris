@@ -484,4 +484,129 @@ class PengembanganSdmService
             ]
         ];
     }
+
+    /**
+     * Rangkuman Status Jabatan Fungsional Dosen (Kuning, Orange, Merah, Hijau)
+     */
+    public static function getJabatanFungsionalSummary(): array
+    {
+        $dosens = DB::table('data_dosen_tendiks')
+            ->leftJoin('master_units', 'master_units.id', '=', 'data_dosen_tendiks.unit_id')
+            ->leftJoin('karyawan_jabatan_fungsionals', function($join) {
+                $join->on('karyawan_jabatan_fungsionals.data_dosen_tendik_id', '=', 'data_dosen_tendiks.id')
+                     ->where('karyawan_jabatan_fungsionals.is_active', '=', 'Y');
+            })
+            ->leftJoin('master_jabatan_fungsionals', 'master_jabatan_fungsionals.id', '=', 'karyawan_jabatan_fungsionals.jabatan_fungsional_id')
+            ->where('data_dosen_tendiks.tipe_karyawan', 'LIKE', '%Dosen%')
+            ->where('data_dosen_tendiks.is_active', 1)
+            ->select(
+                'data_dosen_tendiks.id',
+                'data_dosen_tendiks.nama',
+                'data_dosen_tendiks.nidn',
+                'data_dosen_tendiks.tipe_karyawan',
+                'data_dosen_tendiks.tgl_bergabung',
+                'master_units.nama_unit as prodi',
+                'master_jabatan_fungsionals.nama_jabatan',
+                'master_jabatan_fungsionals.periode_jabatan',
+                'karyawan_jabatan_fungsionals.tgl_mulai',
+                'karyawan_jabatan_fungsionals.tgl_akhir'
+            )
+            ->orderBy('data_dosen_tendiks.nama')
+            ->get();
+
+        $now = Carbon::now();
+        $counts = ['kuning' => 0, 'orange' => 0, 'merah' => 0, 'hijau' => 0];
+        $details = ['kuning' => [], 'orange' => [], 'merah' => [], 'hijau' => []];
+
+        foreach ($dosens as $d) {
+            $jafungName = $d->nama_jabatan ?? 'Tenaga Pengajar';
+            $status = 'hijau';
+            $statusLabel = 'Sesuai Aturan';
+            $statusDesc = '';
+
+            if ($d->nama_jabatan === 'Guru Besar') {
+                $status = 'hijau';
+                $statusLabel = 'Sesuai Aturan';
+                $statusDesc = 'Guru Besar (Jenjang Tertinggi)';
+            } elseif (!$d->nama_jabatan || $d->nama_jabatan === 'Tenaga Pengajar') {
+                $tglBergabung = $d->tgl_bergabung ? Carbon::parse($d->tgl_bergabung) : null;
+                if ($tglBergabung) {
+                    $masaKerjaBulan = $tglBergabung->diffInMonths($now);
+                    if ($masaKerjaBulan >= 24) {
+                        $status = 'merah';
+                        $statusLabel = 'Telat Naik Pangkat';
+                        $statusDesc = 'Masa kerja ' . round($masaKerjaBulan / 12, 1) . ' tahun belum pengajuan Asisten Ahli';
+                    } elseif ($masaKerjaBulan >= 18) {
+                        $status = 'orange';
+                        $statusLabel = 'Harus Sudah Pengajuan';
+                        $statusDesc = 'Masa kerja ' . $masaKerjaBulan . ' bulan, segera ajukan Asisten Ahli';
+                    } elseif ($masaKerjaBulan >= 12) {
+                        $status = 'kuning';
+                        $statusLabel = 'Persiapan Naik JabFung';
+                        $statusDesc = 'Masa kerja ' . $masaKerjaBulan . ' bulan, siapkan berkas Asisten Ahli';
+                    } else {
+                        $status = 'hijau';
+                        $statusLabel = 'Sesuai Aturan';
+                        $statusDesc = 'Dosen baru (masa kerja ' . $masaKerjaBulan . ' bulan)';
+                    }
+                } else {
+                    $status = 'kuning';
+                    $statusLabel = 'Persiapan Naik JabFung';
+                    $statusDesc = 'Belum memiliki Jafung, perlu verifikasi TMT';
+                }
+            } else {
+                $tglMulai = $d->tgl_mulai ? Carbon::parse($d->tgl_mulai) : ($d->tgl_bergabung ? Carbon::parse($d->tgl_bergabung) : null);
+                $periodeBulan = $d->periode_jabatan ?: 36;
+                $tglAkhir = $d->tgl_akhir ? Carbon::parse($d->tgl_akhir) : ($tglMulai ? (clone $tglMulai)->addMonths($periodeBulan) : null);
+
+                if ($tglAkhir) {
+                    $diffDays = $now->diffInDays($tglAkhir, false);
+                    $diffMonths = $now->diffInMonths($tglAkhir, false);
+
+                    if ($diffDays < 0) {
+                        $status = 'merah';
+                        $statusLabel = 'Telat Naik Pangkat';
+                        $statusDesc = 'Lewat masa periode ' . abs(round($diffDays / 30)) . ' bulan';
+                    } elseif ($diffMonths <= 3) {
+                        $status = 'orange';
+                        $statusLabel = 'Harus Sudah Pengajuan';
+                        $statusDesc = 'Sisa masa aktif ' . max(0, $diffDays) . ' hari';
+                    } elseif ($diffMonths <= 12) {
+                        $status = 'kuning';
+                        $statusLabel = 'Persiapan Naik JabFung';
+                        $statusDesc = 'Sisa masa aktif ' . $diffMonths . ' bulan';
+                    } else {
+                        $status = 'hijau';
+                        $statusLabel = 'Sesuai Aturan';
+                        $statusDesc = 'Masa aktif masih ' . $diffMonths . ' bulan';
+                    }
+                } else {
+                    $status = 'kuning';
+                    $statusLabel = 'Persiapan Naik JabFung';
+                    $statusDesc = 'Perlu melengkapi SK/TMT JabFung';
+                }
+            }
+
+            $counts[$status]++;
+            $details[$status][] = [
+                'id' => $d->id,
+                'nama' => $d->nama,
+                'nidn' => $d->nidn ?? '-',
+                'prodi' => $d->prodi ?? '-',
+                'jafung' => $jafungName,
+                'status' => $status,
+                'status_label' => $statusLabel,
+                'status_desc' => $statusDesc,
+                'tgl_mulai' => $d->tgl_mulai ? Carbon::parse($d->tgl_mulai)->format('d/m/Y') : '-',
+                'tgl_akhir' => isset($tglAkhir) && $tglAkhir ? $tglAkhir->format('d/m/Y') : '-',
+            ];
+        }
+
+        return [
+            'total_dosen' => $dosens->count(),
+            'counts' => $counts,
+            'details' => $details,
+        ];
+    }
 }
+

@@ -127,6 +127,10 @@
         </x-slot>
     </x-tsu-page-header>
 
+    @php
+        $currentTab = $activeTab ?? request()->query('tab', 'cuti');
+    @endphp
+
     {{-- Main Content Section --}}
     <section class="content">
         <div class="container-fluid">
@@ -134,12 +138,12 @@
                 <div class="card-header p-0 border-bottom-0">
                     <ul class="nav nav-tabs tsu-tab-nav" id="riwayatTabs" role="tablist">
                         <li class="nav-item" role="presentation">
-                            <a class="nav-link active" id="tab-cuti-btn" data-toggle="tab" href="#content-cuti" role="tab" aria-controls="content-cuti" aria-selected="true">
+                            <a class="nav-link {{ $currentTab === 'cuti' ? 'active' : '' }}" id="tab-cuti-btn" data-toggle="tab" href="#content-cuti" role="tab" aria-controls="content-cuti" aria-selected="{{ $currentTab === 'cuti' ? 'true' : 'false' }}">
                                 <i class="fas fa-calendar-minus mr-2"></i> Riwayat Cuti
                             </a>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <a class="nav-link" id="tab-izin-btn" data-toggle="tab" href="#content-izin" role="tab" aria-controls="content-izin" aria-selected="false">
+                            <a class="nav-link {{ $currentTab === 'izin' ? 'active' : '' }}" id="tab-izin-btn" data-toggle="tab" href="#content-izin" role="tab" aria-controls="content-izin" aria-selected="{{ $currentTab === 'izin' ? 'true' : 'false' }}">
                                 <i class="fas fa-envelope-open-text mr-2"></i> Riwayat Izin
                             </a>
                         </li>
@@ -149,7 +153,7 @@
                 <div class="card-body p-0">
                     <div class="tab-content" id="riwayatTabsContent">
                         {{-- Tab Cuti --}}
-                        <div class="tab-pane fade show active p-3" id="content-cuti" role="tabpanel" aria-labelledby="tab-cuti-btn">
+                        <div class="tab-pane fade {{ $currentTab === 'cuti' ? 'show active' : '' }} p-3" id="content-cuti" role="tabpanel" aria-labelledby="tab-cuti-btn">
                             <div class="table-responsive">
                                 <table id="table-cuti" class="table table-bordered table-hover tsu-table-modern w-100">
                                     <thead>
@@ -170,7 +174,7 @@
                         </div>
 
                         {{-- Tab Izin --}}
-                        <div class="tab-pane fade p-3" id="content-izin" role="tabpanel" aria-labelledby="tab-izin-btn">
+                        <div class="tab-pane fade {{ $currentTab === 'izin' ? 'show active' : '' }} p-3" id="content-izin" role="tabpanel" aria-labelledby="tab-izin-btn">
                             <div class="table-responsive">
                                 <table id="table-izin" class="table table-bordered table-hover tsu-table-modern w-100">
                                     <thead>

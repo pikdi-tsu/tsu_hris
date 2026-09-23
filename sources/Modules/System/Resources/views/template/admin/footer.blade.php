@@ -162,6 +162,7 @@
 </script>
 @include('system::components.alert')
 @include('system::template/admin/quick-search')
+@include('system::components.modal-absensi-kegiatan')
 @yield('script')
 @stack('scripts')
 

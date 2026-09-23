@@ -51,6 +51,14 @@ class DataDosenTendik extends Authenticatable
     }
 
     /**
+     * Mengambil Nomor Induk Pegawai (fallback dari NIP, NIK, atau NIDN)
+     */
+    public function getNomorIndukAttribute()
+    {
+        return $this->nip ?: ($this->nik ?: ($this->nidn ?: '-'));
+    }
+
+    /**
      * Relasi ke Jabatan Struktural (Bisa lebih dari 1 / Many)
      */
     public function jabatanStrukturals()
@@ -284,5 +292,17 @@ class DataDosenTendik extends Authenticatable
     public function onboardingOffboardings()
     {
         return $this->hasMany(\App\Models\KaryawanOnboardingOffboarding::class, 'karyawan_id', 'id');
+    }
+
+    public function kontraks()
+    {
+        return $this->hasMany(\App\Models\PegawaiKontrak::class, 'pegawai_id', 'id');
+    }
+
+    public function kontrakAktif()
+    {
+        return $this->hasOne(\App\Models\PegawaiKontrak::class, 'pegawai_id', 'id')
+            ->where('status', 'aktif')
+            ->latest('tgl_mulai');
     }
 }

@@ -31,6 +31,7 @@ class PayrollCalculationService
             ->with([
                 'unit',
                 'statusKaryawan',
+                'kontrakAktif',
                 'jabatanFungsionals' => function ($q) {
                     $q->where('is_active', 'Y')->with(['masterFungsional', 'pangkatGolongan']);
                 },
@@ -155,24 +156,31 @@ class PayrollCalculationService
             $jabatanStrukturalStr = $activeStruk->masterStruktural->nama_jabatan;
         }
 
-        // 3. Gaji Pokok (Berdasarkan Matriks Slide 3)
-        $cleanGol = strtoupper(trim(explode(' ', $golonganStr)[0] ?? ''));
-        $masterGapok = $gajiPokokMaster->get($cleanGol);
+        // 3. Gaji Pokok
         $persenGapok = $pegawai->persen_gaji_pokok ?: 100;
 
-        if ($masterGapok) {
-            $gapok = ($persenGapok == 80) ? floatval($masterGapok->gaji_pokok_80) : floatval($masterGapok->gaji_pokok_100);
+        // PRIORITAS 1: Jika pegawai memiliki Kontrak Kerja (PKWT) aktif dengan nominal gaji pokok disepakati
+        if ($pegawai->kontrakAktif && floatval($pegawai->kontrakAktif->gaji_pokok_disepakati) > 0) {
+            $gapok = floatval($pegawai->kontrakAktif->gaji_pokok_disepakati);
         } else {
-            // Default standar jika belum ada golongan tertentu:
-            if ($pegawai->tipe_karyawan === 'Dosen') {
-                $defaultGapokItem = $gajiPokokMaster->get('III/A');
-                $gapok = $defaultGapokItem ? floatval($defaultGapokItem->gaji_pokok_100) : 3037000;
+            // PRIORITAS 2 (Fallback): Berdasarkan Matriks Master Data Gaji Pokok & Golongan
+            $cleanGol = strtoupper(trim(explode(' ', $golonganStr)[0] ?? ''));
+            $masterGapok = $gajiPokokMaster->get($cleanGol);
+
+            if ($masterGapok) {
+                $gapok = ($persenGapok == 80) ? floatval($masterGapok->gaji_pokok_80) : floatval($masterGapok->gaji_pokok_100);
             } else {
-                $defaultGapokItem = $gajiPokokMaster->get('II/A');
-                $gapok = $defaultGapokItem ? floatval($defaultGapokItem->gaji_pokok_100) : 2184000;
-            }
-            if ($persenGapok == 80) {
-                $gapok = round($gapok * 0.8, 2);
+                // Default standar jika belum ada golongan tertentu:
+                if ($pegawai->tipe_karyawan === 'Dosen') {
+                    $defaultGapokItem = $gajiPokokMaster->get('III/A');
+                    $gapok = $defaultGapokItem ? floatval($defaultGapokItem->gaji_pokok_100) : 3037000;
+                } else {
+                    $defaultGapokItem = $gajiPokokMaster->get('II/A');
+                    $gapok = $defaultGapokItem ? floatval($defaultGapokItem->gaji_pokok_100) : 2184000;
+                }
+                if ($persenGapok == 80) {
+                    $gapok = round($gapok * 0.8, 2);
+                }
             }
         }
 

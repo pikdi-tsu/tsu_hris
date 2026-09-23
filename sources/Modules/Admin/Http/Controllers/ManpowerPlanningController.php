@@ -27,8 +27,6 @@ class ManpowerPlanningController extends MiddlewareController
 
     public function index()
     {
-        // Permission middleware is already handling 'view' through constructor if they hit the route, but we can double check.
-        // Or in route we use `permission:admin:mpp:view`. Since I'm using MiddlewareController, I don't necessarily need `$this->guard('view', 'admin:mpp')` if the route uses the middleware. But let's follow the rule.
         $this->guard('view', 'admin:mpp');
 
         $tahun = request('tahun', date('Y'));
@@ -42,13 +40,53 @@ class ManpowerPlanningController extends MiddlewareController
             'count_history' => ManpowerPlanning::where('tahun', $tahun)->whereIn('status', ['approved', 'rejected'])->count(),
         ];
         
-        $units = MasterUnit::orderBy('nama_unit', 'asc')->get();
+        $allUnits = MasterUnit::with(['parent'])->orderBy('tipe_unit', 'asc')->orderBy('nama_unit', 'asc')->get();
+
+        $analysisData = $allUnits->map(function ($unit) use ($tahun) {
+            $gapData = $unit->hitungGap();
+            $pendingCount = ManpowerPlanning::where('unit_id', $unit->id)
+                ->where('tahun', $tahun)
+                ->whereIn('status', ['waiting', 'approved'])
+                ->sum('jumlah_kebutuhan');
+
+            return [
+                'unit' => $unit,
+                'id' => $unit->id,
+                'tipe_unit' => $unit->tipe_unit,
+                'nama_unit' => $unit->nama_unit,
+                'parent_name' => $unit->parent ? $unit->parent->nama_unit : '-',
+                'jumlah_mahasiswa' => $unit->jumlah_mahasiswa,
+                'beban_kerja' => $unit->beban_kerja ?? 'sedang',
+                'kuota_mpp' => (int)$unit->kuota_mpp,
+                'supply' => $gapData['supply'],
+                'demand' => $gapData['demand'],
+                'gap' => $gapData['gap'],
+                'status' => $gapData['status'],
+                'label' => $gapData['label'],
+                'badge' => $gapData['badge'],
+                'rekomendasi' => $gapData['rekomendasi'],
+                'action_type' => $gapData['action_type'],
+                'pending_mpp' => $pendingCount,
+            ];
+        });
+
+        $mppSummary = [
+            'total_units' => $analysisData->count(),
+            'total_supply' => $analysisData->sum(fn($i) => $i['supply']['total_hc']),
+            'total_demand' => $analysisData->sum('demand'),
+            'units_deficit' => $analysisData->where('gap', '>', 0)->count(),
+            'units_balanced' => $analysisData->where('gap', '==', 0)->count(),
+            'units_surplus' => $analysisData->where('gap', '<', 0)->count(),
+            'total_gap_kebutuhan' => $analysisData->where('gap', '>', 0)->sum('gap'),
+        ];
+
+        $units = $allUnits;
 
         $title = 'Manpower Planning';
         $menu = 'manpower_planning';
         $menuIcon = MenuSidebar::where('route', 'admin.mpp.index')->value('icon') ?? 'fas fa-users-cog';
 
-        return view('admin::mpp.index', compact('stats', 'tahun', 'units', 'title', 'menu', 'menuIcon'));
+        return view('admin::mpp.index', compact('stats', 'tahun', 'units', 'analysisData', 'mppSummary', 'title', 'menu', 'menuIcon'));
     }
 
     public function datatables(Request $request)
@@ -135,6 +173,7 @@ class ManpowerPlanningController extends MiddlewareController
     {
         try {
             $data = ManpowerPlanning::with(['jabatan', 'unit.kepalaJabatan', 'unit.parent', 'pengaju'])->find($request->id);
+            if (!$data) throw new \Exception('Data MPP tidak ditemukan.');
             
             $hrdName = '-';
             if ($data->hrd) {
@@ -142,14 +181,67 @@ class ManpowerPlanningController extends MiddlewareController
                 $hrdName = $hrdProf ? $hrdProf->nama : $data->hrd->name;
             }
 
-            // Dapatkan jumlah karyawan saat ini di unit tersebut dari Struktur Organisasi
-            $existing_count = DataDosenTendik::where('unit_id', $data->unit_id)->count();
-            $kuota_mpp = $data->unit ? $data->unit->kuota_mpp : 0;
+            // Dapatkan jumlah karyawan aktif saat ini di unit tersebut
+            $existing_count = DataDosenTendik::where('unit_id', $data->unit_id)->where('is_active', 1)->count();
+            $kuota_mpp = $data->unit ? (int)$data->unit->kuota_mpp : 0;
 
-            $html = view('admin::mpp.modalapproval', compact('data', 'hrdName', 'existing_count', 'kuota_mpp'))->render();
+            // Pengajuan berjalan lainnya pada tahun yang sama (kecuali usulan ini)
+            $pending_other_count = ManpowerPlanning::where('unit_id', $data->unit_id)
+                ->where('tahun', $data->tahun)
+                ->where('id', '!=', $data->id)
+                ->whereIn('status', ['waiting', 'approved'])
+                ->sum('jumlah_kebutuhan');
+
+            $balance_before = $kuota_mpp > 0 ? max(0, $kuota_mpp - $existing_count - $pending_other_count) : '∞';
+            $balance_after = $kuota_mpp > 0 ? max(0, $kuota_mpp - $existing_count - $pending_other_count - $data->jumlah_kebutuhan) : '∞';
+            $is_over_quota = ($kuota_mpp > 0 && ($existing_count + $pending_other_count + $data->jumlah_kebutuhan) > $kuota_mpp);
+
+            $html = view('admin::mpp.modalapproval', compact(
+                'data', 
+                'hrdName', 
+                'existing_count', 
+                'kuota_mpp',
+                'pending_other_count',
+                'balance_before',
+                'balance_after',
+                'is_over_quota'
+            ))->render();
+
             return response()->json(['success' => true, 'html' => $html]);
         } catch (\Exception $e) {
             return TsuErrorHandlerService::handleJson($e, '[TSU_MPP_DETAIL_FAIL]', 'Gagal memuat detail MPP.');
+        }
+    }
+
+    /**
+     * Endpoint Cepat HRD untuk Penyesuaian Kuota MPP Unit Kerja
+     */
+    public function updateKuota(Request $request)
+    {
+        $this->guard('update', 'admin:mpp');
+        $request->validate([
+            'unit_id'   => 'required',
+            'kuota_mpp' => 'required|integer|min:0',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $unit = MasterUnit::find($request->unit_id);
+            if (!$unit) throw new \Exception('Unit kerja tidak ditemukan.');
+
+            $oldKuota = (int)$unit->kuota_mpp;
+            $unit->kuota_mpp = (int)$request->kuota_mpp;
+            $unit->save();
+
+            DB::commit();
+            return response()->json([
+                'success'   => true,
+                'message'   => "Kuota MPP unit {$unit->nama_unit} berhasil disesuaikan dari {$oldKuota} menjadi {$unit->kuota_mpp} orang.",
+                'new_kuota' => $unit->kuota_mpp
+            ]);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return TsuErrorHandlerService::handleJson($e, '[TSU_MPP_UPDATE_KUOTA_FAIL]', 'Gagal memperbarui kuota unit.');
         }
     }
 }

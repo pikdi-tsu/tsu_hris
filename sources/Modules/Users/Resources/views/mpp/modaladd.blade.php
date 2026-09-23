@@ -15,18 +15,25 @@
                 <div class="modal-body p-4">
                     {{-- Unit Info Callout --}}
                     <div class="mb-3" style="background: #eef9fa; border: 1px solid var(--tsu-primary-light, #cce6e9); border-left: 4px solid var(--tsu-primary, #094b54); border-radius: 8px; padding: 0.75rem 1rem; font-size: 0.83rem; color: var(--tsu-primary-dark, #094b54);">
-                        <div class="d-flex align-items-center justify-content-between">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
                             <div>
                                 <i class="fas fa-building mr-1"></i> Unit: <strong>{{ $unit ? $unit->nama_unit : '-' }}</strong>
                             </div>
                             @if($kuota > 0)
-                                <span class="badge badge-info" style="font-size: 0.75rem; padding: 0.35rem 0.6rem;">
-                                    Sisa Kuota: {{ max(0, $kuota - $existingCount) }} Orang
+                                <span class="badge badge-success" style="font-size: 0.78rem; padding: 0.35rem 0.65rem;">
+                                    <i class="fas fa-balance-scale mr-1"></i>Balance: {{ $balance }} Orang
                                 </span>
                             @else
-                                <span class="badge badge-secondary" style="font-size: 0.75rem; padding: 0.35rem 0.6rem;">
+                                <span class="badge badge-secondary" style="font-size: 0.78rem; padding: 0.35rem 0.65rem;">
                                     Kuota: Bebas (Unlimited)
                                 </span>
+                            @endif
+                        </div>
+                        <div class="d-flex align-items-center flex-wrap gap-2 text-muted" style="font-size: 0.75rem;">
+                            <span class="mr-2">Target MPP: <strong>{{ $kuota > 0 ? $kuota : '∞' }}</strong></span>
+                            <span class="mr-2">&bull; Pegawai Aktif: <strong>{{ $existingCount }}</strong></span>
+                            @if($pendingCount > 0)
+                                <span class="mr-2">&bull; Sedang Diproses: <strong>{{ $pendingCount }}</strong></span>
                             @endif
                         </div>
                     </div>
@@ -61,7 +68,7 @@
                             </label>
                             <div class="input-group">
                                 <input type="number" name="jumlah_kebutuhan" class="form-control" min="1" 
-                                       {{ ($kuota > 0) ? 'max=' . max(1, $kuota - $existingCount) : '' }} 
+                                       {{ ($kuota > 0 && is_numeric($balance)) ? 'max=' . $balance : '' }} 
                                        value="1" required style="border-radius: var(--tsu-radius, 8px) 0 0 var(--tsu-radius, 8px); height: 38px; font-size: 0.85rem;">
                                 <div class="input-group-append">
                                     <span class="input-group-text" style="background: #f1f5f9; border-color: #ced4da; font-size: 0.8rem; font-weight: 600; border-radius: 0 var(--tsu-radius, 8px) var(--tsu-radius, 8px) 0;">Orang</span>
@@ -69,7 +76,7 @@
                             </div>
                             @if($kuota > 0)
                                 <small class="text-muted d-block mt-1" style="font-size: 0.73rem;">
-                                    Maks. kuota unit: {{ max(0, $kuota - $existingCount) }} orang.
+                                    Maks. Balance formasi saat ini: <strong>{{ $balance }}</strong> orang.
                                 </small>
                             @endif
                         </div>

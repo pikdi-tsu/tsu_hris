@@ -419,6 +419,37 @@
             border-color: var(--tsu-primary, #094b54) !important;
             box-shadow: 0 0 0 3px rgba(9, 75, 84, 0.12) !important;
         }
+
+        /* TSU DASHBOARD NAV PILLS */
+        .tsu-nav-pills-wrap {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 6px;
+            border: 1px solid var(--tsu-border, #e2e8f0);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+            margin-bottom: 1.25rem;
+        }
+
+        .tsu-nav-pills-wrap .nav-pills .nav-link {
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.92rem;
+            color: var(--tsu-text-muted, #64748b);
+            padding: 0.6rem 1.4rem;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+        }
+
+        .tsu-nav-pills-wrap .nav-pills .nav-link.active {
+            background: linear-gradient(135deg, #094b54 0%, #0c6170 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(9, 75, 84, 0.25);
+        }
+
+        .tsu-nav-pills-wrap .nav-pills .nav-link:hover:not(.active) {
+            background: #f1f5f9;
+            color: var(--tsu-text-main, #0f172a);
+        }
     </style>
 @endsection
 
@@ -531,166 +562,310 @@
                 </div>
             </div>
 
-            {{-- Table Tendik Matrix Card --}}
-            <div class="tsu-card">
-                <div class="tsu-card__header d-flex flex-wrap justify-content-between align-items-center">
-                    <div>
-                        <h5 class="tsu-card__title">
-                            Lembar Kerja Road Map Tendik: {{ $unit->nama_unit ?? 'Unit Kerja' }}
-                        </h5>
-                        <div class="text-muted small mt-1">
-                            Perencanaan kualifikasi pendidikan, penempatan posisi, dan target perolehan sertifikasi profesi
+            {{-- TABS: JENDELA RENCANA PENGEMBANGAN vs JENDELA REALISASI PENGEMBANGAN TENDIK --}}
+            <div class="tsu-nav-pills-wrap">
+                <ul class="nav nav-pills" id="roadmapTendikPills" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="rencana-tendik-tab" data-toggle="pill" href="#tab-rencana-tendik" role="tab" aria-controls="tab-rencana-tendik" aria-selected="true">
+                            <i class="fas fa-calendar-alt mr-2"></i> Jendela Rencana Pengembangan (2026 - 2030)
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="realisasi-tendik-tab" data-toggle="pill" href="#tab-realisasi-tendik" role="tab" aria-controls="tab-realisasi-tendik" aria-selected="false">
+                            <i class="fas fa-check-circle mr-2"></i> Jendela Realisasi Pengembangan
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="tab-content" id="roadmapTendikTabContent">
+                {{-- JENDELA 1: RENCANA PENGEMBANGAN --}}
+                <div class="tab-pane fade show active" id="tab-rencana-tendik" role="tabpanel" aria-labelledby="rencana-tendik-tab">
+                    {{-- Table Tendik Matrix Card --}}
+                    <div class="tsu-card">
+                        <div class="tsu-card__header d-flex flex-wrap justify-content-between align-items-center">
+                            <div>
+                                <h5 class="tsu-card__title">
+                                    Lembar Kerja Road Map Tendik: {{ $unit->nama_unit ?? 'Unit Kerja' }}
+                                </h5>
+                                <div class="text-muted small mt-1">
+                                    Perencanaan kualifikasi pendidikan, penempatan posisi, dan target perolehan sertifikasi profesi
+                                </div>
+                            </div>
+                            <div class="mt-2 mt-sm-0">
+                                <span class="tsu-badge-info-clean">
+                                    Live Auto-Save &bull; Ubah status tahun (2026 - 2030) langsung
+                                </span>
+                            </div>
                         </div>
-                    </div>
-                    <div class="mt-2 mt-sm-0">
-                        <span class="tsu-badge-info-clean">
-                            Live Auto-Save &bull; Ubah status tahun (2026 - 2030) langsung
-                        </span>
+
+                        <div class="table-responsive">
+                            <table class="table tsu-tendik-matrix-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th rowspan="2" style="width: 40px; text-align: center;">No</th>
+                                        <th rowspan="2" style="min-width: 220px; text-align: left;">Data Pegawai</th>
+                                        <th rowspan="2" style="min-width: 170px; text-align: left;">Unit Kerja &amp; Posisi</th>
+                                        <th rowspan="2" style="min-width: 120px; text-align: center;">Pendidikan Terakhir</th>
+                                        <th colspan="{{ count($tahun_range) }}" style="background: linear-gradient(135deg, #094b54 0%, #0c6170 100%); color: #ffffff; text-align: center; font-weight: 700;">
+                                            Road Map Kualifikasi ({{ $periode->tahun_mulai ?? '2026' }} - {{ $periode->tahun_selesai ?? '2030' }})
+                                        </th>
+                                        <th rowspan="2" style="min-width: 210px; text-align: left;">Sertifikasi Kompetensi</th>
+                                        <th rowspan="2" style="width: 70px; text-align: center;">Aksi</th>
+                                    </tr>
+                                    <tr>
+                                        @foreach($tahun_range as $thn)
+                                            <th style="width: 85px; text-align: center; background-color: {{ $loop->last ? '#0369a1' : '#0f766e' }}; color: #ffffff; font-size: 0.76rem; font-weight: 700; padding: 0.45rem 0.3rem;">
+                                                {{ $thn }}
+                                                @if($loop->last)
+                                                    <span class="badge badge-light ml-1" style="font-size: 8px; color: #0369a1; font-weight: 800;">TARGET</span>
+                                                @endif
+                                            </th>
+                                        @endforeach
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($pesertas as $index => $peserta)
+                                        @php
+                                            $karyawan = $peserta->karyawan;
+                                            $nama = $karyawan ? ($karyawan->nama_lengkap ?? $karyawan->nama) : ($peserta->nama_placeholder ?? $peserta->nama_karyawan_manual ?? 'Tendik');
+                                            $nik = $karyawan ? $karyawan->nik : ($peserta->nik_manual ?? '-');
+                                            $unitNama = $peserta->unit?->nama_unit ?? $karyawan?->unit?->nama_unit ?? $unit->nama_unit ?? '-';
+                                            $posisi = $karyawan ? ($karyawan->posisi ?? 'Staf') : '-';
+                                            $pendidikanAwal = $peserta->pendidikan_awal ?? ($karyawan ? $karyawan->pendidikan_terakhir : ($peserta->pendidikan_s1 ?? 'S1'));
+                                            $timelineMap = $peserta->timelines->keyBy('tahun');
+                                        @endphp
+                                        <tr id="row-tendik-{{ $peserta->id }}">
+                                            <td class="text-center font-weight-bold text-muted">{{ $index + 1 }}</td>
+                                            <td>
+                                                <div class="font-weight-bold text-dark" style="font-size: 0.9rem;">{{ $nama }}</div>
+                                                <div class="text-muted small mt-0.5">
+                                                    <span>NIK: {{ $nik }}</span>
+                                                </div>
+                                                <div class="mt-1 d-flex flex-wrap align-items-center" style="gap: 4px;">
+                                                    @if($peserta->lokasi_studi)
+                                                        <span class="tsu-badge-soft {{ $peserta->lokasi_studi == 'DN' ? 'tsu-badge-dn' : 'tsu-badge-ln' }}">
+                                                            {{ $peserta->lokasi_studi == 'DN' ? 'Dalam Negeri (DN)' : 'Luar Negeri (LN)' }}
+                                                        </span>
+                                                    @endif
+                                                    @if($peserta->is_dosen_baru)
+                                                        <span class="tsu-badge-soft tsu-badge-new">Pegawai Baru</span>
+                                                    @endif
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="font-weight-600 text-dark" style="font-size: 0.85rem;">
+                                                    {{ $unitNama }}
+                                                </div>
+                                                <div class="text-muted small mt-0.5">
+                                                    <span>Posisi: {{ $posisi }}</span>
+                                                </div>
+                                                @if($peserta->sub_unit)
+                                                    <span class="badge badge-light border mt-1" style="font-size: 10px;">{{ $peserta->sub_unit }}</span>
+                                                @endif
+                                            </td>
+                                            <td class="text-center">
+                                                <span class="tsu-edu-badge tsu-edu-{{ strtolower($pendidikanAwal) }}">
+                                                    {{ $pendidikanAwal }}
+                                                </span>
+                                            </td>
+
+                                            {{-- Timelines 2026 - 2030 --}}
+                                            @foreach($tahun_range as $thn)
+                                                @php
+                                                    $tl = $timelineMap->get($thn);
+                                                    $statusStudi = $tl ? $tl->status_studi : $pendidikanAwal;
+                                                    $statusAktif = $tl ? $tl->status_aktif_studi : 'TSS';
+                                                    
+                                                    $badgeClass = 'cell-s1';
+                                                    if (str_contains(strtoupper($statusStudi), 'S2')) {
+                                                        $badgeClass = 'cell-s2';
+                                                    } elseif (str_contains(strtoupper($statusStudi), 'D3')) {
+                                                        $badgeClass = 'cell-d3';
+                                                    }
+                                                @endphp
+                                                <td class="text-center p-1" style="{{ $loop->last ? 'background: rgba(3, 105, 161, 0.04);' : '' }}">
+                                                    <div class="dropdown">
+                                                        <button class="tsu-matrix-cell {{ $badgeClass }} dropdown-toggle" type="button" data-toggle="dropdown" id="btn-tl-{{ $peserta->id }}-{{ $thn }}">
+                                                            {{ $statusStudi }}
+                                                        </button>
+                                                        <div class="dropdown-menu dropdown-menu-sm shadow-sm">
+                                                            <h6 class="dropdown-header small text-muted">Set Jenjang {{ $thn }}:</h6>
+                                                            <a class="dropdown-item small font-weight-bold" href="javascript:void(0)" onclick="updateTimelineStatus('{{ $peserta->id }}', {{ $thn }}, 'D3', 'TSS')">D3 (Diploma)</a>
+                                                            <a class="dropdown-item small font-weight-bold text-primary" href="javascript:void(0)" onclick="updateTimelineStatus('{{ $peserta->id }}', {{ $thn }}, 'S1', 'TSS')">S1 (Sarjana)</a>
+                                                            <a class="dropdown-item small font-weight-bold text-success" href="javascript:void(0)" onclick="updateTimelineStatus('{{ $peserta->id }}', {{ $thn }}, 'S2', 'TSS')">S2 (Magister)</a>
+                                                            <div class="dropdown-divider"></div>
+                                                            <h6 class="dropdown-header small text-muted">Status Aktif Studi:</h6>
+                                                            <a class="dropdown-item small font-weight-bold text-warning" href="javascript:void(0)" onclick="updateTimelineStatus('{{ $peserta->id }}', {{ $thn }}, '{{ $statusStudi }}', 'SS')">Sedang Studi (SS)</a>
+                                                            <a class="dropdown-item small font-weight-bold text-secondary" href="javascript:void(0)" onclick="updateTimelineStatus('{{ $peserta->id }}', {{ $thn }}, '{{ $statusStudi }}', 'TSS')">Tidak Studi (TSS)</a>
+                                                        </div>
+                                                    </div>
+                                                    <div class="mt-1">
+                                                        @if($statusAktif == 'SS')
+                                                            <span class="tsu-status-aktif-badge badge-aktif-ss" id="aktif-{{ $peserta->id }}-{{ $thn }}">SS</span>
+                                                        @else
+                                                            <span class="tsu-status-aktif-badge badge-aktif-tss" id="aktif-{{ $peserta->id }}-{{ $thn }}">TSS</span>
+                                                        @endif
+                                                    </div>
+                                                </td>
+                                            @endforeach
+
+                                            {{-- Sertifikasi Kompetensi --}}
+                                            <td>
+                                                <div id="sertifikasi-tags-{{ $peserta->id }}">
+                                                    @forelse($peserta->sertifikasis as $sert)
+                                                        <span class="tsu-sertifikasi-tag">
+                                                            {{ $sert->sertifikasi->nama_sertifikasi ?? '-' }}
+                                                            @if($sert->tahun_target)
+                                                                <span class="tag-year">('{{ substr($sert->tahun_target, -2) }})</span>
+                                                            @endif
+                                                            <a href="javascript:void(0)" class="tag-remove" onclick="removeSertifikasi('{{ $peserta->id }}', '{{ $sert->sertifikasi_id }}')" title="Hapus sertifikasi">&times;</a>
+                                                        </span>
+                                                    @empty
+                                                        <span class="text-muted small">- Belum ada -</span>
+                                                    @endforelse
+                                                </div>
+                                                <div class="mt-1">
+                                                    <button type="button" class="btn tsu-btn-kelola" onclick="openSertifikasiModal('{{ $peserta->id }}', '{{ addslashes($nama) }}')">
+                                                        <i class="fas fa-plus mr-1"></i> Tambah
+                                                    </button>
+                                                </div>
+                                            </td>
+
+                                            {{-- Aksi --}}
+                                            <td class="text-center">
+                                                <button type="button" class="btn tsu-btn-delete" onclick="deletePeserta('{{ $peserta->id }}', '{{ addslashes($nama) }}')" title="Hapus Tendik">
+                                                    <i class="fas fa-trash-alt"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="{{ 6 + count($tahun_range) }}" class="text-center py-5 text-muted font-weight-medium" style="text-align: center !important;">
+                                                Belum ada data tenaga kependidikan untuk unit kerja ini.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
 
-                <div class="table-responsive">
-                    <table class="table tsu-tendik-matrix-table mb-0">
-                        <thead>
-                            <tr>
-                                <th rowspan="2" style="width: 40px; text-align: center;">No</th>
-                                <th rowspan="2" style="min-width: 220px; text-align: left;">Data Pegawai</th>
-                                <th rowspan="2" style="min-width: 170px; text-align: left;">Unit Kerja &amp; Posisi</th>
-                                <th rowspan="2" style="min-width: 120px; text-align: center;">Pendidikan Terakhir</th>
-                                <th colspan="{{ count($tahun_range) }}" style="background: linear-gradient(135deg, #094b54 0%, #0c6170 100%); color: #ffffff; text-align: center; font-weight: 700;">
-                                    Road Map Kualifikasi ({{ $periode->tahun_mulai ?? '2026' }} - {{ $periode->tahun_selesai ?? '2030' }})
-                                </th>
-                                <th rowspan="2" style="min-width: 210px; text-align: left;">Sertifikasi Kompetensi</th>
-                                <th rowspan="2" style="width: 70px; text-align: center;">Aksi</th>
-                            </tr>
-                            <tr>
-                                @foreach($tahun_range as $thn)
-                                    <th style="width: 85px; text-align: center; background-color: {{ $loop->last ? '#0369a1' : '#0f766e' }}; color: #ffffff; font-size: 0.76rem; font-weight: 700; padding: 0.45rem 0.3rem;">
-                                        {{ $thn }}
-                                        @if($loop->last)
-                                            <span class="badge badge-light ml-1" style="font-size: 8px; color: #0369a1; font-weight: 800;">TARGET</span>
-                                        @endif
-                                    </th>
-                                @endforeach
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($pesertas as $index => $peserta)
-                                @php
-                                    $karyawan = $peserta->karyawan;
-                                    $nama = $karyawan ? ($karyawan->nama_lengkap ?? $karyawan->nama) : ($peserta->nama_placeholder ?? $peserta->nama_karyawan_manual ?? 'Tendik');
-                                    $nik = $karyawan ? $karyawan->nik : ($peserta->nik_manual ?? '-');
-                                    $unitNama = $peserta->unit?->nama_unit ?? $karyawan?->unit?->nama_unit ?? $unit->nama_unit ?? '-';
-                                    $posisi = $karyawan ? ($karyawan->posisi ?? 'Staf') : '-';
-                                    $pendidikanAwal = $peserta->pendidikan_awal ?? ($karyawan ? $karyawan->pendidikan_terakhir : ($peserta->pendidikan_s1 ?? 'S1'));
-                                    $timelineMap = $peserta->timelines->keyBy('tahun');
-                                @endphp
-                                <tr id="row-tendik-{{ $peserta->id }}">
-                                    <td class="text-center font-weight-bold text-muted">{{ $index + 1 }}</td>
-                                    <td>
-                                        <div class="font-weight-bold text-dark" style="font-size: 0.9rem;">{{ $nama }}</div>
-                                        <div class="text-muted small mt-0.5">
-                                            <span>NIK: {{ $nik }}</span>
-                                        </div>
-                                        <div class="mt-1 d-flex flex-wrap align-items-center" style="gap: 4px;">
-                                            @if($peserta->lokasi_studi)
-                                                <span class="tsu-badge-soft {{ $peserta->lokasi_studi == 'DN' ? 'tsu-badge-dn' : 'tsu-badge-ln' }}">
-                                                    {{ $peserta->lokasi_studi == 'DN' ? 'Dalam Negeri (DN)' : 'Luar Negeri (LN)' }}
-                                                </span>
-                                            @endif
-                                            @if($peserta->is_dosen_baru)
-                                                <span class="tsu-badge-soft tsu-badge-new">Tendik Baru</span>
-                                            @endif
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <div class="font-weight-bold text-dark">{{ $posisi }}</div>
-                                        <div class="small text-muted">{{ $unitNama }}</div>
-                                        @if($peserta->bidangKeilmuan)
-                                            <div class="small font-weight-semibold mt-0.5" style="color: var(--tsu-primary, #094b54);">
-                                                {{ $peserta->bidangKeilmuan->nama_bidang }}
-                                            </div>
-                                        @endif
-                                    </td>
-                                    <td class="text-center">
-                                        <span class="tsu-badge-soft tsu-badge-edu px-2 py-1">{{ $pendidikanAwal }}</span>
-                                        @if($peserta->gelar)
-                                            <div class="text-muted small mt-1 font-weight-medium">{{ trim($peserta->gelar) }}</div>
-                                        @endif
-                                    </td>
+                {{-- JENDELA 2: REALISASI PENGEMBANGAN TENDIK --}}
+                <div class="tab-pane fade" id="tab-realisasi-tendik" role="tabpanel" aria-labelledby="realisasi-tendik-tab">
+                    <div class="tsu-card">
+                        <div class="tsu-card__header d-flex flex-wrap justify-content-between align-items-center">
+                            <div>
+                                <h5 class="tsu-card__title">
+                                    <i class="fas fa-chart-line text-info mr-2"></i> Lembar Pemantauan Realisasi Pengembangan Tendik: {{ $unit->nama_unit ?? 'Unit Kerja' }}
+                                </h5>
+                                <div class="text-muted small mt-1">
+                                    Pemantauan riil peningkatan kualifikasi magister, program studi lanjut aktif, dan sertifikasi profesi pegawai
+                                </div>
+                            </div>
+                            <div class="mt-2 mt-sm-0">
+                                <span class="badge badge-pill font-weight-bold px-3 py-2" style="background: rgba(2, 132, 199, 0.12); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.25); font-size: 0.8rem;">
+                                    <i class="fas fa-check-double mr-1"></i> Data Realisasi Unit
+                                </span>
+                            </div>
+                        </div>
 
-                                    {{-- Matrix Timeline 2026 - 2030 --}}
-                                    @foreach($tahun_range as $thn)
+                        <div class="table-responsive">
+                            <table class="table table-hover table-bordered mb-0">
+                                <thead class="bg-light">
+                                    <tr>
+                                        <th style="width: 40px; text-align: center;">No</th>
+                                        <th>Nama Pegawai & NIK</th>
+                                        <th>Posisi / Penugasan</th>
+                                        <th style="text-align: center;">Kualifikasi Terkini</th>
+                                        <th style="text-align: center;">Status Studi</th>
+                                        <th>Realisasi Sertifikasi Profesi</th>
+                                        <th style="text-align: center;">Progres Capaian</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($pesertas as $trIdx => $peserta)
                                         @php
-                                            $tl = $timelineMap->get($thn);
-                                            $st = $tl ? $tl->status_studi : $pendidikanAwal;
-                                            $stUpper = strtoupper($st);
-                                            $class = 'status-d3';
-                                            if (str_contains($stUpper, 'S3')) $class = 'status-s3';
-                                            elseif (str_contains($stUpper, 'S2')) $class = 'status-s2';
-                                            elseif (str_contains($stUpper, 'S1')) $class = 'status-s1';
-                                            elseif (str_contains($stUpper, 'D3')) $class = 'status-d3';
-
-                                            if (str_contains($stUpper, '+')) $class .= ' status-sedang-studi';
+                                            $karyawan = $peserta->karyawan;
+                                            $nama = $karyawan ? ($karyawan->nama_lengkap ?? $karyawan->nama) : ($peserta->nama_placeholder ?? $peserta->nama_karyawan_manual ?? 'Tendik');
+                                            $nik = $karyawan ? $karyawan->nik : ($peserta->nik_manual ?? '-');
+                                            $posisi = $karyawan ? ($karyawan->posisi ?? 'Staf') : '-';
+                                            $currentTl = $peserta->timelines->where('tahun', 2026)->first();
+                                            $studiSaatIni = $currentTl ? $currentTl->status_studi : ($peserta->pendidikan_awal ?: 'S1');
+                                            $aktifSaatIni = $currentTl ? $currentTl->status_aktif_studi : 'TSS';
+                                            $isMagister = str_contains(strtoupper($studiSaatIni), 'S2');
                                         @endphp
-                                        <td class="text-center p-1">
-                                            <select class="form-control status-select {{ $class }}" 
-                                                    data-peserta-id="{{ $peserta->id }}" 
-                                                    data-tahun="{{ $thn }}"
-                                                    onchange="updateTimeline(this)">
-                                                <option value="D3" {{ $st == 'D3' ? 'selected' : '' }}>D3</option>
-                                                <option value="D3+" {{ $st == 'D3+' ? 'selected' : '' }}>D3+</option>
-                                                <option value="S1" {{ $st == 'S1' ? 'selected' : '' }}>S1</option>
-                                                <option value="S1+" {{ $st == 'S1+' ? 'selected' : '' }}>S1+</option>
-                                                <option value="S2" {{ $st == 'S2' ? 'selected' : '' }}>S2</option>
-                                                <option value="S2+" {{ $st == 'S2+' ? 'selected' : '' }}>S2+</option>
-                                                <option value="S3" {{ $st == 'S3' ? 'selected' : '' }}>S3</option>
-                                            </select>
-                                            @if($tl && $tl->keterangan)
-                                                <div class="text-muted mt-1" style="font-size: 10px;" title="{{ $tl->keterangan }}">
-                                                    {{ \Illuminate\Support\Str::limit($tl->keterangan, 10) }}
-                                                </div>
-                                            @endif
-                                        </td>
-                                    @endforeach
-
-                                    {{-- Sertifikasi Kompetensi --}}
-                                    <td>
-                                        <div id="sertifikasi-tags-{{ $peserta->id }}" class="d-flex flex-wrap" style="gap: 4px;">
-                                            @forelse($peserta->sertifikasis as $sert)
-                                                <span class="tsu-sertifikasi-tag">
-                                                    {{ $sert->sertifikasi->nama_sertifikasi ?? '-' }}
-                                                    @if($sert->tahun_target)
-                                                        <span class="tag-year">('{{ substr($sert->tahun_target, -2) }})</span>
-                                                    @endif
-                                                    <a href="javascript:void(0)" class="tag-remove" onclick="removeSertifikasi('{{ $peserta->id }}', '{{ $sert->sertifikasi_id }}')" title="Hapus sertifikasi">&times;</a>
-                                                </span>
-                                            @empty
-                                                <span class="text-muted small">- Belum ada target -</span>
-                                            @endforelse
-                                        </div>
-                                        <div class="mt-1">
-                                            <button type="button" class="btn tsu-btn-kelola" onclick="openSertifikasiModal('{{ $peserta->id }}', '{{ addslashes($nama) }}')">
-                                                <i class="fas fa-plus mr-1"></i> Tambah Sertifikasi
-                                            </button>
-                                        </div>
-                                    </td>
-
-                                    <td class="text-center">
-                                        <button type="button" class="btn tsu-btn-delete" onclick="deletePeserta('{{ $peserta->id }}', '{{ addslashes($nama) }}')" title="Hapus Tendik">
-                                            <i class="fas fa-trash-alt"></i>
-                                        </button>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="{{ 6 + count($tahun_range) }}" class="text-center py-5 text-muted font-weight-medium" style="text-align: center !important;">
-                                        Belum ada data tenaga kependidikan untuk unit kerja ini.
-                                    </td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                                        <tr>
+                                            <td class="text-center font-weight-bold text-muted">{{ $trIdx + 1 }}</td>
+                                            <td>
+                                                <div class="font-weight-bold text-dark">{{ $nama }}</div>
+                                                <small class="text-muted">NIK: {{ $nik }}</small>
+                                            </td>
+                                            <td>
+                                                <div class="font-weight-bold text-dark small">{{ $posisi }}</div>
+                                                <small class="text-muted">{{ $peserta->sub_unit ?: ($unit->nama_unit ?? '-') }}</small>
+                                            </td>
+                                            <td class="text-center">
+                                                @if($isMagister)
+                                                    <span class="badge badge-pill badge-success px-3 py-1 font-weight-bold" style="font-size: 0.8rem;">
+                                                        Magister (S2)
+                                                    </span>
+                                                @elseif(str_contains(strtoupper($studiSaatIni), 'S1'))
+                                                    <span class="badge badge-pill badge-primary px-3 py-1 font-weight-bold" style="font-size: 0.8rem;">
+                                                        Sarjana (S1)
+                                                    </span>
+                                                @else
+                                                    <span class="badge badge-pill badge-secondary px-3 py-1 font-weight-bold" style="font-size: 0.8rem;">
+                                                        Diploma (D3)
+                                                    </span>
+                                                @endif
+                                            </td>
+                                            <td class="text-center">
+                                                @if($aktifSaatIni == 'SS')
+                                                    <span class="badge badge-pill font-weight-bold px-2 py-1" style="background: rgba(2, 132, 199, 0.15); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.3); font-size: 0.78rem;">
+                                                        <i class="fas fa-spinner fa-spin mr-1"></i> Sedang Studi ({{ $peserta->lokasi_studi ?: 'DN' }})
+                                                    </span>
+                                                @else
+                                                    <span class="badge badge-pill font-weight-bold px-2 py-1" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; font-size: 0.78rem;">
+                                                        Aktif Bekerja
+                                                    </span>
+                                                @endif
+                                            </td>
+                                            <td>
+                                                @forelse($peserta->sertifikasis as $sert)
+                                                    <span class="badge badge-pill font-weight-bold px-2 py-1 mr-1 mb-1" style="background: rgba(2, 132, 199, 0.1); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.25); font-size: 0.75rem;">
+                                                        <i class="fas fa-award mr-1 text-info"></i> {{ $sert->sertifikasi->nama_sertifikasi ?? '-' }}
+                                                    </span>
+                                                @empty
+                                                    <span class="text-muted small">- Belum sertifikasi -</span>
+                                                @endforelse
+                                            </td>
+                                            <td class="text-center">
+                                                @if($isMagister)
+                                                    <span class="badge badge-success px-2 py-1 font-weight-bold" style="border-radius: 6px; font-size: 0.76rem;">
+                                                        <i class="fas fa-check mr-1"></i> Target S2 Tercapai
+                                                    </span>
+                                                @elseif($aktifSaatIni == 'SS')
+                                                    <span class="badge badge-info px-2 py-1 font-weight-bold text-white" style="border-radius: 6px; font-size: 0.76rem;">
+                                                        <i class="fas fa-clock mr-1"></i> Sedang Studi Lanjut
+                                                    </span>
+                                                @else
+                                                    <span class="badge badge-light border px-2 py-1 text-muted" style="border-radius: 6px; font-size: 0.76rem;">
+                                                        Standar Terpenuhi
+                                                    </span>
+                                                @endif
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="7" class="text-center py-4 text-muted">Belum ada data realisasi tenaga kependidikan.</td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
 

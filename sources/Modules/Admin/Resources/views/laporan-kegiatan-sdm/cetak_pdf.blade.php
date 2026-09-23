@@ -645,8 +645,7 @@
         <div>
             @foreach($laporan->fotoDokumentasis as $foto)
                 @php
-                    $fullPath = storage_path('app/' . $foto->file_path);
-                    $fotoB64 = file_exists($fullPath) ? 'data:image/jpeg;base64,' . base64_encode(file_get_contents($fullPath)) : null;
+                    $fotoB64 = $foto->pdf_base64;
                 @endphp
                 @if($fotoB64)
                     <div class="photo-box">

@@ -727,6 +727,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
             Route::put('/{id}', [LaporanKegiatanSdmController::class, 'update'])->name('update');
             Route::delete('/{id}', [LaporanKegiatanSdmController::class, 'destroy'])->name('destroy');
             Route::get('/{id}/cetak-pdf', [LaporanKegiatanSdmController::class, 'cetakPdf'])->name('cetak-pdf');
+            Route::get('/dokumen/{dokumenId}/file', [LaporanKegiatanSdmController::class, 'streamDokumen'])->name('stream-dokumen');
             Route::delete('/dokumen/{dokumenId}', [LaporanKegiatanSdmController::class, 'destroyDokumen'])->name('destroy-dokumen');
         });
     });

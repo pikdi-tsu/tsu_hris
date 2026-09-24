@@ -20,7 +20,7 @@ class LaporanKegiatanSdmController extends MiddlewareController
     public function __construct()
     {
         $this->registerPermissions('admin:laporan-kegiatan-sdm');
-        $this->middleware('permission:admin:laporan-kegiatan-sdm:view')->only(['data', 'cetakPdf', 'ajaxPegawai']);
+        $this->middleware('permission:admin:laporan-kegiatan-sdm:view')->only(['data', 'cetakPdf', 'ajaxPegawai', 'streamDokumen']);
         $this->middleware('permission:admin:laporan-kegiatan-sdm:delete')->only(['destroyDokumen']);
     }
 
@@ -630,6 +630,28 @@ class LaporanKegiatanSdmController extends MiddlewareController
                 'message' => 'Gagal menghapus dokumen: ' . $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Stream Berkas Dokumen / Foto Laporan Kegiatan SDM (Aman & Tepat URL)
+     */
+    public function streamDokumen($dokumenId)
+    {
+        $dokumen = LaporanKegiatanSdmDokumen::findOrFail($dokumenId);
+
+        $fullPath = $dokumen->physical_path;
+        if (!$fullPath) {
+            abort(404, 'File fisik berkas tidak ditemukan di server.');
+        }
+
+        $mimeType = mime_content_type($fullPath) ?: 'application/octet-stream';
+        $filename = $dokumen->nama_file ?: basename($fullPath);
+
+        return response()->file($fullPath, [
+            'Content-Type'        => $mimeType,
+            'Content-Disposition' => 'inline; filename="' . $filename . '"',
+            'Cache-Control'       => 'public, max-age=86400',
+        ]);
     }
 
     /**

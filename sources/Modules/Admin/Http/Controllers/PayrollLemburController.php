@@ -10,6 +10,8 @@ use App\Models\PayrollLemburDetail;
 use App\Models\PayrollLemburKaryawan;
 use App\Models\PayrollLemburPeriod;
 use App\Models\PayrollLemburPeriodApproval;
+use App\Models\User;
+use App\Notifications\PayrollApprovalNotification;
 use App\Services\PayrollLemburCalculationService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
@@ -101,9 +103,9 @@ class PayrollLemburController extends MiddlewareController
             'karyawan_ttd_id'       => 'nullable|string',
             'penandatangan_nama'    => 'required|string|max:150',
             'penandatangan_jabatan' => 'required|string|max:150',
-            'validator_1_id'        => 'nullable|exists:data_dosen_tendiks,id',
+            'validator_1_id'        => 'required|exists:data_dosen_tendiks,id',
             'validator_2_id'        => 'nullable|exists:data_dosen_tendiks,id',
-            'approval_id'           => 'nullable|exists:data_dosen_tendiks,id',
+            'approval_id'           => 'required|exists:data_dosen_tendiks,id',
             'keterangan'            => 'nullable|string',
         ]);
 
@@ -127,15 +129,16 @@ class PayrollLemburController extends MiddlewareController
         ]);
 
         // Catat approval log awal
+        $myProfile = $this->getCurrentProfile();
         PayrollLemburPeriodApproval::create([
             'payroll_lembur_period_id' => $period->id,
             'step'                     => 'draft',
             'role_label'               => 'Pembuat Draft',
             'user_id'                  => Auth::id(),
-            'karyawan_id'              => Auth::user()->karyawan->id ?? null,
-            'karyawan_name'            => Auth::user()->name,
+            'karyawan_id'              => $myProfile ? $myProfile->id : null,
+            'karyawan_name'            => $myProfile ? $myProfile->nama : Auth::user()->name,
             'action'                   => 'created',
-            'note'                     => 'Periode baru dibuat oleh ' . Auth::user()->name,
+            'note'                     => 'Periode lembur baru dibuat oleh ' . Auth::user()->name,
         ]);
 
         // Generate data otomatis dari lembur yang approved
@@ -153,8 +156,14 @@ class PayrollLemburController extends MiddlewareController
      */
     public function show($id)
     {
-        $period = PayrollLemburPeriod::with(['creator', 'validator1', 'validator2', 'approvalKaryawan'])
-            ->findOrFail($id);
+        $period = PayrollLemburPeriod::with([
+            'creator',
+            'validator1',
+            'validator2',
+            'approvalKaryawan',
+            'approvals.user',
+            'penandatangan'
+        ])->findOrFail($id);
 
         $karyawans = DataDosenTendik::where('is_active', 1)
             ->orderBy('nama', 'asc')
@@ -168,12 +177,36 @@ class PayrollLemburController extends MiddlewareController
             'jam_hari_libur'        => $period->karyawans()->sum('jam_hari_libur'),
         ];
 
+        $myProfile = $this->getCurrentProfile();
+        $myKaryawanId = $myProfile ? $myProfile->id : null;
+
+        $canEditLembur = Auth::user()->can('admin:payroll-lembur:edit') || Auth::user()->can('admin:payroll-lembur:approve') || (method_exists(Auth::user(), 'isAdmin') && Auth::user()->isAdmin());
+        $isCreator = ($period->created_by == Auth::id()) || $canEditLembur;
+        $isValidator1 = ($period->validator_1_id && $period->validator_1_id == $myKaryawanId) || $canEditLembur;
+        $isValidator2 = ($period->validator_2_id && $period->validator_2_id == $myKaryawanId) || $canEditLembur;
+        $isApproval   = ($period->approval_id && $period->approval_id == $myKaryawanId) || $canEditLembur;
+
+        // Auto mark as read notifikasi lonceng terkait periode lembur ini untuk user saat ini
+        try {
+            Auth::user()->unreadNotifications()
+                ->where('data->payroll_period_id', $period->id)
+                ->update(['read_at' => now()]);
+        } catch (\Exception $e) {
+            // Ignore
+        }
+
         return view('admin::payroll-lembur.show', [
-            'title'     => 'Detail ' . $period->nama_periode,
-            'menuIcon'  => 'fas fa-business-time',
-            'period'    => $period,
-            'summary'   => $summary,
-            'karyawans' => $karyawans,
+            'title'        => 'Detail ' . $period->nama_periode,
+            'menuIcon'     => 'fas fa-business-time',
+            'period'       => $period,
+            'summary'      => $summary,
+            'karyawans'    => $karyawans,
+            'allKaryawan'  => $karyawans,
+            'isCreator'    => $isCreator,
+            'isValidator1' => $isValidator1,
+            'isValidator2' => $isValidator2,
+            'isApproval'   => $isApproval,
+            'myProfile'    => $myProfile,
         ]);
     }
 
@@ -459,7 +492,354 @@ class PayrollLemburController extends MiddlewareController
             return response()->download($zipPath)->deleteFileAfterSend(true);
         }
 
-        return back()->with('error', 'Gagal membuat file arsip ZIP.');
+        return back()->with('error', 'Gagal membuat file ZIP arsip slip lembur.');
+    }
+
+    /**
+     * Pembuat mengajukan draft ke Validator 1
+     */
+    public function submitApproval(Request $request, $id)
+    {
+        $period = PayrollLemburPeriod::with(['validator1', 'validator2', 'approvalKaryawan'])->findOrFail($id);
+
+        if ($period->created_by != Auth::id() && !Auth::user()->can('admin:payroll-lembur:edit')) {
+            return back()->with('error', 'Hanya pembuat draft yang berwenang mengajukan periode lembur ke Validator.');
+        }
+
+        if (!in_array($period->status, ['draft', 'revision_requested'])) {
+            return back()->with('error', 'Periode lembur ini sedang dalam proses verifikasi atau sudah terkunci.');
+        }
+
+        $myProfile = $this->getCurrentProfile();
+        $isResubmit = ($period->status === 'revision_requested');
+
+        $period->update([
+            'status'            => 'pending_val_1',
+            'rejection_note'    => null,
+            'rejection_by_role' => null,
+        ]);
+
+        PayrollLemburPeriodApproval::create([
+            'payroll_lembur_period_id' => $period->id,
+            'step'                     => 'validator_1',
+            'role_label'               => 'Pembuat Draft',
+            'user_id'                  => Auth::id(),
+            'karyawan_id'              => $myProfile ? $myProfile->id : null,
+            'karyawan_name'            => $myProfile ? $myProfile->nama : Auth::user()->name,
+            'action'                   => 'submitted',
+            'note'                     => $request->catatan_pengajuan ?: ($isResubmit ? 'Revisi telah dibenahi dan diajukan ulang ke Validator 1.' : 'Diajukan ke Validator 1 untuk pemeriksaan data lembur.'),
+        ]);
+
+        // Kirim Notifikasi ke Validator 1
+        $this->notifyKaryawanUser(
+            $period->validator1,
+            new PayrollApprovalNotification(
+                $period,
+                "Periode lembur {$period->nama_periode} telah diajukan oleh " . (Auth::user()->name) . ". Mohon lakukan pemeriksaan dan validasi data lembur.",
+                'validator_1',
+                'Kroscek & Validasi'
+            )
+        );
+
+        return back()->with('success', 'Periode lembur berhasil diajukan ke Validator 1 (' . ($period->validator1->nama ?? '-') . '). Menunggu verifikasi.');
+    }
+
+    /**
+     * Aksi Persetujuan Bertingkat (Validator 1 -> Validator 2 -> Approval Paling Atas)
+     */
+    public function approveStep(Request $request, $id)
+    {
+        $period = PayrollLemburPeriod::with(['validator1', 'validator2', 'approvalKaryawan'])->findOrFail($id);
+        $myProfile = $this->getCurrentProfile();
+        $userName = $myProfile ? $myProfile->nama : Auth::user()->name;
+        $karyawanId = $myProfile ? $myProfile->id : null;
+
+        $nextStatus = '';
+        $stepName = '';
+        $roleLabel = '';
+        $pesanSukses = '';
+
+        if ($period->status === 'pending_val_1') {
+            if ($period->validator_2_id) {
+                $nextStatus = 'pending_val_2';
+                $stepName = 'validator_1';
+                $roleLabel = 'Validator 1';
+                $pesanSukses = 'Verifikasi Tingkat 1 disetujui. Berkas diteruskan ke Validator 2 (' . ($period->validator2->nama ?? '-') . ').';
+            } else {
+                $nextStatus = 'pending_approval';
+                $stepName = 'validator_1';
+                $roleLabel = 'Validator 1';
+                $pesanSukses = 'Verifikasi Tingkat 1 disetujui. Berkas diteruskan ke Approval Paling Atas (' . ($period->approvalKaryawan->nama ?? '-') . ').';
+            }
+        } elseif ($period->status === 'pending_val_2') {
+            $nextStatus = 'pending_approval';
+            $stepName = 'validator_2';
+            $roleLabel = 'Validator 2';
+            $pesanSukses = 'Verifikasi Tingkat 2 disetujui. Berkas diteruskan ke Approval Paling Atas (' . ($period->approvalKaryawan->nama ?? '-') . ').';
+        } elseif ($period->status === 'pending_approval') {
+            // Approval Paling Atas: SISTEM OTOMATIS MENGUNCI (LOCKED)
+            $nextStatus = 'locked';
+            $stepName = 'approval';
+            $roleLabel = 'Approval (Paling Atas)';
+            $period->is_locked = true;
+            $period->locked_at = now();
+            $period->locked_by = Auth::id();
+            $pesanSukses = 'Persetujuan Final berhasil diberikan! Sistem telah OTOMATIS MENGUNCI (LOCKED) periode lembur ini.';
+        } else {
+            return back()->with('error', 'Status periode lembur saat ini tidak membutuhkan persetujuan.');
+        }
+
+        $period->status = $nextStatus;
+        $period->save();
+
+        PayrollLemburPeriodApproval::create([
+            'payroll_lembur_period_id' => $period->id,
+            'step'                     => $stepName,
+            'role_label'               => $roleLabel,
+            'user_id'                  => Auth::id(),
+            'karyawan_id'              => $karyawanId,
+            'karyawan_name'            => $userName,
+            'action'                   => 'approved',
+            'note'                     => $request->note ?: 'Disetujui tanpa catatan.',
+        ]);
+
+        // Notifikasi ke pihak berikutnya
+        if ($nextStatus === 'pending_val_2') {
+            $this->notifyKaryawanUser(
+                $period->validator2,
+                new PayrollApprovalNotification(
+                    $period,
+                    "Periode lembur {$period->nama_periode} telah disetujui oleh Validator 1 (" . ($period->validator1->nama ?? 'Validator 1') . "). Menunggu verifikasi Anda.",
+                    'validator_2',
+                    'Kroscek & Validasi'
+                )
+            );
+        } elseif ($nextStatus === 'pending_approval') {
+            $this->notifyKaryawanUser(
+                $period->approvalKaryawan,
+                new PayrollApprovalNotification(
+                    $period,
+                    "Periode lembur {$period->nama_periode} telah diverifikasi. Menunggu persetujuan final & penguncian Anda.",
+                    'approval',
+                    'Persetujuan Final & Lock'
+                )
+            );
+        } elseif ($nextStatus === 'locked') {
+            $this->notifyUserById(
+                $period->created_by,
+                new PayrollApprovalNotification(
+                    $period,
+                    "Selamat! Periode lembur {$period->nama_periode} telah disetujui secara final oleh " . ($period->approvalKaryawan->nama ?? 'Approval Paling Atas') . " dan resmi TERKUNCI.",
+                    'locked',
+                    'Lihat Rekap Final'
+                )
+            );
+        }
+
+        // Auto mark as read notifikasi periode ini untuk approver saat ini
+        try {
+            Auth::user()->unreadNotifications()
+                ->where('data->payroll_period_id', $period->id)
+                ->update(['read_at' => now()]);
+        } catch (\Exception $e) {
+            // Ignore
+        }
+
+        return back()->with('success', $pesanSukses);
+    }
+
+    /**
+     * Aksi Meminta Revisi (Tolak untuk perbaikan)
+     */
+    public function rejectStep(Request $request, $id)
+    {
+        $request->validate([
+            'catatan_revisi' => 'required|string|min:5',
+        ], [
+            'catatan_revisi.required' => 'Mohon isi catatan revisi agar pembuat draft mengetahui hal yang perlu diperbaiki.',
+            'catatan_revisi.min'      => 'Catatan revisi minimal 5 karakter.',
+        ]);
+
+        $period = PayrollLemburPeriod::with(['validator1', 'validator2', 'approvalKaryawan'])->findOrFail($id);
+        $myProfile = $this->getCurrentProfile();
+        $userName = $myProfile ? $myProfile->nama : Auth::user()->name;
+        $karyawanId = $myProfile ? $myProfile->id : null;
+
+        $roleLabel = 'Approver';
+        $stepName = $period->status;
+
+        if ($period->status === 'pending_val_1') {
+            $roleLabel = 'Validator 1 (' . ($period->validator1->nama ?? $userName) . ')';
+        } elseif ($period->status === 'pending_val_2') {
+            $roleLabel = 'Validator 2 (' . ($period->validator2->nama ?? $userName) . ')';
+        } elseif ($period->status === 'pending_approval') {
+            $roleLabel = 'Approval Paling Atas (' . ($period->approvalKaryawan->nama ?? $userName) . ')';
+        } else {
+            return back()->with('error', 'Periode saat ini tidak sedang dalam tahapan approval.');
+        }
+
+        $period->update([
+            'status'            => 'revision_requested',
+            'rejection_by_role' => $roleLabel,
+            'rejection_note'    => $request->catatan_revisi,
+        ]);
+
+        PayrollLemburPeriodApproval::create([
+            'payroll_lembur_period_id' => $period->id,
+            'step'                     => $stepName,
+            'role_label'               => $roleLabel,
+            'user_id'                  => Auth::id(),
+            'karyawan_id'              => $karyawanId,
+            'karyawan_name'            => $userName,
+            'action'                   => 'revision_requested',
+            'note'                     => $request->catatan_revisi,
+        ]);
+
+        // Kirim Notifikasi Lonceng ke Pembuat Draft
+        $this->notifyUserById(
+            $period->created_by,
+            new PayrollApprovalNotification(
+                $period,
+                "{$roleLabel} meminta revisi untuk periode lembur {$period->nama_periode}. Catatan: \"{$request->catatan_revisi}\".",
+                'revision',
+                'Benahi Data Lembur'
+            )
+        );
+
+        // Auto mark as read notifikasi periode ini untuk approver saat ini
+        try {
+            Auth::user()->unreadNotifications()
+                ->where('data->payroll_period_id', $period->id)
+                ->update(['read_at' => now()]);
+        } catch (\Exception $e) {
+            // Ignore
+        }
+
+        return back()->with('warning', "Catatan revisi berhasil dikirim ke Pembuat Draft. Status periode kini: PERLU REVISI.");
+    }
+
+    /**
+     * Buka Kunci (Unlock) Periode Lembur
+     */
+    public function unlock(Request $request, $id)
+    {
+        $period = PayrollLemburPeriod::findOrFail($id);
+
+        if ($period->created_by != Auth::id() && !Auth::user()->can('admin:payroll-lembur:edit')) {
+            return back()->with('error', 'Hanya pembuat draft / admin yang berwenang membuka kunci periode lembur.');
+        }
+
+        $request->validate([
+            'alasan_buka_kunci' => 'required|string|min:5',
+        ], [
+            'alasan_buka_kunci.required' => 'Mohon isi alasan pembukaan kunci periode.',
+            'alasan_buka_kunci.min'      => 'Alasan pembukaan kunci minimal 5 karakter.',
+        ]);
+
+        $period->update([
+            'is_locked'       => false,
+            'status'          => 'draft',
+            'unlocked_reason' => $request->alasan_buka_kunci,
+            'locked_at'       => null,
+            'locked_by'       => null,
+        ]);
+
+        $myProfile = $this->getCurrentProfile();
+        PayrollLemburPeriodApproval::create([
+            'payroll_lembur_period_id' => $period->id,
+            'step'                     => 'unlocked',
+            'role_label'               => 'Pembuat Draft',
+            'user_id'                  => Auth::id(),
+            'karyawan_id'              => $myProfile ? $myProfile->id : null,
+            'karyawan_name'            => $myProfile ? $myProfile->nama : Auth::user()->name,
+            'action'                   => 'unlocked',
+            'note'                     => 'Kunci dibuka kembali. Alasan: ' . $request->alasan_buka_kunci,
+        ]);
+
+        return back()->with('warning', "Kunci pada periode lembur {$period->nama_periode} telah berhasil DIBUKA. Anda dapat membenahi data kembali.");
+    }
+
+    /**
+     * Update susunan Validator 1, Validator 2, dan Approval jika terjadi kesalahan input
+     */
+    public function updateApprovers(Request $request, $id)
+    {
+        $period = PayrollLemburPeriod::findOrFail($id);
+
+        if ($period->created_by != Auth::id() && !Auth::user()->can('admin:payroll-lembur:edit')) {
+            return back()->with('error', 'Hanya pembuat draft yang berwenang mengubah susunan validator & approval.');
+        }
+
+        if ($period->is_locked) {
+            return back()->with('error', 'Periode lembur telah terkunci.');
+        }
+
+        $request->validate([
+            'validator_1_id' => 'required|exists:data_dosen_tendiks,id',
+            'validator_2_id' => 'nullable|exists:data_dosen_tendiks,id',
+            'approval_id'    => 'required|exists:data_dosen_tendiks,id',
+        ]);
+
+        $period->update([
+            'validator_1_id' => $request->validator_1_id,
+            'validator_2_id' => $request->validator_2_id,
+            'approval_id'    => $request->approval_id,
+        ]);
+
+        return back()->with('success', 'Susunan validator & approval periode lembur berhasil diperbarui.');
+    }
+
+    /**
+     * Log Riwayat Approval
+     */
+    public function approvalHistory($id)
+    {
+        $period = PayrollLemburPeriod::findOrFail($id);
+        $approvals = PayrollLemburPeriodApproval::where('payroll_lembur_period_id', $period->id)
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        return response()->json([
+            'success'   => true,
+            'approvals' => $approvals,
+        ]);
+    }
+
+    private function getCurrentProfile()
+    {
+        return DataDosenTendik::where('user_id', Auth::id())->first();
+    }
+
+    private function notifyKaryawanUser($karyawan, $notification)
+    {
+        if (!$karyawan) return;
+        $user = null;
+        if (!empty($karyawan->user_id)) {
+            $user = User::find($karyawan->user_id);
+        }
+        if (!$user && !empty($karyawan->nik)) {
+            $user = User::where('nik', $karyawan->nik)->first();
+        }
+        if ($user) {
+            try {
+                $user->notify($notification);
+            } catch (\Exception $e) {
+                // Ignore safe notification failure
+            }
+        }
+    }
+
+    private function notifyUserById($userId, $notification)
+    {
+        if (!$userId) return;
+        $user = User::find($userId);
+        if ($user) {
+            try {
+                $user->notify($notification);
+            } catch (\Exception $e) {
+                // Ignore safe notification failure
+            }
+        }
     }
 
     private function resolveTtdMaster($period)

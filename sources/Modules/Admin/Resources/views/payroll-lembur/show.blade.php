@@ -7,6 +7,9 @@
     <link rel="stylesheet" href="{{ asset('public/assets/plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
     <!-- SweetAlert2 -->
     <link rel="stylesheet" href="{{ asset('public/assets/plugins/sweetalert2/sweetalert2.min.css') }}">
+    <!-- Select2 -->
+    <link rel="stylesheet" href="{{ asset('public/assets/plugins/select2/css/select2.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('public/assets/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css') }}">
 @endsection
 
 @section('css')
@@ -227,6 +230,83 @@
             border-radius: var(--tsu-radius, 8px) !important;
             border: 1px solid var(--tsu-border-gray, #e2e8f0) !important;
         }
+
+        /* Stepper Approval 4 Tahap */
+        .stepper-wrapper {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            margin-bottom: 1rem;
+        }
+        .stepper-item {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex: 1;
+            text-align: center;
+        }
+        .stepper-item::before {
+            position: absolute;
+            content: "";
+            border-bottom: 3px solid #e2e8f0;
+            width: 100%;
+            top: 20px;
+            left: -50%;
+            z-index: 1;
+        }
+        .stepper-item:first-child::before {
+            content: none;
+        }
+        .stepper-item .step-counter {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #f1f5f9;
+            color: #64748b;
+            font-weight: bold;
+            margin-bottom: 6px;
+            border: 3px solid #e2e8f0;
+            transition: all 0.3s;
+        }
+        .stepper-item.completed .step-counter {
+            background-color: #10b981;
+            border-color: #10b981;
+            color: #ffffff;
+        }
+        .stepper-item.completed::before {
+            border-color: #10b981;
+        }
+        .stepper-item.active .step-counter {
+            background-color: #3b82f6;
+            border-color: #93c5fd;
+            color: #ffffff;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.25);
+        }
+        .stepper-item.revision .step-counter {
+            background-color: #ef4444;
+            border-color: #fca5a5;
+            color: #ffffff;
+            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.25);
+        }
+        .stepper-item .step-name {
+            font-weight: 600;
+            font-size: 0.82rem;
+            color: #1e293b;
+        }
+        .stepper-item .step-user {
+            font-size: 0.72rem;
+            color: #64748b;
+            max-width: 160px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
     </style>
 @endsection
 
@@ -239,22 +319,7 @@
     >
         <x-slot name="actions">
             <a href="{{ route('admin.payroll.lembur.index') }}" class="btn btn-outline-secondary btn-sm font-weight-bold shadow-sm">
-                <i class="fas fa-arrow-left mr-1"></i> Kembali
-            </a>
-            @if(!$period->is_locked && in_array($period->status, ['draft', 'revision_requested']))
-                <button type="button" class="btn btn-outline-info btn-sm font-weight-bold shadow-sm" id="btn-recalculate" title="Tarik dan hitung ulang data presensi lembur">
-                    <i class="fas fa-sync-alt mr-1"></i> Hitung Ulang
-                </button>
-            @endif
-            <button type="button" class="btn {{ $period->is_locked ? 'btn-outline-warning' : 'btn-outline-success' }} btn-sm font-weight-bold shadow-sm" id="btn-toggle-lock">
-                <i class="fas {{ $period->is_locked ? 'fa-unlock' : 'fa-lock' }} mr-1"></i>
-                {{ $period->is_locked ? 'Buka Kunci' : 'Kunci Periode' }}
-            </button>
-            <a href="{{ route('admin.payroll.lembur.export-excel', $period->id) }}" class="btn btn-outline-success btn-sm font-weight-bold shadow-sm" title="Export Excel Rekap">
-                <i class="fas fa-file-excel mr-1"></i> Export Excel
-            </a>
-            <a href="{{ route('admin.payroll.lembur.download-all-slip', $period->id) }}" class="btn btn-sm tsu-btn-primary font-weight-bold shadow-sm" title="Unduh Semua Slip PDF (ZIP)">
-                <i class="fas fa-file-archive mr-1"></i> Download Semua Slip (ZIP)
+                <i class="fas fa-arrow-left mr-1"></i> Kembali ke Daftar Periode
             </a>
         </x-slot>
     </x-tsu-page-header>
@@ -263,23 +328,245 @@
     <section class="content">
         <div class="container-fluid">
 
-            {{-- Period Meta Banner --}}
-            <div class="alert alert-light border mb-4 shadow-sm" style="border-radius: 10px; border-left: 4px solid var(--tsu-primary, #094b54) !important;">
-                <div class="d-flex align-items-center justify-content-between flex-wrap" style="gap: 1rem;">
-                    <div>
-                        <div class="d-flex align-items-center flex-wrap" style="gap: 0.6rem;">
-                            <span class="font-weight-bold text-dark" style="font-size: 1rem;">{{ $period->nama_periode }}</span>
-                            {!! $period->status_badge !!}
+            {{-- Flash Messages --}}
+            @if (session('success'))
+                <div class="alert alert-success alert-dismissible fade show shadow-sm mb-3" role="alert">
+                    <i class="fas fa-check-circle mr-2"></i> {{ session('success') }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            @endif
+            @if (session('warning'))
+                <div class="alert alert-warning alert-dismissible fade show shadow-sm mb-3" role="alert">
+                    <i class="fas fa-exclamation-triangle mr-2"></i> {{ session('warning') }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            @endif
+            @if (session('error'))
+                <div class="alert alert-danger alert-dismissible fade show shadow-sm mb-3" role="alert">
+                    <i class="fas fa-times-circle mr-2"></i> {{ session('error') }}
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+            @endif
+
+            {{-- Approval Workflow Card & 4-Stage Stepper --}}
+            <div class="card card-outline shadow-sm mb-4" style="border-top: 3px solid var(--tsu-primary, #094b54); border-radius: 12px; overflow: hidden;">
+                <div class="card-body p-4">
+                    <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 pb-3 border-bottom" style="gap: 1rem;">
+                        <div>
+                            <div class="d-flex align-items-center flex-wrap" style="gap: 0.6rem;">
+                                <h4 class="font-weight-bold text-dark mb-0">{{ $period->nama_periode }}</h4>
+                                {!! $period->status_badge !!}
+                            </div>
+                            <div class="text-muted small mt-1">
+                                <i class="fas fa-calendar-alt text-primary mr-1"></i> Cut-Off Lembur: <strong>{{ $period->cutoff_label }}</strong> &bull;
+                                <i class="fas fa-map-marker-alt text-danger mr-1"></i> Kota: <strong>{{ $period->kota_surat }}</strong> &bull;
+                                <i class="fas fa-user-edit mr-1"></i> Pembuat: <strong>{{ $period->creator->name ?? 'Admin' }}</strong>
+                                @if($period->is_locked && $period->lockedUser)
+                                    &bull; <i class="fas fa-lock text-success mr-1"></i> Dikunci: <strong>{{ $period->lockedUser->name }}</strong> ({{ $period->locked_at ? $period->locked_at->format('d/m/Y H:i') : '' }})
+                                @endif
+                            </div>
                         </div>
-                        <div class="text-muted small mt-1">
-                            <i class="fas fa-calendar-alt text-primary mr-1"></i> Cut-Off Lembur: 
-                            <strong>{{ $period->start_date_cutoff->translatedFormat('d F Y') }}</strong> s/d <strong>{{ $period->end_date_cutoff->translatedFormat('d F Y') }}</strong> &bull;
-                            Surat: <strong>{{ $period->kota_surat }}, {{ $period->tanggal_surat ? $period->tanggal_surat->translatedFormat('d F Y') : '-' }}</strong>
+
+                        {{-- Action Buttons --}}
+                        <div class="d-flex flex-wrap gap-2 align-items-center">
+                            <button type="button" class="btn btn-outline-secondary btn-sm mr-2" id="btnShowHistory" title="Lihat Rekam Jejak Approval">
+                                <i class="fas fa-history mr-1"></i> Riwayat Approval
+                            </button>
+
+                            {{-- AKSI KHUSUS PEMBUAT DRAFT / ADMIN --}}
+                            @if($isCreator)
+                                @if(in_array($period->status, ['draft', 'revision_requested']))
+                                    <button type="button" class="btn btn-outline-primary btn-sm font-weight-bold mr-2" data-toggle="modal" data-target="#modalEditApproversShow" title="Ganti susunan Validator 1, Validator 2, atau Approval">
+                                        <i class="fas fa-user-edit mr-1"></i> Ganti Approval
+                                    </button>
+                                    <button type="button" class="btn btn-outline-info btn-sm font-weight-bold mr-2" id="btn-recalculate" title="Hitung ulang otomatis kehadiran & jam lembur">
+                                        <i class="fas fa-sync-alt mr-1"></i> Hitung Ulang
+                                    </button>
+                                    <button type="button" class="btn btn-success btn-sm font-weight-bold mr-2" data-toggle="modal" data-target="#modalSubmitApproval">
+                                        <i class="fas fa-paper-plane mr-1"></i> {{ $period->status === 'revision_requested' ? 'Kirim Ulang ke Validator 1' : 'Kirim ke Validator 1' }}
+                                    </button>
+                                @elseif($period->is_locked)
+                                    <button type="button" class="btn btn-warning btn-sm font-weight-bold mr-2 text-dark" data-toggle="modal" data-target="#modalUnlockPeriod">
+                                        <i class="fas fa-unlock mr-1"></i> Buka Kunci (Unlock)
+                                    </button>
+                                @endif
+                            @endif
+
+                            {{-- AKSI VALIDATOR 1 --}}
+                            @if($isValidator1 && $period->status === 'pending_val_1')
+                                <button type="button" class="btn btn-success btn-sm font-weight-bold mr-2" data-toggle="modal" data-target="#modalApproveStep">
+                                    <i class="fas fa-check-circle mr-1"></i> Setujui (Lanjut ke Tahap Berikutnya)
+                                </button>
+                                <button type="button" class="btn btn-danger btn-sm font-weight-bold mr-2" data-toggle="modal" data-target="#modalRejectStep">
+                                    <i class="fas fa-undo-alt mr-1"></i> Minta Revisi
+                                </button>
+                            @endif
+
+                            {{-- AKSI VALIDATOR 2 --}}
+                            @if($isValidator2 && $period->status === 'pending_val_2')
+                                <button type="button" class="btn btn-success btn-sm font-weight-bold mr-2" data-toggle="modal" data-target="#modalApproveStep">
+                                    <i class="fas fa-check-circle mr-1"></i> Setujui (Lanjut ke Approval Final)
+                                </button>
+                                <button type="button" class="btn btn-danger btn-sm font-weight-bold mr-2" data-toggle="modal" data-target="#modalRejectStep">
+                                    <i class="fas fa-undo-alt mr-1"></i> Minta Revisi
+                                </button>
+                            @endif
+
+                            {{-- AKSI APPROVAL PALING ATAS --}}
+                            @if($isApproval && $period->status === 'pending_approval')
+                                <button type="button" class="btn btn-success btn-sm font-weight-bold mr-2" data-toggle="modal" data-target="#modalApproveStep">
+                                    <i class="fas fa-lock mr-1"></i> Setujui Final &amp; Kunci Periode
+                                </button>
+                                <button type="button" class="btn btn-danger btn-sm font-weight-bold mr-2" data-toggle="modal" data-target="#modalRejectStep">
+                                    <i class="fas fa-undo-alt mr-1"></i> Minta Revisi
+                                </button>
+                            @endif
+
+                            {{-- EKSPOR DOKUMEN --}}
+                            @if(($isCreator && in_array($period->status, ['draft', 'revision_requested'])) || $period->is_locked)
+                                <div class="btn-group">
+                                    <a href="{{ route('admin.payroll.lembur.export-excel', $period->id) }}" class="btn btn-outline-success btn-sm font-weight-bold">
+                                        <i class="fas fa-file-excel mr-1"></i> Rekap Excel
+                                    </a>
+                                    <a href="{{ route('admin.payroll.lembur.download-all-slip', $period->id) }}" class="btn tsu-btn-primary btn-sm font-weight-bold">
+                                        <i class="fas fa-file-archive mr-1"></i> Semua Slip (ZIP)
+                                    </a>
+                                </div>
+                            @endif
                         </div>
                     </div>
-                    <div class="text-muted small">
-                        Dibuat oleh: <strong>{{ $period->creator->name ?? 'Admin' }}</strong> ({{ $period->created_at->format('d/m/Y H:i') }})
+
+                    {{-- Visual Stepper 4 Tahap --}}
+                    @php
+                        $logDraft = $period->approvals->where('action', 'submitted')->sortByDesc('created_at')->first();
+                        $logVal1 = $period->approvals->where('step', 'validator_1')->where('action', 'approved')->sortByDesc('created_at')->first();
+                        $logVal2 = $period->approvals->where('step', 'validator_2')->where('action', 'approved')->sortByDesc('created_at')->first();
+                        $logApproval = $period->approvals->where('step', 'approval')->where('action', 'approved')->sortByDesc('created_at')->first();
+
+                        $step1Class = ($period->status === 'draft' || $period->status === 'revision_requested') ? 'active' : 'completed';
+                        if ($period->status === 'revision_requested') $step1Class = 'revision';
+
+                        $step2Class = '';
+                        if ($period->status === 'pending_val_1') $step2Class = 'active';
+                        elseif (in_array($period->status, ['pending_val_2', 'pending_approval', 'locked'])) $step2Class = 'completed';
+
+                        $step3Class = '';
+                        if ($period->status === 'pending_val_2') $step3Class = 'active';
+                        elseif (in_array($period->status, ['pending_approval', 'locked'])) $step3Class = 'completed';
+
+                        $step4Class = '';
+                        if ($period->status === 'pending_approval') $step4Class = 'active';
+                        elseif ($period->status === 'locked') $step4Class = 'completed';
+                    @endphp
+
+                    <div class="stepper-wrapper pt-2">
+                        <div class="stepper-item {{ $step1Class }}">
+                            <div class="step-counter">
+                                @if($step1Class === 'completed') <i class="fas fa-check"></i>
+                                @elseif($step1Class === 'revision') <i class="fas fa-exclamation"></i>
+                                @else 1 @endif
+                            </div>
+                            <div class="step-name">1. Pembuat Draft</div>
+                            <div class="step-user font-weight-bold">{{ $period->creator->name ?? 'Pembuat' }}</div>
+                            @if($logDraft)
+                                <div class="step-time text-success mt-1" style="font-size: 7.5pt;">
+                                    <i class="fas fa-paper-plane mr-1"></i>{{ $logDraft->created_at->format('d/m/Y H:i') }}
+                                </div>
+                            @else
+                                <div class="step-time text-muted mt-1" style="font-size: 7.5pt;">
+                                    <i class="fas fa-clock mr-1"></i>{{ $period->created_at->format('d/m/Y H:i') }}
+                                </div>
+                            @endif
+                        </div>
+                        <div class="stepper-item {{ $step2Class }}">
+                            <div class="step-counter">
+                                @if($step2Class === 'completed') <i class="fas fa-check"></i>
+                                @else 2 @endif
+                            </div>
+                            <div class="step-name">2. Validator 1</div>
+                            <div class="step-user font-weight-bold">{{ $period->validator1->nama ?? 'Validator 1' }}</div>
+                            @if($logVal1)
+                                <div class="step-time text-success mt-1" style="font-size: 7.5pt;">
+                                    <i class="fas fa-check-circle mr-1"></i>{{ $logVal1->created_at->format('d/m/Y H:i') }}
+                                </div>
+                            @elseif($period->status === 'pending_val_1')
+                                <div class="step-time text-primary mt-1" style="font-size: 7.5pt;">
+                                    <i class="fas fa-spinner fa-spin mr-1"></i>Menunggu
+                                </div>
+                            @elseif($period->status === 'revision_requested' && str_contains($period->rejection_by_role ?? '', 'Validator 1'))
+                                <div class="step-time text-danger mt-1" style="font-size: 7.5pt;">
+                                    <i class="fas fa-undo-alt mr-1"></i>Minta Revisi
+                                </div>
+                            @else
+                                <div class="step-time text-muted mt-1" style="font-size: 7.5pt;">-</div>
+                            @endif
+                        </div>
+                        <div class="stepper-item {{ $step3Class }}">
+                            <div class="step-counter">
+                                @if($step3Class === 'completed') <i class="fas fa-check"></i>
+                                @else 3 @endif
+                            </div>
+                            <div class="step-name">3. Validator 2</div>
+                            <div class="step-user font-weight-bold">{{ $period->validator2->nama ?? ($period->validator_2_id ? 'Validator 2' : '(Dilewati)') }}</div>
+                            @if($logVal2)
+                                <div class="step-time text-success mt-1" style="font-size: 7.5pt;">
+                                    <i class="fas fa-check-circle mr-1"></i>{{ $logVal2->created_at->format('d/m/Y H:i') }}
+                                </div>
+                            @elseif($period->status === 'pending_val_2')
+                                <div class="step-time text-primary mt-1" style="font-size: 7.5pt;">
+                                    <i class="fas fa-spinner fa-spin mr-1"></i>Menunggu
+                                </div>
+                            @elseif($period->status === 'revision_requested' && str_contains($period->rejection_by_role ?? '', 'Validator 2'))
+                                <div class="step-time text-danger mt-1" style="font-size: 7.5pt;">
+                                    <i class="fas fa-undo-alt mr-1"></i>Minta Revisi
+                                </div>
+                            @else
+                                <div class="step-time text-muted mt-1" style="font-size: 7.5pt;">-</div>
+                            @endif
+                        </div>
+                        <div class="stepper-item {{ $step4Class }}">
+                            <div class="step-counter">
+                                @if($step4Class === 'completed') <i class="fas fa-lock"></i>
+                                @else 4 @endif
+                            </div>
+                            <div class="step-name">4. Approval Final (Lock)</div>
+                            <div class="step-user font-weight-bold">{{ $period->approvalKaryawan->nama ?? 'Approval Paling Atas' }}</div>
+                            @if($logApproval)
+                                <div class="step-time text-success mt-1" style="font-size: 7.5pt;">
+                                    <i class="fas fa-lock mr-1"></i>{{ $logApproval->created_at->format('d/m/Y H:i') }}
+                                </div>
+                            @elseif($period->status === 'pending_approval')
+                                <div class="step-time text-primary mt-1" style="font-size: 7.5pt;">
+                                    <i class="fas fa-spinner fa-spin mr-1"></i>Menunggu
+                                </div>
+                            @elseif($period->status === 'revision_requested' && str_contains($period->rejection_by_role ?? '', 'Approval'))
+                                <div class="step-time text-danger mt-1" style="font-size: 7.5pt;">
+                                    <i class="fas fa-undo-alt mr-1"></i>Minta Revisi
+                                </div>
+                            @else
+                                <div class="step-time text-muted mt-1" style="font-size: 7.5pt;">-</div>
+                            @endif
+                        </div>
                     </div>
+
+                    {{-- Alert Catatan Revisi --}}
+                    @if($period->status === 'revision_requested' && $period->rejection_note)
+                        <div class="alert alert-danger mb-0 mt-3 shadow-sm border-0" style="background-color: #fee2e2; border-left: 4px solid #ef4444 !important;">
+                            <div class="d-flex align-items-start">
+                                <i class="fas fa-exclamation-circle text-danger mr-2 mt-1" style="font-size: 1.1rem;"></i>
+                                <div>
+                                    <strong class="text-danger d-block">Perlu Revisi dari {{ $period->rejection_by_role }}:</strong>
+                                    <span class="text-dark">{{ $period->rejection_note }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </div>
 
@@ -386,6 +673,218 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal Submit Approval -->
+    <div class="modal fade" id="modalSubmitApproval" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content" style="border-radius: 12px; overflow: hidden;">
+                <form action="{{ route('admin.payroll.lembur.submit-approval', $period->id) }}" method="POST">
+                    @csrf
+                    <div class="modal-header text-white" style="background-color: #094b54;">
+                        <h5 class="modal-title font-weight-bold">
+                            <i class="fas fa-paper-plane mr-2"></i>Pengajuan Approval Lembur
+                        </h5>
+                        <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <p class="text-dark">
+                            Apakah Anda yakin seluruh rincian lembur untuk periode <strong>{{ $period->nama_periode }}</strong> sudah sesuai dan siap diajukan ke Validator 1 (<strong>{{ $period->validator1->nama ?? '-' }}</strong>)?
+                        </p>
+                        <div class="form-group mb-0">
+                            <label class="font-weight-bold small text-muted">Catatan Pengajuan (Opsional):</label>
+                            <textarea name="catatan_pengajuan" class="form-control" rows="2" placeholder="Catatan untuk Validator 1..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-success btn-sm font-weight-bold px-3">
+                            <i class="fas fa-paper-plane mr-1"></i> Kirim ke Validator 1
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Approve Step -->
+    <div class="modal fade" id="modalApproveStep" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content" style="border-radius: 12px; overflow: hidden;">
+                <form action="{{ route('admin.payroll.lembur.approve-step', $period->id) }}" method="POST">
+                    @csrf
+                    <div class="modal-header bg-success text-white">
+                        <h5 class="modal-title font-weight-bold">
+                            <i class="fas fa-check-circle mr-2"></i>Konfirmasi Persetujuan
+                        </h5>
+                        <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                    </div>
+                    <div class="modal-body p-4">
+                        @if($period->status === 'pending_approval')
+                            <div class="alert alert-warning border-0 small mb-3" style="border-radius: 6px;">
+                                <i class="fas fa-lock mr-1"></i> <strong>Persetujuan Final:</strong> Setelah Anda menyetujui, sistem akan <strong>otomatis mengunci (LOCKED)</strong> periode lembur ini secara resmi.
+                            </div>
+                        @endif
+                        <p class="text-dark">
+                            Apakah Anda yakin ingin menyetujui berkas lembur periode <strong>{{ $period->nama_periode }}</strong> pada tahapan ini?
+                        </p>
+                        <div class="form-group mb-0">
+                            <label class="font-weight-bold small text-muted">Catatan Verifikasi (Opsional):</label>
+                            <textarea name="note" class="form-control" rows="2" placeholder="Disetujui tanpa catatan..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-success btn-sm font-weight-bold px-3">
+                            <i class="fas fa-check mr-1"></i> Berikan Persetujuan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Reject Step (Minta Revisi) -->
+    <div class="modal fade" id="modalRejectStep" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content" style="border-radius: 12px; overflow: hidden;">
+                <form action="{{ route('admin.payroll.lembur.reject-step', $period->id) }}" method="POST">
+                    @csrf
+                    <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title font-weight-bold">
+                            <i class="fas fa-undo-alt mr-2"></i>Minta Revisi Berkas Lembur
+                        </h5>
+                        <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <p class="text-dark small">
+                            Berkas akan dikembalikan ke Pembuat Draft (<strong>{{ $period->creator->name ?? 'Pembuat' }}</strong>) dengan status <strong>"Perlu Revisi"</strong>.
+                        </p>
+                        <div class="form-group mb-0">
+                            <label class="font-weight-bold text-dark small">Rincian / Catatan Hal yang Harus Diperbaiki <span class="text-danger">*</span>:</label>
+                            <textarea name="catatan_revisi" class="form-control" rows="3" required placeholder="Jelaskan alasan pengembalian berkas dan data jam lembur/koreksi yang perlu diperbaiki..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-danger btn-sm font-weight-bold px-3">
+                            <i class="fas fa-undo mr-1"></i> Kirim Catatan Revisi
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Unlock Period -->
+    <div class="modal fade" id="modalUnlockPeriod" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content" style="border-radius: 12px; overflow: hidden;">
+                <form action="{{ route('admin.payroll.lembur.unlock', $period->id) }}" method="POST">
+                    @csrf
+                    <div class="modal-header bg-warning text-dark">
+                        <h5 class="modal-title font-weight-bold">
+                            <i class="fas fa-unlock mr-2"></i>Buka Kunci Periode Lembur (Unlock)
+                        </h5>
+                        <button type="button" class="close text-dark" data-dismiss="modal">&times;</button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="alert alert-warning small border-0 mb-3" style="border-radius: 6px;">
+                            <strong>Perhatian:</strong> Membuka kunci akan mengembalikan status periode menjadi <strong>Draft</strong> sehingga penyesuaian nominal dan kalkulasi ulang dapat dilakukan kembali. Seluruh proses approval harus diulang dari awal.
+                        </div>
+                        <div class="form-group mb-0">
+                            <label class="font-weight-bold text-dark small">Alasan Resmi Pembukaan Kunci <span class="text-danger">*</span>:</label>
+                            <textarea name="alasan_buka_kunci" class="form-control" rows="2" required placeholder="Contoh: Ada koreksi lembur susulan bagi staf laboratorium..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-warning btn-sm font-weight-bold px-3 text-dark">
+                            <i class="fas fa-unlock mr-1"></i> Buka Kunci Periode
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Ganti Susunan Approver -->
+    <div class="modal fade" id="modalEditApproversShow" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content" style="border-radius: 12px; overflow: hidden;">
+                <form action="{{ route('admin.payroll.lembur.update-approvers', $period->id) }}" method="POST">
+                    @csrf
+                    <div class="modal-header text-white" style="background-color: #094b54;">
+                        <h5 class="modal-title font-weight-bold">
+                            <i class="fas fa-user-edit mr-2"></i>Perbarui Pejabat Validator &amp; Approval
+                        </h5>
+                        <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="form-group">
+                            <label class="font-weight-bold text-dark small">Validator 1 <span class="text-danger">*</span></label>
+                            <select name="validator_1_id" class="form-control select2-modal" required style="width: 100%;">
+                                @foreach($allKaryawan as $k)
+                                    <option value="{{ $k->id }}" {{ $period->validator_1_id == $k->id ? 'selected' : '' }}>
+                                        {{ $k->nama }} ({{ $k->nik ?: '-' }}) &bull; {{ $k->nama_unit ?: $k->posisi }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="font-weight-bold text-dark small">Validator 2 (Opsional)</label>
+                            <select name="validator_2_id" class="form-control select2-modal" style="width: 100%;">
+                                <option value="">-- Langsung ke Approval Final (Tanpa Validator 2) --</option>
+                                @foreach($allKaryawan as $k)
+                                    <option value="{{ $k->id }}" {{ $period->validator_2_id == $k->id ? 'selected' : '' }}>
+                                        {{ $k->nama }} ({{ $k->nik ?: '-' }}) &bull; {{ $k->nama_unit ?: $k->posisi }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group mb-0">
+                            <label class="font-weight-bold text-dark small">Approval Paling Atas <span class="text-danger">*</span></label>
+                            <select name="approval_id" class="form-control select2-modal" required style="width: 100%;">
+                                @foreach($allKaryawan as $k)
+                                    <option value="{{ $k->id }}" {{ $period->approval_id == $k->id ? 'selected' : '' }}>
+                                        {{ $k->nama }} ({{ $k->nik ?: '-' }}) &bull; {{ $k->nama_unit ?: $k->posisi }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer bg-light">
+                        <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary btn-sm font-weight-bold px-3" style="background-color: #094b54;">
+                            <i class="fas fa-save mr-1"></i> Simpan Perubahan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Riwayat Approval (Timeline History) -->
+    <div class="modal fade" id="modalApprovalHistory" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg" role="document">
+            <div class="modal-content" style="border-radius: 12px; overflow: hidden;">
+                <div class="modal-header text-white" style="background-color: #094b54;">
+                    <h5 class="modal-title font-weight-bold">
+                        <i class="fas fa-history mr-2"></i>Rekam Jejak &amp; Riwayat Approval Lembur
+                    </h5>
+                    <button type="button" class="close text-white" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body p-4" id="historyTimelineContent">
+                    <div class="text-center py-4">
+                        <i class="fas fa-spinner fa-spin fa-2x text-muted"></i>
+                        <div class="small text-muted mt-2">Memuat riwayat jejak audit...</div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light">
+                    <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection
 
 @section('script')
@@ -394,9 +893,19 @@
     <script src="{{ asset('public/assets/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js') }}"></script>
     <!-- SweetAlert2 -->
     <script src="{{ asset('public/assets/plugins/sweetalert2/sweetalert2.min.js') }}"></script>
+    <!-- Select2 -->
+    <script src="{{ asset('public/assets/plugins/select2/js/select2.full.min.js') }}"></script>
 
     <script>
         $(document).ready(function() {
+            // Inisialisasi Select2 di Modal Edit Approver
+            $('#modalEditApproversShow').on('shown.bs.modal', function () {
+                $('.select2-modal').select2({
+                    theme: 'bootstrap4',
+                    dropdownParent: $('#modalEditApproversShow')
+                });
+            });
+
             let table = $('#table-payroll-lembur').DataTable({
                 processing: true,
                 serverSide: true,
@@ -529,7 +1038,60 @@
                 });
             });
 
-            // Toggle Lock
+            // Riwayat Approval History Modal
+            $('#btnShowHistory').on('click', function() {
+                $('#modalApprovalHistory').modal('show');
+                $('#historyTimelineContent').html('<div class="text-center py-4"><i class="fas fa-spinner fa-spin fa-2x text-muted"></i><div class="small text-muted mt-2">Memuat riwayat...</div></div>');
+
+                $.get("{{ route('admin.payroll.lembur.approval-history', $period->id) }}", function(res) {
+                    if (res.success && res.approvals.length > 0) {
+                        let html = '<div class="timeline">';
+                        res.approvals.forEach(function(item) {
+                            let badgeClass = 'bg-primary';
+                            let iconClass = 'fas fa-info';
+
+                            if (item.action === 'submitted') {
+                                badgeClass = 'bg-info';
+                                iconClass = 'fas fa-paper-plane';
+                            } else if (item.action === 'approved') {
+                                badgeClass = 'bg-success';
+                                iconClass = 'fas fa-check';
+                            } else if (item.action === 'revision_requested') {
+                                badgeClass = 'bg-danger';
+                                iconClass = 'fas fa-undo-alt';
+                            } else if (item.action === 'unlocked') {
+                                badgeClass = 'bg-warning';
+                                iconClass = 'fas fa-unlock';
+                            }
+
+                            let dateStr = new Date(item.created_at).toLocaleString('id-ID', {
+                                day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                            });
+
+                            html += `
+                                <div>
+                                    <i class="${iconClass} ${badgeClass}"></i>
+                                    <div class="timeline-item shadow-sm">
+                                        <span class="time"><i class="fas fa-clock mr-1"></i>${dateStr}</span>
+                                        <h3 class="timeline-header font-weight-bold" style="font-size: 0.92rem;">
+                                            ${item.role_label} &mdash; <span class="text-primary">${item.karyawan_name}</span>
+                                        </h3>
+                                        <div class="timeline-body text-dark" style="font-size: 0.88rem;">
+                                            ${item.note || 'Tidak ada catatan.'}
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        html += '<div><i class="fas fa-clock bg-gray"></i></div></div>';
+                        $('#historyTimelineContent').html(html);
+                    } else {
+                        $('#historyTimelineContent').html('<div class="text-center py-4 text-muted">Belum ada riwayat approval tercatat.</div>');
+                    }
+                });
+            });
+
+            // Toggle Lock (Backup / alternatif cepat jika diperlukan)
             $('#btn-toggle-lock').on('click', function() {
                 let isLocked = {{ $period->is_locked ? 'true' : 'false' }};
                 let actionText = isLocked ? 'Buka Kunci' : 'Kunci (Lock)';

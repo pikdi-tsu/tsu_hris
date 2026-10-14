@@ -82,13 +82,37 @@ class PayrollLemburPeriod extends Model
         return Carbon::createFromDate($this->tahun, $this->bulan, 1)->translatedFormat('F Y');
     }
 
+    public function getCutoffLabelAttribute(): string
+    {
+        return ($this->start_date_cutoff ? $this->start_date_cutoff->translatedFormat('d M Y') : '-') . ' s/d ' .
+               ($this->end_date_cutoff ? $this->end_date_cutoff->translatedFormat('d M Y') : '-');
+    }
+
+    public function getStatusLabelAttribute(): string
+    {
+        return match ($this->status) {
+            'draft'              => 'Draft (Kroscek Pembuat)',
+            'pending_val_1'      => 'Menunggu Validator 1 (' . ($this->validator1->nama ?? 'Validator 1') . ')',
+            'pending_val_2'      => 'Menunggu Validator 2 (' . ($this->validator2->nama ?? 'Validator 2') . ')',
+            'pending_approval'   => 'Menunggu Approval Final (' . ($this->approvalKaryawan->nama ?? 'Pimpinan') . ')',
+            'revision_requested' => 'Perlu Revisi (' . ($this->rejection_by_role ?: 'Approver') . ')',
+            'locked'             => 'Terkunci & Final (LOCKED)',
+            'approved'           => 'Disetujui',
+            default              => ucfirst($this->status),
+        };
+    }
+
     public function getStatusBadgeAttribute(): string
     {
         return match ($this->status) {
-            'locked'            => '<span class="badge badge-success px-2 py-1"><i class="fas fa-lock mr-1"></i> Terkunci</span>',
-            'approved'          => '<span class="badge badge-info px-2 py-1"><i class="fas fa-check-double mr-1"></i> Disetujui</span>',
-            'pending_approval'  => '<span class="badge badge-warning px-2 py-1 text-dark"><i class="fas fa-clock mr-1"></i> Menunggu Approval</span>',
-            default             => '<span class="badge badge-secondary px-2 py-1"><i class="fas fa-pencil-alt mr-1"></i> Draft</span>',
+            'draft'              => '<span class="badge badge-secondary px-2 py-1"><i class="fas fa-pencil-alt mr-1"></i> Draft</span>',
+            'pending_val_1'      => '<span class="badge badge-info px-2 py-1"><i class="fas fa-user-check mr-1"></i> Menunggu Validator 1</span>',
+            'pending_val_2'      => '<span class="badge badge-primary px-2 py-1"><i class="fas fa-user-check mr-1"></i> Menunggu Validator 2</span>',
+            'pending_approval'   => '<span class="badge badge-warning px-2 py-1 text-dark"><i class="fas fa-crown mr-1"></i> Menunggu Approval</span>',
+            'revision_requested' => '<span class="badge badge-danger px-2 py-1"><i class="fas fa-undo-alt mr-1"></i> Perlu Revisi</span>',
+            'locked'             => '<span class="badge badge-success px-2 py-1"><i class="fas fa-lock mr-1"></i> LOCKED (FINAL)</span>',
+            'approved'           => '<span class="badge badge-success px-2 py-1"><i class="fas fa-check-double mr-1"></i> Disetujui</span>',
+            default              => '<span class="badge badge-light px-2 py-1">' . e($this->status) . '</span>',
         };
     }
 }

@@ -566,6 +566,14 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
                 Route::get('/export-excel/{id}', [PayrollLemburController::class, 'exportExcel'])->name('export-excel');
                 Route::get('/slip-pdf/{karyawanId}', [PayrollLemburController::class, 'slipPdf'])->name('slip-pdf');
                 Route::get('/download-all-slip/{id}', [PayrollLemburController::class, 'downloadAllSlipZip'])->name('download-all-slip');
+
+                // Approval Bertingkat & Workflow
+                Route::post('/submit-approval/{id}', [PayrollLemburController::class, 'submitApproval'])->name('submit-approval');
+                Route::post('/approve-step/{id}', [PayrollLemburController::class, 'approveStep'])->name('approve-step');
+                Route::post('/reject-step/{id}', [PayrollLemburController::class, 'rejectStep'])->name('reject-step');
+                Route::post('/unlock/{id}', [PayrollLemburController::class, 'unlock'])->name('unlock');
+                Route::post('/update-approvers/{id}', [PayrollLemburController::class, 'updateApprovers'])->name('update-approvers');
+                Route::get('/approval-history/{id}', [PayrollLemburController::class, 'approvalHistory'])->name('approval-history');
             });
         });
     });

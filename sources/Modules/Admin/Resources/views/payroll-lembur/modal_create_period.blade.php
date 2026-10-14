@@ -155,6 +155,56 @@
             </div>
         </div>
 
+        {{-- Section 2: Penugasan Validator & Approval Bertingkat --}}
+        <h6 class="font-weight-bold border-bottom pb-2 mb-3 mt-3" style="color: var(--tsu-primary, #094b54);">
+            <i class="fas fa-users-cog mr-1"></i> Penugasan Validator &amp; Approval Bertingkat
+        </h6>
+        <p class="text-muted small mb-3" style="font-size: 8.5pt;">
+            Tentukan susunan personil yang bertugas memverifikasi dan memberikan persetujuan final sebelum periode lembur dikunci resmi.
+        </p>
+
+        <div class="form-group mb-3">
+            <label class="font-weight-bold text-dark small mb-1">
+                <i class="fas fa-user-check text-info mr-1"></i> Validator 1 (Pemeriksa Tingkat 1) <span class="text-danger">*</span>
+            </label>
+            <select name="validator_1_id" id="validator_1_id" class="form-control select2-modal" required style="width: 100%;">
+                <option value="">-- Pilih Karyawan Validator 1 --</option>
+                @foreach($karyawans as $k)
+                    <option value="{{ $k->id }}">
+                        {{ trim(($k->gelar_depan ? $k->gelar_depan . ' ' : '') . $k->nama . ($k->gelar_belakang ? ', ' . $k->gelar_belakang : '')) }} ({{ $k->nip ?: ($k->nik ?: '-') }}) &bull; {{ $k->posisi ?: ($k->tipe_karyawan ?: 'Tendik') }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="form-group mb-3">
+            <label class="font-weight-bold text-dark small mb-1">
+                <i class="fas fa-user-check text-primary mr-1"></i> Validator 2 (Pemeriksa Tingkat 2 - Opsional)
+            </label>
+            <select name="validator_2_id" id="validator_2_id" class="form-control select2-modal" style="width: 100%;">
+                <option value="">-- Langsung ke Approval Final (Tanpa Validator 2) --</option>
+                @foreach($karyawans as $k)
+                    <option value="{{ $k->id }}">
+                        {{ trim(($k->gelar_depan ? $k->gelar_depan . ' ' : '') . $k->nama . ($k->gelar_belakang ? ', ' . $k->gelar_belakang : '')) }} ({{ $k->nip ?: ($k->nik ?: '-') }}) &bull; {{ $k->posisi ?: ($k->tipe_karyawan ?: 'Tendik') }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="form-group mb-3">
+            <label class="font-weight-bold text-dark small mb-1">
+                <i class="fas fa-crown text-warning mr-1"></i> Approval Paling Atas (Persetujuan Final &amp; Kunci Otomatis) <span class="text-danger">*</span>
+            </label>
+            <select name="approval_id" id="approval_id" class="form-control select2-modal" required style="width: 100%;">
+                <option value="">-- Pilih Pejabat Approval Paling Atas --</option>
+                @foreach($karyawans as $k)
+                    <option value="{{ $k->id }}">
+                        {{ trim(($k->gelar_depan ? $k->gelar_depan . ' ' : '') . $k->nama . ($k->gelar_belakang ? ', ' . $k->gelar_belakang : '')) }} ({{ $k->nip ?: ($k->nik ?: '-') }}) &bull; {{ $k->posisi ?: ($k->tipe_karyawan ?: 'Tendik') }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
         {{-- Catatan --}}
         <div class="form-group mb-0">
             <label class="font-weight-bold text-dark small mb-1">Catatan Tambahan (Opsional)</label>
@@ -181,6 +231,10 @@
                 dropdownParent: $('#modal-create-period-lembur'),
                 width: '100%',
                 placeholder: "-- Ketik Nama atau NIP/NIK untuk Mencari --"
+            });
+            $('.select2-modal').select2({
+                dropdownParent: $('#modal-create-period-lembur'),
+                width: '100%'
             });
         }
 

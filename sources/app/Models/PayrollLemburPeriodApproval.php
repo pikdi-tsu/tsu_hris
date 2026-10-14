@@ -21,4 +21,14 @@ class PayrollLemburPeriodApproval extends Model
     {
         return $this->belongsTo(PayrollLemburPeriod::class, 'payroll_lembur_period_id', 'id');
     }
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    public function karyawan()
+    {
+        return $this->belongsTo(DataDosenTendik::class, 'karyawan_id');
+    }
 }

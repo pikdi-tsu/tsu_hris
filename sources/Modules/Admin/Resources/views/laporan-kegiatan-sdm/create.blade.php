@@ -773,7 +773,7 @@
                                 <div id="container_foto">
                                     <div class="row align-items-center border rounded p-3 mb-2 bg-light foto-row">
                                         <div class="col-md-5 mb-2 mb-md-0">
-                                            <label class="small font-weight-bold mb-1">Pilih File Foto (JPG/PNG/WEBP)</label>
+                                            <label class="small font-weight-bold mb-1">Pilih File Foto (JPG/PNG/WEBP, Maks. 3 MB)</label>
                                             <input type="file" name="foto_dokumentasi[]" class="form-control-file" accept="image/*">
                                         </div>
                                         <div class="col-md-6 mb-2 mb-md-0">
@@ -924,8 +924,8 @@
                                             </select>
                                         </div>
                                         <div class="col-md-4 mb-2 mb-md-0">
-                                            <label class="small font-weight-bold mb-1">Pilih Berkas (PDF / Dokumen)</label>
-                                            <input type="file" name="berkas_lampiran[]" class="form-control-file" accept=".pdf,.doc,.docx,.xls,.xlsx,.zip">
+                                            <label class="small font-weight-bold mb-1">Pilih Berkas (PDF, Maks. 5 MB)</label>
+                                            <input type="file" name="berkas_lampiran[]" class="form-control-file" accept=".pdf">
                                         </div>
                                         <div class="col-md-4 mb-2 mb-md-0">
                                             <label class="small font-weight-bold mb-1">Keterangan Berkas</label>
@@ -1494,7 +1494,7 @@
                 var html = `
                     <div class="row align-items-center border rounded p-3 mb-2 bg-light foto-row">
                         <div class="col-md-5 mb-2 mb-md-0">
-                            <label class="small font-weight-bold mb-1">Pilih File Foto (JPG/PNG/WEBP)</label>
+                            <label class="small font-weight-bold mb-1">Pilih File Foto (JPG/PNG/WEBP, Maks. 3 MB)</label>
                             <input type="file" name="foto_dokumentasi[]" class="form-control-file" accept="image/*">
                         </div>
                         <div class="col-md-6 mb-2 mb-md-0">
@@ -1531,8 +1531,8 @@
                             </select>
                         </div>
                         <div class="col-md-4 mb-2 mb-md-0">
-                            <label class="small font-weight-bold mb-1">Pilih Berkas (PDF / Dokumen)</label>
-                            <input type="file" name="berkas_lampiran[]" class="form-control-file" accept=".pdf,.doc,.docx,.xls,.xlsx,.zip">
+                            <label class="small font-weight-bold mb-1">Pilih Berkas (PDF, Maks. 5 MB)</label>
+                            <input type="file" name="berkas_lampiran[]" class="form-control-file" accept=".pdf">
                         </div>
                         <div class="col-md-4 mb-2 mb-md-0">
                             <label class="small font-weight-bold mb-1">Keterangan Berkas</label>

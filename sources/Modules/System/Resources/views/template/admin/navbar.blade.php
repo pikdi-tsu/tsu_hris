@@ -29,11 +29,12 @@
             $notifpayroll_url = session('notifpayroll_url', route('admin.payroll.index'));
             $notifhonorarium = session('notifhonorarium', 0);
             $notifhonorarium_url = session('notifhonorarium_url', route('admin.honorarium.index'));
+            $notifperubahandata = session('notifperubahandata', 0);
 
             $dbUnreadNotifs = auth()->user()->unreadNotifications()->take(5)->get();
             $dbUnreadCount = auth()->user()->unreadNotifications()->count();
 
-            $all = $notifcutiatasan + $notifizinatasan + $notifcutihrd + $notifizinhrd + $notiflemburatasan + $notiflemburhrd + $notifpayroll + $notifhonorarium + $dbUnreadCount;
+            $all = $notifcutiatasan + $notifizinatasan + $notifcutihrd + $notifizinhrd + $notiflemburatasan + $notiflemburhrd + $notifpayroll + $notifhonorarium + $notifperubahandata + $dbUnreadCount;
         @endphp
         <li class="nav-item dropdown" id="tsu-notif-dropdown">
             <a class="nav-link tsu-notif-trigger" data-toggle="dropdown" href="#" id="notif-bell-btn">
@@ -167,6 +168,20 @@
                         </div>
                         <span class="tsu-notif-item__badge tsu-notif-item__badge--teal" id="badge-notif-lembur-hrd">{{ $notiflemburhrd }}</span>
                     </a>
+
+                    {{-- Item: Perubahan Data Pegawai (SDM) --}}
+                    @if(Route::has('admin.approval-perubahan-data.index'))
+                    <a href="{{ route('admin.approval-perubahan-data.index') }}" class="tsu-notif-item" id="perubahan-data-item" {!! $notifperubahandata > 0 ? '' : 'style="display:none;"' !!}>
+                        <span class="tsu-notif-item__icon" style="background:#fef3c7; color:#d97706;">
+                            <i class="fas fa-user-edit"></i>
+                        </span>
+                        <div class="tsu-notif-item__content">
+                            <div class="tsu-notif-item__title">Perubahan Data Pegawai</div>
+                            <div class="tsu-notif-item__sub">Menunggu verifikasi SDM</div>
+                        </div>
+                        <span class="tsu-notif-item__badge tsu-notif-item__badge--warning" id="badge-notif-perubahan-data">{{ $notifperubahandata }}</span>
+                    </a>
+                    @endif
 
                     {{-- DB Realtime Notifications --}}
                     @foreach($dbUnreadNotifs as $notif)

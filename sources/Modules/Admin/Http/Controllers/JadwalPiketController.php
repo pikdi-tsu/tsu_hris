@@ -11,6 +11,7 @@ use Carbon\Carbon;
 
 use App\Models\DataDosenTendik;
 use App\Models\DataJadwalPiket;
+use App\Models\MasterUnit;
 
 class JadwalPiketController extends MiddlewareController
 {
@@ -111,62 +112,130 @@ class JadwalPiketController extends MiddlewareController
 
     public function create()
     {
+        $units = MasterUnit::orderBy('nama_unit', 'asc')->get();
         // Ambil data Tendik dan Sarpras yang aktif
         $karyawans = DataDosenTendik::with('unit')
-            ->where('tipe_karyawan', 'Tendik')
-            ->orWhereNull('tipe_karyawan')
+            ->where(function ($q) {
+                $q->where('tipe_karyawan', 'Tendik')
+                  ->orWhereNull('tipe_karyawan');
+            })
+            ->where('is_active', true)
             ->orderBy('nama', 'asc')
             ->get();
 
+        $bulan = $this->getBulan();
+        $currentMonth = (int) date('n');
+        $currentYear = (int) date('Y');
+
+        $saturdays = $this->generateSaturdaysForMonth($currentMonth, $currentYear);
+
         return view('admin::jadwal-piket.create_modal', [
-            'karyawans' => $karyawans,
+            'karyawans'    => $karyawans,
+            'units'        => $units,
+            'bulan'        => $bulan,
+            'currentMonth' => $currentMonth,
+            'currentYear'  => $currentYear,
+            'saturdays'    => $saturdays,
+        ]);
+    }
+
+    /**
+     * Helper untuk menghasilkan daftar hari Sabtu dalam bulan tertentu
+     */
+    private function generateSaturdaysForMonth(int $month, int $year): array
+    {
+        $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth();
+        $endDate = $startDate->copy()->endOfMonth();
+        $saturdays = [];
+
+        while ($startDate->lte($endDate)) {
+            if ($startDate->isSaturday()) {
+                $saturdays[] = [
+                    'date'     => $startDate->format('Y-m-d'),
+                    'label'    => $startDate->translatedFormat('l, d F Y'),
+                    'short'    => $startDate->format('d M'),
+                    'day_num'  => $startDate->day,
+                ];
+            }
+            $startDate->addDay();
+        }
+
+        return $saturdays;
+    }
+
+    /**
+     * AJAX endpoint untuk mengambil daftar hari Sabtu berdasarkan Bulan & Tahun
+     */
+    public function getSaturdays(Request $request)
+    {
+        $month = (int) ($request->month ?: date('n'));
+        $year = (int) ($request->year ?: date('Y'));
+        $saturdays = $this->generateSaturdaysForMonth($month, $year);
+
+        return response()->json([
+            'success'   => true,
+            'saturdays' => $saturdays,
         ]);
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'tanggal_piket' => 'required|date',
             'karyawan_ids' => 'required|array|min:1',
-            'jam_mulai' => 'required',
-            'jam_selesai' => 'required',
+            'jam_mulai'    => 'required',
+            'jam_selesai'  => 'required',
         ], [
-            'tanggal_piket.required' => 'Silahkan pilih tanggal piket (Hari Sabtu).',
-            'karyawan_ids.required' => 'Pilih minimal satu karyawan.',
+            'karyawan_ids.required' => 'Pilih minimal satu karyawan bertugas.',
+            'jam_mulai.required'    => 'Jam mulai wajib diisi.',
+            'jam_selesai.required'  => 'Jam selesai wajib diisi.',
         ]);
+
+        $dates = $request->input('tanggal_pikets');
+        if (empty($dates) && $request->filled('tanggal_piket')) {
+            $dates = [$request->input('tanggal_piket')];
+        }
+
+        if (empty($dates) || !is_array($dates)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Silakan pilih minimal satu tanggal piket (Hari Sabtu).'
+            ], 422);
+        }
 
         try {
             $userNik = Auth::check() && $this->getCurrentProfile() ? $this->getCurrentProfile()->nik : 'System';
             $inTime = Carbon::parse($request->jam_mulai);
             $outTime = Carbon::parse($request->jam_selesai);
             $targetMinutes = intval(abs($outTime->diffInMinutes($inTime)));
+            if ($targetMinutes <= 0) $targetMinutes = 240;
 
             $inserted = 0;
-            foreach ($request->karyawan_ids as $karyawanId) {
-                $karyawan = DataDosenTendik::find($karyawanId);
-                if (!$karyawan) continue;
+            foreach ($dates as $tgl) {
+                foreach ($request->karyawan_ids as $karyawanId) {
+                    $karyawan = DataDosenTendik::find($karyawanId);
+                    if (!$karyawan) continue;
 
-                // Hindari duplikasi jadwal untuk karyawan dan tanggal yang sama
-                DataJadwalPiket::updateOrCreate([
-                    'data_dosen_tendik_id' => $karyawan->id,
-                    'tanggal_piket' => $request->tanggal_piket,
-                ], [
-                    'pin' => $karyawan->pin_absensi,
-                    'jam_mulai' => $request->jam_mulai,
-                    'jam_selesai' => $request->jam_selesai,
-                    'target_durasi_menit' => $targetMinutes > 0 ? $targetMinutes : 240,
-                    'keterangan' => $request->keterangan ?? 'Piket Sabtu Tendik & Sarpras',
-                    'is_active' => true,
-                    'created_by' => $userNik,
-                    'updated_by' => $userNik,
-                ]);
+                    DataJadwalPiket::updateOrCreate([
+                        'data_dosen_tendik_id' => $karyawan->id,
+                        'tanggal_piket'        => $tgl,
+                    ], [
+                        'pin'                 => $karyawan->pin_absensi,
+                        'jam_mulai'           => $request->jam_mulai,
+                        'jam_selesai'         => $request->jam_selesai,
+                        'target_durasi_menit' => $targetMinutes,
+                        'keterangan'          => $request->keterangan ?? 'Piket Sabtu Pelayanan',
+                        'is_active'           => true,
+                        'created_by'          => $userNik,
+                        'updated_by'          => $userNik,
+                    ]);
 
-                $inserted++;
+                    $inserted++;
+                }
             }
 
             return response()->json([
                 'success' => true,
-                'message' => 'Berhasil menyimpan ' . $inserted . ' jadwal piket Sabtu.',
+                'message' => 'Berhasil menyimpan ' . $inserted . ' jadwal penugasan piket Sabtu.',
             ]);
         } catch (\Exception $e) {
             return response()->json([

@@ -278,36 +278,12 @@ class PayrollCalculationService
         $appliedTarifTransport = $isDapatTransport ? $tarifTransport : 0;
         $totalTransport = round($hariHadirValid * $appliedTarifTransport, 2);
 
-        // 10. Uang Lembur (Sesuai PP 35/2021 & Aturan TSU: Upah per Jam = (Gaji Pokok + Tunjangan Tetap) / 173)
-        // Syarat Mutlak: HANYA lembur yang disetujui oleh Atasan Langsung DAN HRD (Approved Ganda)
+        // Gaji Tetap (Dasar perhitungan upah tetap bulanan & lembur sesuai PP 35/2021)
+        $gajiTetap = $gapok + $tunjFungsional + $tunjStruktural + $tunjKeluarga + $tunjAnak + $tunjKesehatan;
+
+        // 10. Uang Lembur: Dipisahkan ke modul mandiri "Payroll Lembur" (dibayarkan via transfer & slip terpisah)
         $totalJamLembur = 0;
         $totalLembur = 0;
-
-        $lemburQuery = LemburKaryawan::where('id_user', $pegawai->id)
-            ->where('statushrd', 'approved')
-            ->where('statusatasan', 'approved');
-
-        if ($period->start_date_cutoff && $period->end_date_cutoff) {
-            $lemburQuery->whereBetween('tanggalmulai', [
-                Carbon::parse($period->start_date_cutoff)->startOfDay(),
-                Carbon::parse($period->end_date_cutoff)->endOfDay()
-            ]);
-        } elseif ($period->bulan && $period->tahun) {
-            $lemburQuery->whereMonth('tanggalmulai', $period->bulan)
-                ->whereYear('tanggalmulai', $period->tahun);
-        }
-
-        $lemburRecords = $lemburQuery->get();
-        foreach ($lemburRecords as $lemb) {
-            $jam = floatval($lemb->total_jam ?? 0);
-            $totalJamLembur += $jam;
-
-            $tgl = Carbon::parse($lemb->tanggalmulai);
-            $isLibur = ($tgl->isSunday() || in_array($tgl->format('Y-m-d'), $holidayDates));
-
-            $nominalLembur = LemburKaryawan::hitungNominalLembur($gajiTetap, $jam, $isLibur);
-            $totalLembur += $nominalLembur;
-        }
 
         // 11. Potongan Unpaid Leave (Rate = Gapok / 25 hari)
         $rateUnpaidLeave = ($gapok > 0) ? round($gapok / 25, 2) : 0;

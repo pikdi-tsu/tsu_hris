@@ -41,7 +41,7 @@
                                 <th width="22%">Jenis Surat</th>
                                 <th width="28%">Keperluan</th>
                                 <th width="12%">Tgl Pengajuan</th>
-                                <th width="18%" class="text-center">Status</th>
+                                <th width="18%" class="text-center text-nowrap">Status</th>
                                 <th width="15%" class="text-center">Aksi</th>
                             </tr>
                         </thead>
@@ -76,7 +76,7 @@
                     { data: 'jenis_surat', name: 'jenis_surat' },
                     { data: 'keperluan', name: 'keperluan' },
                     { data: 'tgl_pengajuan', name: 'created_at' },
-                    { data: 'status_badge', name: 'status', className: 'text-center' },
+                    { data: 'status_badge', name: 'status', className: 'text-center text-nowrap' },
                     { data: 'aksi', name: 'aksi', orderable: false, searchable: false, className: 'text-center' },
                 ]
             });

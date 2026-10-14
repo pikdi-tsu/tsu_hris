@@ -11,6 +11,15 @@ class SuratMasuk extends Model
 
     protected $table = 'surat_masuks';
 
+    protected static function booted()
+    {
+        static::deleting(function ($surat) {
+            if ($surat->file_surat) {
+                \App\Services\FileUploadService::deleteFile($surat->file_surat);
+            }
+        });
+    }
+
     protected $fillable = [
         'no_agenda',
         'no_surat_asal',

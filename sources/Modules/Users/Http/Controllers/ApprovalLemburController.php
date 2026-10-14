@@ -98,7 +98,10 @@ class ApprovalLemburController extends Controller
                 if (!$data->tanggalmulai || !$data->tanggalselesai) return '-';
                 $jamMulai = Carbon::parse($data->tanggalmulai)->format('H:i');
                 $jamSelesai = Carbon::parse($data->tanggalselesai)->format('H:i');
-                return $jamMulai . ' - ' . $jamSelesai . ' <br><span class="badge badge-secondary">' . $data->total_jam . ' Jam</span>';
+                $durasi = $data->durasi_diakui;
+                $kategoriBadge = '<span class="badge badge-light border text-muted ml-1" style="font-size:0.7rem;">' . e($data->kategori_label) . '</span>';
+                $nominal = $data->nominal_estimasi > 0 ? '<small class="text-success d-block font-weight-bold">Est: Rp ' . number_format($data->nominal_estimasi, 0, ',', '.') . '</small>' : '';
+                return $jamMulai . ' - ' . $jamSelesai . ' <br><span class="badge badge-success">' . $durasi . ' Jam Diakui</span>' . $kategoriBadge . $nominal;
             })
             ->addColumn('status', function ($data) {
                 if ($data->statusatasan == 'waiting') {
@@ -159,7 +162,7 @@ class ApprovalLemburController extends Controller
             } else {
                 $tanggal = $mulai->translatedFormat('d M Y') . ' - ' . $selesai->translatedFormat('d M Y');
             }
-            $waktu = $mulai->format('H:i') . ' - ' . $selesai->format('H:i') . ' (' . $getdata->total_jam . ' Jam)';
+            $waktu = $mulai->format('H:i') . ' - ' . $selesai->format('H:i') . ' (' . $getdata->durasi_diakui . ' Jam Diakui)';
 
             $form = view('users::approvallembur.modaldetail', [
                 'data'     => $getdata,

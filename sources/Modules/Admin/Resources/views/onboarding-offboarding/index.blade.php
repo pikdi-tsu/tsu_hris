@@ -271,96 +271,136 @@
 
             {{-- 4 Stat Cards Grid --}}
             <div class="tsu-stat-grid-onoff">
-                {{-- Total Pegawai Aktif --}}
-                <div class="tsu-stat-card tsu-stat-card--total">
-                    <i class="fas fa-users tsu-stat-card__icon"></i>
-                    <div>
-                        <div class="tsu-stat-card__title">Total Pegawai Aktif</div>
-                        <div class="tsu-stat-card__value">
-                            {{ number_format($totalAktif) }}
-                            <span class="tsu-stat-card__unit">Pegawai</span>
-                        </div>
-                    </div>
-                    <div class="tsu-stat-card__subtext">
-                        Dosen & Tendik Terdaftar
-                    </div>
-                </div>
-
-                {{-- Kandidat Onboarding --}}
+                {{-- Onboarding Berjalan --}}
                 <div class="tsu-stat-card tsu-stat-card--onboard">
-                    <i class="fas fa-user-plus tsu-stat-card__icon"></i>
+                    <i class="fas fa-user-clock tsu-stat-card__icon"></i>
                     <div>
-                        <div class="tsu-stat-card__title">Kandidat Onboarding</div>
+                        <div class="tsu-stat-card__title">Onboarding Berjalan</div>
                         <div class="tsu-stat-card__value">
-                            {{ number_format($onboardingCount) }}
+                            <span id="stat-count-onb-berjalan">{{ number_format($onboardingBerjalanCount) }}</span>
                             <span class="tsu-stat-card__unit">Pegawai</span>
                         </div>
                     </div>
                     <div class="tsu-stat-card__subtext">
-                        Bergabung dlm 1 Thn Terakhir
+                        Masa Orientasi & Checklist Aktif
                     </div>
                 </div>
 
-                {{-- Master Checklist Tugas --}}
+                {{-- Riwayat Onboarding Selesai --}}
                 <div class="tsu-stat-card tsu-stat-card--tasks">
-                    <i class="fas fa-tasks tsu-stat-card__icon"></i>
+                    <i class="fas fa-user-check tsu-stat-card__icon"></i>
                     <div>
-                        <div class="tsu-stat-card__title">Master Checklist</div>
+                        <div class="tsu-stat-card__title">Riwayat Onboarding</div>
                         <div class="tsu-stat-card__value">
-                            {{ number_format($totalTasks ?? 0) }}
-                            <span class="tsu-stat-card__unit">Tugas</span>
-                        </div>
-                    </div>
-                    <div class="tsu-stat-card__subtext">
-                        Orientasi & Serah Terima
-                    </div>
-                </div>
-
-                {{-- Offboarding (Resign) --}}
-                <div class="tsu-stat-card tsu-stat-card--offboard">
-                    <i class="fas fa-user-slash tsu-stat-card__icon"></i>
-                    <div>
-                        <div class="tsu-stat-card__title">Offboarding (Resign)</div>
-                        <div class="tsu-stat-card__value">
-                            {{ number_format($totalResign) }}
+                            <span id="stat-count-onb-riwayat">{{ number_format($riwayatOnboardingCount) }}</span>
                             <span class="tsu-stat-card__unit">Pegawai</span>
                         </div>
                     </div>
                     <div class="tsu-stat-card__subtext">
-                        Pelepasan Tugas & Aset
+                        Checklist Tuntas (100%)
+                    </div>
+                </div>
+
+                {{-- Offboarding Berjalan --}}
+                <div class="tsu-stat-card tsu-stat-card--offboard">
+                    <i class="fas fa-user-minus tsu-stat-card__icon"></i>
+                    <div>
+                        <div class="tsu-stat-card__title">Offboarding Berjalan</div>
+                        <div class="tsu-stat-card__value">
+                            <span id="stat-count-off-berjalan">{{ number_format($offboardingBerjalanCount) }}</span>
+                            <span class="tsu-stat-card__unit">Pegawai</span>
+                        </div>
+                    </div>
+                    <div class="tsu-stat-card__subtext">
+                        Proses Serah Terima & Aset
+                    </div>
+                </div>
+
+                {{-- Riwayat Offboarding Selesai --}}
+                <div class="tsu-stat-card tsu-stat-card--total">
+                    <i class="fas fa-clipboard-check tsu-stat-card__icon"></i>
+                    <div>
+                        <div class="tsu-stat-card__title">Riwayat Offboarding</div>
+                        <div class="tsu-stat-card__value">
+                            <span id="stat-count-off-riwayat">{{ number_format($riwayatOffboardingCount) }}</span>
+                            <span class="tsu-stat-card__unit">Pegawai</span>
+                        </div>
+                    </div>
+                    <div class="tsu-stat-card__subtext">
+                        Serah Terima Tuntas (100%)
                     </div>
                 </div>
             </div>
 
-            {{-- Main Underline Tab Card Container --}}
+            {{-- Main Underline Tab Card Container (4 Tabs) --}}
             <div class="card card-primary card-outline card-tabs tsu-card">
                 <div class="card-header p-0 border-bottom-0">
                     <ul class="nav nav-tabs tsu-tab-nav" id="onoff-tabs" role="tablist">
+                        {{-- Tab 1: Onboarding Berjalan --}}
                         <li class="nav-item">
                             <a class="nav-link active" id="tab-onboarding-link" data-toggle="pill" href="#tab-onboarding" role="tab">
-                                <i class="fas fa-user-plus mr-2 text-success"></i> Onboarding Pegawai Baru
+                                <i class="fas fa-user-clock mr-2 text-primary"></i> Onboarding (Berjalan)
+                                <span class="badge badge-warning text-dark ml-2 px-2" id="badge-count-onb-berjalan">{{ $onboardingBerjalanCount }}</span>
                             </a>
                         </li>
+                        {{-- Tab 2: Riwayat Onboarding (Selesai 100%) --}}
+                        <li class="nav-item">
+                            <a class="nav-link" id="tab-riwayat-onboarding-link" data-toggle="pill" href="#tab-riwayat-onboarding" role="tab">
+                                <i class="fas fa-user-check mr-2 text-success"></i> Riwayat Onboarding
+                                <span class="badge badge-success ml-2 px-2" id="badge-count-onb-riwayat">{{ $riwayatOnboardingCount }}</span>
+                            </a>
+                        </li>
+                        {{-- Tab 3: Offboarding Berjalan --}}
                         <li class="nav-item">
                             <a class="nav-link" id="tab-offboarding-link" data-toggle="pill" href="#tab-offboarding" role="tab">
-                                <i class="fas fa-user-minus mr-2 text-warning"></i> Offboarding Pegawai Resign
+                                <i class="fas fa-user-minus mr-2 text-warning"></i> Offboarding (Berjalan)
+                                <span class="badge badge-warning text-dark ml-2 px-2" id="badge-count-off-berjalan">{{ $offboardingBerjalanCount }}</span>
+                            </a>
+                        </li>
+                        {{-- Tab 4: Riwayat Offboarding (Selesai 100%) --}}
+                        <li class="nav-item">
+                            <a class="nav-link" id="tab-riwayat-offboarding-link" data-toggle="pill" href="#tab-riwayat-offboarding" role="tab">
+                                <i class="fas fa-clipboard-check mr-2 text-success"></i> Riwayat Offboarding
+                                <span class="badge badge-success ml-2 px-2" id="badge-count-off-riwayat">{{ $riwayatOffboardingCount }}</span>
                             </a>
                         </li>
                     </ul>
                 </div>
                 <div class="card-body p-3">
                     <div class="tab-content" id="onoff-tabContent">
-                        {{-- Tab 1: Onboarding --}}
+                        
+                        {{-- ========================================================
+                             TAB 1: ONBOARDING BERJALAN (< 100%)
+                        ======================================================== --}}
                         <div class="tab-pane fade show active" id="tab-onboarding" role="tabpanel">
+                            {{-- Filter Dosen vs Tendik --}}
+                            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 p-2 bg-light rounded" style="border: 1px solid #e2e8f0;">
+                                <div class="btn-group btn-group-toggle" data-toggle="buttons" id="filter-tipe-onboarding">
+                                    <label class="btn btn-sm btn-white active shadow-none border" style="font-weight: 600;">
+                                        <input type="radio" name="tipe_onboarding" value="" checked> <i class="fas fa-users mr-1 text-primary"></i> Semua Pegawai Baru
+                                    </label>
+                                    <label class="btn btn-sm btn-white shadow-none border" style="font-weight: 600;">
+                                        <input type="radio" name="tipe_onboarding" value="dosen"> <i class="fas fa-chalkboard-teacher mr-1 text-info"></i> Khusus Dosen Baru
+                                    </label>
+                                    <label class="btn btn-sm btn-white shadow-none border" style="font-weight: 600;">
+                                        <input type="radio" name="tipe_onboarding" value="tendik"> <i class="fas fa-user-tie mr-1 text-success"></i> Khusus Tendik Baru
+                                    </label>
+                                </div>
+                                <div class="small text-muted mt-2 mt-md-0">
+                                    <i class="fas fa-info-circle text-info mr-1"></i> Menampilkan pegawai baru dengan checklist belum tuntas (< 100%)
+                                </div>
+                            </div>
+
                             <div class="table-responsive">
                                 <table id="table-onboarding-pegawai" class="table tsu-table-modern table-hover w-100">
                                     <thead>
                                         <tr>
-                                            <th width="5%" class="text-center">NO</th>
-                                            <th width="35%">IDENTITAS PEGAWAI</th>
-                                            <th width="16%" class="text-center">TGL BERGABUNG</th>
-                                            <th width="30%">PROGRESS KELENGKAPAN</th>
-                                            <th width="14%" class="text-center">AKSI</th>
+                                            <th width="5%" class="text-center text-nowrap">NO</th>
+                                            <th width="32%">IDENTITAS PEGAWAI</th>
+                                            <th width="14%" class="text-center text-nowrap">TGL BERGABUNG</th>
+                                            <th width="24%">PROGRESS KELENGKAPAN</th>
+                                            <th width="13%" class="text-center text-nowrap">STATUS</th>
+                                            <th width="12%" class="text-center text-nowrap">AKSI</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -369,16 +409,38 @@
                             </div>
                         </div>
 
-                        {{-- Tab 2: Offboarding --}}
-                        <div class="tab-pane fade" id="tab-offboarding" role="tabpanel">
+                        {{-- ========================================================
+                             TAB 2: RIWAYAT ONBOARDING (LENGKAP 100%)
+                        ======================================================== --}}
+                        <div class="tab-pane fade" id="tab-riwayat-onboarding" role="tabpanel">
+                            {{-- Filter Dosen vs Tendik --}}
+                            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 p-2 bg-light rounded" style="border: 1px solid #e2e8f0;">
+                                <div class="btn-group btn-group-toggle" data-toggle="buttons" id="filter-tipe-riwayat-onboarding">
+                                    <label class="btn btn-sm btn-white active shadow-none border" style="font-weight: 600;">
+                                        <input type="radio" name="tipe_riwayat_onboarding" value="" checked> <i class="fas fa-users mr-1 text-success"></i> Semua Riwayat Selesai
+                                    </label>
+                                    <label class="btn btn-sm btn-white shadow-none border" style="font-weight: 600;">
+                                        <input type="radio" name="tipe_riwayat_onboarding" value="dosen"> <i class="fas fa-chalkboard-teacher mr-1 text-info"></i> Dosen Tuntas
+                                    </label>
+                                    <label class="btn btn-sm btn-white shadow-none border" style="font-weight: 600;">
+                                        <input type="radio" name="tipe_riwayat_onboarding" value="tendik"> <i class="fas fa-user-tie mr-1 text-success"></i> Tendik Tuntas
+                                    </label>
+                                </div>
+                                <div class="small text-muted mt-2 mt-md-0">
+                                    <i class="fas fa-check-double text-success mr-1"></i> Seluruh tugas orientasi &amp; berkas checklist telah selesai 100%
+                                </div>
+                            </div>
+
                             <div class="table-responsive">
-                                <table id="table-offboarding-pegawai" class="table tsu-table-modern table-hover w-100">
+                                <table id="table-riwayat-onboarding-pegawai" class="table tsu-table-modern table-hover w-100">
                                     <thead>
                                         <tr>
-                                            <th width="5%" class="text-center">NO</th>
-                                            <th width="38%">IDENTITAS PEGAWAI</th>
-                                            <th width="42%">PROGRESS SERAH TERIMA</th>
-                                            <th width="15%" class="text-center">AKSI</th>
+                                            <th width="5%" class="text-center text-nowrap">NO</th>
+                                            <th width="35%">IDENTITAS PEGAWAI</th>
+                                            <th width="15%" class="text-center text-nowrap">TGL BERGABUNG</th>
+                                            <th width="15%" class="text-center text-nowrap">STATUS ORIENTASI</th>
+                                            <th width="18%" class="text-center text-nowrap">WAKTU TUNTAS</th>
+                                            <th width="12%" class="text-center text-nowrap">AKSI</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -386,6 +448,85 @@
                                 </table>
                             </div>
                         </div>
+
+                        {{-- ========================================================
+                             TAB 3: OFFBOARDING BERJALAN (< 100%)
+                        ======================================================== --}}
+                        <div class="tab-pane fade" id="tab-offboarding" role="tabpanel">
+                            {{-- Filter Dosen vs Tendik --}}
+                            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 p-2 bg-light rounded" style="border: 1px solid #e2e8f0;">
+                                <div class="btn-group btn-group-toggle" data-toggle="buttons" id="filter-tipe-offboarding">
+                                    <label class="btn btn-sm btn-white active shadow-none border" style="font-weight: 600;">
+                                        <input type="radio" name="tipe_offboarding" value="" checked> <i class="fas fa-users mr-1 text-secondary"></i> Semua Pegawai Resign
+                                    </label>
+                                    <label class="btn btn-sm btn-white shadow-none border" style="font-weight: 600;">
+                                        <input type="radio" name="tipe_offboarding" value="dosen"> <i class="fas fa-chalkboard-teacher mr-1 text-warning"></i> Offboarding Dosen
+                                    </label>
+                                    <label class="btn btn-sm btn-white shadow-none border" style="font-weight: 600;">
+                                        <input type="radio" name="tipe_offboarding" value="tendik"> <i class="fas fa-user-tie mr-1 text-danger"></i> Offboarding Tendik
+                                    </label>
+                                </div>
+                                <div class="small text-muted mt-2 mt-md-0">
+                                    <i class="fas fa-info-circle text-warning mr-1"></i> Menampilkan pegawai resign dengan serah terima inventaris &amp; tugas belum selesai
+                                </div>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table id="table-offboarding-pegawai" class="table tsu-table-modern table-hover w-100">
+                                    <thead>
+                                        <tr>
+                                            <th width="5%" class="text-center text-nowrap">NO</th>
+                                            <th width="35%">IDENTITAS PEGAWAI</th>
+                                            <th width="28%">PROGRESS SERAH TERIMA</th>
+                                            <th width="18%" class="text-center text-nowrap">STATUS</th>
+                                            <th width="14%" class="text-center text-nowrap">AKSI</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        {{-- ========================================================
+                             TAB 4: RIWAYAT OFFBOARDING (LENGKAP 100%)
+                        ======================================================== --}}
+                        <div class="tab-pane fade" id="tab-riwayat-offboarding" role="tabpanel">
+                            {{-- Filter Dosen vs Tendik --}}
+                            <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 p-2 bg-light rounded" style="border: 1px solid #e2e8f0;">
+                                <div class="btn-group btn-group-toggle" data-toggle="buttons" id="filter-tipe-riwayat-offboarding">
+                                    <label class="btn btn-sm btn-white active shadow-none border" style="font-weight: 600;">
+                                        <input type="radio" name="tipe_riwayat_offboarding" value="" checked> <i class="fas fa-users mr-1 text-success"></i> Semua Riwayat Selesai
+                                    </label>
+                                    <label class="btn btn-sm btn-white shadow-none border" style="font-weight: 600;">
+                                        <input type="radio" name="tipe_riwayat_offboarding" value="dosen"> <i class="fas fa-chalkboard-teacher mr-1 text-warning"></i> Dosen Selesai
+                                    </label>
+                                    <label class="btn btn-sm btn-white shadow-none border" style="font-weight: 600;">
+                                        <input type="radio" name="tipe_riwayat_offboarding" value="tendik"> <i class="fas fa-user-tie mr-1 text-danger"></i> Tendik Selesai
+                                    </label>
+                                </div>
+                                <div class="small text-muted mt-2 mt-md-0">
+                                    <i class="fas fa-check-double text-success mr-1"></i> Seluruh serah terima inventaris, akun kampus &amp; administrasi telah tuntas 100%
+                                </div>
+                            </div>
+
+                            <div class="table-responsive">
+                                <table id="table-riwayat-offboarding-pegawai" class="table tsu-table-modern table-hover w-100">
+                                    <thead>
+                                        <tr>
+                                            <th width="5%" class="text-center text-nowrap">NO</th>
+                                            <th width="40%">IDENTITAS PEGAWAI</th>
+                                            <th width="20%" class="text-center text-nowrap">STATUS SERAH TERIMA</th>
+                                            <th width="20%" class="text-center text-nowrap">WAKTU TUNTAS</th>
+                                            <th width="15%" class="text-center text-nowrap">AKSI</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
             </div>
@@ -413,37 +554,83 @@
 
     <script>
         $(document).ready(function() {
+            let currentTipeOnboarding = '';
+            let currentTipeRiwayatOnboarding = '';
+            let currentTipeOffboarding = '';
+            let currentTipeRiwayatOffboarding = '';
+
+            // Common Language settings
+            let dtLanguage = {
+                processing: '<div class="spinner-border spinner-border-sm text-primary" role="status"></div> Memuat data...',
+                search: "Cari Pegawai:",
+                lengthMenu: "Tampilkan _MENU_ entri",
+                info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ pegawai",
+                infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
+                infoFiltered: "(disaring dari _MAX_ total data)",
+                paginate: {
+                    first: "Pertama",
+                    last: "Terakhir",
+                    next: "Selanjutnya",
+                    previous: "Sebelumnya"
+                },
+                emptyTable: "Tidak ada data pegawai",
+                zeroRecords: "Tidak ditemukan pegawai yang sesuai"
+            };
+
+            // 1. Table Onboarding Berjalan
             let dtOnboarding = $('#table-onboarding-pegawai').DataTable({
                 processing: true,
                 serverSide: true,
                 responsive: true,
                 pageLength: 25,
-                ajax: "{{ route('admin.pelaksanaan-onboarding-offboarding.json-onboarding') }}",
+                ajax: {
+                    url: "{{ route('admin.pelaksanaan-onboarding-offboarding.json-onboarding') }}",
+                    data: function(d) {
+                        d.tipe_karyawan = currentTipeOnboarding;
+                    }
+                },
                 columns: [
                     { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, className: 'text-center align-middle' },
                     { data: 'identitas', name: 'nama', className: 'align-middle' },
-                    { data: 'tgl_bergabung_fmt', name: 'tgl_bergabung', className: 'text-center align-middle' },
+                    { data: 'tgl_bergabung_fmt', name: 'tgl_bergabung', className: 'text-center align-middle text-nowrap' },
                     { data: 'progress', name: 'progress', orderable: false, searchable: false, className: 'align-middle' },
+                    { data: 'status_badge', name: 'status_badge', orderable: false, searchable: false, className: 'text-center align-middle text-nowrap' },
                     { data: 'aksi', name: 'aksi', orderable: false, searchable: false, className: 'text-center align-middle text-nowrap' }
                 ],
-                language: {
-                    processing: '<div class="spinner-border spinner-border-sm text-primary" role="status"></div> Memuat data...',
-                    search: "Cari Pegawai:",
-                    lengthMenu: "Tampilkan _MENU_ entri",
-                    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ pegawai",
-                    infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
-                    infoFiltered: "(disaring dari _MAX_ total data)",
-                    paginate: {
-                        first: "Pertama",
-                        last: "Terakhir",
-                        next: "Selanjutnya",
-                        previous: "Sebelumnya"
-                    },
-                    emptyTable: "Tidak ada data pegawai onboarding",
-                    zeroRecords: "Tidak ditemukan pegawai yang sesuai"
+                language: dtLanguage
+            });
+
+            // 2. Table Riwayat Onboarding (Selesai 100%)
+            let dtRiwayatOnboarding = null;
+            $('#tab-riwayat-onboarding-link').on('shown.bs.tab', function() {
+                if (!dtRiwayatOnboarding) {
+                    dtRiwayatOnboarding = $('#table-riwayat-onboarding-pegawai').DataTable({
+                        processing: true,
+                        serverSide: true,
+                        responsive: true,
+                        pageLength: 25,
+                        ajax: {
+                            url: "{{ route('admin.pelaksanaan-onboarding-offboarding.json-riwayat-onboarding') }}",
+                            data: function(d) {
+                                d.tipe_karyawan = currentTipeRiwayatOnboarding;
+                            }
+                        },
+                        columns: [
+                            { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, className: 'text-center align-middle' },
+                            { data: 'identitas', name: 'nama', className: 'align-middle' },
+                            { data: 'tgl_bergabung_fmt', name: 'tgl_bergabung', className: 'text-center align-middle text-nowrap' },
+                            { data: 'status_badge', name: 'status_badge', orderable: false, searchable: false, className: 'text-center align-middle text-nowrap' },
+                            { data: 'tgl_selesai_fmt', name: 'tgl_selesai_fmt', orderable: false, searchable: false, className: 'text-center align-middle text-nowrap' },
+                            { data: 'aksi', name: 'aksi', orderable: false, searchable: false, className: 'text-center align-middle text-nowrap' }
+                        ],
+                        language: dtLanguage
+                    });
+                } else {
+                    dtRiwayatOnboarding.columns.adjust().responsive.recalc();
                 }
             });
 
+            // 3. Table Offboarding Berjalan
             let dtOffboarding = null;
             $('#tab-offboarding-link').on('shown.bs.tab', function() {
                 if (!dtOffboarding) {
@@ -452,56 +639,142 @@
                         serverSide: true,
                         responsive: true,
                         pageLength: 25,
-                        ajax: "{{ route('admin.pelaksanaan-onboarding-offboarding.json-offboarding') }}",
+                        ajax: {
+                            url: "{{ route('admin.pelaksanaan-onboarding-offboarding.json-offboarding') }}",
+                            data: function(d) {
+                                d.tipe_karyawan = currentTipeOffboarding;
+                            }
+                        },
                         columns: [
                             { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, className: 'text-center align-middle' },
                             { data: 'identitas', name: 'nama', className: 'align-middle' },
                             { data: 'progress', name: 'progress', orderable: false, searchable: false, className: 'align-middle' },
+                            { data: 'status_badge', name: 'status_badge', orderable: false, searchable: false, className: 'text-center align-middle text-nowrap' },
                             { data: 'aksi', name: 'aksi', orderable: false, searchable: false, className: 'text-center align-middle text-nowrap' }
                         ],
-                        language: {
-                            processing: '<div class="spinner-border spinner-border-sm text-primary" role="status"></div> Memuat data...',
-                            search: "Cari Pegawai:",
-                            lengthMenu: "Tampilkan _MENU_ entri",
-                            info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ pegawai",
-                            infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
-                            infoFiltered: "(disaring dari _MAX_ total data)",
-                            paginate: {
-                                first: "Pertama",
-                                last: "Terakhir",
-                                next: "Selanjutnya",
-                                previous: "Sebelumnya"
-                            },
-                            emptyTable: "Tidak ada data pegawai offboarding",
-                            zeroRecords: "Tidak ditemukan pegawai yang sesuai"
-                        }
+                        language: dtLanguage
                     });
                 } else {
                     dtOffboarding.columns.adjust().responsive.recalc();
                 }
             });
 
-            // Adjust columns on tab switch
+            // 4. Table Riwayat Offboarding (Selesai 100%)
+            let dtRiwayatOffboarding = null;
+            $('#tab-riwayat-offboarding-link').on('shown.bs.tab', function() {
+                if (!dtRiwayatOffboarding) {
+                    dtRiwayatOffboarding = $('#table-riwayat-offboarding-pegawai').DataTable({
+                        processing: true,
+                        serverSide: true,
+                        responsive: true,
+                        pageLength: 25,
+                        ajax: {
+                            url: "{{ route('admin.pelaksanaan-onboarding-offboarding.json-riwayat-offboarding') }}",
+                            data: function(d) {
+                                d.tipe_karyawan = currentTipeRiwayatOffboarding;
+                            }
+                        },
+                        columns: [
+                            { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, className: 'text-center align-middle' },
+                            { data: 'identitas', name: 'nama', className: 'align-middle' },
+                            { data: 'status_badge', name: 'status_badge', orderable: false, searchable: false, className: 'text-center align-middle text-nowrap' },
+                            { data: 'tgl_selesai_fmt', name: 'tgl_selesai_fmt', orderable: false, searchable: false, className: 'text-center align-middle text-nowrap' },
+                            { data: 'aksi', name: 'aksi', orderable: false, searchable: false, className: 'text-center align-middle text-nowrap' }
+                        ],
+                        language: dtLanguage
+                    });
+                } else {
+                    dtRiwayatOffboarding.columns.adjust().responsive.recalc();
+                }
+            });
+
+            // Filter Radio Tipe Karyawan Change Handlers
+            $('input[name="tipe_onboarding"]').on('change', function() {
+                currentTipeOnboarding = $(this).val();
+                if (dtOnboarding) dtOnboarding.ajax.reload();
+            });
+
+            $('input[name="tipe_riwayat_onboarding"]').on('change', function() {
+                currentTipeRiwayatOnboarding = $(this).val();
+                if (dtRiwayatOnboarding) dtRiwayatOnboarding.ajax.reload();
+            });
+
+            $('input[name="tipe_offboarding"]').on('change', function() {
+                currentTipeOffboarding = $(this).val();
+                if (dtOffboarding) dtOffboarding.ajax.reload();
+            });
+
+            $('input[name="tipe_riwayat_offboarding"]').on('change', function() {
+                currentTipeRiwayatOffboarding = $(this).val();
+                if (dtRiwayatOffboarding) dtRiwayatOffboarding.ajax.reload();
+            });
+
+            // Adjust columns on any tab switch
             $('a[data-toggle="pill"], a[data-toggle="tab"]').on('shown.bs.tab', function() {
                 $($.fn.dataTable.tables(true)).DataTable().columns.adjust().responsive.recalc();
             });
+
+            // Function to reload all active tables
+            function reloadAllTables() {
+                if (dtOnboarding) dtOnboarding.ajax.reload(null, false);
+                if (dtRiwayatOnboarding) dtRiwayatOnboarding.ajax.reload(null, false);
+                if (dtOffboarding) dtOffboarding.ajax.reload(null, false);
+                if (dtRiwayatOffboarding) dtRiwayatOffboarding.ajax.reload(null, false);
+            }
+
+            // Function to apply counter numbers to DOM in real-time with smooth transition
+            function applyStats(stats) {
+                if (!stats) return;
+
+                function updateElement(selector, val) {
+                    let $el = $(selector);
+                    if ($el.length && $el.text() != val) {
+                        $el.fadeOut(100, function() {
+                            $(this).text(val).fadeIn(150);
+                        });
+                    }
+                }
+
+                updateElement('#badge-count-onb-berjalan', stats.onboarding_berjalan);
+                updateElement('#stat-count-onb-berjalan', stats.onboarding_berjalan);
+
+                updateElement('#badge-count-onb-riwayat', stats.riwayat_onboarding);
+                updateElement('#stat-count-onb-riwayat', stats.riwayat_onboarding);
+
+                updateElement('#badge-count-off-berjalan', stats.offboarding_berjalan);
+                updateElement('#stat-count-off-berjalan', stats.offboarding_berjalan);
+
+                updateElement('#badge-count-off-riwayat', stats.riwayat_offboarding);
+                updateElement('#stat-count-off-riwayat', stats.riwayat_offboarding);
+            }
+
+            // Function to fetch real-time stats via AJAX
+            function updateCounters() {
+                $.ajax({
+                    url: "{{ route('admin.pelaksanaan-onboarding-offboarding.stats') }}",
+                    type: "GET",
+                    cache: false,
+                    success: function(res) {
+                        applyStats(res);
+                    }
+                });
+            }
 
             // Tombol Refresh Data
             $('#btn-reload').on('click', function() {
                 var $btn = $(this);
                 $btn.find('i').addClass('fa-spin');
-                if (dtOnboarding) dtOnboarding.ajax.reload(null, false);
-                if (dtOffboarding) {
-                    dtOffboarding.ajax.reload(function() {
-                        setTimeout(function() {
-                            $btn.find('i').removeClass('fa-spin');
-                        }, 400);
-                    }, false);
-                } else {
-                    setTimeout(function() {
-                        $btn.find('i').removeClass('fa-spin');
-                    }, 400);
-                }
+                reloadAllTables();
+                updateCounters();
+                setTimeout(function() {
+                    $btn.find('i').removeClass('fa-spin');
+                }, 500);
+            });
+
+            // Saat Modal Checklist ditutup, pastikan tabel dan angka counter tetap up-to-date
+            $('#modal-checklist').on('hidden.bs.modal', function() {
+                reloadAllTables();
+                updateCounters();
             });
 
             // Open Checklist Modal
@@ -559,8 +832,31 @@
                             } else {
                                 tr.find('.task-title').removeClass('text-muted').css('text-decoration', 'none');
                             }
-                            if (dtOnboarding) dtOnboarding.ajax.reload(null, false);
-                            if (dtOffboarding) dtOffboarding.ajax.reload(null, false);
+
+                            // Reload semua tabel
+                            reloadAllTables();
+
+                            // Update angka badge di tab & kartu statistik secara real-time
+                            if (res.stats) {
+                                applyStats(res.stats);
+                            } else {
+                                updateCounters();
+                            }
+
+                            // Jika baru saja tuntas 100%, beri notifikasi perpindahan tab
+                            if (res.is_all_completed && isChecked) {
+                                let labelTarget = res.kategori === 'onboarding' ? 'Riwayat Onboarding' : 'Riwayat Offboarding';
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Checklist Telah Lengkap (100%)!',
+                                    text: 'Seluruh tugas orientasi/serah terima telah tuntas. Data pegawai berhasil dipindahkan ke tab ' + labelTarget + '.',
+                                    timer: 3000,
+                                    timerProgressBar: true,
+                                    showConfirmButton: false,
+                                    toast: true,
+                                    position: 'top-end'
+                                });
+                            }
                         }
                     },
                     error: function() {

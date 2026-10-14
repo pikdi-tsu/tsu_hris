@@ -17,6 +17,13 @@ class LaporanKegiatanSdmDokumen extends Model
 
     protected $guarded = ['id'];
 
+    protected static function booted(): void
+    {
+        static::deleting(function ($dokumen) {
+            \App\Services\FileUploadService::deleteFile($dokumen->file_path);
+        });
+    }
+
     public function laporan()
     {
         return $this->belongsTo(LaporanKegiatanSdm::class, 'laporan_kegiatan_sdm_id', 'id');

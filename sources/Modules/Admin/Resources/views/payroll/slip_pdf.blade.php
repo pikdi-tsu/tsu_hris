@@ -262,12 +262,6 @@
                             <td style="border: none; border-bottom: 0.5px solid #e2e8f0;">Uang Transport ({{ number_format($row->hari_hadir_valid, 0) }} Hari &times; Rp {{ number_format($row->tarif_transport, 0, ',', '.') }})</td>
                             <td style="border: none; border-bottom: 0.5px solid #e2e8f0; text-align: right;">Rp {{ number_format($row->total_transport, 0, ',', '.') }}</td>
                         </tr>
-                        @if($row->total_lembur > 0)
-                        <tr>
-                            <td style="border: none; border-bottom: 0.5px solid #e2e8f0;">Uang Lembur ({{ number_format($row->total_jam_lembur, 1) }} Jam)</td>
-                            <td style="border: none; border-bottom: 0.5px solid #e2e8f0; text-align: right;">Rp {{ number_format($row->total_lembur, 0, ',', '.') }}</td>
-                        </tr>
-                        @endif
                     </table>
                 </td>
 
@@ -324,30 +318,32 @@
                 <td style="border: none; vertical-align: middle;">
                     <div class="thp-label">Gaji Bersih Diterima (Take Home Pay)</div>
                     @php
-                        function penyebut($nilai) {
-                            $nilai = abs($nilai);
-                            $huruf = array("", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas");
-                            $temp = "";
-                            if ($nilai < 12) {
-                                $temp = " ". $huruf[$nilai];
-                            } else if ($nilai < 20) {
-                                $temp = penyebut($nilai - 10). " Belas";
-                            } else if ($nilai < 100) {
-                                $temp = penyebut($nilai/10)." Puluh". penyebut($nilai % 10);
-                            } else if ($nilai < 200) {
-                                $temp = " Seratus" . penyebut($nilai - 100);
-                            } else if ($nilai < 1000) {
-                                $temp = penyebut($nilai/100) . " Ratus" . penyebut($nilai % 100);
-                            } else if ($nilai < 2000) {
-                                $temp = " Seribu" . penyebut($nilai - 1000);
-                            } else if ($nilai < 1000000) {
-                                $temp = penyebut($nilai/1000) . " Ribu" . penyebut($nilai % 1000);
-                            } else if ($nilai < 1000000000) {
-                                $temp = penyebut($nilai/1000000) . " Juta" . penyebut($nilai % 1000000);
-                            } else if ($nilai < 1000000000000) {
-                                $temp = penyebut($nilai/1000000000) . " Milyar" . penyebut(fmod($nilai,1000000000));
+                        if (!function_exists('penyebut')) {
+                            function penyebut($nilai) {
+                                $nilai = abs($nilai);
+                                $huruf = array("", "Satu", "Dua", "Tiga", "Empat", "Lima", "Enam", "Tujuh", "Delapan", "Sembilan", "Sepuluh", "Sebelas");
+                                $temp = "";
+                                if ($nilai < 12) {
+                                    $temp = " ". $huruf[$nilai];
+                                } else if ($nilai < 20) {
+                                    $temp = penyebut($nilai - 10). " Belas";
+                                } else if ($nilai < 100) {
+                                    $temp = penyebut($nilai/10)." Puluh". penyebut($nilai % 10);
+                                } else if ($nilai < 200) {
+                                    $temp = " Seratus" . penyebut($nilai - 100);
+                                } else if ($nilai < 1000) {
+                                    $temp = penyebut($nilai/100) . " Ratus" . penyebut($nilai % 100);
+                                } else if ($nilai < 2000) {
+                                    $temp = " Seribu" . penyebut($nilai - 1000);
+                                } else if ($nilai < 1000000) {
+                                    $temp = penyebut($nilai/1000) . " Ribu" . penyebut($nilai % 1000);
+                                } else if ($nilai < 1000000000) {
+                                    $temp = penyebut($nilai/1000000) . " Juta" . penyebut($nilai % 1000000);
+                                } else if ($nilai < 1000000000000) {
+                                    $temp = penyebut($nilai/1000000000) . " Milyar" . penyebut(fmod($nilai,1000000000));
+                                }
+                                return $temp;
                             }
-                            return $temp;
                         }
                         $terbilang = trim(penyebut($row->gaji_bersih)) . ' Rupiah';
                     @endphp
@@ -360,76 +356,51 @@
         </table>
     </div>
 
-    {{-- Tanda Tangan & Verifikasi Approval --}}
+    {{-- Tanda Tangan Resmi Pejabat Penandatangan --}}
     @php
-        $logDraft = $period->approvals->where('action', 'submitted')->sortByDesc('created_at')->first();
-        $logVal1 = $period->approvals->where('step', 'validator_1')->where('action', 'approved')->sortByDesc('created_at')->first();
-        $logVal2 = $period->approvals->where('step', 'validator_2')->where('action', 'approved')->sortByDesc('created_at')->first();
-        $logApproval = $period->approvals->where('step', 'approval')->where('action', 'approved')->sortByDesc('created_at')->first();
+        // Lokasi & Tanggal Surat
+        $kotaSurat = $period->kota_surat ?: 'Surakarta';
+        $tglSuratFormat = $period->tanggal_cetak_slip 
+            ? \Carbon\Carbon::parse($period->tanggal_cetak_slip)->translatedFormat('d F Y') 
+            : \Carbon\Carbon::now()->translatedFormat('d F Y');
+
+        // Pejabat Penandatangan
+        $penandatanganJabatan = $period->penandatangan_jabatan ?: 'Sumber Daya Manusia';
+        $penandatanganNama = $period->penandatangan_nama ?: ($ttdMaster->nama_pejabat ?? ($period->approvalKaryawan->nama ?? '-'));
+
+        // Cek apakah Approval Final sudah ACC (periode resmi berstatus terkunci/final)
+        $isFinalApproved = in_array($period->status, ['locked', 'approved', 'final']) || !empty($period->is_locked) || !empty($period->locked_at);
+
+        // Tanda tangan & Stempel dari Master Data Tanda Tangan (HANYA muncul jika Approval Final sudah ACC)
+        $ttdImgSrc = null;
+        $stempelImgSrc = null;
+        if ($isFinalApproved && isset($ttdMaster) && $ttdMaster) {
+            if ($ttdMaster->file_ttd && \Illuminate\Support\Facades\Storage::disk('public')->exists($ttdMaster->file_ttd)) {
+                $ttdPath = storage_path('app/public/' . $ttdMaster->file_ttd);
+                $ttdImgSrc = file_exists($ttdPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($ttdPath)) : null;
+            }
+            if ($ttdMaster->file_stempel && \Illuminate\Support\Facades\Storage::disk('public')->exists($ttdMaster->file_stempel)) {
+                $stempelPath = storage_path('app/public/' . $ttdMaster->file_stempel);
+                $stempelImgSrc = file_exists($stempelPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($stempelPath)) : null;
+            }
+        }
     @endphp
 
-    <table class="signatures" style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+    <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
         <tr>
-            <td style="width: 25%; text-align: center; vertical-align: top; border: none; padding: 2px;">
-                <div style="font-size: 7pt; color: #64748b;">1. Dibuat Oleh:</div>
-                <div style="font-weight: bold; font-size: 7.5pt; margin-top: 1px;">Pembuat Draft</div>
-                <div style="height: 32px; margin-top: 3px;">
-                    @if($logDraft)
-                        <div style="font-size: 6pt; color: #059669; border: 0.5px solid #10b981; padding: 1px 2px; border-radius: 2px; line-height: 1.1;">
-                            <span style="font-weight: bold;">[DIGITALLY SUBMITTED]</span><br>{{ $logDraft->created_at->format('d/m/Y H:i') }}
-                        </div>
-                    @else
-                        <div style="font-size: 6pt; color: #64748b; border: 0.5px dashed #cbd5e1; padding: 1px 2px;">
-                            {{ $period->created_at->format('d/m/Y H:i') }}
-                        </div>
+            <td style="width: 60%; border: none;"></td>
+            <td style="width: 40%; text-align: center; vertical-align: top; border: none; font-size: 8.5pt;">
+                <div>{{ $kotaSurat }}, {{ $tglSuratFormat }}</div>
+                <div style="font-weight: bold; margin-top: 3px;">{{ $penandatanganJabatan }},</div>
+                <div style="height: 65px; margin: 5px 0; position: relative; text-align: center;">
+                    @if($stempelImgSrc)
+                        <img src="{{ $stempelImgSrc }}" style="position: absolute; left: 10px; top: -5px; height: 65px; opacity: 0.85;" alt="Stempel">
+                    @endif
+                    @if($ttdImgSrc)
+                        <img src="{{ $ttdImgSrc }}" style="position: relative; height: 60px; z-index: 2;" alt="TTD">
                     @endif
                 </div>
-                <div class="sign-name" style="font-size: 7.5pt; margin-top: 2px;">{{ $period->createdUser->name ?? 'Admin Payroll' }}</div>
-            </td>
-
-            <td style="width: 25%; text-align: center; vertical-align: top; border: none; padding: 2px;">
-                <div style="font-size: 7pt; color: #64748b;">2. Diperiksa Oleh:</div>
-                <div style="font-weight: bold; font-size: 7.5pt; margin-top: 1px;">Validator 1</div>
-                <div style="height: 32px; margin-top: 3px;">
-                    @if($logVal1)
-                        <div style="font-size: 6pt; color: #059669; border: 0.5px solid #10b981; padding: 1px 2px; border-radius: 2px; line-height: 1.1;">
-                            <span style="font-weight: bold;">[DIGITALLY APPROVED]</span><br>{{ $logVal1->created_at->format('d/m/Y H:i') }}
-                        </div>
-                    @else
-                        <div style="font-size: 6pt; color: #94a3b8; font-style: italic; margin-top: 8px;">-</div>
-                    @endif
-                </div>
-                <div class="sign-name" style="font-size: 7.5pt; margin-top: 2px;">{{ $period->validator1->nama ?? '-' }}</div>
-            </td>
-
-            <td style="width: 25%; text-align: center; vertical-align: top; border: none; padding: 2px;">
-                <div style="font-size: 7pt; color: #64748b;">3. Diverifikasi Oleh:</div>
-                <div style="font-weight: bold; font-size: 7.5pt; margin-top: 1px;">Validator 2</div>
-                <div style="height: 32px; margin-top: 3px;">
-                    @if($logVal2)
-                        <div style="font-size: 6pt; color: #059669; border: 0.5px solid #10b981; padding: 1px 2px; border-radius: 2px; line-height: 1.1;">
-                            <span style="font-weight: bold;">[DIGITALLY APPROVED]</span><br>{{ $logVal2->created_at->format('d/m/Y H:i') }}
-                        </div>
-                    @else
-                        <div style="font-size: 6pt; color: #94a3b8; font-style: italic; margin-top: 8px;">-</div>
-                    @endif
-                </div>
-                <div class="sign-name" style="font-size: 7.5pt; margin-top: 2px;">{{ $period->validator2->nama ?? '-' }}</div>
-            </td>
-
-            <td style="width: 25%; text-align: center; vertical-align: top; border: none; padding: 2px;">
-                <div style="font-size: 7pt; color: #64748b;">4. Disetujui Oleh:</div>
-                <div style="font-weight: bold; font-size: 7.5pt; margin-top: 1px;">Approval Final (Lock)</div>
-                <div style="height: 32px; margin-top: 3px;">
-                    @if($logApproval)
-                        <div style="font-size: 6pt; color: #059669; border: 0.5px solid #10b981; padding: 1px 2px; border-radius: 2px; line-height: 1.1;">
-                            <span style="font-weight: bold;">[LOCKED & APPROVED]</span><br>{{ $logApproval->created_at->format('d/m/Y H:i') }}
-                        </div>
-                    @else
-                        <div style="font-size: 6pt; color: #94a3b8; font-style: italic; margin-top: 8px;">-</div>
-                    @endif
-                </div>
-                <div class="sign-name" style="font-size: 7.5pt; margin-top: 2px;">{{ $period->approvalKaryawan->nama ?? '-' }}</div>
+                <div style="font-weight: bold; text-decoration: underline; color: #0f172a; font-size: 9pt;">{{ $penandatanganNama }}</div>
             </td>
         </tr>
     </table>

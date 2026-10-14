@@ -520,7 +520,11 @@ class RekapAbsensiController extends MiddlewareController
         $records = $query->orderBy('tanggal_absen', 'asc')->get();
 
         if ($records->isEmpty()) {
-            return back()->with('error', 'Tidak ada data absensi untuk karyawan ini pada periode yang dipilih.');
+            return response('<div style="font-family: Arial, sans-serif; text-align: center; margin-top: 50px; color: #4b5563;">
+                <h3 style="color: #ef4444;">Data Presensi Tidak Ditemukan</h3>
+                <p>Tidak ada catatan presensi untuk karyawan dengan PIN <strong>' . htmlspecialchars($pin) . '</strong> pada periode <strong>' . htmlspecialchars($periodeTitle) . '</strong>.</p>
+                <button onclick="window.close()" style="margin-top: 15px; padding: 8px 16px; background: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer;">Tutup Jendela</button>
+            </div>', 404)->header('Content-Type', 'text/html');
         }
 
         $firstRow = $records->first();
@@ -542,7 +546,11 @@ class RekapAbsensiController extends MiddlewareController
         $cleanName = strtoupper(preg_replace('/[^A-Za-z0-9_\-]/', '_', trim($karyawanName)));
         $pdfFileName = $prefixPeriod . ' SLIP PRESENSI - ' . $cleanName . '.pdf';
 
-        return $pdf->download($pdfFileName);
+        if ($request->has('download')) {
+            return $pdf->download($pdfFileName);
+        }
+
+        return $pdf->stream($pdfFileName);
     }
 
     /**

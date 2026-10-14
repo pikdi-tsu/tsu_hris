@@ -75,6 +75,28 @@
                                     </div>
                                 </div>
                                 <div class="form-group row mb-2">
+                                    <label for="kategori_lembur" class="col-sm-4 col-form-label">Kategori Lembur <span class="text-danger">*</span></label>
+                                    <div class="col-sm-8">
+                                        <select id="kategori_lembur" class="form-control select2">
+                                            <option value="tendik" {{ ($defaultKategori ?? 'tendik') == 'tendik' ? 'selected' : '' }}>Tendik Reguler (Kantor 08:00 - 16:30)</option>
+                                            <option value="kerumahtanggaan" {{ ($defaultKategori ?? '') == 'kerumahtanggaan' ? 'selected' : '' }}>Kerumahtanggaan (Driver &amp; Maintenance - Sabtu s/d 12:00)</option>
+                                            <option value="satpam" {{ ($defaultKategori ?? '') == 'satpam' ? 'selected' : '' }}>Satpam / Keamanan (Pola 3 Shift)</option>
+                                        </select>
+                                        <small class="text-muted" style="font-size:.72rem;"><i class="fas fa-info-circle mr-1"></i>Sistem otomatis memotong durasi kerja wajib sesuai kategori divisi</small>
+                                    </div>
+                                </div>
+                                <div class="form-group row mb-2" id="group-shift" style="{{ ($defaultKategori ?? '') == 'satpam' ? '' : 'display:none;' }}">
+                                    <label for="jenis_shift" class="col-sm-4 col-form-label">Pilihan Shift <span class="text-danger">*</span></label>
+                                    <div class="col-sm-8">
+                                        <select id="jenis_shift" class="form-control select2">
+                                            <option value="shift_1">Shift 1 (07:00 - 15:00)</option>
+                                            <option value="shift_2">Shift 2 (15:00 - 23:00)</option>
+                                            <option value="shift_3">Shift 3 (23:00 - 07:00 Lintas Hari)</option>
+                                            <option value="shift_extra">Shift Extra (Jaga Hari Libur / Off)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group row mb-2">
                                     <label for="alasan" class="col-sm-4 col-form-label">Keterangan / Pekerjaan <span class="text-danger">*</span></label>
                                     <div class="col-sm-8"><textarea id="alasan" class="form-control" rows="3" placeholder="Deskripsikan pekerjaan yang dilembur..."></textarea></div>
                                 </div>
@@ -99,7 +121,15 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div id="duration-preview" class="tsu-duration-display mt-1" style="display:none;"><i class="fas fa-stopwatch"></i> <span id="duration-text">0 Jam</span></div>
+                                        <div id="duration-preview" class="p-2 mt-2 rounded border" style="display:none;background:#f0fdf4;border-color:#bbf7d0!important;">
+                                            <div class="d-flex align-items-center justify-content-between">
+                                                <span style="font-size:0.8rem;font-weight:700;color:#166534;"><i class="fas fa-stopwatch mr-1"></i> Durasi Lembur Diakui:</span>
+                                                <span id="duration-effective" class="badge badge-success" style="font-size:0.85rem;">0 Jam</span>
+                                            </div>
+                                            <div class="text-muted mt-1" style="font-size:0.75rem;" id="duration-detail-text">
+                                                Menghitung estimasi...
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div class="form-group row mb-2">
@@ -170,8 +200,7 @@
                                     <th class="text-center" style="width:110px;">Aksi</th>
                                 </tr>
                             </thead>
-                            <tbody id="skeleton-body">
-                                @for($i=0;$i<5;$i++)<tr class="skeleton-row"><td><div class="tsu-skeleton" style="width:24px;margin:auto;"></div></td><td><div class="tsu-skeleton" style="width:80%;"></div></td><td><div class="tsu-skeleton" style="width:90%;"></div></td><td><div class="tsu-skeleton" style="width:50px;margin:auto;"></div></td><td><div class="tsu-skeleton" style="width:85%;"></div></td><td><div class="tsu-skeleton" style="width:100px;margin:auto;border-radius:20px;"></div></td><td><div class="tsu-skeleton" style="width:75%;"></div></td><td><div class="tsu-skeleton" style="width:70%;"></div></td><td><div class="tsu-skeleton" style="width:90px;margin:auto;"></div></td></tr>@endfor
+                            <tbody>
                             </tbody>
                         </table>
                     </div>
@@ -222,11 +251,48 @@
         $('#datetimepicker2').datetimepicker({ format: 'YYYY-MM-DD HH:mm:ss', useCurrent: false, icons: { time: 'far fa-clock' } });
 
         function updateDuration() {
-            var t1=$('#tanggal1').val(), t2=$('#tanggal2').val();
-            if(t1&&t2){ var d=moment(t2,'YYYY-MM-DD HH:mm:ss').diff(moment(t1,'YYYY-MM-DD HH:mm:ss'),'minutes'); if(d>0){$('#duration-text').text((d/60).toFixed(1)+' Jam');$('#duration-preview').show();}else{$('#duration-preview').hide();} }else{$('#duration-preview').hide();}
+            var t1 = $('#tanggal1').val(), t2 = $('#tanggal2').val(), kat = $('#kategori_lembur').val(), shift = $('#jenis_shift').val(), id_mlembur = $('#id_mlembur').val();
+            if(t1 && t2) {
+                $.ajax({
+                    url: "{{ route('users.lembur.hitung-estimasi') }}",
+                    type: 'POST',
+                    data: {
+                        tanggal1: t1,
+                        tanggal2: t2,
+                        kategori_lembur: kat,
+                        jenis_shift: shift,
+                        id_mlembur: id_mlembur
+                    },
+                    success: function(res) {
+                        if(res.success && res.data) {
+                            var d = res.data;
+                            $('#duration-effective').text(d.durasi_efektif_jam + ' Jam');
+                            var detail = '<strong>' + d.status_hari_text + '</strong> (Total hadir: ' + d.durasi_kotor_jam + ' jam) &middot; Pengali: <strong>' + d.koefisien_pengali + 'x</strong>';
+                            if(d.nominal_estimasi > 0) {
+                                detail += ' &middot; Est. Upah: <strong class="text-success">Rp ' + new Intl.NumberFormat('id-ID').format(d.nominal_estimasi) + '</strong>';
+                            }
+                            $('#duration-detail-text').html(detail);
+                            $('#duration-preview').slideDown(200);
+                        }
+                    }
+                });
+            } else {
+                $('#duration-preview').hide();
+            }
         }
         $("#datetimepicker1").on("change.datetimepicker",function(e){$('#datetimepicker2').datetimepicker('minDate',e.date);updateDuration();});
         $("#datetimepicker2").on("change.datetimepicker",function(e){$('#datetimepicker1').datetimepicker('maxDate',e.date);updateDuration();});
+        $('#kategori_lembur').change(function() {
+            if($(this).val() === 'satpam') {
+                $('#group-shift').slideDown(150);
+            } else {
+                $('#group-shift').slideUp(150);
+            }
+            updateDuration();
+        });
+        $('#jenis_shift, #id_mlembur').change(function() {
+            updateDuration();
+        });
 
         function resetFileInput(){
             $('#bukti_kegiatan').val('');$('#lbl-bukti_kegiatan').html('Pilih file bukti kegiatan...');
@@ -264,6 +330,7 @@
 
         $('#btnsimpan').click(function(){
             var ketedit=$('#ketedit').val(),id_mlembur=$('#id_mlembur').val(),tanggal1=$('#tanggal1').val(),tanggal2=$('#tanggal2').val(),alasan=$('#alasan').val(),id_hrd=$('#id_hrd').val();
+            var kategori_lembur=$('#kategori_lembur').val(), jenis_shift=$('#jenis_shift').val();
             function notifalert(f){Swal.fire({title:'Isian Tidak Lengkap',text:f+' tidak boleh kosong!',icon:'warning',confirmButtonColor:'var(--tsu-primary)'});}
             if(!id_mlembur)return notifalert('Jenis Lembur');
             if(!tanggal1)return notifalert('Waktu Mulai');
@@ -276,14 +343,22 @@
             fd.append('_token',$('meta[name=csrf-token]').attr('content'));
             fd.append('id_mlembur',id_mlembur);fd.append('tanggal1',tanggal1);fd.append('tanggal2',tanggal2);
             fd.append('alasan',alasan);fd.append('id_hrd',id_hrd);
+            fd.append('kategori_lembur',kategori_lembur);
+            if(kategori_lembur==='satpam') fd.append('jenis_shift',jenis_shift);
             if($('#bukti_kegiatan')[0].files[0])fd.append('bukti_kegiatan',$('#bukti_kegiatan')[0].files[0]);
             if(ketedit==='yes')fd.append('_method','PUT');
             var btn=$(this);btn.prop('disabled',true).html('<span class="spinner-border spinner-border-sm mr-1" role="status"></span> Memproses...');
             pikdiAjax({url:url,data:fd,onSuccess:function(){location.reload();},onError:function(){btn.prop('disabled',false).html('<i class="fas fa-paper-plane mr-1"></i><span id="btnsimpan-text">'+(ketedit==='yes'?'Simpan Perubahan':'Ajukan Lembur')+'</span>');}});
         });
 
-        var oTable=$('#dataTables').DataTable({order:[],processing:false,serverSide:true,
-            ajax:{url:"{!! route('users.lembur.json') !!}",type:'GET',dataSrc:function(json){$('#skeleton-body').remove();return json.data;}},
+        var oTable=$('#dataTables').DataTable({
+            order:[],
+            processing:true,
+            serverSide:true,
+            ajax:{
+                url:"{!! route('users.lembur.json') !!}",
+                type:'GET'
+            },
             columns:[
                 {data:'DT_RowIndex',orderable:false,searchable:false,className:'text-center'},
                 {data:'jenislembur'},{data:'waktu'},
@@ -297,8 +372,7 @@
                 emptyTable:'<div class="text-center py-3"><i class="fas fa-inbox fa-2x mb-2" style="color:var(--tsu-primary-light);"></i><p class="mb-1" style="font-size:.85rem;color:#6c757d;">Belum ada pengajuan lembur</p><small class="text-muted">Isi form di atas untuk memulai</small></div>',
                 zeroRecords:'<div class="text-center py-3"><i class="fas fa-search fa-2x mb-2" style="color:var(--tsu-primary-light);"></i><p class="mb-0" style="font-size:.85rem;color:#6c757d;">Data tidak ditemukan</p></div>',
                 processing:'<div class="text-center py-2"><div class="spinner-border spinner-border-sm" style="color:var(--tsu-primary);"></div></div>',
-            },
-            drawCallback:function(){$('#skeleton-body').remove();}
+            }
         });
 
         $('body').on('click','.btn-edit',function(){
@@ -309,6 +383,8 @@
                     $('#btnbatal').removeClass('d-none');$('#edit-mode-banner').removeClass('d-none');
                     $('#ketedit').val('yes');$('#idedit').val(r.encrypted_id);
                     $('#id_mlembur').val(r.id_mlembur).trigger('change');
+                    if(r.kategori_lembur) $('#kategori_lembur').val(r.kategori_lembur).trigger('change');
+                    if(r.jenis_shift) $('#jenis_shift').val(r.jenis_shift).trigger('change');
                     $('#tanggal1').val(r.tanggalmulai);$('#tanggal2').val(r.tanggalselesai);
                     $('#alasan').val(r.keterangan);$('#id_hrd').val(r.id_hrd).trigger('change');
                     resetFileInput();

@@ -250,26 +250,51 @@
         </tr>
     </table>
 
-    {{-- Tanda Tangan --}}
-    <table class="table-ttd">
+    {{-- Tanda Tangan Resmi Pejabat Penandatangan --}}
+    @php
+        // Lokasi & Tanggal Surat
+        $kotaSurat = $item->period->kota_surat ?: 'Surakarta';
+        $tglSuratFormat = $item->period->tanggal_cetak_slip 
+            ? \Carbon\Carbon::parse($item->period->tanggal_cetak_slip)->translatedFormat('d F Y') 
+            : \Carbon\Carbon::now()->translatedFormat('d F Y');
+
+        // Pejabat Penandatangan
+        $penandatanganJabatan = $item->period->penandatangan_jabatan ?: 'Sumber Daya Manusia';
+        $penandatanganNama = $item->period->penandatangan_nama ?: ($ttdMaster->nama_pejabat ?? ($item->period->approvalKaryawan->nama ?? '-'));
+
+        // Cek apakah Approval Final sudah ACC (periode resmi berstatus terkunci/final)
+        $isFinalApproved = in_array($item->period->status, ['locked', 'approved', 'final']) || !empty($item->period->is_locked) || !empty($item->period->locked_at);
+
+        // Tanda tangan & Stempel dari Master Data Tanda Tangan (HANYA muncul jika Approval Final sudah ACC)
+        $ttdImgSrc = null;
+        $stempelImgSrc = null;
+        if ($isFinalApproved && isset($ttdMaster) && $ttdMaster) {
+            if ($ttdMaster->file_ttd && \Illuminate\Support\Facades\Storage::disk('public')->exists($ttdMaster->file_ttd)) {
+                $ttdPath = storage_path('app/public/' . $ttdMaster->file_ttd);
+                $ttdImgSrc = file_exists($ttdPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($ttdPath)) : null;
+            }
+            if ($ttdMaster->file_stempel && \Illuminate\Support\Facades\Storage::disk('public')->exists($ttdMaster->file_stempel)) {
+                $stempelPath = storage_path('app/public/' . $ttdMaster->file_stempel);
+                $stempelImgSrc = file_exists($stempelPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($stempelPath)) : null;
+            }
+        }
+    @endphp
+
+    <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
         <tr>
-            <td>
-                Mengetahui,<br>
-                <strong>Validator 1</strong>
-                <br><br><br><br>
-                <u>{{ $item->period->validator1->nama ?? '..........................' }}</u>
-            </td>
-            <td>
-                Menyetujui,<br>
-                <strong>Validator 2</strong>
-                <br><br><br><br>
-                <u>{{ $item->period->validator2->nama ?? '..........................' }}</u>
-            </td>
-            <td>
-                Mengetahui & Mengesahkan,<br>
-                <strong>Approval Paling Atas</strong>
-                <br><br><br><br>
-                <u>{{ $item->period->approvalKaryawan->nama ?? '..........................' }}</u>
+            <td style="width: 60%; border: none;"></td>
+            <td style="width: 40%; text-align: center; vertical-align: top; border: none; font-size: 8.5pt;">
+                <div>{{ $kotaSurat }}, {{ $tglSuratFormat }}</div>
+                <div style="font-weight: bold; margin-top: 3px;">{{ $penandatanganJabatan }},</div>
+                <div style="height: 65px; margin: 5px 0; position: relative; text-align: center;">
+                    @if($stempelImgSrc)
+                        <img src="{{ $stempelImgSrc }}" style="position: absolute; left: 10px; top: -5px; height: 65px; opacity: 0.85;" alt="Stempel">
+                    @endif
+                    @if($ttdImgSrc)
+                        <img src="{{ $ttdImgSrc }}" style="position: relative; height: 60px; z-index: 2;" alt="TTD">
+                    @endif
+                </div>
+                <div style="font-weight: bold; text-decoration: underline; color: #0f172a; font-size: 9pt;">{{ $penandatanganNama }}</div>
             </td>
         </tr>
     </table>

@@ -18,6 +18,7 @@ class KpiUnitIndikator extends Model
         'master_indikator_id',
         'parent_unit_indikator_id',
         'jenis_cascading',
+        'formula_pengukuran',
         'target_angka',
         'target_label',
         'satuan',

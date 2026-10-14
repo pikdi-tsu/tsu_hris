@@ -37,12 +37,14 @@ use Modules\Admin\Http\Controllers\RekapAbsensiController;
 use Modules\Admin\Http\Controllers\JadwalPiketController;
 use Modules\Admin\Http\Controllers\PayrollController;
 use Modules\Admin\Http\Controllers\ThrController;
+use Modules\Admin\Http\Controllers\PayrollLemburController;
 use Modules\Admin\Http\Controllers\HonorariumController;
 use Modules\Admin\Http\Controllers\SaldoCutiController;
 use Modules\Admin\Http\Controllers\PengembanganSdmController;
 use Modules\Admin\Http\Controllers\MasterPengembanganSdmController;
 use Modules\Admin\Http\Controllers\MasterJenisDokumenController;
 use Modules\Admin\Http\Controllers\MasterJenisSuratController;
+use Modules\Admin\Http\Controllers\MasterTandaTanganController;
 use Modules\Admin\Http\Controllers\RequestSuratController;
 use Modules\Admin\Http\Controllers\SuratEdaranController;
 use Modules\Admin\Http\Controllers\MasterOnboardingOffboardingController;
@@ -71,6 +73,8 @@ use Modules\Admin\Http\Controllers\Rkat\RkatMonitoringController;
 use Modules\Admin\Http\Controllers\Rkat\RkatLaporanController;
 use Modules\Admin\Http\Controllers\EmployeeLifecycle\KontrakKerjaController;
 use Modules\Admin\Http\Controllers\EmployeeLifecycle\ProbationController;
+use Modules\Admin\Http\Controllers\EmployeeLifecycle\PhkController;
+use Modules\Admin\Http\Controllers\RequestEmailController;
 
 Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () {
     Route::get('/dashboard', [UserDashboardController::class, 'index'])->name('dashboard');
@@ -101,13 +105,22 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
             Route::get('/dokumen/{dokumen_id}/preview', [DataKaryawanController::class, 'previewDokumenModal'])->name('preview-dokumen');
             Route::get('/dokumen/{dokumen_id}/file', [DataKaryawanController::class, 'streamDokumen'])->name('stream-dokumen');
 
-            // Route Riwayat Jabatan (Read Only)
+            // Route Riwayat Jabatan (Read Only) & Perubahan Data Individu
             Route::get('/{id}/riwayat', [DataKaryawanController::class, 'riwayatModal'])->name('riwayat');
             Route::get('/{id}/export-riwayat', [DataKaryawanController::class, 'exportRiwayatExcel'])->name('export-riwayat');
+            Route::post('/{id}/perubahan/{perubahan_id}/approve', [DataKaryawanController::class, 'approvePerubahanData'])->name('perubahan.approve');
+            Route::post('/{id}/perubahan/{perubahan_id}/reject', [DataKaryawanController::class, 'rejectPerubahanData'])->name('perubahan.reject');
 
             // Route CRUD
             Route::resource('/', DataKaryawanController::class)->parameters(['' => 'id']);
             Route::post('/{id}/bio-aktif', [DataKaryawanController::class, 'bioAktif'])->name('bio-aktif');
+        });
+
+        // Route Approval Perubahan Data Mandiri Pegawai (SDM)
+        Route::prefix('approval-perubahan-data')->name('approval-perubahan-data.')->group(function () {
+            Route::get('/', [\Modules\Admin\Http\Controllers\ApprovalPerubahanDataController::class, 'index'])->name('index');
+            Route::post('/{id}/approve', [\Modules\Admin\Http\Controllers\ApprovalPerubahanDataController::class, 'approve'])->name('approve');
+            Route::post('/{id}/reject', [\Modules\Admin\Http\Controllers\ApprovalPerubahanDataController::class, 'reject'])->name('reject');
         });
     });
 
@@ -230,6 +243,30 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
         });
     });
 
+    // --- ROUTE MASTER TANDA TANGAN & STEMPEL ---
+    Route::middleware(['permission:admin:master-tanda-tangan:view'])->group(function () {
+        Route::prefix('master-tanda-tangan')->name('master-tanda-tangan.')->group(function () {
+            Route::get('/json', [MasterTandaTanganController::class, 'datatable'])->name('json');
+            Route::post('/{id}/toggle-active', [MasterTandaTanganController::class, 'toggleActive'])->name('toggle-active');
+            Route::get('/{id}/preview', [MasterTandaTanganController::class, 'previewModal'])->name('preview');
+            Route::resource('/', MasterTandaTanganController::class)->parameters(['' => 'id'])->except(['show']);
+        });
+    });
+
+    // --- ROUTE MASTER ASPEK SURVEI KEPUASAN (TRAINING & LAYANAN SDM) ---
+    Route::middleware(['permission:admin:master-aspek-survey:view'])->group(function () {
+        Route::prefix('master-aspek-survey')->name('master-aspek-survey.')->group(function () {
+            Route::get('/', [\Modules\Admin\Http\Controllers\MasterAspekSurveyController::class, 'index'])->name('index');
+            Route::get('/json', [\Modules\Admin\Http\Controllers\MasterAspekSurveyController::class, 'datatable'])->name('json');
+            Route::get('/create', [\Modules\Admin\Http\Controllers\MasterAspekSurveyController::class, 'create'])->name('create');
+            Route::post('/', [\Modules\Admin\Http\Controllers\MasterAspekSurveyController::class, 'store'])->name('store');
+            Route::get('/{id}/edit', [\Modules\Admin\Http\Controllers\MasterAspekSurveyController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [\Modules\Admin\Http\Controllers\MasterAspekSurveyController::class, 'update'])->name('update');
+            Route::delete('/{id}', [\Modules\Admin\Http\Controllers\MasterAspekSurveyController::class, 'destroy'])->name('destroy');
+            Route::post('/{id}/toggle-active', [\Modules\Admin\Http\Controllers\MasterAspekSurveyController::class, 'toggleActive'])->name('toggle-active');
+        });
+    });
+
     // --- ROUTE MASTER ONBOARDING & OFFBOARDING ---
     Route::middleware(['permission:admin:data-karyawan:view'])->group(function () {
         Route::prefix('master-onboarding-offboarding')->name('master-onboarding-offboarding.')->group(function () {
@@ -242,8 +279,11 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::middleware(['permission:admin:data-karyawan:view'])->group(function () {
         Route::prefix('pelaksanaan-onboarding-offboarding')->name('pelaksanaan-onboarding-offboarding.')->group(function () {
             Route::get('/', [OnboardingOffboardingController::class, 'index'])->name('index');
+            Route::get('/stats', [OnboardingOffboardingController::class, 'getStatsJson'])->name('stats');
             Route::get('/json-onboarding', [OnboardingOffboardingController::class, 'datatableOnboarding'])->name('json-onboarding');
+            Route::get('/json-riwayat-onboarding', [OnboardingOffboardingController::class, 'datatableRiwayatOnboarding'])->name('json-riwayat-onboarding');
             Route::get('/json-offboarding', [OnboardingOffboardingController::class, 'datatableOffboarding'])->name('json-offboarding');
+            Route::get('/json-riwayat-offboarding', [OnboardingOffboardingController::class, 'datatableRiwayatOffboarding'])->name('json-riwayat-offboarding');
             Route::get('/{id}/detail', [OnboardingOffboardingController::class, 'detail'])->name('detail');
             Route::post('/toggle', [OnboardingOffboardingController::class, 'toggleItem'])->name('toggle');
         });
@@ -255,12 +295,16 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
         Route::prefix('kontrak')->name('kontrak.')->group(function () {
             Route::get('/', [KontrakKerjaController::class, 'index'])->name('index');
             Route::get('/datatable', [KontrakKerjaController::class, 'datatable'])->name('datatable');
+            Route::get('/json', [KontrakKerjaController::class, 'datatable'])->name('json');
             Route::get('/modal-add', [KontrakKerjaController::class, 'modalAdd'])->name('modal-add');
             Route::post('/store', [KontrakKerjaController::class, 'store'])->name('store');
             Route::get('/{id}/modal-perpanjang', [KontrakKerjaController::class, 'modalPerpanjang'])->name('modal-perpanjang');
+            Route::get('/modal-perpanjang/{id}', [KontrakKerjaController::class, 'modalPerpanjang']);
             Route::post('/{id}/perpanjang', [KontrakKerjaController::class, 'storePerpanjang'])->name('store-perpanjang');
             Route::post('/{id}/akhiri', [KontrakKerjaController::class, 'akhiriKontrak'])->name('akhiri');
+            Route::post('/akhiri', [KontrakKerjaController::class, 'akhiriKontrak'])->name('akhiri-post');
             Route::delete('/{id}', [KontrakKerjaController::class, 'destroy'])->name('destroy');
+            Route::post('/delete', [KontrakKerjaController::class, 'destroy'])->name('destroy-post');
         });
 
         // Evaluasi Masa Percobaan (Probation)
@@ -272,6 +316,15 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
             Route::get('/{id}/modal-evaluasi', [ProbationController::class, 'modalEvaluasi'])->name('modal-evaluasi');
             Route::post('/{id}/evaluasi', [ProbationController::class, 'storeEvaluasi'])->name('store-evaluasi');
             Route::delete('/{id}', [ProbationController::class, 'destroy'])->name('destroy');
+        });
+
+        // Pemutusan Hubungan Kerja (PHK)
+        Route::prefix('phk')->name('phk.')->group(function () {
+            Route::get('/', [PhkController::class, 'index'])->name('index');
+            Route::get('/datatable', [PhkController::class, 'datatable'])->name('datatable');
+            Route::get('/detail/{id}', [PhkController::class, 'detail'])->name('detail');
+            Route::get('/modal-add', [PhkController::class, 'modalAdd'])->name('modal-add');
+            Route::post('/store', [PhkController::class, 'store'])->name('store');
         });
     });
 
@@ -413,8 +466,20 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
     Route::middleware(['permission:admin:jadwal-piket:view'])->group(function () {
         Route::prefix('jadwal-piket')->name('jadwal-piket.')->group(function () {
             Route::get('/json', [JadwalPiketController::class, 'datatable'])->name('json');
+            Route::get('/get-saturdays', [JadwalPiketController::class, 'getSaturdays'])->name('get-saturdays');
             Route::resource('/', JadwalPiketController::class)->parameters(['' => 'id'])->except(['show']);
         });
+    });
+
+    // --- ROUTE SURAT TUGAS & DINAS LUAR (Fase 3 Integrasi) ---
+    Route::prefix('surat-tugas')->name('surat-tugas.')->group(function () {
+        Route::get('/', [\Modules\Admin\Http\Controllers\SuratTugasController::class, 'index'])->name('index');
+        Route::get('/json', [\Modules\Admin\Http\Controllers\SuratTugasController::class, 'datatable'])->name('json');
+        Route::post('/', [\Modules\Admin\Http\Controllers\SuratTugasController::class, 'store'])->name('store');
+        Route::get('/{id}/edit', [\Modules\Admin\Http\Controllers\SuratTugasController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [\Modules\Admin\Http\Controllers\SuratTugasController::class, 'update'])->name('update');
+        Route::delete('/{id}', [\Modules\Admin\Http\Controllers\SuratTugasController::class, 'destroy'])->name('destroy');
+        Route::get('/{id}/download-berkas', [\Modules\Admin\Http\Controllers\SuratTugasController::class, 'downloadBerkas'])->name('download-berkas');
     });
 
     // --- ROUTE MANPOWER PLANNING (MPP) ---
@@ -483,6 +548,32 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
                 Route::get('/export-excel/{id}', [ThrController::class, 'exportExcel'])->name('export-excel');
                 Route::get('/slip-pdf/{karyawanId}', [ThrController::class, 'slipPdf'])->name('slip-pdf');
                 Route::get('/download-all-slip/{id}', [ThrController::class, 'downloadAllSlipZip'])->name('download-all-slip');
+            });
+
+            // --- ROUTE PAYROLL LEMBUR ---
+            Route::prefix('lembur')->name('lembur.')->group(function () {
+                Route::get('/', [PayrollLemburController::class, 'index'])->name('index');
+                Route::get('/create-period-modal', [PayrollLemburController::class, 'createPeriodModal'])->name('create-period-modal');
+                Route::post('/store-period', [PayrollLemburController::class, 'storePeriod'])->name('store-period');
+                Route::get('/show/{id}', [PayrollLemburController::class, 'show'])->name('show');
+                Route::get('/datatable/{id}', [PayrollLemburController::class, 'datatable'])->name('datatable');
+                Route::get('/detail-modal/{id}', [PayrollLemburController::class, 'detailModal'])->name('detail-modal');
+                Route::post('/recalculate/{id}', [PayrollLemburController::class, 'recalculate'])->name('recalculate');
+                Route::get('/edit-karyawan/{id}', [PayrollLemburController::class, 'editKaryawan'])->name('edit-karyawan');
+                Route::post('/update-karyawan/{id}', [PayrollLemburController::class, 'updateKaryawan'])->name('update-karyawan');
+                Route::post('/toggle-lock/{id}', [PayrollLemburController::class, 'toggleLock'])->name('toggle-lock');
+                Route::delete('/destroy-period/{id}', [PayrollLemburController::class, 'destroy'])->name('destroy-period');
+                Route::get('/export-excel/{id}', [PayrollLemburController::class, 'exportExcel'])->name('export-excel');
+                Route::get('/slip-pdf/{karyawanId}', [PayrollLemburController::class, 'slipPdf'])->name('slip-pdf');
+                Route::get('/download-all-slip/{id}', [PayrollLemburController::class, 'downloadAllSlipZip'])->name('download-all-slip');
+
+                // Approval Bertingkat & Workflow
+                Route::post('/submit-approval/{id}', [PayrollLemburController::class, 'submitApproval'])->name('submit-approval');
+                Route::post('/approve-step/{id}', [PayrollLemburController::class, 'approveStep'])->name('approve-step');
+                Route::post('/reject-step/{id}', [PayrollLemburController::class, 'rejectStep'])->name('reject-step');
+                Route::post('/unlock/{id}', [PayrollLemburController::class, 'unlock'])->name('unlock');
+                Route::post('/update-approvers/{id}', [PayrollLemburController::class, 'updateApprovers'])->name('update-approvers');
+                Route::get('/approval-history/{id}', [PayrollLemburController::class, 'approvalHistory'])->name('approval-history');
             });
         });
     });
@@ -642,6 +733,16 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
         Route::get('/{id}/stream-tindak-lanjut', [DisposisiUnitController::class, 'streamTindakLanjut'])->name('stream-tindak-lanjut');
     });
 
+    // --- ROUTE LAYANAN REQUEST EMAIL RESMI (BPO: Permintaan -> Validasi/Edit SDM -> Eksekusi PIKDI -> Selesai) ---
+    Route::prefix('request-email')->name('request-email.')->group(function () {
+        Route::get('/', [RequestEmailController::class, 'index'])->name('index');
+        Route::post('/store', [RequestEmailController::class, 'store'])->name('store');
+        Route::post('/{id}/validate-sdm', [RequestEmailController::class, 'validateSdm'])->name('validate-sdm');
+        Route::post('/{id}/process-pikdi', [RequestEmailController::class, 'processPikdi'])->name('process-pikdi');
+        Route::post('/{id}/resend-notif', [RequestEmailController::class, 'resendNotification'])->name('resend-notif');
+        Route::delete('/{id}', [RequestEmailController::class, 'destroy'])->name('destroy');
+    });
+
     // =========================================================================
     // MODUL KPI & BALANCED SCORECARD (BSC)
     // =========================================================================
@@ -691,6 +792,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
             Route::get('/options/parent-unit-indikators', [KpiCascadingController::class, 'getParentUnitIndikatorOptions'])->name('parent-unit-options');
             Route::get('/{id}', [KpiCascadingController::class, 'show'])->name('show');
             Route::put('/{id}', [KpiCascadingController::class, 'update'])->name('update');
+            Route::post('/{id}/realisasi', [KpiCascadingController::class, 'updateRealisasi'])->name('update-realisasi');
             Route::delete('/{id}', [KpiCascadingController::class, 'destroy'])->name('destroy');
         });
 
@@ -711,6 +813,14 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
             Route::get('/peraturan', [HrPolicyController::class, 'peraturan'])->name('peraturan.index');
             Route::get('/sop', [HrPolicyController::class, 'sop'])->name('sop.index');
             Route::get('/tupoksi', [HrPolicyController::class, 'tupoksi'])->name('tupoksi.index');
+
+            // Action endpoints
+            Route::get('/data', [HrPolicyController::class, 'datatable'])->name('data');
+            Route::get('/create', [HrPolicyController::class, 'create'])->name('create');
+            Route::post('/store', [HrPolicyController::class, 'store'])->name('store');
+            Route::get('/{id}/edit', [HrPolicyController::class, 'edit'])->name('edit');
+            Route::post('/{id}/update', [HrPolicyController::class, 'update'])->name('update');
+            Route::delete('/{id}', [HrPolicyController::class, 'destroy'])->name('destroy');
         });
     });
 
@@ -782,10 +892,17 @@ Route::prefix('admin')->name('admin.')->middleware(['auth'])->group(function () 
         // 1.c. Hasil & Analisis Survei (Renstra Style)
         Route::get('/hasil-analisis', [SurveyController::class, 'hasilIndex'])->name('hasil-analisis.index');
 
-        // 1.d. Audit (Audit SPI dan Audit LPM - Renstra Style)
+        // 1.d. Audit (Audit SPI dan Audit LPM - Renstra & Daftar Temuan Style)
         Route::prefix('audit')->name('audit.')->group(function () {
             Route::get('/spi', [SurveyController::class, 'auditSpi'])->name('spi');
+            Route::post('/spi', [SurveyController::class, 'auditSpiStore'])->name('spi.store');
+            Route::put('/spi/{id}', [SurveyController::class, 'auditSpiUpdate'])->name('spi.update');
+            Route::delete('/spi/{id}', [SurveyController::class, 'auditSpiDestroy'])->name('spi.destroy');
+
             Route::get('/lpm', [SurveyController::class, 'auditLpm'])->name('lpm');
+            Route::post('/lpm', [SurveyController::class, 'auditLpmStore'])->name('lpm.store');
+            Route::put('/lpm/{id}', [SurveyController::class, 'auditLpmUpdate'])->name('lpm.update');
+            Route::delete('/lpm/{id}', [SurveyController::class, 'auditLpmDestroy'])->name('lpm.destroy');
         });
     });
 

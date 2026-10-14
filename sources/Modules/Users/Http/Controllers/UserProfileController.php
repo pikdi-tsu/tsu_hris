@@ -4,6 +4,9 @@ namespace Modules\Users\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Models\DataDosenTendik;
+use App\Models\RiwayatPerubahanData;
+use App\Notifications\PerubahanDataDiajukanNotification;
 use Illuminate\Http\Request;
 use App\Services\TsuErrorHandlerService;
 use Illuminate\Support\Facades\Http;
@@ -45,6 +48,18 @@ class UserProfileController extends Controller
             'icon'     => ($user->isactive ?? true) ? 'fa-check-circle' : 'fa-ban',
         ];
 
+        // Cari record kepegawaian (Dosen/Tendik)
+        $karyawan = DataDosenTendik::where('user_id', $user->id)
+            ->orWhere(function($q) use ($user) {
+                if (!empty($user->username)) {
+                    $q->where('nik', $user->username)->orWhere('nidn', $user->username);
+                }
+            })->first();
+
+        $riwayatPerubahan = $karyawan
+            ? RiwayatPerubahanData::with('reviewer')->where('data_dosen_tendik_id', $karyawan->id)->latest()->get()
+            : collect();
+
         return view('users::profile.index', compact(
             'user',
             'title',
@@ -53,7 +68,9 @@ class UserProfileController extends Controller
             'identityLabel',
             'identityValue',
             'unitKerja',
-            'accountStatus'
+            'accountStatus',
+            'karyawan',
+            'riwayatPerubahan'
         ));
     }
 
@@ -142,5 +159,113 @@ class UserProfileController extends Controller
         } catch (\Exception $e) {
             return TsuErrorHandlerService::handleHtml($e, '[TSU_PHOTO_UPD_FAIL]', 'Terjadi kesalahan sistem.', 'Gagal Update Foto Profil.', $request);
         }
+    }
+
+    /**
+     * Handle Permohonan Pengajuan Perubahan Data Mandiri Pegawai (ESS)
+     */
+    public function ajukanPerubahanData(Request $request)
+    {
+        $user = auth()->user();
+        $karyawan = DataDosenTendik::where('user_id', $user->id)
+            ->orWhere(function($q) use ($user) {
+                if (!empty($user->username)) {
+                    $q->where('nik', $user->username)->orWhere('nidn', $user->username);
+                }
+            })->first();
+
+        if (!$karyawan) {
+            return back()->with('error', 'Profil data kepegawaian Anda tidak ditemukan.');
+        }
+
+        // Cek apakah ada pengajuan yang masih berstatus 'menunggu'
+        $adaPending = RiwayatPerubahanData::where('data_dosen_tendik_id', $karyawan->id)
+            ->where('status', 'menunggu')
+            ->exists();
+
+        if ($adaPending) {
+            return back()->with('error', 'Anda masih memiliki permohonan perubahan data yang sedang menunggu persetujuan SDM. Mohon tunggu proses verifikasi selesai sebelum mengajukan perubahan baru.');
+        }
+
+        $fields = [
+            'no_hp' => 'No. WhatsApp / HP',
+            'nik_ktp' => 'NIK KTP',
+            'no_npwp' => 'No. NPWP',
+            'tempat_lahir' => 'Tempat Lahir',
+            'tgl_lahir' => 'Tanggal Lahir',
+            'jenis_kelamin' => 'Jenis Kelamin',
+            'status_perkawinan' => 'Status Perkawinan',
+            'alamat_lengkap' => 'Alamat Lengkap (KTP)',
+            'alamat_domisili' => 'Alamat Domisili',
+            'nama_bank' => 'Nama Bank',
+            'no_rekening' => 'No. Rekening',
+            'atas_nama_rekening' => 'Atas Nama Rekening',
+            'kontak_darurat_nama' => 'Nama Kontak Darurat',
+            'kontak_darurat_hubungan' => 'Hubungan Kontak Darurat',
+            'kontak_darurat_no_hp' => 'No. HP Kontak Darurat',
+            'kontak_darurat_alamat' => 'Alamat Kontak Darurat',
+        ];
+
+        $diffs = [];
+        foreach ($fields as $field => $label) {
+            $oldVal = trim((string)($karyawan->{$field} ?? ''));
+            $newVal = trim((string)$request->input($field, ''));
+
+            if ($field === 'tgl_lahir') {
+                if (!empty($newVal)) {
+                    try {
+                        $newVal = \Carbon\Carbon::parse($newVal)->format('Y-m-d');
+                    } catch (\Exception $e) {}
+                }
+                if (!empty($oldVal)) {
+                    try {
+                        $oldVal = \Carbon\Carbon::parse($oldVal)->format('Y-m-d');
+                    } catch (\Exception $e) {}
+                }
+            }
+
+            if ($oldVal !== $newVal) {
+                $diffs[$field] = [
+                    'label' => $label,
+                    'old'   => $oldVal,
+                    'new'   => $newVal,
+                ];
+            }
+        }
+
+        if (empty($diffs)) {
+            return back()->with('error', 'Tidak ada perbedaan data yang Anda masukkan.');
+        }
+
+        $perubahan = RiwayatPerubahanData::create([
+            'data_dosen_tendik_id' => $karyawan->id,
+            'user_id'              => $user->id,
+            'kategori_perubahan'   => 'Data Pribadi, Kontak & Rekening',
+            'perubahan_data'       => $diffs,
+            'status'               => 'menunggu',
+            'catatan_pemohon'      => $request->catatan_pemohon,
+        ]);
+
+        // Notifikasi ke Tim SDM / HRD
+        try {
+            $hrds = User::permission('admin:data-karyawan:view')->get();
+            if ($hrds->isEmpty()) {
+                $hrds = User::whereHas('roles', function ($q) {
+                    $q->whereIn('name', ['super admin', 'super admin hris', 'admin', 'admin hris', 'admin sdm']);
+                })->get();
+            }
+
+            foreach ($hrds as $hrd) {
+                $hrd->notify(new PerubahanDataDiajukanNotification(
+                    $perubahan,
+                    $karyawan,
+                    'Pengajuan perubahan data mandiri dari ' . $karyawan->nama . '.'
+                ));
+            }
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::warning('Gagal kirim notif perubahan data: ' . $e->getMessage());
+        }
+
+        return back()->with('success', 'Permohonan perubahan data berhasil dikirim! Menunggu verifikasi dan persetujuan (ACC) dari Bagian SDM.');
     }
 }

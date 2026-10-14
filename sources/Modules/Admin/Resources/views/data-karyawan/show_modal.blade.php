@@ -67,6 +67,11 @@
                                             $value = $karyawan->statusKaryawan->nama_status;
                                         }
 
+                                        // Override khusus untuk pangkat_golongan_id
+                                        if ($field['name'] === 'pangkat_golongan_id' && $karyawan->pangkatGolongan) {
+                                            $value = $karyawan->pangkatGolongan->nama_pangkat_golongan;
+                                        }
+
                                         $isEmpty = is_null($value) || $value === '' || $value === '0' || $value === '-';
 
                                         $valStr = trim((string)$value);

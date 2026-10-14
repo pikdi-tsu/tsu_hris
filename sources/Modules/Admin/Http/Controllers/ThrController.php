@@ -5,6 +5,7 @@ namespace Modules\Admin\Http\Controllers;
 use App\Exports\ThrExport;
 use App\Http\Controllers\MiddlewareController;
 use App\Models\DataDosenTendik;
+use App\Models\MasterTandaTangan;
 use App\Models\ThrKaryawan;
 use App\Models\ThrPeriod;
 use App\Models\ThrPeriodApproval;
@@ -101,9 +102,15 @@ class ThrController extends MiddlewareController
         $karyawans = DataDosenTendik::with('unit')
             ->where('is_active', true)
             ->orderBy('nama')
-            ->get();
+            ->get(['id', 'nama', 'gelar_depan', 'gelar_belakang', 'nik', 'nip', 'posisi', 'unit_id', 'tipe_karyawan']);
 
-        return view('admin::payroll.thr.modal_create', compact('karyawans'));
+        $masterTtdList = MasterTandaTangan::where('is_active', 1)->get()->keyBy('karyawan_id');
+
+        $ttdDefault = MasterTandaTangan::where('is_active', 1)
+            ->whereIn('peruntukan', ['semua', 'slip_thr', 'surat_sdm'])
+            ->first();
+
+        return view('admin::payroll.thr.modal_create', compact('karyawans', 'masterTtdList', 'ttdDefault'));
     }
 
     /**
@@ -117,6 +124,7 @@ class ThrController extends MiddlewareController
             'tanggal_cutoff'        => 'required|date',
             'tanggal_surat'         => 'required|date',
             'kota_surat'            => 'required|string|max:100',
+            'karyawan_ttd_id'       => 'nullable|string',
             'penandatangan_nama'    => 'required|string|max:150',
             'penandatangan_jabatan' => 'required|string|max:150',
             'validator_1_id'        => 'required|uuid',
@@ -124,8 +132,10 @@ class ThrController extends MiddlewareController
             'approval_id'           => 'required|uuid',
             'keterangan'            => 'nullable|string',
         ], [
-            'validator_1_id.required' => 'Silahkan pilih pejabat Validator 1.',
-            'approval_id.required'    => 'Silahkan pilih pejabat Approval (Paling Atas).',
+            'validator_1_id.required'        => 'Silahkan pilih pejabat Validator 1.',
+            'approval_id.required'           => 'Silahkan pilih pejabat Approval (Paling Atas).',
+            'penandatangan_nama.required'    => 'Nama penandatangan wajib diisi.',
+            'penandatangan_jabatan.required' => 'Jabatan penandatangan wajib diisi.',
         ]);
 
         try {
@@ -137,6 +147,7 @@ class ThrController extends MiddlewareController
                 'tanggal_cutoff'        => $request->tanggal_cutoff,
                 'tanggal_surat'         => $request->tanggal_surat,
                 'kota_surat'            => $request->kota_surat,
+                'karyawan_ttd_id'       => $request->karyawan_ttd_id,
                 'penandatangan_nama'    => $request->penandatangan_nama,
                 'penandatangan_jabatan' => $request->penandatangan_jabatan,
                 'validator_1_id'        => $request->validator_1_id,
@@ -772,7 +783,9 @@ class ThrController extends MiddlewareController
         $karyawan = ThrKaryawan::with('period')->findOrFail($karyawanId);
         $period = $karyawan->period;
 
-        $pdf = Pdf::loadView('admin::payroll.thr.slip_pdf', compact('karyawan', 'period'))
+        $ttdMaster = $this->resolveTtdMaster($period);
+
+        $pdf = Pdf::loadView('admin::payroll.thr.slip_pdf', compact('karyawan', 'period', 'ttdMaster'))
             ->setPaper('A4', 'portrait');
 
         $cleanName = preg_replace('/[^A-Za-z0-9_\-]/', '_', $karyawan->nama);
@@ -793,13 +806,15 @@ class ThrController extends MiddlewareController
             return back()->with('error', 'Tidak ada data pegawai pada periode ini.');
         }
 
+        $ttdMaster = $this->resolveTtdMaster($period);
+
         $zipFileName = 'ALL_SLIP_THR_' . Str::slug($period->nama_periode) . '.zip';
         $zipPath = storage_path('app/' . $zipFileName);
 
         $zip = new ZipArchive;
         if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
             foreach ($karyawans as $karyawan) {
-                $pdf = Pdf::loadView('admin::payroll.thr.slip_pdf', compact('karyawan', 'period'))
+                $pdf = Pdf::loadView('admin::payroll.thr.slip_pdf', compact('karyawan', 'period', 'ttdMaster'))
                     ->setPaper('A4', 'portrait');
 
                 $cleanName = preg_replace('/[^A-Za-z0-9_\-]/', '_', $karyawan->nama);
@@ -813,5 +828,41 @@ class ThrController extends MiddlewareController
         }
 
         return back()->with('error', 'Gagal membuat file arsip ZIP.');
+    }
+
+    private function resolveTtdMaster($period)
+    {
+        // Tanda tangan & stempel HANYA muncul ketika approval final sudah ACC (periode terkunci/final)
+        $isFinalApproved = in_array($period->status, ['locked', 'approved', 'final']) || !empty($period->is_locked) || !empty($period->locked_at);
+        if (!$isFinalApproved) {
+            return null;
+        }
+
+        $ttdMaster = null;
+
+        // 1. Cari berdasarkan karyawan_ttd_id
+        if (!empty($period->karyawan_ttd_id)) {
+            $ttdMaster = MasterTandaTangan::where('karyawan_id', $period->karyawan_ttd_id)->first();
+        }
+
+        // 2. Jika belum ketemu, cari berdasarkan nama pejabat penandatangan
+        if (!$ttdMaster && !empty($period->penandatangan_nama)) {
+            $cleanName = trim(preg_replace('/^(dr\.|drg\.|drs\.|dra\.|prof\.|ir\.)\s*/i', '', $period->penandatangan_nama));
+            $cleanName = trim(explode(',', $cleanName)[0]);
+            if (strlen($cleanName) >= 3) {
+                $ttdMaster = MasterTandaTangan::where('nama_pejabat', 'like', '%' . $cleanName . '%')->first();
+            }
+        }
+
+        // 3. Verifikasi kesesuaian nama agar TIDAK SALAH TTD ORANG LAIN
+        if ($ttdMaster && !empty($period->penandatangan_nama)) {
+            $cleanTtd = trim(explode(',', preg_replace('/^(dr\.|drg\.|drs\.|dra\.|prof\.|ir\.)\s*/i', '', $ttdMaster->nama_pejabat))[0]);
+            $cleanPena = trim(explode(',', preg_replace('/^(dr\.|drg\.|drs\.|dra\.|prof\.|ir\.)\s*/i', '', $period->penandatangan_nama))[0]);
+            if (stripos($cleanTtd, $cleanPena) === false && stripos($cleanPena, $cleanTtd) === false && $ttdMaster->karyawan_id !== $period->karyawan_ttd_id) {
+                $ttdMaster = null;
+            }
+        }
+
+        return $ttdMaster;
     }
 }

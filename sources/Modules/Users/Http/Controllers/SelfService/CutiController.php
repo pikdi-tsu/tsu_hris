@@ -21,6 +21,7 @@ use App\Services\TsuErrorHandlerService;
 use App\Models\User;
 use App\Notifications\CutiDiajukanNotification;
 use App\Models\MasterUnit;
+use App\Models\SuratTugas;
 use App\Services\OrgStructureService;
 
 class CutiController extends Controller
@@ -200,6 +201,23 @@ class CutiController extends Controller
             $jumlahHari = CutiKaryawan::hitungHariEfektif($tgl1, $tgl2);
             if ($jumlahHari <= 0) {
                 return $this->sendError('Gagal mengajukan: Rentang tanggal yang dipilih tidak memuat hari kerja efektif (semua tanggal merupakan akhir pekan atau hari libur nasional).');
+            }
+
+            // Validasi Konflik dengan Surat Tugas / Dinas Luar Aktif
+            $conflictTugas = SuratTugas::where('data_dosen_tendik_id', $profile->id)
+                ->where('status', 'Disetujui')
+                ->where(function ($q) use ($tgl1, $tgl2) {
+                    $q->whereBetween('tanggal_mulai', [$tgl1, $tgl2])
+                      ->orWhereBetween('tanggal_selesai', [$tgl1, $tgl2])
+                      ->orWhere(function ($sub) use ($tgl1, $tgl2) {
+                          $sub->where('tanggal_mulai', '<=', $tgl1)
+                              ->where('tanggal_selesai', '>=', $tgl2);
+                      });
+                })
+                ->first();
+
+            if ($conflictTugas) {
+                return $this->sendError('Gagal mengajukan cuti: Anda memiliki agenda Surat Tugas / Dinas Luar resmi pada rentang tanggal tersebut (No: ' . $conflictTugas->nomor_surat . ' - ' . $conflictTugas->keperluan . '). Silakan koordinasikan dengan SDM/atasan.');
             }
 
             // Validasi kuota HANYA jika memotong kuota tahunan

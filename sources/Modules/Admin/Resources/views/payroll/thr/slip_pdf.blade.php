@@ -149,8 +149,25 @@
         $kotaSurat = $period->kota_surat ?: 'Surakarta';
 
         // Penandatangan
-        $penandatanganNama = $period->penandatangan_nama ?: 'Afifah Raisya Putri Sanjaya, S.I.P.';
-        $penandatanganJabatan = $period->penandatangan_jabatan ?: 'Bagian SDM';
+        $penandatanganNama = $period->penandatangan_nama ?: ($ttdMaster->nama_pejabat ?? ($period->karyawanTtd->nama ?? '-'));
+        $penandatanganJabatan = $period->penandatangan_jabatan ?: ($ttdMaster->jabatan ?? 'Sumber Daya Manusia');
+
+        // Cek apakah Approval Final sudah ACC (periode resmi berstatus terkunci/final)
+        $isFinalApproved = in_array($period->status, ['locked', 'approved', 'final']) || !empty($period->is_locked) || !empty($period->locked_at);
+
+        // Tanda tangan & Stempel dari Master Data Tanda Tangan (HANYA muncul jika Approval Final sudah ACC)
+        $ttdImgSrc = null;
+        $stempelImgSrc = null;
+        if ($isFinalApproved && isset($ttdMaster) && $ttdMaster) {
+            if ($ttdMaster->file_ttd && \Illuminate\Support\Facades\Storage::disk('public')->exists($ttdMaster->file_ttd)) {
+                $ttdPath = storage_path('app/public/' . $ttdMaster->file_ttd);
+                $ttdImgSrc = file_exists($ttdPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($ttdPath)) : null;
+            }
+            if ($ttdMaster->file_stempel && \Illuminate\Support\Facades\Storage::disk('public')->exists($ttdMaster->file_stempel)) {
+                $stempelPath = storage_path('app/public/' . $ttdMaster->file_stempel);
+                $stempelImgSrc = file_exists($stempelPath) ? 'data:image/png;base64,' . base64_encode(file_get_contents($stempelPath)) : null;
+            }
+        }
     @endphp
 
     <!-- Logo TSU -->
@@ -228,9 +245,14 @@
                 <td><strong>{{ $penandatanganJabatan }},</strong></td>
             </tr>
             <tr>
-                <td class="sign-img-box">
-                    @if($logoBase64)
-                        <img src="{{ $logoBase64 }}" alt="Stempel / TTD">
+                <td class="sign-img-box" style="position: relative; height: 65px;">
+                    @if($stempelImgSrc)
+                        <img src="{{ $stempelImgSrc }}" style="position: absolute; left: 0px; top: 0px; height: 60px; opacity: 0.85;" alt="Stempel">
+                    @endif
+                    @if($ttdImgSrc)
+                        <img src="{{ $ttdImgSrc }}" style="position: relative; height: 55px; z-index: 2;" alt="TTD">
+                    @else
+                        <div style="height: 55px;"></div>
                     @endif
                 </td>
             </tr>

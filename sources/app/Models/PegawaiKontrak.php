@@ -23,6 +23,7 @@ class PegawaiKontrak extends Model
         'tgl_selesai' => 'date',
         'durasi_bulan' => 'integer',
         'kontrak_ke' => 'integer',
+        'tmt_tetap' => 'date',
         'gaji_pokok_disepakati' => 'decimal:2',
     ];
 

@@ -91,7 +91,7 @@ class RiwayatAbsensiController extends MiddlewareController
             }
         }
 
-        $data = $query->groupBy('pin', 'nama', 'periode_bulan', 'periode_tahun')->get();
+        $data = $query->groupBy('pin', 'nama', 'periode_bulan', 'periode_tahun')->orderBy('nama', 'asc')->get();
 
         return DataTables::of($data)
             ->addIndexColumn()
@@ -131,7 +131,7 @@ class RiwayatAbsensiController extends MiddlewareController
                 ]);
 
                 $btnDetail = '<button type="button" class="btn btn-xs tsu-btn-action tsu-btn-action--detail btn-detail-rekap mr-1" data-pin="' . $data->pin . '" data-nama="' . e($data->users ? $data->users->nama_lengkap : $data->nama) . '" title="Rincian Hari Presensi"><i class="fas fa-list mr-1"></i> Rincian</button>';
-                $btnPdf = '<a href="' . route('admin.absensi.downloadslip', $data->pin) . '?' . $params . '" class="btn btn-xs tsu-btn-action tsu-btn-action--pdf" target="_blank" title="Cetak Slip PDF"><i class="fas fa-file-pdf mr-1"></i> Slip PDF</a>';
+                $btnPdf = '<a href="' . route('admin.rekap-absensi.downloadslip', $data->pin) . '?' . $params . '" class="btn btn-xs tsu-btn-action tsu-btn-action--pdf" target="_blank" title="Cetak Slip PDF"><i class="fas fa-file-pdf mr-1"></i> Slip PDF</a>';
 
                 return '<div class="text-center text-nowrap">' . $btnDetail . $btnPdf . '</div>';
             })

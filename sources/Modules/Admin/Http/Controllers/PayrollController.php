@@ -92,19 +92,27 @@ class PayrollController extends MiddlewareController
             'latest_payout' => $periods->first() ? $periods->first()->total_gaji_bersih : 0,
         ];
 
-        // Daftar seluruh karyawan untuk Select2 pencarian Validator 1, Validator 2, dan Approval
+        // Daftar seluruh karyawan untuk Select2 pencarian Validator 1, Validator 2, Approval, dan Penandatangan
         $allKaryawans = DataDosenTendik::where('is_active', 1)
             ->with('unit')
             ->orderBy('nama')
-            ->get(['id', 'nama', 'nik', 'posisi', 'unit_id', 'tipe_karyawan']);
+            ->get(['id', 'nama', 'gelar_depan', 'gelar_belakang', 'nik', 'nip', 'posisi', 'unit_id', 'tipe_karyawan']);
+
+        $masterTtdList = \App\Models\MasterTandaTangan::where('is_active', 1)->get()->keyBy('karyawan_id');
+
+        $ttdDefault = \App\Models\MasterTandaTangan::where('is_active', 1)
+            ->whereIn('peruntukan', ['semua', 'slip_gaji', 'surat_sdm'])
+            ->first();
 
         return view('admin::payroll.index', [
-            'title'        => 'Payroll Karyawan (Gaji Bulanan)',
-            'periods'      => $periods,
-            'bulanList'    => $bulanList,
-            'currentYear'  => $currentYear,
-            'stats'        => $stats,
-            'allKaryawans' => $allKaryawans,
+            'title'         => 'Payroll Karyawan (Gaji Bulanan)',
+            'periods'       => $periods,
+            'bulanList'     => $bulanList,
+            'currentYear'   => $currentYear,
+            'stats'         => $stats,
+            'allKaryawans'  => $allKaryawans,
+            'masterTtdList' => $masterTtdList,
+            'ttdDefault'    => $ttdDefault,
         ]);
     }
 
@@ -115,13 +123,18 @@ class PayrollController extends MiddlewareController
             'tahun'             => 'required|integer|min:2020|max:2050',
             'start_date_cutoff' => 'nullable|date',
             'end_date_cutoff'   => 'nullable|date|after_or_equal:start_date_cutoff',
-            'validator_1_id'    => 'required|uuid',
-            'validator_2_id'    => 'required|uuid',
-            'approval_id'       => 'required|uuid',
+            'validator_1_id'        => 'required|uuid',
+            'validator_2_id'        => 'required|uuid',
+            'approval_id'           => 'required|uuid',
+            'karyawan_ttd_id'       => 'nullable|string',
+            'penandatangan_nama'    => 'required|string|max:150',
+            'penandatangan_jabatan' => 'required|string|max:150',
         ], [
-            'validator_1_id.required' => 'Silahkan pilih Validator 1.',
-            'validator_2_id.required' => 'Silahkan pilih Validator 2.',
-            'approval_id.required'    => 'Silahkan pilih Approval (Paling Atas).',
+            'validator_1_id.required'        => 'Silahkan pilih Validator 1.',
+            'validator_2_id.required'        => 'Silahkan pilih Validator 2.',
+            'approval_id.required'           => 'Silahkan pilih Approval (Paling Atas).',
+            'penandatangan_nama.required'    => 'Nama pejabat penandatangan wajib diisi.',
+            'penandatangan_jabatan.required' => 'Jabatan penandatangan wajib diisi.',
         ]);
 
         $bulan = intval($request->bulan);
@@ -141,19 +154,22 @@ class PayrollController extends MiddlewareController
 
         // Buat Periode Baru
         $period = PayrollPeriod::create([
-            'kode_periode'      => $kodePeriode,
-            'nama_periode'      => $namaPeriode,
-            'tipe'              => 'karyawan',
-            'bulan'             => $bulan,
-            'tahun'             => $tahun,
-            'start_date_cutoff' => $request->start_date_cutoff,
-            'end_date_cutoff'   => $request->end_date_cutoff,
-            'validator_1_id'    => $request->validator_1_id,
-            'validator_2_id'    => $request->validator_2_id,
-            'approval_id'       => $request->approval_id,
-            'status'            => 'draft',
-            'created_by'        => Auth::id(),
-            'catatan'           => $request->catatan,
+            'kode_periode'          => $kodePeriode,
+            'nama_periode'          => $namaPeriode,
+            'tipe'                  => 'karyawan',
+            'bulan'                 => $bulan,
+            'tahun'                 => $tahun,
+            'start_date_cutoff'     => $request->start_date_cutoff,
+            'end_date_cutoff'       => $request->end_date_cutoff,
+            'validator_1_id'        => $request->validator_1_id,
+            'validator_2_id'        => $request->validator_2_id,
+            'approval_id'           => $request->approval_id,
+            'karyawan_ttd_id'       => $request->karyawan_ttd_id,
+            'penandatangan_nama'    => $request->penandatangan_nama,
+            'penandatangan_jabatan' => $request->penandatangan_jabatan,
+            'status'                => 'draft',
+            'created_by'            => Auth::id(),
+            'catatan'               => $request->catatan,
         ]);
 
         // Catat di log riwayat approval
@@ -196,7 +212,6 @@ class PayrollController extends MiddlewareController
                 return $k->tunjangan_fungsional + $k->tunjangan_struktural + $k->tunjangan_khusus + $k->tunjangan_keluarga + $k->tunjangan_anak + $k->tunjangan_kesehatan;
             }),
             'total_transport'   => $karyawans->sum('total_transport'),
-            'total_lembur'      => $karyawans->sum('total_lembur'),
             'total_gaji_kotor'  => $karyawans->sum('gaji_kotor'),
             'total_potongan'    => $karyawans->sum('total_potongan'),
             'total_gaji_bersih' => $karyawans->sum('gaji_bersih'),
@@ -275,10 +290,6 @@ class PayrollController extends MiddlewareController
                 $total = '<strong>Rp ' . number_format($row->total_transport, 0, ',', '.') . '</strong>';
                 return '<div class="text-center">' . $total . '<br><small class="text-muted">' . $hadir . '</small></div>';
             })
-            ->addColumn('lembur_info', function ($row) {
-                if ($row->total_lembur <= 0) return '<div class="text-center text-muted">-</div>';
-                return '<div class="text-center"><strong>Rp ' . number_format($row->total_lembur, 0, ',', '.') . '</strong><br><small class="text-muted">' . number_format($row->total_jam_lembur, 1) . ' Jam</small></div>';
-            })
             ->addColumn('potongan_info', function ($row) {
                 if ($row->total_potongan <= 0) return '<div class="text-center text-muted">-</div>';
                 return '<div class="text-center text-danger font-weight-bold">Rp ' . number_format($row->total_potongan, 0, ',', '.') . '</div>';
@@ -308,7 +319,7 @@ class PayrollController extends MiddlewareController
 
                 return '<div class="d-inline-flex align-items-center justify-content-center" style="white-space: nowrap;">' . $btnDetail . $btnEdit . $btnPdf . '</div>';
             })
-            ->rawColumns(['pegawai_info', 'gol_jabatan', 'gaji_tetap_formatted', 'transport_info', 'lembur_info', 'potongan_info', 'gaji_bersih_formatted', 'keterangan', 'aksi'])
+            ->rawColumns(['pegawai_info', 'gol_jabatan', 'gaji_tetap_formatted', 'transport_info', 'potongan_info', 'gaji_bersih_formatted', 'keterangan', 'aksi'])
             ->make(true);
     }
 
@@ -369,7 +380,8 @@ class PayrollController extends MiddlewareController
         $karyawan->tunjangan_kesehatan   = floatval($request->tunjangan_kesehatan ?: 0);
         $karyawan->hari_hadir_valid      = floatval($request->hari_hadir_valid ?: 0);
         $karyawan->tarif_transport       = floatval($request->tarif_transport ?: 20000);
-        $karyawan->total_lembur          = floatval($request->total_lembur ?: 0);
+        $karyawan->total_lembur          = 0;
+        $karyawan->total_jam_lembur      = 0;
         $karyawan->hari_unpaid_leave     = floatval($request->hari_unpaid_leave ?: 0);
         $karyawan->potongan_bpjs_kes     = floatval($request->potongan_bpjs_kes ?: 0);
         $karyawan->potongan_lainnya      = floatval($request->potongan_lainnya ?: 0);
@@ -780,7 +792,9 @@ class PayrollController extends MiddlewareController
         $row = PayrollKaryawan::with(['period', 'pegawai'])->findOrFail($karyawanId);
         $period = $row->period;
 
-        $pdf = Pdf::loadView('admin::payroll.slip_pdf', compact('row', 'period'))
+        $ttdMaster = $this->resolveTtdMaster($period);
+
+        $pdf = Pdf::loadView('admin::payroll.slip_pdf', compact('row', 'period', 'ttdMaster'))
             ->setPaper('A4', 'portrait');
 
         $fileName = 'SLIP_GAJI_' . Str::slug($row->nama) . '_' . Str::slug($period->nama_periode) . '.pdf';
@@ -796,13 +810,15 @@ class PayrollController extends MiddlewareController
             return back()->with('error', 'Tidak ada data pegawai pada periode ini.');
         }
 
+        $ttdMaster = $this->resolveTtdMaster($period);
+
         $zipFileName = 'SLIP_GAJI_ALL_' . Str::slug($period->nama_periode) . '.zip';
         $zipPath = storage_path('app/' . $zipFileName);
 
         $zip = new ZipArchive;
         if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
             foreach ($karyawans as $row) {
-                $pdf = Pdf::loadView('admin::payroll.slip_pdf', compact('row', 'period'))
+                $pdf = Pdf::loadView('admin::payroll.slip_pdf', compact('row', 'period', 'ttdMaster'))
                     ->setPaper('A4', 'portrait');
 
                 $cleanName = preg_replace('/[^A-Za-z0-9_\-]/', '_', $row->nama);
@@ -834,5 +850,41 @@ class PayrollController extends MiddlewareController
             11 => 'November',
             12 => 'Desember',
         ];
+    }
+
+    private function resolveTtdMaster($period)
+    {
+        // Tanda tangan & stempel HANYA muncul ketika approval final sudah ACC (periode terkunci/final)
+        $isFinalApproved = in_array($period->status, ['locked', 'approved', 'final']) || !empty($period->is_locked) || !empty($period->locked_at);
+        if (!$isFinalApproved) {
+            return null;
+        }
+
+        $ttdMaster = null;
+
+        // 1. Cari berdasarkan karyawan_ttd_id
+        if (!empty($period->karyawan_ttd_id)) {
+            $ttdMaster = \App\Models\MasterTandaTangan::where('karyawan_id', $period->karyawan_ttd_id)->first();
+        }
+
+        // 2. Jika belum ketemu, cari berdasarkan nama pejabat penandatangan
+        if (!$ttdMaster && !empty($period->penandatangan_nama)) {
+            $cleanName = trim(preg_replace('/^(dr\.|drg\.|drs\.|dra\.|prof\.|ir\.)\s*/i', '', $period->penandatangan_nama));
+            $cleanName = trim(explode(',', $cleanName)[0]);
+            if (strlen($cleanName) >= 3) {
+                $ttdMaster = \App\Models\MasterTandaTangan::where('nama_pejabat', 'like', '%' . $cleanName . '%')->first();
+            }
+        }
+
+        // 3. Verifikasi kesesuaian nama agar TIDAK SALAH TTD ORANG LAIN
+        if ($ttdMaster && !empty($period->penandatangan_nama)) {
+            $cleanTtd = trim(explode(',', preg_replace('/^(dr\.|drg\.|drs\.|dra\.|prof\.|ir\.)\s*/i', '', $ttdMaster->nama_pejabat))[0]);
+            $cleanPena = trim(explode(',', preg_replace('/^(dr\.|drg\.|drs\.|dra\.|prof\.|ir\.)\s*/i', '', $period->penandatangan_nama))[0]);
+            if (stripos($cleanTtd, $cleanPena) === false && stripos($cleanPena, $cleanTtd) === false && $ttdMaster->karyawan_id !== $period->karyawan_ttd_id) {
+                $ttdMaster = null;
+            }
+        }
+
+        return $ttdMaster;
     }
 }

@@ -77,91 +77,111 @@
 
                     @php
                         $resp = $peserta->surveyResponse;
+                    @php
+                        $detailMap = [];
+                        if ($resp && !empty($resp->jawaban_detail) && is_array($resp->jawaban_detail)) {
+                            foreach ($resp->jawaban_detail as $jd) {
+                                if (!empty($jd['aspek_id'])) {
+                                    $detailMap[$jd['aspek_id']] = (int)$jd['skor'];
+                                }
+                                if (!empty($jd['kode'])) {
+                                    $detailMap[$jd['kode']] = (int)$jd['skor'];
+                                }
+                            }
+                        }
                     @endphp
 
                     <h6 class="font-weight-bold text-dark border-bottom pb-2 mb-3">
                         Bagian 1: Penilaian Kepuasan Pelatihan (Skala 1 - 5)
                     </h6>
 
-                    <!-- Pertanyaan 1: Kualitas Materi -->
-                    <div class="form-group mb-4">
-                        <label class="font-weight-bold text-dark mb-1">
-                            1. Kualitas & Kedalaman Materi Pelatihan <span class="text-danger">*</span>
-                        </label>
-                        <p class="text-muted small mb-2">Materi yang disampaikan relevan, terstruktur dengan baik, dan mudah dipahami.</p>
-                        <div class="d-flex flex-wrap" style="gap: 12px;">
-                            @for($i = 1; $i <= 5; $i++)
-                                <div class="custom-control custom-radio custom-control-inline">
-                                    <input type="radio" id="materi_{{ $i }}" name="skor_materi" value="{{ $i }}" class="custom-control-input"
-                                           {{ old('skor_materi', $resp->skor_materi ?? 5) == $i ? 'checked' : '' }} required>
-                                    <label class="custom-control-label" for="materi_{{ $i }}">
-                                        <strong>{{ $i }}</strong>
-                                        <small class="text-muted">({{ $i == 1 ? 'Sangat Buruk' : ($i == 3 ? 'Cukup' : ($i == 5 ? 'Sangat Baik' : $i)) }})</small>
-                                    </label>
+                    @if(isset($aspekList) && $aspekList->count() > 0)
+                        @foreach($aspekList as $idx => $aspek)
+                            @php
+                                $curScore = $detailMap[$aspek->id] ?? ($detailMap[$aspek->kode] ?? ($resp ? ($resp->{'skor_' . $aspek->kode} ?? 5) : 5));
+                            @endphp
+                            <div class="form-group mb-4">
+                                <label class="font-weight-bold text-dark mb-1">
+                                    {{ $idx + 1 }}. {{ $aspek->nama_aspek }} <span class="text-danger">*</span>
+                                </label>
+                                @if($aspek->deskripsi)
+                                    <p class="text-muted small mb-2">{{ $aspek->deskripsi }}</p>
+                                @endif
+                                <div class="d-flex flex-wrap" style="gap: 12px;">
+                                    @for($i = 1; $i <= 5; $i++)
+                                        <div class="custom-control custom-radio custom-control-inline">
+                                            <input type="radio" id="aspek_{{ $aspek->id }}_{{ $i }}" name="aspek_{{ $aspek->id }}" value="{{ $i }}" class="custom-control-input"
+                                                   {{ old('aspek_' . $aspek->id, $curScore) == $i ? 'checked' : '' }} required>
+                                            <label class="custom-control-label" for="aspek_{{ $aspek->id }}_{{ $i }}">
+                                                <strong>{{ $i }}</strong>
+                                                <small class="text-muted">({{ $i == 1 ? 'Sangat Kurang' : ($i == 3 ? 'Cukup' : ($i == 5 ? 'Sangat Baik' : $i)) }})</small>
+                                            </label>
+                                        </div>
+                                    @endfor
                                 </div>
-                            @endfor
+                            </div>
+                        @endforeach
+                    @else
+                        <!-- Pertanyaan 1: Kualitas Materi -->
+                        <div class="form-group mb-4">
+                            <label class="font-weight-bold text-dark mb-1">
+                                1. Kualitas & Kedalaman Materi Pelatihan <span class="text-danger">*</span>
+                            </label>
+                            <p class="text-muted small mb-2">Materi yang disampaikan relevan, terstruktur dengan baik, dan mudah dipahami.</p>
+                            <div class="d-flex flex-wrap" style="gap: 12px;">
+                                @for($i = 1; $i <= 5; $i++)
+                                    <div class="custom-control custom-radio custom-control-inline">
+                                        <input type="radio" id="materi_{{ $i }}" name="skor_relevansi" value="{{ $i }}" class="custom-control-input"
+                                               {{ old('skor_relevansi', $resp->skor_relevansi ?? 5) == $i ? 'checked' : '' }} required>
+                                        <label class="custom-control-label" for="materi_{{ $i }}">
+                                            <strong>{{ $i }}</strong>
+                                            <small class="text-muted">({{ $i == 1 ? 'Sangat Buruk' : ($i == 3 ? 'Cukup' : ($i == 5 ? 'Sangat Baik' : $i)) }})</small>
+                                        </label>
+                                    </div>
+                                @endfor
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Pertanyaan 2: Narasumber -->
-                    <div class="form-group mb-4">
-                        <label class="font-weight-bold text-dark mb-1">
-                            2. Kompetensi & Kemampuan Komunikasi Narasumber / Instruktur <span class="text-danger">*</span>
-                        </label>
-                        <p class="text-muted small mb-2">Narasumber menguasai materi, interaktif, dan mampu menjawab pertanyaan dengan jelas.</p>
-                        <div class="d-flex flex-wrap" style="gap: 12px;">
-                            @for($i = 1; $i <= 5; $i++)
-                                <div class="custom-control custom-radio custom-control-inline">
-                                    <input type="radio" id="narasumber_{{ $i }}" name="skor_narasumber" value="{{ $i }}" class="custom-control-input"
-                                           {{ old('skor_narasumber', $resp->skor_narasumber ?? 5) == $i ? 'checked' : '' }} required>
-                                    <label class="custom-control-label" for="narasumber_{{ $i }}">
-                                        <strong>{{ $i }}</strong>
-                                        <small class="text-muted">({{ $i == 1 ? 'Sangat Buruk' : ($i == 3 ? 'Cukup' : ($i == 5 ? 'Sangat Baik' : $i)) }})</small>
-                                    </label>
-                                </div>
-                            @endfor
+                        <!-- Pertanyaan 2: Narasumber -->
+                        <div class="form-group mb-4">
+                            <label class="font-weight-bold text-dark mb-1">
+                                2. Kompetensi & Kemampuan Komunikasi Narasumber / Instruktur <span class="text-danger">*</span>
+                            </label>
+                            <p class="text-muted small mb-2">Narasumber menguasai materi, interaktif, dan mampu menjawab pertanyaan dengan jelas.</p>
+                            <div class="d-flex flex-wrap" style="gap: 12px;">
+                                @for($i = 1; $i <= 5; $i++)
+                                    <div class="custom-control custom-radio custom-control-inline">
+                                        <input type="radio" id="narasumber_{{ $i }}" name="skor_narasumber" value="{{ $i }}" class="custom-control-input"
+                                               {{ old('skor_narasumber', $resp->skor_narasumber ?? 5) == $i ? 'checked' : '' }} required>
+                                        <label class="custom-control-label" for="narasumber_{{ $i }}">
+                                            <strong>{{ $i }}</strong>
+                                            <small class="text-muted">({{ $i == 1 ? 'Sangat Buruk' : ($i == 3 ? 'Cukup' : ($i == 5 ? 'Sangat Baik' : $i)) }})</small>
+                                        </label>
+                                    </div>
+                                @endfor
+                            </div>
                         </div>
-                    </div>
 
-                    <!-- Pertanyaan 3: Fasilitas & Penyelenggaraan -->
-                    <div class="form-group mb-4">
-                        <label class="font-weight-bold text-dark mb-1">
-                            3. Fasilitas & Kesiapan Panitia Penyelenggara <span class="text-danger">*</span>
-                        </label>
-                        <p class="text-muted small mb-2">Platform/ruangan, konektivitas, modul pelatihan, dan koordinasi panitia memadai.</p>
-                        <div class="d-flex flex-wrap" style="gap: 12px;">
-                            @for($i = 1; $i <= 5; $i++)
-                                <div class="custom-control custom-radio custom-control-inline">
-                                    <input type="radio" id="fasilitas_{{ $i }}" name="skor_fasilitas" value="{{ $i }}" class="custom-control-input"
-                                           {{ old('skor_fasilitas', $resp->skor_fasilitas ?? 5) == $i ? 'checked' : '' }} required>
-                                    <label class="custom-control-label" for="fasilitas_{{ $i }}">
-                                        <strong>{{ $i }}</strong>
-                                        <small class="text-muted">({{ $i == 1 ? 'Sangat Buruk' : ($i == 3 ? 'Cukup' : ($i == 5 ? 'Sangat Baik' : $i)) }})</small>
-                                    </label>
-                                </div>
-                            @endfor
+                        <!-- Pertanyaan 3: Fasilitas & Penyelenggaraan -->
+                        <div class="form-group mb-4">
+                            <label class="font-weight-bold text-dark mb-1">
+                                3. Fasilitas & Kesiapan Panitia Penyelenggara <span class="text-danger">*</span>
+                            </label>
+                            <p class="text-muted small mb-2">Platform/ruangan, konektivitas, modul pelatihan, dan koordinasi panitia memadai.</p>
+                            <div class="d-flex flex-wrap" style="gap: 12px;">
+                                @for($i = 1; $i <= 5; $i++)
+                                    <div class="custom-control custom-radio custom-control-inline">
+                                        <input type="radio" id="fasilitas_{{ $i }}" name="skor_fasilitas" value="{{ $i }}" class="custom-control-input"
+                                               {{ old('skor_fasilitas', $resp->skor_fasilitas ?? 5) == $i ? 'checked' : '' }} required>
+                                        <label class="custom-control-label" for="fasilitas_{{ $i }}">
+                                            <strong>{{ $i }}</strong>
+                                            <small class="text-muted">({{ $i == 1 ? 'Sangat Buruk' : ($i == 3 ? 'Cukup' : ($i == 5 ? 'Sangat Baik' : $i)) }})</small>
+                                        </label>
+                                    </div>
+                                @endfor
+                            </div>
                         </div>
-                    </div>
-
-                    <!-- Pertanyaan 4: Relevansi dengan Pekerjaan -->
-                    <div class="form-group mb-4">
-                        <label class="font-weight-bold text-dark mb-1">
-                            4. Relevansi Manfaat Terhadap Bidang Kerja / Pengajaran <span class="text-danger">*</span>
-                        </label>
-                        <p class="text-muted small mb-2">Pelatihan ini berdampak langsung terhadap peningkatan keterampilan kerja Anda di TSU.</p>
-                        <div class="d-flex flex-wrap" style="gap: 12px;">
-                            @for($i = 1; $i <= 5; $i++)
-                                <div class="custom-control custom-radio custom-control-inline">
-                                    <input type="radio" id="relevansi_{{ $i }}" name="skor_relevansi" value="{{ $i }}" class="custom-control-input"
-                                           {{ old('skor_relevansi', $resp->skor_relevansi ?? 5) == $i ? 'checked' : '' }} required>
-                                    <label class="custom-control-label" for="relevansi_{{ $i }}">
-                                        <strong>{{ $i }}</strong>
-                                        <small class="text-muted">({{ $i == 1 ? 'Sangat Rendah' : ($i == 3 ? 'Cukup' : ($i == 5 ? 'Sangat Tinggi' : $i)) }})</small>
-                                    </label>
-                                </div>
-                            @endfor
-                        </div>
-                    </div>
+                    @endif
 
                     <!-- Feedback & Saran -->
                     <div class="form-group mb-4">

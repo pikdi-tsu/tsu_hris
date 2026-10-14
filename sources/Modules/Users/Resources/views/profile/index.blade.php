@@ -165,6 +165,17 @@
                                         <i class="fas fa-lock mr-1"></i> Keamanan
                                     </a>
                                 </li>
+                                @if($karyawan)
+                                <li class="nav-item">
+                                    <a class="tsu-notif-tab" href="#data_pribadi" data-toggle="tab" id="tab-data-pribadi">
+                                        <i class="fas fa-user-edit mr-1"></i> Data Pribadi & Verifikasi
+                                        @php $userPending = $riwayatPerubahan->where('status', 'menunggu')->count(); @endphp
+                                        @if($userPending > 0)
+                                            <span class="badge badge-warning text-dark ml-1 shadow-sm">{{ $userPending }} Menunggu</span>
+                                        @endif
+                                    </a>
+                                </li>
+                                @endif
                             </ul>
                         </div>
 
@@ -318,8 +329,221 @@
                                     </form>
                                 </div>
 
-                            </div>
-                        </div>
+                                @if($karyawan)
+                                {{-- TAB 3: DATA PRIBADI & PENGAJUAN PERUBAHAN KE SDM --}}
+                                <div class="tab-pane" id="data_pribadi">
+                                    <div class="tsu-callout tsu-callout--info mb-4">
+                                        <div class="tsu-callout__icon"><i class="fas fa-info-circle"></i></div>
+                                        <div>
+                                            <div class="tsu-callout__title">Alur Pembaruan Data Mandiri (ESS)</div>
+                                            <div class="tsu-callout__text">
+                                                Anda dapat memperbarui data kontak, kependudukan, rekening, dan kontak darurat Anda. 
+                                                Setelah disimpan, perubahan akan diverifikasi dan disetujui (ACC) oleh Bagian SDM sebelum diterapkan ke sistem.
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    @php $hasPendingReq = $riwayatPerubahan->where('status', 'menunggu')->isNotEmpty(); @endphp
+                                    @if($hasPendingReq)
+                                        <div class="alert alert-warning border-warning shadow-sm mb-4">
+                                            <i class="fas fa-clock mr-2"></i>
+                                            <strong>Perhatian:</strong> Anda memiliki pengajuan perubahan data yang sedang <strong>Menunggu Persetujuan SDM</strong>. 
+                                            Anda belum dapat mengajukan permohonan baru sampai verifikasi selesai.
+                                        </div>
+                                    @endif
+
+                                    <form action="{{ route('users.profile.ajukan-perubahan') }}" method="POST" id="form-ajukan-perubahan">
+                                        @csrf
+
+                                        {{-- 1. IDENTITAS & KONTAK --}}
+                                        <h6 class="font-weight-bold text-dark border-bottom pb-2 mb-3">
+                                            <i class="fas fa-id-card text-info mr-1"></i> Data Kontak & Identitas Pribadi
+                                        </h6>
+                                        <div class="row">
+                                            <div class="col-md-6 form-group">
+                                                <label class="tsu-form-label font-weight-bold">No. WhatsApp / HP <span class="text-danger">*</span></label>
+                                                <input type="text" name="no_hp" class="form-control" value="{{ old('no_hp', $karyawan->no_hp) }}" placeholder="Contoh: 08123456789" required {{ $hasPendingReq ? 'readonly' : '' }}>
+                                            </div>
+                                            <div class="col-md-6 form-group">
+                                                <label class="tsu-form-label font-weight-bold">Nomor NIK KTP</label>
+                                                <input type="text" name="nik_ktp" class="form-control" value="{{ old('nik_ktp', $karyawan->nik_ktp) }}" placeholder="16 digit NIK KTP" {{ $hasPendingReq ? 'readonly' : '' }}>
+                                            </div>
+                                            <div class="col-md-6 form-group">
+                                                <label class="tsu-form-label font-weight-bold">Nomor NPWP</label>
+                                                <input type="text" name="no_npwp" class="form-control" value="{{ old('no_npwp', $karyawan->no_npwp) }}" placeholder="Nomor Pokok Wajib Pajak" {{ $hasPendingReq ? 'readonly' : '' }}>
+                                            </div>
+                                            <div class="col-md-3 form-group">
+                                                <label class="tsu-form-label font-weight-bold">Tempat Lahir</label>
+                                                <input type="text" name="tempat_lahir" class="form-control" value="{{ old('tempat_lahir', $karyawan->tempat_lahir) }}" {{ $hasPendingReq ? 'readonly' : '' }}>
+                                            </div>
+                                            <div class="col-md-3 form-group">
+                                                <label class="tsu-form-label font-weight-bold">Tanggal Lahir</label>
+                                                <input type="date" name="tgl_lahir" class="form-control" value="{{ old('tgl_lahir', $karyawan->tgl_lahir ? \Carbon\Carbon::parse($karyawan->tgl_lahir)->format('Y-m-d') : '') }}" {{ $hasPendingReq ? 'readonly' : '' }}>
+                                            </div>
+                                            <div class="col-md-6 form-group">
+                                                <label class="tsu-form-label font-weight-bold">Jenis Kelamin</label>
+                                                <select name="jenis_kelamin" class="form-control" {{ $hasPendingReq ? 'disabled' : '' }}>
+                                                    <option value="">-- Pilih --</option>
+                                                    <option value="Laki-laki" {{ old('jenis_kelamin', $karyawan->jenis_kelamin) == 'Laki-laki' ? 'selected' : '' }}>Laki-laki</option>
+                                                    <option value="Perempuan" {{ old('jenis_kelamin', $karyawan->jenis_kelamin) == 'Perempuan' ? 'selected' : '' }}>Perempuan</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6 form-group">
+                                                <label class="tsu-form-label font-weight-bold">Status Perkawinan</label>
+                                                <select name="status_perkawinan" class="form-control" {{ $hasPendingReq ? 'disabled' : '' }}>
+                                                    <option value="">-- Pilih --</option>
+                                                    <option value="Belum Menikah" {{ old('status_perkawinan', $karyawan->status_perkawinan) == 'Belum Menikah' ? 'selected' : '' }}>Belum Menikah</option>
+                                                    <option value="Menikah" {{ old('status_perkawinan', $karyawan->status_perkawinan) == 'Menikah' ? 'selected' : '' }}>Menikah</option>
+                                                    <option value="Cerai Hidup" {{ old('status_perkawinan', $karyawan->status_perkawinan) == 'Cerai Hidup' ? 'selected' : '' }}>Cerai Hidup</option>
+                                                    <option value="Cerai Mati" {{ old('status_perkawinan', $karyawan->status_perkawinan) == 'Cerai Mati' ? 'selected' : '' }}>Cerai Mati</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-6 form-group">
+                                                <label class="tsu-form-label font-weight-bold">Alamat Lengkap (KTP)</label>
+                                                <textarea name="alamat_lengkap" class="form-control" rows="2" placeholder="Sesuai KTP" {{ $hasPendingReq ? 'readonly' : '' }}>{{ old('alamat_lengkap', $karyawan->alamat_lengkap) }}</textarea>
+                                            </div>
+                                            <div class="col-md-6 form-group">
+                                                <label class="tsu-form-label font-weight-bold">Alamat Domisili Sekarang</label>
+                                                <textarea name="alamat_domisili" class="form-control" rows="2" placeholder="Domisili saat ini" {{ $hasPendingReq ? 'readonly' : '' }}>{{ old('alamat_domisili', $karyawan->alamat_domisili) }}</textarea>
+                                            </div>
+                                        </div>
+
+                                        {{-- 2. REKENING BANK --}}
+                                        <h6 class="font-weight-bold text-dark border-bottom pb-2 mb-3 mt-4">
+                                            <i class="fas fa-university text-info mr-1"></i> Rekening Bank Penggajian
+                                        </h6>
+                                        <div class="row">
+                                            <div class="col-md-4 form-group">
+                                                <label class="tsu-form-label font-weight-bold">Nama Bank</label>
+                                                <input type="text" name="nama_bank" class="form-control" value="{{ old('nama_bank', $karyawan->nama_bank) }}" placeholder="Contoh: Bank Mandiri, BNI, BCA" {{ $hasPendingReq ? 'readonly' : '' }}>
+                                            </div>
+                                            <div class="col-md-4 form-group">
+                                                <label class="tsu-form-label font-weight-bold">Nomor Rekening</label>
+                                                <input type="text" name="no_rekening" class="form-control" value="{{ old('no_rekening', $karyawan->no_rekening) }}" placeholder="Nomor Rekening" {{ $hasPendingReq ? 'readonly' : '' }}>
+                                            </div>
+                                            <div class="col-md-4 form-group">
+                                                <label class="tsu-form-label font-weight-bold">Atas Nama Rekening</label>
+                                                <input type="text" name="atas_nama_rekening" class="form-control" value="{{ old('atas_nama_rekening', $karyawan->atas_nama_rekening) }}" placeholder="Nama Pemilik Rekening" {{ $hasPendingReq ? 'readonly' : '' }}>
+                                            </div>
+                                        </div>
+
+                                        {{-- 3. KONTAK DARURAT --}}
+                                        <h6 class="font-weight-bold text-dark border-bottom pb-2 mb-3 mt-4">
+                                            <i class="fas fa-phone-alt text-danger mr-1"></i> Kontak Darurat (Emergency Contact)
+                                        </h6>
+                                        <div class="row">
+                                            <div class="col-md-4 form-group">
+                                                <label class="tsu-form-label font-weight-bold">Nama Lengkap</label>
+                                                <input type="text" name="kontak_darurat_nama" class="form-control" value="{{ old('kontak_darurat_nama', $karyawan->kontak_darurat_nama) }}" placeholder="Nama Kontak Darurat" {{ $hasPendingReq ? 'readonly' : '' }}>
+                                            </div>
+                                            <div class="col-md-4 form-group">
+                                                <label class="tsu-form-label font-weight-bold">Hubungan / Relasi</label>
+                                                <input type="text" name="kontak_darurat_hubungan" class="form-control" value="{{ old('kontak_darurat_hubungan', $karyawan->kontak_darurat_hubungan) }}" placeholder="Contoh: Suami, Istri, Orang Tua" {{ $hasPendingReq ? 'readonly' : '' }}>
+                                            </div>
+                                            <div class="col-md-4 form-group">
+                                                <label class="tsu-form-label font-weight-bold">No. Telepon / HP</label>
+                                                <input type="text" name="kontak_darurat_no_hp" class="form-control" value="{{ old('kontak_darurat_no_hp', $karyawan->kontak_darurat_no_hp) }}" placeholder="No. HP Darurat" {{ $hasPendingReq ? 'readonly' : '' }}>
+                                            </div>
+                                            <div class="col-12 form-group">
+                                                <label class="tsu-form-label font-weight-bold">Alamat Kontak Darurat</label>
+                                                <input type="text" name="kontak_darurat_alamat" class="form-control" value="{{ old('kontak_darurat_alamat', $karyawan->kontak_darurat_alamat) }}" placeholder="Alamat tinggal kontak darurat" {{ $hasPendingReq ? 'readonly' : '' }}>
+                                            </div>
+                                        </div>
+
+                                        {{-- 4. CATATAN PEMOHON --}}
+                                        <div class="form-group mt-3">
+                                            <label class="tsu-form-label font-weight-bold">Catatan Pengajuan ke SDM <small class="text-muted">(Opsional)</small></label>
+                                            <textarea name="catatan_pemohon" class="form-control" rows="2" placeholder="Berikan catatan alasan perubahan data ini jika diperlukan..." {{ $hasPendingReq ? 'readonly' : '' }}></textarea>
+                                        </div>
+
+                                        @if(!$hasPendingReq)
+                                            <div class="mt-4 pt-2 border-top">
+                                                <button type="submit" class="btn tsu-btn-create shadow-sm">
+                                                    <i class="fas fa-paper-plane mr-1"></i> Simpan & Ajukan Perubahan ke SDM
+                                                </button>
+                                            </div>
+                                        @endif
+                                    </form>
+
+                                    {{-- TABEL RIWAYAT PENGAJUAN DATA OLEH PEGAWAI INI --}}
+                                    <div class="mt-5 pt-3 border-top">
+                                        <h6 class="font-weight-bold text-dark mb-3">
+                                            <i class="fas fa-history text-secondary mr-1"></i> Riwayat & Status Pengajuan Perubahan Data Anda
+                                        </h6>
+
+                                        @if($riwayatPerubahan->isEmpty())
+                                            <div class="alert alert-light text-center border py-4 text-muted small">
+                                                <i class="fas fa-clipboard-list fa-2x mb-2 text-black-50"></i>
+                                                <p class="mb-0">Belum ada riwayat permohonan perubahan data yang pernah Anda kirimkan.</p>
+                                            </div>
+                                        @else
+                                            <div class="table-responsive">
+                                                <table class="table table-bordered table-hover bg-white" style="font-size: 0.88rem;">
+                                                    <thead class="bg-light">
+                                                        <tr>
+                                                            <th width="18%">Tgl Pengajuan</th>
+                                                            <th width="35%">Data yang Diubah</th>
+                                                            <th width="20%">Catatan Anda</th>
+                                                            <th width="15%">Status</th>
+                                                            <th width="12%">Tanggapan SDM</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        @foreach($riwayatPerubahan as $rp)
+                                                            @php
+                                                                $badgeStatus = match($rp->status) {
+                                                                    'menunggu' => 'badge-warning text-dark',
+                                                                    'disetujui' => 'badge-success',
+                                                                    'ditolak' => 'badge-danger',
+                                                                    default => 'badge-secondary'
+                                                                };
+                                                                $textStatus = match($rp->status) {
+                                                                    'menunggu' => 'Menunggu ACC SDM',
+                                                                    'disetujui' => 'Disetujui',
+                                                                    'ditolak' => 'Ditolak',
+                                                                    default => $rp->status
+                                                                };
+                                                                $diffList = $rp->perubahan_data ?: [];
+                                                            @endphp
+                                                            <tr>
+                                                                <td>{{ $rp->created_at ? $rp->created_at->format('d M Y, H:i') : '-' }}</td>
+                                                                <td>
+                                                                    <ul class="pl-3 mb-0">
+                                                                        @foreach($diffList as $fKey => $dVal)
+                                                                            <li class="mb-1">
+                                                                                <strong>{{ $dVal['label'] ?? $fKey }}:</strong> 
+                                                                                <span class="text-danger font-italic">{{ !empty($dVal['old']) ? $dVal['old'] : '(kosong)' }}</span> 
+                                                                                <i class="fas fa-arrow-right mx-1 small text-muted"></i> 
+                                                                                <span class="text-success font-weight-bold">{{ !empty($dVal['new']) ? $dVal['new'] : '(kosong)' }}</span>
+                                                                            </li>
+                                                                        @endforeach
+                                                                    </ul>
+                                                                </td>
+                                                                <td>{{ $rp->catatan_pemohon ?: '-' }}</td>
+                                                                <td>
+                                                                    <span class="badge {{ $badgeStatus }} px-2 py-1 text-uppercase font-weight-bold">
+                                                                        {{ $textStatus }}
+                                                                    </span>
+                                                                </td>
+                                                                <td>
+                                                                    @if($rp->catatan_sdm)
+                                                                        <small class="text-muted d-block">{{ $rp->catatan_sdm }}</small>
+                                                                    @endif
+                                                                    @if($rp->approved_at)
+                                                                        <small class="text-muted d-block font-italic">{{ $rp->approved_at->format('d M Y') }}</small>
+                                                                    @else
+                                                                        <small class="text-muted">-</small>
+                                                                    @endif
+                                                                </td>
+                                                            </tr>
+                                                        @endforeach
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </div>
+                                @endif
                     </div>
                 </div>
 

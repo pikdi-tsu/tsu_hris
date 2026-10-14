@@ -11,6 +11,15 @@ class SuratEdaranSdm extends Model
 
     protected $table = 'surat_edaran_sdms';
 
+    protected static function booted()
+    {
+        static::deleting(function ($se) {
+            if ($se->file_dokumen) {
+                \App\Services\FileUploadService::deleteFile($se->file_dokumen);
+            }
+        });
+    }
+
     protected $fillable = [
         'nomor_surat',
         'perihal',

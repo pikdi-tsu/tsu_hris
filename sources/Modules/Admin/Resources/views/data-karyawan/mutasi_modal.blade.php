@@ -1,38 +1,42 @@
 <form action="{{ route('admin.data-karyawan.store-mutasi', $karyawan->id) }}" method="POST" id="form-mutasi" class="d-flex flex-column w-100 h-100">
     @csrf
+    <input type="hidden" name="tipe_jabatan" value="struktural">
     <div class="modal-header bg-primary">
-        <h5 class="modal-title text-white">Mutasi / Pindah Jabatan</h5>
+        <h5 class="modal-title text-white"><i class="fas fa-exchange-alt mr-2"></i> Mutasi / Serah Terima Jabatan Struktural</h5>
         <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
             <span aria-hidden="true">&times;</span>
         </button>
     </div>
     <div class="modal-body p-4">
-        <div class="alert alert-info shadow-sm">
-            Pegawai yang akan dimutasi: <strong class="text-uppercase">{{ $karyawan->nama }}</strong>
+        <div class="alert alert-info shadow-sm d-flex align-items-center mb-4">
+            <div class="mr-3">
+                <i class="fas fa-user-tie fa-2x text-info"></i>
+            </div>
+            <div>
+                <small class="text-muted d-block text-uppercase font-weight-bold">Pegawai yang Diproses:</small>
+                <strong class="text-uppercase" style="font-size: 1.05rem;">{{ $karyawan->nama }}</strong>
+                <span class="text-muted d-block small">NIK: {{ $karyawan->nik }} | Tipe: {{ $karyawan->tipe_karyawan }}</span>
+            </div>
         </div>
 
-        {{-- STEP 1: Pilih Tipe Jabatan --}}
-        <h6 class="font-weight-bold text-primary mt-4 border-bottom pb-2">Langkah 1: Pilih Tipe Jabatan</h6>
-        <div class="form-group mt-3">
-            <label>Tipe Jabatan yang Dimutasi <span class="text-danger">*</span></label>
-            <select name="tipe_jabatan" id="tipe_jabatan" class="form-control" required>
-                <option value="">-- Pilih Tipe Jabatan --</option>
-                @if($karyawan->jabatanStrukturals->isNotEmpty())
-                    <option value="struktural">Jabatan Struktural</option>
-                @endif
-                @if($karyawan->jabatanFungsionals->isNotEmpty())
-                    <option value="fungsional">Jabatan Fungsional</option>
-                @endif
-            </select>
-        </div>
-
-        {{-- Info Jabatan Struktural --}}
-        <div id="info_struktural" class="info-jabatan-section d-none mb-4">
-            @if($karyawan->jabatanStrukturals->isNotEmpty())
-                <div class="card bg-light shadow-sm border-info p-3">
-                    <label class="text-info font-weight-bold mb-2"><i class="fas fa-hand-pointer mr-1"></i> Pilih Jabatan Struktural yang Dilepas <span class="text-danger">*</span></label>
-                    <select name="karyawan_jabatan_struktural_id" id="karyawan_jabatan_struktural_id" class="form-control select2" style="width: 100%;">
-                        <option value="">-- Pilih Jabatan Struktural --</option>
+        @if($karyawan->jabatanStrukturals->isEmpty())
+            <div class="alert alert-warning border-warning">
+                <i class="fas fa-exclamation-triangle mr-1"></i>
+                Pegawai ini saat ini belum memiliki <strong>Jabatan Struktural aktif</strong> untuk dilepas/diserah-terimakan. 
+                Anda dapat langsung menetapkan jabatan struktural baru di bawah ini.
+            </div>
+        @else
+            {{-- STEP 1: Pilih Jabatan Struktural yang Dilepas --}}
+            <h6 class="font-weight-bold text-primary border-bottom pb-2">
+                <span class="badge badge-primary mr-1">1</span> Pilih Jabatan Struktural yang Dilepas <span class="text-danger">*</span>
+            </h6>
+            <div class="card bg-light shadow-sm border-info p-3 mb-4 mt-3">
+                <div class="form-group mb-0">
+                    <label class="text-info font-weight-bold mb-2">
+                        <i class="fas fa-briefcase mr-1"></i> Jabatan Struktural Aktif Saat Ini
+                    </label>
+                    <select name="karyawan_jabatan_struktural_id" id="karyawan_jabatan_struktural_id" class="form-control select2" style="width: 100%;" required>
+                        <option value="">-- Pilih Jabatan yang Akan Dimutasi/Dilepas --</option>
                         @foreach($karyawan->jabatanStrukturals as $js)
                             @php
                                 $tglMulaiStr = \Carbon\Carbon::parse($js->tgl_mulai);
@@ -42,76 +46,46 @@
                                 $namaStr = $js->masterStruktural ? $js->masterStruktural->nama_jabatan : 'Unknown';
                             @endphp
                             <option value="{{ $js->id }}">
-                                {{ $namaStr }} (Menjabat: {{ $lamaBulanStr }} Bln | Sisa: {{ $sisaStr }} Bln)
+                                {{ $namaStr }} (Menjabat: {{ $lamaBulanStr }} Bln | Sisa Periode: {{ $sisaStr }} Bln)
                             </option>
                         @endforeach
                     </select>
                 </div>
-            @endif
-        </div>
-
-        {{-- Info Jabatan Fungsional --}}
-        <div id="info_fungsional" class="info-jabatan-section d-none mb-4">
-            @if($karyawan->jabatanFungsionals->isNotEmpty())
-                <div class="card bg-light shadow-sm border-info p-3">
-                    <label class="text-info font-weight-bold mb-2"><i class="fas fa-hand-pointer mr-1"></i> Pilih Jabatan Fungsional yang Dilepas <span class="text-danger">*</span></label>
-                    <select name="karyawan_jabatan_fungsional_id" id="karyawan_jabatan_fungsional_id" class="form-control select2" style="width: 100%;">
-                        <option value="">-- Pilih Jabatan Fungsional --</option>
-                        @foreach($karyawan->jabatanFungsionals as $jf)
-                            @php
-                                $tglMulaiFung = \Carbon\Carbon::parse($jf->tgl_mulai);
-                                $lamaBulanFung = $tglMulaiFung->diffInMonths(\Carbon\Carbon::now());
-                                $masterFung = $jf->masterFungsional->periode_jabatan ?? 0;
-                                $sisaFung = max(0, $masterFung - $lamaBulanFung);
-                                $namaFung = $jf->masterFungsional ? $jf->masterFungsional->nama_jabatan : 'Unknown';
-                            @endphp
-                            <option value="{{ $jf->id }}">
-                                {{ $namaFung }} (Menjabat: {{ $lamaBulanFung }} Bln | Sisa: {{ $sisaFung }} Bln)
-                            </option>
-                        @endforeach
-                    </select>
-                </div>
-            @endif
-        </div>
-
-        <div id="step_lanjutan" class="d-none">
-            {{-- STEP 2: Jabatan Baru --}}
-            <h6 class="font-weight-bold text-primary mt-4 border-bottom pb-2">Langkah 2: Jabatan Baru untuk Karyawan Saat Ini</h6>
-            <div class="form-group mt-3">
-                <label>Pilih Jabatan Baru <small class="text-muted">(Opsional)</small></label>
-                
-                <div id="wrapper_jabatan_baru_struktural" class="d-none">
-                    <select name="jabatan_baru_pegawai_lama_struktural" id="jab_baru_str" class="form-control select2" style="width: 100%;">
-                        <option value="">-- Kosongkan Jika Dicopot/Diberhentikan --</option>
-                        @foreach($listStruktural as $str)
-                            <option value="{{ $str->id }}">{{ $str->nama_jabatan }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                
-                <div id="wrapper_jabatan_baru_fungsional" class="d-none">
-                    <select name="jabatan_baru_pegawai_lama_fungsional" id="jab_baru_fung" class="form-control select2" style="width: 100%;">
-                        <option value="">-- Kosongkan Jika Dicopot/Diberhentikan --</option>
-                        @foreach($listFungsional as $fung)
-                            <option value="{{ $fung->id }}">{{ $fung->nama_jabatan }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <small class="form-text text-muted">Abaikan/kosongkan jika pegawai ini hanya dilepas jabatannya tanpa dipindah ke jabatan sejenis yang baru.</small>
             </div>
+        @endif
 
-            {{-- STEP 3: Nasib Jabatan Lama (Regenerasi) --}}
-            <h6 class="font-weight-bold text-primary mt-4 border-bottom pb-2">Langkah 3: Serah Terima Jabatan Lama</h6>
+        {{-- STEP 2: Jabatan Baru untuk Pegawai Ini --}}
+        <h6 class="font-weight-bold text-primary border-bottom pb-2 mt-4">
+            <span class="badge badge-primary mr-1">2</span> Jabatan Struktural Baru untuk Pegawai Ini <small class="text-muted font-weight-normal">(Opsional)</small>
+        </h6>
+        <div class="form-group mt-3">
+            <label>Pilih Jabatan Struktural Baru</label>
+            <select name="jabatan_baru_pegawai_lama" id="jab_baru_str" class="form-control select2" style="width: 100%;">
+                <option value="">-- Kosongkan jika Pegawai Selesai Menjabat / Dicopot --</option>
+                @foreach($listStruktural as $str)
+                    <option value="{{ $str->id }}">{{ $str->nama_jabatan }}</option>
+                @endforeach
+            </select>
+            <small class="form-text text-muted">Abaikan/kosongkan jika pegawai ini hanya dilepas jabatannya tanpa dipindah ke jabatan struktural lain.</small>
+        </div>
+
+        @if($karyawan->jabatanStrukturals->isNotEmpty())
+            {{-- STEP 3: Nasib Jabatan Lama (Regenerasi / Serah Terima) --}}
+            <h6 class="font-weight-bold text-primary border-bottom pb-2 mt-4">
+                <span class="badge badge-primary mr-1">3</span> Serah Terima Jabatan Lama ke Pegawai Lain
+            </h6>
             <div class="form-group mt-3">
                 <div class="custom-control custom-switch">
                     <input type="checkbox" class="custom-control-input" id="toggle_serah_terima">
-                    <label class="custom-control-label" for="toggle_serah_terima">Serahkan jabatan lama ini ke orang lain?</label>
+                    <label class="custom-control-label font-weight-bold text-dark" for="toggle_serah_terima">
+                        Serahkan jabatan lama ini kepada pegawai pengganti?
+                    </label>
                 </div>
             </div>
 
-            <div id="section_serah_terima" class="d-none p-3 mb-3" style="background-color: #f8f9fa; border-radius: 8px; border: 1px solid #e9ecef;">
+            <div id="section_serah_terima" class="d-none p-3 mb-3 shadow-sm" style="background-color: #f0f7f8; border-radius: 8px; border: 1px solid #b2dfdb;">
                 <div class="form-group">
-                    <label>Pilih Karyawan Penerima (Pengganti) <span class="text-danger">*</span></label>
+                    <label class="font-weight-bold text-dark">Pilih Pegawai Pengganti (Penerima) <span class="text-danger">*</span></label>
                     <select name="pegawai_pengganti_id" id="pegawai_pengganti_id" class="form-control select2" style="width: 100%;">
                         <option value="">-- Pilih Pegawai Pengganti --</option>
                         @foreach($listKaryawan as $kry)
@@ -121,31 +95,35 @@
                 </div>
                 
                 <div class="form-group mb-0 mt-3">
-                    <label>Opsi Masa Jabatan Penerima <span class="text-danger">*</span></label>
+                    <label class="font-weight-bold text-dark">Opsi Masa Jabatan Penerima <span class="text-danger">*</span></label>
                     <div>
                         <div class="custom-control custom-radio custom-control-inline">
                             <input type="radio" id="opsi_lanjutkan" name="opsi_pengganti" class="custom-control-input" value="lanjutkan">
-                            <label class="custom-control-label" for="opsi_lanjutkan">Lanjutkan Sisa Masa Jabatan</label>
+                            <label class="custom-control-label" for="opsi_lanjutkan">Lanjutkan Sisa Masa Jabatan Pejabat Lama</label>
                         </div>
                         <div class="custom-control custom-radio custom-control-inline">
                             <input type="radio" id="opsi_baru" name="opsi_pengganti" class="custom-control-input" value="periode_baru">
-                            <label class="custom-control-label" for="opsi_baru">Mulai Periode Baru</label>
+                            <label class="custom-control-label" for="opsi_baru">Mulai Periode Masa Jabatan Penuh Baru</label>
                         </div>
                     </div>
                 </div>
             </div>
+        @endif
 
-            {{-- STEP 4: Keterangan --}}
-            <h6 class="font-weight-bold text-primary mt-4 border-bottom pb-2">Langkah 4: Penyelesaian</h6>
-            <div class="form-group mt-3">
-                <label>Keterangan Mutasi <small class="text-muted">(Opsional, untuk riwayat)</small></label>
-                <textarea name="keterangan" class="form-control" rows="2" placeholder="Contoh: Mutasi rutin, atau serah terima jabatan ke pejabat baru."></textarea>
-            </div>
+        {{-- STEP 4: Keterangan Mutasi --}}
+        <h6 class="font-weight-bold text-primary border-bottom pb-2 mt-4">
+            <span class="badge badge-primary mr-1">4</span> Keterangan & Catatan Mutasi
+        </h6>
+        <div class="form-group mt-3 mb-0">
+            <label>Keterangan Mutasi <small class="text-muted">(Dicatat dalam Riwayat Jabatan)</small></label>
+            <textarea name="keterangan" class="form-control" rows="2" placeholder="Contoh: Mutasi berkala pimpinan unit, serah terima SK Rektor, dll."></textarea>
         </div>
     </div>
     <div class="modal-footer bg-light">
         <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
-        <button type="submit" class="btn btn-primary d-none" id="btn-submit-mutasi"><i class="fas fa-save mr-1"></i> Proses Mutasi</button>
+        <button type="submit" class="btn btn-primary" id="btn-submit-mutasi">
+            <i class="fas fa-save mr-1"></i> Proses Mutasi
+        </button>
     </div>
 </form>
 
@@ -158,40 +136,6 @@
                 width: '100%'
             });
         }
-
-        let jabatanLamaText = '';
-
-        // Tipe Jabatan On Change
-        $('#tipe_jabatan').on('change', function() {
-            let val = $(this).val();
-            
-            // Hide all first
-            $('.info-jabatan-section').addClass('d-none');
-            $('#wrapper_jabatan_baru_struktural').addClass('d-none');
-            $('#wrapper_jabatan_baru_fungsional').addClass('d-none');
-            $('#step_lanjutan').addClass('d-none');
-            $('#btn-submit-mutasi').addClass('d-none');
-            
-            // Reset attributes
-            $('#jab_baru_str').attr('name', '');
-            $('#jab_baru_fung').attr('name', '');
-
-            if (val === 'struktural') {
-                $('#info_struktural').removeClass('d-none');
-                $('#wrapper_jabatan_baru_struktural').removeClass('d-none');
-                $('#jab_baru_str').attr('name', 'jabatan_baru_pegawai_lama');
-                $('#step_lanjutan').removeClass('d-none');
-                $('#btn-submit-mutasi').removeClass('d-none');
-                jabatanLamaText = 'Jabatan Struktural';
-            } else if (val === 'fungsional') {
-                $('#info_fungsional').removeClass('d-none');
-                $('#wrapper_jabatan_baru_fungsional').removeClass('d-none');
-                $('#jab_baru_fung').attr('name', 'jabatan_baru_pegawai_lama');
-                $('#step_lanjutan').removeClass('d-none');
-                $('#btn-submit-mutasi').removeClass('d-none');
-                jabatanLamaText = 'Jabatan Fungsional';
-            }
-        });
 
         // Toggle Serah Terima
         $('#toggle_serah_terima').on('change', function() {
@@ -212,28 +156,32 @@
             e.preventDefault();
             let form = this;
 
-            // Simple validation
-            if (!$('#tipe_jabatan').val()) {
-                Swal.fire('Peringatan', 'Silakan pilih Tipe Jabatan.', 'warning');
+            let hasStruktural = {{ $karyawan->jabatanStrukturals->isNotEmpty() ? 'true' : 'false' }};
+            if (hasStruktural && !$('#karyawan_jabatan_struktural_id').val()) {
+                Swal.fire('Peringatan', 'Silakan pilih Jabatan Struktural yang akan dimutasi/dilepas.', 'warning');
                 return false;
             }
 
             let serahTerima = $('#toggle_serah_terima').is(':checked');
-            let txtConfirm = `Anda akan melepas <b>${jabatanLamaText}</b> dari pegawai ini. Data riwayat jabatan akan dicatat ke database.`;
+            let txtConfirm = 'Anda akan memproses mutasi jabatan struktural untuk pegawai ini.';
             
             if(serahTerima) {
                 let namaPengganti = $('#pegawai_pengganti_id option:selected').text();
-                txtConfirm += `<br><br>Jabatan lamanya akan langsung diberikan kepada: <br><b class="text-primary">${namaPengganti}</b>.`;
+                if(!$('#pegawai_pengganti_id').val() || !$('input[name="opsi_pengganti"]:checked').val()) {
+                    Swal.fire('Peringatan', 'Silakan lengkapi data pegawai pengganti dan opsi masa jabatannya.', 'warning');
+                    return false;
+                }
+                txtConfirm += `<br><br>Jabatan struktural lama akan langsung diserah-terimakan kepada:<br><strong class="text-primary">${namaPengganti}</strong>.`;
             }
 
-            txtConfirm += `<br><br>Apakah Anda yakin form sudah diisi dengan benar? Tindakan ini tidak bisa dibatalkan secara otomatis!`;
+            txtConfirm += `<br><br>Apakah Anda yakin form sudah diisi dengan benar?`;
 
             Swal.fire({
-                title: 'Konfirmasi Transaksi Mutasi',
+                title: 'Konfirmasi Mutasi Jabatan',
                 html: txtConfirm,
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#3085d6',
+                confirmButtonColor: '#094b54',
                 cancelButtonColor: '#d33',
                 confirmButtonText: '<i class="fas fa-check"></i> Ya, Proses Mutasi!',
                 cancelButtonText: 'Batal'
@@ -248,19 +196,28 @@
                         type: 'POST',
                         data: $(form).serialize(),
                         onSuccess: function(res) {
-                            btnSubmit.html(originalBtnText).prop('disabled', false);
-                            $('#modal-edit').modal('hide');
-                            // Reload table in index
-                            if($.fn.DataTable.isDataTable('#table-karyawan')){
-                                $('#table-karyawan').DataTable().ajax.reload(null, false);
+                            if (res.status === 'success') {
+                                Swal.fire({
+                                    title: 'Berhasil!',
+                                    text: res.message || 'Mutasi jabatan berhasil diproses.',
+                                    icon: 'success'
+                                }).then(() => {
+                                    $('#modal-edit').modal('hide');
+                                    if (typeof window.LaravelDataTables !== 'undefined' && window.LaravelDataTables["table-karyawan"]) {
+                                        window.LaravelDataTables["table-karyawan"].ajax.reload(null, false);
+                                    } else {
+                                        location.reload();
+                                    }
+                                });
                             } else {
-                                // as a fallback if the table id is different, use the closest datatable
-                                $('.dataTable').DataTable().ajax.reload(null, false);
+                                Swal.fire('Gagal!', res.message || 'Terjadi kesalahan.', 'error');
+                                btnSubmit.html(originalBtnText).prop('disabled', false);
                             }
                         },
-                        onError: function(xhr) {
+                        onError: function(err) {
+                            let msg = (err.responseJSON && err.responseJSON.message) ? err.responseJSON.message : 'Terjadi kegagalan komunikasi sistem.';
+                            Swal.fire('Kesalahan Server!', msg, 'error');
                             btnSubmit.html(originalBtnText).prop('disabled', false);
-                            // Notifikasi error sudah ditangani pikdiAjax
                         }
                     });
                 }

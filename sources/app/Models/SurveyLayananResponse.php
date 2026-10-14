@@ -17,6 +17,10 @@ class SurveyLayananResponse extends Model
 
     protected $guarded = ['id'];
 
+    protected $casts = [
+        'jawaban_detail' => 'array',
+    ];
+
     public function periode()
     {
         return $this->belongsTo(MasterPeriodeSurvey::class, 'periode_id', 'id');

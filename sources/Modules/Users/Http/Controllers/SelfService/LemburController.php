@@ -22,6 +22,7 @@ use App\Models\User;
 use App\Traits\ApiResponseTrait;
 use App\Http\Controllers\MiddlewareController;
 use App\Notifications\LemburDiajukanNotification;
+use App\Services\OvertimeCalculationService;
 
 class LemburController extends MiddlewareController
 {
@@ -76,17 +77,41 @@ class LemburController extends MiddlewareController
         }
 
         $menuData = MenuSidebar::where('route', 'users.lembur.index')->first();
+        $defaultKategori = OvertimeCalculationService::detectCategory($profile);
         $data = [
-            'title'      => 'Lembur Karyawan',
-            'menu'       => 'dashboard',
-            'mlembur'    => $mlembur,
-            'profile'    => $profile,
-            'karyawans'  => $listSdm,
-            'namaAtasan' => $namaAtasan,
-            'menuIcon'   => $menuData->icon ?? 'fas fa-clock',
+            'title'           => 'Lembur Karyawan',
+            'menu'            => 'dashboard',
+            'mlembur'         => $mlembur,
+            'profile'         => $profile,
+            'defaultKategori' => $defaultKategori,
+            'karyawans'       => $listSdm,
+            'namaAtasan'      => $namaAtasan,
+            'menuIcon'        => $menuData->icon ?? 'fas fa-clock',
         ];
 
         return view('users::lembur.index', $data);
+    }
+
+    /**
+     * AJAX hitung kalkulasi estimasi durasi dan rupiah lembur secara realtime
+     */
+    public function hitungEstimasi(Request $req)
+    {
+        $profile = $this->getCurrentProfile();
+        $category = $req->kategori_lembur ?: OvertimeCalculationService::detectCategory($profile);
+        $shift = $req->jenis_shift;
+        $isHolidayForce = $req->id_mlembur == 2 ? true : null;
+
+        $res = OvertimeCalculationService::calculateAll(
+            $profile,
+            $req->tanggal1,
+            $req->tanggal2,
+            $category,
+            $shift,
+            $isHolidayForce
+        );
+
+        return $this->sendSuccess('Estimasi berhasil dihitung.', $res);
     }
 
     public function store(Request $req)
@@ -136,18 +161,36 @@ class LemburController extends MiddlewareController
                 return $this->sendError('Unit Anda (atau Unit Induk) belum memiliki Kepala Unit. Silakan hubungi SDM.');
             }
 
+            $category = $req->kategori_lembur ?: OvertimeCalculationService::detectCategory($profile);
+            $shift = $req->jenis_shift;
+            $isHolidayForce = $req->id_mlembur == 2 ? true : null;
+
+            $calc = OvertimeCalculationService::calculateAll(
+                $profile,
+                $req->tanggal1,
+                $req->tanggal2,
+                $category,
+                $shift,
+                $isHolidayForce
+            );
+
             $dataLembur = [
-                'id_mlembur'      => $req->id_mlembur,
-                'id_user'         => $profile->id,
-                'tanggalmulai'    => $req->tanggal1,
-                'tanggalselesai'  => $req->tanggal2,
-                'keterangan'      => $req->alasan,
-                'id_atasan'       => $id_atasan,
-                'id_hrd'          => $req->id_hrd,
-                'updated_by'      => $profile->nik ?? Auth::id(),
-                'statusatasan'    => 'waiting',
-                'statushrd'       => 'waiting',
-                'created_by'      => $profile->nik ?? Auth::id()
+                'id_mlembur'         => $req->id_mlembur,
+                'kategori_lembur'    => $calc['kategori_lembur'],
+                'jenis_shift'        => $calc['jenis_shift'],
+                'durasi_efektif_jam' => $calc['durasi_efektif_jam'],
+                'koefisien_pengali'  => $calc['koefisien_pengali'],
+                'nominal_estimasi'   => $calc['nominal_estimasi'],
+                'id_user'            => $profile->id,
+                'tanggalmulai'       => $req->tanggal1,
+                'tanggalselesai'     => $req->tanggal2,
+                'keterangan'         => $req->alasan,
+                'id_atasan'          => $id_atasan,
+                'id_hrd'             => $req->id_hrd,
+                'updated_by'         => $profile->nik ?? Auth::id(),
+                'statusatasan'       => 'waiting',
+                'statushrd'          => 'waiting',
+                'created_by'         => $profile->nik ?? Auth::id()
             ];
 
             if ($req->hasFile('bukti_kegiatan')) {
@@ -235,16 +278,34 @@ class LemburController extends MiddlewareController
                  return $this->sendError('Profil karyawan tidak ditemukan.', null, 422);
             }
 
+            $category = $req->kategori_lembur ?: OvertimeCalculationService::detectCategory($profile);
+            $shift = $req->jenis_shift;
+            $isHolidayForce = $req->id_mlembur == 2 ? true : null;
+
+            $calc = OvertimeCalculationService::calculateAll(
+                $profile,
+                $req->tanggal1,
+                $req->tanggal2,
+                $category,
+                $shift,
+                $isHolidayForce
+            );
+
             $dataLembur = [
-                'id_mlembur'      => $req->id_mlembur,
-                'tanggalmulai'    => $req->tanggal1,
-                'tanggalselesai'  => $req->tanggal2,
-                'keterangan'      => $req->alasan,
-                'id_atasan'       => $req->id_atasan,
-                'id_hrd'          => $req->id_hrd,
-                'statusatasan'    => 'waiting',
-                'statushrd'       => 'waiting',
-                'updated_by'      => $profile->nik ?? Auth::id()
+                'id_mlembur'         => $req->id_mlembur,
+                'kategori_lembur'    => $calc['kategori_lembur'],
+                'jenis_shift'        => $calc['jenis_shift'],
+                'durasi_efektif_jam' => $calc['durasi_efektif_jam'],
+                'koefisien_pengali'  => $calc['koefisien_pengali'],
+                'nominal_estimasi'   => $calc['nominal_estimasi'],
+                'tanggalmulai'       => $req->tanggal1,
+                'tanggalselesai'     => $req->tanggal2,
+                'keterangan'         => $req->alasan,
+                'id_atasan'          => $req->id_atasan,
+                'id_hrd'             => $req->id_hrd,
+                'statusatasan'       => 'waiting',
+                'statushrd'          => 'waiting',
+                'updated_by'         => $profile->nik ?? Auth::id()
             ];
 
             $lembur = LemburKaryawan::where('id', $myid)
@@ -326,10 +387,18 @@ class LemburController extends MiddlewareController
 
         $profile = $this->getCurrentProfile();
         $profileId = $profile ? $profile->id : null;
+        $userId = Auth::id();
 
         // Using Eager Loading to avoid N+1 issues
         $data = LemburKaryawan::with(['masterLembur', 'atasan', 'hrd'])
-            ->where('id_user', $profileId)
+            ->where(function ($q) use ($profileId, $userId) {
+                if ($profileId) {
+                    $q->where('id_user', $profileId);
+                }
+                if ($userId) {
+                    $q->orWhere('id_user', $userId);
+                }
+            })
             ->where('is_active', '1')
             ->orderByDesc('created_at')
             ->get();
@@ -345,10 +414,10 @@ class LemburController extends MiddlewareController
                 return $mulai . ' - ' . $selesai;
             })
             ->addColumn('durasi', function ($row) {
-                $start = Carbon::parse($row->tanggalmulai);
-                $end   = Carbon::parse($row->tanggalselesai);
-                $diffInHours = $start->floatDiffInHours($end);
-                return round($diffInHours, 1) . ' Jam';
+                $durasiDiakui = $row->durasi_efektif_jam !== null ? (float) $row->durasi_efektif_jam : $row->total_jam;
+                $kategoriBadge = '<span class="badge badge-light border text-muted ml-1" style="font-size:0.7rem;">' . e($row->kategori_label) . '</span>';
+                $nominalText = $row->nominal_estimasi > 0 ? '<small class="text-success d-block font-weight-bold">Est: Rp ' . number_format($row->nominal_estimasi, 0, ',', '.') . '</small>' : '';
+                return '<strong>' . round($durasiDiakui, 1) . ' Jam</strong> ' . $kategoriBadge . $nominalText;
             })
             ->addColumn('status', function ($row) {
                 if ($row->statusatasan == 'draft') return '<span class="badge badge-secondary">Draft</span>';
@@ -387,7 +456,7 @@ class LemburController extends MiddlewareController
 
                 return str_replace('</div>', $tarikBtn . $detailBtn . '</div>', $btn);
             })
-            ->rawColumns(['status', 'action'])
+            ->rawColumns(['durasi', 'status', 'action'])
             ->make(true);
     }
 

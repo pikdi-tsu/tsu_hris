@@ -11,6 +11,7 @@ use App\Models\MasterShiftDetail;
 use App\Models\CutiKaryawan;
 use App\Models\IzinKaryawan;
 use App\Models\DataJadwalPiket;
+use App\Models\SuratTugas;
 use Modules\Admin\Entities\MasterHariLibur;
 
 class PresensiCalculationService
@@ -450,6 +451,19 @@ class PresensiCalculationService
             })
             ->get();
 
+        // Preload Surat Tugas yang disetujui untuk karyawan ini pada periode terkait
+        $suratTugasList = SuratTugas::where('data_dosen_tendik_id', $karyawan->id)
+            ->where('status', 'Disetujui')
+            ->where(function ($q) use ($startDate, $endDate) {
+                $q->whereBetween('tanggal_mulai', [$startDate, $endDate])
+                  ->orWhereBetween('tanggal_selesai', [$startDate, $endDate])
+                  ->orWhere(function ($sub) use ($startDate, $endDate) {
+                      $sub->where('tanggal_mulai', '<=', $startDate)
+                          ->where('tanggal_selesai', '>=', $endDate);
+                  });
+            })
+            ->get();
+
         // Preload Master Hari Libur
         $hariLiburs = MasterHariLibur::whereBetween('tanggal', [$startDate, $endDate])
             ->where('isactive', 1)
@@ -462,6 +476,7 @@ class PresensiCalculationService
         $logs = [];
 
         $totalValid = 0;
+        $totalDinasLuar = 0;
         $totalCuti = 0;
         $totalIzin = 0;
         $totalAlpha = 0;
@@ -476,6 +491,13 @@ class PresensiCalculationService
             // Cek jadwal piket Sabtu
             $piketItem = ($dayOfWeek === 6) ? $pikets->get($tglStr) : null;
 
+            // Cek apakah ada Surat Tugas aktif pada tanggal ini
+            $suratTugasItem = $suratTugasList->first(function ($st) use ($tglStr) {
+                $tMulai = Carbon::parse($st->tanggal_mulai)->format('Y-m-d');
+                $tSelesai = Carbon::parse($st->tanggal_selesai)->format('Y-m-d');
+                return $tglStr >= $tMulai && $tglStr <= $tSelesai;
+            });
+
             // Cek apakah ada scan
             $absensi = $absensis->get($tglStr);
             $hasScan = $absensi && (!empty($absensi->scan_1) || !empty($absensi->scan_2) || !empty($absensi->scan_3) || !empty($absensi->scan_4));
@@ -487,7 +509,16 @@ class PresensiCalculationService
                 $calc = self::calculateRecord($absensi, $dayShift);
                 $isValid = $calc['akumulasi_validasi'] > 0;
 
-                if ($isValid) {
+                if ($suratTugasItem) {
+                    // Jika ada scan dan terdapat Surat Tugas resmi, diakui penuh sebagai Dinas Luar
+                    $totalValid++;
+                    $totalDinasLuar++;
+                    $statusType = 'DINAS_LUAR';
+                    $statusLabel = 'DL (Dinas Luar)';
+                    $badgeClass = 'badge-info';
+                    $calc['akumulasi_validasi'] = 1.0;
+                    $calc['keterangan_validasi'] = 'Dinas Luar: ' . $suratTugasItem->keperluan . ' (No. ' . $suratTugasItem->nomor_surat . ')';
+                } elseif ($isValid) {
                     $totalValid++;
                     if ($piketItem) {
                         $totalPiket++;
@@ -576,6 +607,34 @@ class PresensiCalculationService
             }
 
             // Jika TIDAK ADA SCAN:
+            // 0. Cek Surat Tugas / Dinas Luar Resmi Terlebih Dahulu (Tugas Luar Kampus diakui kehadiran penuh)
+            if ($suratTugasItem) {
+                $totalValid++;
+                $totalDinasLuar++;
+                $logs[] = [
+                    'tanggal' => $tglStr,
+                    'tanggal_formatted' => $date->translatedFormat('l, d F Y'),
+                    'hari' => $date->translatedFormat('l'),
+                    'scan_1' => '-',
+                    'scan_2' => '-',
+                    'scan_3' => '-',
+                    'scan_4' => '-',
+                    'scan_1_red' => false,
+                    'scan_2_red' => false,
+                    'scan_3_red' => false,
+                    'scan_4_red' => false,
+                    'is_late_in' => false,
+                    'is_under_duration' => false,
+                    'durasi' => '-',
+                    'akumulasi' => 1.0,
+                    'status_type' => 'DINAS_LUAR',
+                    'status_label' => 'DL (Dinas Luar)',
+                    'badge_class' => 'badge-info',
+                    'keterangan' => 'Dinas Luar: ' . $suratTugasItem->keperluan . ' (No. ' . $suratTugasItem->nomor_surat . ')',
+                ];
+                continue;
+            }
+
             // 1. Cek Hari Sabtu:
             if ($dayOfWeek === 6) {
                 // Jika Karyawan TERJADWAL PIKET tapi TIDAK SCAN:
@@ -880,6 +939,7 @@ class PresensiCalculationService
             'summary' => [
                 'total_hari' => count($logs),
                 'total_valid' => $totalValid,
+                'total_dinas_luar' => $totalDinasLuar,
                 'total_piket' => $totalPiket,
                 'total_cuti' => $totalCuti,
                 'total_izin' => $totalIzin,

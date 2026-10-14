@@ -17,6 +17,11 @@ class SurveyPelatihanResponse extends Model
 
     protected $guarded = ['id'];
 
+    protected $casts = [
+        'jawaban_detail' => 'array',
+        'is_draft'       => 'boolean',
+    ];
+
     public function trainingPeserta()
     {
         return $this->belongsTo(TrainingPeserta::class, 'training_peserta_id', 'id');

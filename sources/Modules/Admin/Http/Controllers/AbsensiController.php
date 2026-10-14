@@ -681,6 +681,14 @@ class AbsensiController extends MiddlewareController
         }
     }
 
+    /**
+     * Cetak / Download Slip PDF Presensi
+     */
+    public function downloadslip(Request $request, $pin)
+    {
+        return app(RekapAbsensiController::class)->downloadslip($request, $pin);
+    }
+
     public function getBulan()
     {
         return [

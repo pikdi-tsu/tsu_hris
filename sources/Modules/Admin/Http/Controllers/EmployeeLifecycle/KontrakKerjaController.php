@@ -24,7 +24,7 @@ class KontrakKerjaController extends MiddlewareController
     }
 
     /**
-     * Halaman Utama Monitoring Kontrak Kerja (PKWT)
+     * Halaman Utama Status Hubungan Kerja (4 Jendela: PKL, Magang, PKWT, PKWTT)
      */
     public function index(Request $request)
     {
@@ -32,29 +32,37 @@ class KontrakKerjaController extends MiddlewareController
         $in30Days = Carbon::today()->addDays(30)->toDateString();
         $in60Days = Carbon::today()->addDays(60)->toDateString();
 
-        // 1. Total Kontrak Aktif
-        $totalAktif = PegawaiKontrak::where('status', 'aktif')->count();
+        // 1. Total PKL Aktif
+        $totalPkl = PegawaiKontrak::where('jenis_hubungan_kerja', 'pkl')->where('status', 'aktif')->count();
 
-        // 2. Kritis (≤ 30 hari atau sudah lewat tapi masih berstatus aktif)
-        $kritisCount = PegawaiKontrak::where('status', 'aktif')
+        // 2. Total Magang Aktif
+        $totalMagang = PegawaiKontrak::where('jenis_hubungan_kerja', 'magang')->where('status', 'aktif')->count();
+
+        // 3. Total PKWT Aktif & Kritis
+        $totalPkwt = PegawaiKontrak::where('jenis_hubungan_kerja', 'pkwt')->where('status', 'aktif')->count();
+        $kritisCount = PegawaiKontrak::where('jenis_hubungan_kerja', 'pkwt')
+            ->where('status', 'aktif')
             ->where('tgl_selesai', '<=', $in30Days)
             ->count();
-
-        // 3. Perhatian (31 - 60 hari ke depan)
-        $perhatianCount = PegawaiKontrak::where('status', 'aktif')
+        $perhatianCount = PegawaiKontrak::where('jenis_hubungan_kerja', 'pkwt')
+            ->where('status', 'aktif')
             ->whereBetween('tgl_selesai', [Carbon::today()->addDays(31)->toDateString(), $in60Days])
             ->count();
-
-        // 4. Riwayat Selesai / Diperpanjang
         $riwayatCount = PegawaiKontrak::whereIn('status', ['diperpanjang', 'selesai', 'diputus'])->count();
+
+        // 4. Total PKWTT (Pegawai Tetap)
+        $totalPkwtt = PegawaiKontrak::where('jenis_hubungan_kerja', 'pkwtt')->where('status', 'aktif')->count();
 
         $units = MasterUnit::orderBy('nama_unit')->get();
 
         return view('admin::employee-lifecycle.kontrak.index', [
-            'title'          => 'Monitoring Kontrak Kerja (PKWT)',
+            'title'          => 'Status Hubungan Kerja',
             'menu'           => 'kontrak-kerja',
             'menuIcon'       => 'fas fa-file-contract',
-            'totalAktif'     => $totalAktif,
+            'totalPkl'       => $totalPkl,
+            'totalMagang'    => $totalMagang,
+            'totalPkwt'      => $totalPkwt,
+            'totalPkwtt'     => $totalPkwtt,
             'kritisCount'    => $kritisCount,
             'perhatianCount' => $perhatianCount,
             'riwayatCount'   => $riwayatCount,
@@ -63,15 +71,21 @@ class KontrakKerjaController extends MiddlewareController
     }
 
     /**
-     * DataTables Kontrak Kerja
+     * DataTables Kontrak Kerja (4 Jendela: PKL, Magang, PKWT, PKWTT)
      */
     public function datatable(Request $request)
     {
+        $jenis = $request->get('jenis_hubungan_kerja', 'pkwt');
+        if (!in_array($jenis, ['pkl', 'magang', 'pkwt', 'pkwtt'])) {
+            $jenis = 'pkwt';
+        }
+
         $query = PegawaiKontrak::with(['pegawai.unit'])
+            ->where('jenis_hubungan_kerja', $jenis)
             ->select('pegawai_kontraks.*');
 
-        // Filter status tab
-        if ($request->filled('filter_status')) {
+        // Filter status tab untuk PKWT
+        if ($jenis === 'pkwt' && $request->filled('filter_status')) {
             $fStatus = $request->filter_status;
             if ($fStatus === 'kritis') {
                 $query->where('status', 'aktif')
@@ -84,6 +98,8 @@ class KontrakKerjaController extends MiddlewareController
             } elseif ($fStatus === 'riwayat') {
                 $query->whereIn('status', ['diperpanjang', 'selesai', 'diputus']);
             }
+        } elseif ($request->filled('status')) {
+            $query->where('status', $request->status);
         }
 
         // Filter unit
@@ -96,30 +112,77 @@ class KontrakKerjaController extends MiddlewareController
 
         return DataTables::of($query)
             ->addIndexColumn()
-            ->addColumn('pegawai_info', function ($row) {
+            ->addColumn('pegawai_info', function ($row) use ($jenis) {
                 $pegawai = $row->pegawai;
                 if (!$pegawai) {
-                    return '<span class="text-muted font-italic">Data Pegawai Tidak Ditemukan</span>';
+                    return '<span class="text-muted font-italic">Data Tidak Ditemukan</span>';
                 }
 
                 $namaLengkap = trim(($pegawai->gelar_depan ? $pegawai->gelar_depan . ' ' : '') . $pegawai->nama . ($pegawai->gelar_belakang ? ', ' . $pegawai->gelar_belakang : ''));
                 $unitNama = $pegawai->unit->nama_unit ?? '-';
                 $nik = $pegawai->nik ?? $pegawai->nip ?? '-';
                 $posisi = $row->posisi ?: ($pegawai->posisi ?? '-');
-                $tipeBadge = $pegawai->tipe_karyawan === 'Dosen'
-                    ? '<span class="badge badge-primary px-2 py-1">Dosen</span>'
-                    : '<span class="badge badge-info px-2 py-1">Tendik</span>';
+                
+                $tipeBadge = '';
+                if ($jenis === 'pkl') {
+                    $tipeBadge = '<span class="badge badge-warning px-2 py-1 text-dark font-weight-bold">Siswa / Mhs PKL</span>';
+                } elseif ($jenis === 'magang') {
+                    $tipeBadge = '<span class="badge badge-info px-2 py-1 font-weight-bold">Peserta Magang</span>';
+                } elseif ($jenis === 'pkwtt') {
+                    $tipeBadge = '<span class="badge badge-success px-2 py-1 font-weight-bold">Pegawai Tetap</span>';
+                } else {
+                    $tipeBadge = $pegawai->tipe_karyawan === 'Dosen'
+                        ? '<span class="badge badge-primary px-2 py-1">Dosen PKWT</span>'
+                        : '<span class="badge badge-info px-2 py-1">Tendik PKWT</span>';
+                }
 
                 return '
                     <div class="d-flex align-items-center">
-                        <div class="mr-3" style="width: 40px; height: 40px; border-radius: 50%; background: #094b54; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+                        <div class="mr-3" style="width: 40px; height: 40px; border-radius: 50%; background: #094b54; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0;">
                             ' . strtoupper(substr($pegawai->nama, 0, 1)) . '
                         </div>
                         <div>
-                            <div class="font-weight-bold text-dark" style="font-size: 0.95rem;">' . e($namaLengkap) . ' ' . $tipeBadge . '</div>
-                            <div class="text-muted small">NIK: <span class="font-weight-bold">' . e($nik) . '</span> | Unit: ' . e($unitNama) . '</div>
-                            <div class="text-muted small">Posisi: <span class="text-dark font-weight-bold">' . e($posisi) . '</span></div>
+                            <div class="font-weight-bold text-dark" style="font-size: 0.92rem;">' . e($namaLengkap) . ' ' . $tipeBadge . '</div>
+                            <div class="text-muted small">NIK/ID: <span class="font-weight-bold">' . e($nik) . '</span> | Unit: ' . e($unitNama) . '</div>
+                            <div class="text-muted small">Posisi/Tugas: <span class="text-dark font-weight-bold">' . e($posisi) . '</span></div>
                         </div>
+                    </div>
+                ';
+            })
+            ->addColumn('institusi_info', function ($row) {
+                $asal = $row->institusi_asal ?: 'Internal / Umum';
+                $pembimbing = $row->pembimbing_lapangan ?: '-';
+                return '
+                    <div>
+                        <div class="font-weight-bold text-dark"><i class="fas fa-university text-muted mr-1"></i> ' . e($asal) . '</div>
+                        <div class="text-muted small">Pembimbing: <strong class="text-secondary">' . e($pembimbing) . '</strong></div>
+                    </div>
+                ';
+            })
+            ->addColumn('sk_tetap_info', function ($row) {
+                $noSk = e($row->no_sk_pengangkatan ?: ($row->no_kontrak ?: '-'));
+                $gapok = $row->gaji_pokok_disepakati ? 'Rp ' . number_format($row->gaji_pokok_disepakati, 0, ',', '.') : '-';
+                return '
+                    <div>
+                        <div class="font-weight-bold text-dark"><i class="fas fa-certificate text-success mr-1"></i> ' . $noSk . '</div>
+                        <div class="text-muted small">Gaji Pokok: <strong class="text-dark">' . $gapok . '</strong></div>
+                    </div>
+                ';
+            })
+            ->addColumn('masa_kerja', function ($row) {
+                $tmt = $row->tmt_tetap ?: $row->tgl_mulai;
+                if (!$tmt) return '<span class="text-muted">-</span>';
+                
+                $start = Carbon::parse($tmt);
+                $now = Carbon::now();
+                $diff = $start->diff($now);
+                $thn = $diff->y;
+                $bln = $diff->m;
+                
+                return '
+                    <div>
+                        <div class="font-weight-bold text-dark"><i class="fas fa-history text-muted mr-1"></i> ' . $thn . ' Thn ' . $bln . ' Bln</div>
+                        <div class="text-muted small">TMT: ' . $start->format('d M Y') . '</div>
                     </div>
                 ';
             })
@@ -138,7 +201,7 @@ class KontrakKerjaController extends MiddlewareController
             })
             ->addColumn('periode', function ($row) {
                 $mulai = $row->tgl_mulai ? Carbon::parse($row->tgl_mulai)->format('d M Y') : '-';
-                $selesai = $row->tgl_selesai ? Carbon::parse($row->tgl_selesai)->format('d M Y') : '-';
+                $selesai = $row->tgl_selesai ? Carbon::parse($row->tgl_selesai)->format('d M Y') : 'Seterusnya (Tetap)';
 
                 return '
                     <div>
@@ -147,7 +210,11 @@ class KontrakKerjaController extends MiddlewareController
                     </div>
                 ';
             })
-            ->addColumn('sisa_waktu', function ($row) {
+            ->addColumn('sisa_waktu', function ($row) use ($jenis) {
+                if ($jenis === 'pkwtt') {
+                    return '<span class="badge badge-success px-2 py-1"><i class="fas fa-infinity mr-1"></i> Pegawai Tetap</span>';
+                }
+
                 if ($row->status !== 'aktif') {
                     if ($row->status === 'diperpanjang') {
                         return '<span class="badge badge-secondary px-2 py-1"><i class="fas fa-history mr-1"></i> Diperpanjang</span>';
@@ -159,6 +226,10 @@ class KontrakKerjaController extends MiddlewareController
                 }
 
                 $sisa = $row->sisa_hari;
+                if ($sisa === null) {
+                    return '<span class="badge badge-light border">-</span>';
+                }
+
                 if ($sisa < 0) {
                     return '<span class="badge badge-danger px-2 py-1 font-weight-bold"><i class="fas fa-exclamation-triangle mr-1"></i> Lewat ' . abs($sisa) . ' Hari</span>';
                 } elseif ($sisa <= 30) {
@@ -176,28 +247,32 @@ class KontrakKerjaController extends MiddlewareController
                 }
                 return '<span class="text-muted small font-italic"><i class="fas fa-minus"></i></span>';
             })
-            ->addColumn('action', function ($row) {
+            ->addColumn('action', function ($row) use ($jenis) {
                 $btn = '<div class="btn-group" role="group">';
 
-                if ($row->status === 'aktif') {
+                if ($jenis === 'pkwt' && $row->status === 'aktif') {
                     $btn .= '<button type="button" class="btn btn-sm btn-outline-success btn-perpanjang" data-id="' . $row->id . '" title="Perpanjang Kontrak" style="border-radius: 6px 0 0 6px;"><i class="fas fa-calendar-plus mr-1"></i> Perpanjang</button>';
                     $btn .= '<button type="button" class="btn btn-sm btn-outline-warning btn-akhiri" data-id="' . $row->id . '" data-nama="' . e($row->pegawai->nama ?? 'Pegawai') . '" title="Selesaikan Kontrak"><i class="fas fa-flag-checkered mr-1"></i> Selesai</button>';
+                } elseif (($jenis === 'pkl' || $jenis === 'magang') && $row->status === 'aktif') {
+                    $btn .= '<button type="button" class="btn btn-sm btn-outline-warning btn-akhiri" data-id="' . $row->id . '" data-nama="' . e($row->pegawai->nama ?? 'Peserta') . '" title="Selesaikan Masa Magang/PKL"><i class="fas fa-check-double mr-1"></i> Selesai</button>';
                 }
 
-                $btn .= '<button type="button" class="btn btn-sm btn-outline-danger btn-delete" data-id="' . $row->id . '" title="Hapus Data" style="' . ($row->status !== 'aktif' ? 'border-radius: 6px;' : 'border-radius: 0 6px 6px 0;') . '"><i class="fas fa-trash"></i></button>';
+                $btn .= '<button type="button" class="btn btn-sm btn-outline-danger btn-delete" data-id="' . $row->id . '" title="Hapus Data" style="' . ($row->status !== 'aktif' || $jenis === 'pkwtt' ? 'border-radius: 6px;' : 'border-radius: 0 6px 6px 0;') . '"><i class="fas fa-trash"></i></button>';
                 $btn .= '</div>';
 
                 return $btn;
             })
-            ->rawColumns(['pegawai_info', 'kontrak_info', 'periode', 'sisa_waktu', 'dokumen', 'action'])
+            ->rawColumns(['pegawai_info', 'institusi_info', 'sk_tetap_info', 'masa_kerja', 'kontrak_info', 'periode', 'sisa_waktu', 'dokumen', 'action'])
             ->make(true);
     }
 
     /**
      * Modal Form Tambah Kontrak Baru
      */
-    public function modalAdd()
+    public function modalAdd(Request $request)
     {
+        $defaultJenis = $request->get('jenis', 'pkwt');
+
         $pegawais = DataDosenTendik::with([
                 'unit',
                 'jabatanFungsionals' => function ($q) {
@@ -237,22 +312,28 @@ class KontrakKerjaController extends MiddlewareController
         }
 
         return view('admin::employee-lifecycle.kontrak.modal_add', [
-            'pegawais' => $pegawais,
+            'pegawais'     => $pegawais,
+            'defaultJenis' => $defaultJenis,
         ]);
     }
 
     /**
-     * Simpan Data Kontrak Baru
+     * Simpan Data Status Hubungan Kerja Baru
      */
     public function store(Request $request)
     {
         $request->validate([
             'pegawai_id'            => 'required|string|exists:data_dosen_tendiks,id',
+            'jenis_hubungan_kerja'  => 'required|in:pkl,magang,pkwt,pkwtt',
             'no_kontrak'            => 'required|string|max:100',
-            'kontrak_ke'            => 'required|integer|min:1',
+            'kontrak_ke'            => 'nullable|integer|min:1',
             'tgl_mulai'             => 'required|date',
-            'tgl_selesai'           => 'required|date|after_or_equal:tgl_mulai',
+            'tgl_selesai'           => 'nullable|date',
             'posisi'                => 'nullable|string|max:150',
+            'institusi_asal'        => 'nullable|string|max:150',
+            'pembimbing_lapangan'   => 'nullable|string|max:150',
+            'no_sk_pengangkatan'    => 'nullable|string|max:100',
+            'tmt_tetap'             => 'nullable|date',
             'gaji_pokok_disepakati' => 'nullable|numeric|min:0',
             'dokumen_kontrak'       => 'nullable|file|mimes:pdf|max:5120',
             'keterangan'            => 'nullable|string',
@@ -262,11 +343,15 @@ class KontrakKerjaController extends MiddlewareController
             DB::beginTransaction();
 
             $pegawai = DataDosenTendik::findOrFail($request->pegawai_id);
+            $jenis = $request->jenis_hubungan_kerja;
 
-            // Hitung durasi bulan
-            $mulai = Carbon::parse($request->tgl_mulai);
-            $selesai = Carbon::parse($request->tgl_selesai);
-            $durasiBulan = max(1, $mulai->diffInMonths($selesai));
+            // Hitung durasi bulan jika tgl_selesai tersedia
+            $durasiBulan = 0;
+            if ($request->filled('tgl_selesai')) {
+                $mulai = Carbon::parse($request->tgl_mulai);
+                $selesai = Carbon::parse($request->tgl_selesai);
+                $durasiBulan = max(1, $mulai->diffInMonths($selesai));
+            }
 
             $filePath = null;
             if ($request->hasFile('dokumen_kontrak')) {
@@ -277,12 +362,17 @@ class KontrakKerjaController extends MiddlewareController
 
             PegawaiKontrak::create([
                 'pegawai_id'            => $pegawai->id,
+                'jenis_hubungan_kerja'  => $jenis,
                 'no_kontrak'            => $request->no_kontrak,
-                'kontrak_ke'            => $request->kontrak_ke,
+                'kontrak_ke'            => $request->kontrak_ke ?: 1,
                 'tgl_mulai'             => $request->tgl_mulai,
                 'tgl_selesai'           => $request->tgl_selesai,
                 'durasi_bulan'          => $durasiBulan,
                 'posisi'                => $request->posisi ?: $pegawai->posisi,
+                'institusi_asal'        => $request->institusi_asal,
+                'pembimbing_lapangan'   => $request->pembimbing_lapangan,
+                'no_sk_pengangkatan'    => $request->no_sk_pengangkatan ?: ($jenis === 'pkwtt' ? $request->no_kontrak : null),
+                'tmt_tetap'             => $request->tmt_tetap ?: ($jenis === 'pkwtt' ? $request->tgl_mulai : null),
                 'gaji_pokok_disepakati' => $request->gaji_pokok_disepakati,
                 'dokumen_kontrak'       => $filePath,
                 'status'                => 'aktif',
@@ -293,13 +383,13 @@ class KontrakKerjaController extends MiddlewareController
 
             return response()->json([
                 'status'  => 'success',
-                'message' => 'Kontrak kerja berhasil disimpan.',
+                'message' => 'Data status hubungan kerja berhasil disimpan.',
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
                 'status'  => 'error',
-                'message' => 'Gagal menyimpan kontrak: ' . $e->getMessage(),
+                'message' => 'Gagal menyimpan data: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -418,9 +508,10 @@ class KontrakKerjaController extends MiddlewareController
     /**
      * Akhiri Kontrak (Selesai Masa Tugas)
      */
-    public function akhiriKontrak(Request $request, $id)
+    public function akhiriKontrak(Request $request, $id = null)
     {
-        $kontrak = PegawaiKontrak::findOrFail($id);
+        $targetId = $id ?: $request->input('id');
+        $kontrak = PegawaiKontrak::findOrFail($targetId);
 
         $kontrak->update([
             'status'     => 'selesai',
@@ -436,9 +527,10 @@ class KontrakKerjaController extends MiddlewareController
     /**
      * Hapus Data Kontrak
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id = null)
     {
-        $kontrak = PegawaiKontrak::findOrFail($id);
+        $targetId = $id ?: $request->input('id');
+        $kontrak = PegawaiKontrak::findOrFail($targetId);
 
         if ($kontrak->dokumen_kontrak && Storage::disk('public')->exists($kontrak->dokumen_kontrak)) {
             Storage::disk('public')->delete($kontrak->dokumen_kontrak);

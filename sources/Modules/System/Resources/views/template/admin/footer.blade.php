@@ -298,6 +298,7 @@
                             toast: true,
                             position: 'top-end',
                             showConfirmButton: false,
+                              showCloseButton: false,
                             timer: notification.download_url || notification.error_detail ? 10000 : 5000,
                             timerProgressBar: true,
                             didOpen: (toast) => {

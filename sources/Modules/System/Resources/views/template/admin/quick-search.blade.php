@@ -31,10 +31,91 @@
     </div>
 </div>
 
+@php
+    $currentUser = auth()->user();
+    $serverAuthorizedMenus = [];
+
+    if ($currentUser) {
+        // 1. Menu Sistem Utama & Profil yang bisa diakses user login
+        $serverAuthorizedMenus[] = [
+            'title' => 'Dashboard',
+            'url' => route('admin.dashboard'),
+            'category' => 'Akses Cepat',
+            'icon' => 'fas fa-tachometer-alt',
+            'isActive' => request()->routeIs('admin.dashboard') || request()->is('admin/dashboard*')
+        ];
+
+        if (\Illuminate\Support\Facades\Route::has('users.profile.index')) {
+            $serverAuthorizedMenus[] = [
+                'title' => 'Profil Saya / Akun',
+                'url' => route('users.profile.index'),
+                'category' => 'Pengaturan Profil',
+                'icon' => 'fas fa-user-circle',
+                'isActive' => request()->routeIs('users.profile.*')
+            ];
+
+            $serverAuthorizedMenus[] = [
+                'title' => 'Ganti Password',
+                'url' => route('users.profile.index') . '#security',
+                'category' => 'Keamanan Akun',
+                'icon' => 'fas fa-key',
+                'isActive' => false
+            ];
+        }
+
+        if (\Illuminate\Support\Facades\Route::has('users.notifications.index')) {
+            $serverAuthorizedMenus[] = [
+                'title' => 'Kotak Masuk Notifikasi',
+                'url' => route('users.notifications.index'),
+                'category' => 'Pemberitahuan',
+                'icon' => 'fas fa-bell',
+                'isActive' => request()->routeIs('users.notifications.*')
+            ];
+        }
+
+        // 2. Query MenuSidebar dari Database dengan Pengecekan Spatie Permission
+        try {
+            $allDbMenus = \Modules\System\Models\MenuSidebar::with('parent')
+                ->whereNotNull('route')
+                ->where('route', '!=', '#')
+                ->where('route', '!=', '')
+                ->where(function($q) {
+                    $q->where('isactive', 1)->orWhereNull('isactive');
+                })
+                ->orderBy('order')
+                ->get();
+
+            foreach ($allDbMenus as $dbMenu) {
+                // INTEGRASI ROLE & PERMISSION (Spatie):
+                // Jika menu memiliki permission_name, pastikan user memiliki hak akses tersebut!
+                if (!empty($dbMenu->permission_name) && !$currentUser->can($dbMenu->permission_name)) {
+                    continue; // Lewati jika user tidak punya permission
+                }
+
+                if (\Illuminate\Support\Facades\Route::has($dbMenu->route)) {
+                    $category = ($dbMenu->parent && !empty($dbMenu->parent->name)) ? $dbMenu->parent->name : 'Menu Navigasi';
+                    $serverAuthorizedMenus[] = [
+                        'title' => $dbMenu->name,
+                        'url' => route($dbMenu->route),
+                        'category' => $category,
+                        'icon' => $dbMenu->icon ?: 'fas fa-circle-notch',
+                        'isActive' => request()->routeIs($dbMenu->route)
+                    ];
+                }
+            }
+        } catch (\Throwable $e) {
+            // Fallback gracefully jika database belum termigrasi
+        }
+    }
+@endphp
+
 <script>
 (function() {
+    // Menu Terotorisasi dari Server-Side RBAC
+    const serverAuthorizedMenus = @json($serverAuthorizedMenus);
+
     // Menu Index Cache & LocalStorage Key (Isolasi per User ID agar riwayat tidak tertukar antar user)
-    const RECENT_STORAGE_KEY = 'tsu_hris_recent_menus_{{ auth()->id() ?? 0 }}';
+    const RECENT_STORAGE_KEY = 'tsu_recent_menus_{{ auth()->id() ?? 0 }}';
     const MAX_RECENTS = 5;
 
     let tsuMenuItems = [];
@@ -215,11 +296,50 @@
         return null;
     }
 
-    // Index menu dari DOM Sidebar (Zero-Latency, Hak Akses RBAC Otomatis Terpenuhi)
+    // Index menu dari Server RBAC & DOM Sidebar (Zero-Latency, Terintegrasi Spatie RBAC)
     function indexSidebarMenus() {
         tsuMenuItems = [];
         let seenUrls = {};
 
+        // Helper untuk normalisasi URL (hilangkan trailing slash dan lowercase)
+        function normalizeUrl(url) {
+            if (!url) return '';
+            try {
+                let u = new URL(url, window.location.origin);
+                return u.pathname.replace(/\/+$/, '') || '/';
+            } catch (e) {
+                return url.replace(/\/+$/, '');
+            }
+        }
+
+        // 1. Masukkan menu terotorisasi dari Server-Side RBAC (Dashboard, Profil, Notifikasi, MenuSidebar)
+        if (Array.isArray(serverAuthorizedMenus)) {
+            serverAuthorizedMenus.forEach(function(item) {
+                if (!item || !item.url) return;
+                let norm = normalizeUrl(item.url);
+                if (seenUrls[norm]) return;
+                seenUrls[norm] = true;
+
+                let currentNorm = normalizeUrl(window.location.href);
+                let isActive = item.isActive || (norm === currentNorm);
+
+                let menuItem = {
+                    title: item.title,
+                    url: item.url,
+                    category: item.category || 'Menu Utama',
+                    icon: item.icon || 'fas fa-circle-notch',
+                    isActive: isActive
+                };
+
+                tsuMenuItems.push(menuItem);
+
+                if (isActive) {
+                    saveRecentMenu(menuItem);
+                }
+            });
+        }
+
+        // 2. Scrape menu dari DOM Sidebar (yang sudah difilter oleh Spatie RBAC di blade)
         $('.main-sidebar .nav-sidebar a.nav-link').each(function() {
             let $a = $(this);
             let href = $a.attr('href');
@@ -227,9 +347,9 @@
                 return; // Abaikan folder accordion / link kosong
             }
 
-            // Normalisasi URL
-            if (seenUrls[href]) return;
-            seenUrls[href] = true;
+            let norm = normalizeUrl(href);
+            if (seenUrls[norm]) return;
+            seenUrls[norm] = true;
 
             // Dapatkan judul menu (bersihkan spasi & teks badge/child icon)
             let $p = $a.find('p').clone();
@@ -519,9 +639,15 @@
         $resultsWrapper.html(html);
     }
 
-    // Inisialisasi saat DOM siap
-    $(document).ready(function() {
-        initQuickSearch();
-    });
+    // Inisialisasi saat DOM dan jQuery siap
+    if (typeof jQuery === 'undefined') {
+        document.addEventListener('DOMContentLoaded', function() {
+            if (typeof jQuery !== 'undefined') {
+                $(document).ready(initQuickSearch);
+            }
+        });
+    } else {
+        $(document).ready(initQuickSearch);
+    }
 })();
 </script>

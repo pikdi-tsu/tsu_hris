@@ -28,6 +28,7 @@
         toast: true,
         position: 'top-end',
         showConfirmButton: false,
+        showCloseButton: false,
         timer: 4000,
         timerProgressBar: true,
         didOpen: (toast) => {
@@ -151,6 +152,7 @@
                         allowEscapeKey: false,
                         allowOutsideClick: false,
                         showConfirmButton: false,
+        showCloseButton: false,
                         didOpen: () => {
                             Swal.showLoading();
                         }

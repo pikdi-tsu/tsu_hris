@@ -85,55 +85,74 @@
                 </div>
             </div>
 
-            <!-- Responsivitas & Keramahan -->
-            <div class="col-lg-3 col-sm-6 mb-3 mb-lg-0">
-                <div class="card shadow-sm border-0 h-100" style="border-radius: 12px;">
-                    <div class="card-body p-3">
-                        <p class="text-muted small mb-1 font-weight-bold">Ketanggapan & Responsivitas</p>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h4 class="font-weight-bold text-dark mb-0">{{ number_format($stats['avg_responsiveness'], 2) }} <small class="text-muted font-weight-normal">/ 5</small></h4>
-                            <span class="badge badge-info px-2 py-1 font-weight-normal">Layanan Cepat</span>
+            @if(!empty($stats['aspek_stats']) && count($stats['aspek_stats']) > 0)
+                @foreach(array_slice($stats['aspek_stats'], 0, 3) as $asStat)
+                    <div class="col-lg-3 col-sm-6 mb-3 mb-lg-0">
+                        <div class="card shadow-sm border-0 h-100" style="border-radius: 12px;">
+                            <div class="card-body p-3">
+                                <p class="text-muted small mb-1 font-weight-bold text-truncate" title="{{ $asStat['aspek']->nama_aspek }}">{{ $asStat['aspek']->nama_aspek }}</p>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <h4 class="font-weight-bold text-dark mb-0">{{ number_format($asStat['avg'], 2) }} <small class="text-muted font-weight-normal">/ 5</small></h4>
+                                    <span class="badge badge-info px-2 py-1 font-weight-normal">Skala 1-5</span>
+                                </div>
+                                <div class="progress mt-2" style="height: 6px; border-radius: 3px;">
+                                    <div class="progress-bar bg-info" role="progressbar" style="width: {{ ($asStat['avg'] / 5) * 100 }}%"></div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="progress mt-2" style="height: 6px; border-radius: 3px;">
-                            <div class="progress-bar bg-info" role="progressbar" style="width: {{ ($stats['avg_responsiveness'] / 5) * 100 }}%"></div>
+                    </div>
+                @endforeach
+            @else
+                <!-- Responsivitas & Keramahan -->
+                <div class="col-lg-3 col-sm-6 mb-3 mb-lg-0">
+                    <div class="card shadow-sm border-0 h-100" style="border-radius: 12px;">
+                        <div class="card-body p-3">
+                            <p class="text-muted small mb-1 font-weight-bold">Ketanggapan & Responsivitas</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h4 class="font-weight-bold text-dark mb-0">{{ number_format($stats['avg_responsiveness'], 2) }} <small class="text-muted font-weight-normal">/ 5</small></h4>
+                                <span class="badge badge-info px-2 py-1 font-weight-normal">Layanan Cepat</span>
+                            </div>
+                            <div class="progress mt-2" style="height: 6px; border-radius: 3px;">
+                                <div class="progress-bar bg-info" role="progressbar" style="width: {{ ($stats['avg_responsiveness'] / 5) * 100 }}%"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Keramahan Staf -->
-            <div class="col-lg-3 col-sm-6 mb-3 mb-sm-0">
-                <div class="card shadow-sm border-0 h-100" style="border-radius: 12px;">
-                    <div class="card-body p-3">
-                        <p class="text-muted small mb-1 font-weight-bold">Keramahan & Kesopanan Staf</p>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h4 class="font-weight-bold text-dark mb-0">{{ number_format($stats['avg_keramahan'], 2) }} <small class="text-muted font-weight-normal">/ 5</small></h4>
-                            <span class="badge badge-primary px-2 py-1 font-weight-normal">Santun & Solutif</span>
-                        </div>
-                        <div class="progress mt-2" style="height: 6px; border-radius: 3px;">
-                            <div class="progress-bar bg-primary" role="progressbar" style="width: {{ ($stats['avg_keramahan'] / 5) * 100 }}%"></div>
+                <!-- Keramahan Staf -->
+                <div class="col-lg-3 col-sm-6 mb-3 mb-sm-0">
+                    <div class="card shadow-sm border-0 h-100" style="border-radius: 12px;">
+                        <div class="card-body p-3">
+                            <p class="text-muted small mb-1 font-weight-bold">Keramahan & Kesopanan Staf</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h4 class="font-weight-bold text-dark mb-0">{{ number_format($stats['avg_keramahan'], 2) }} <small class="text-muted font-weight-normal">/ 5</small></h4>
+                                <span class="badge badge-primary px-2 py-1 font-weight-normal">Santun & Solutif</span>
+                            </div>
+                            <div class="progress mt-2" style="height: 6px; border-radius: 3px;">
+                                <div class="progress-bar bg-primary" role="progressbar" style="width: {{ ($stats['avg_keramahan'] / 5) * 100 }}%"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Fasilitas HRIS -->
-            <div class="col-lg-3 col-sm-6">
-                <div class="card shadow-sm border-0 h-100" style="border-radius: 12px;">
-                    <div class="card-body p-3">
-                        <p class="text-muted small mb-1 font-weight-bold">Kecepatan & Fasilitas HRIS</p>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <h4 class="font-weight-bold text-dark mb-0">
-                                {{ number_format(($stats['avg_kecepatan'] + $stats['avg_fasilitas']) / 2, 2) }} <small class="text-muted font-weight-normal">/ 5</small>
-                            </h4>
-                            <span class="badge badge-warning text-dark px-2 py-1 font-weight-normal">Sistem & SOP</span>
-                        </div>
-                        <div class="progress mt-2" style="height: 6px; border-radius: 3px;">
-                            <div class="progress-bar bg-warning" role="progressbar" style="width: {{ ((($stats['avg_kecepatan'] + $stats['avg_fasilitas']) / 2) / 5) * 100 }}%"></div>
+                <!-- Fasilitas HRIS -->
+                <div class="col-lg-3 col-sm-6">
+                    <div class="card shadow-sm border-0 h-100" style="border-radius: 12px;">
+                        <div class="card-body p-3">
+                            <p class="text-muted small mb-1 font-weight-bold">Kecepatan & Fasilitas HRIS</p>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h4 class="font-weight-bold text-dark mb-0">
+                                    {{ number_format(($stats['avg_kecepatan'] + $stats['avg_fasilitas']) / 2, 2) }} <small class="text-muted font-weight-normal">/ 5</small>
+                                </h4>
+                                <span class="badge badge-warning text-dark px-2 py-1 font-weight-normal">Sistem & SOP</span>
+                            </div>
+                            <div class="progress mt-2" style="height: 6px; border-radius: 3px;">
+                                <div class="progress-bar bg-warning" role="progressbar" style="width: {{ ((($stats['avg_kecepatan'] + $stats['avg_fasilitas']) / 2) / 5) * 100 }}%"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
+            @endif
         </div>
 
         <!-- Card Tabel Respon Karyawan -->
@@ -169,12 +188,18 @@
                         <thead class="thead-light">
                             <tr>
                                 <th style="width: 45px;" class="text-center">#</th>
-                                <th style="width: 260px;">Pegawai / Responden</th>
-                                <th style="width: 150px;" class="text-center">Waktu Isi</th>
-                                <th style="width: 100px;" class="text-center" title="Ketanggapan Petugas SDM">Responsivitas</th>
-                                <th style="width: 100px;" class="text-center" title="Keramahan & Kesopanan Staf SDM">Keramahan</th>
-                                <th style="width: 100px;" class="text-center" title="Kecepatan Proses Dokumen & Layanan">Kecepatan</th>
-                                <th style="width: 100px;" class="text-center" title="Kemudahan Akses Aplikasi HRIS">Fasilitas</th>
+                                <th style="width: 240px;">Pegawai / Responden</th>
+                                <th style="width: 140px;" class="text-center">Waktu Isi</th>
+                                @if(isset($aspekList) && $aspekList->count() > 0)
+                                    @foreach($aspekList as $asp)
+                                        <th style="min-width: 90px;" class="text-center" title="{{ $asp->nama_aspek }}">{{ $asp->nama_aspek }}</th>
+                                    @endforeach
+                                @else
+                                    <th style="width: 100px;" class="text-center" title="Ketanggapan Petugas SDM">Responsivitas</th>
+                                    <th style="width: 100px;" class="text-center" title="Keramahan & Kesopanan Staf SDM">Keramahan</th>
+                                    <th style="width: 100px;" class="text-center" title="Kecepatan Proses Dokumen & Layanan">Kecepatan</th>
+                                    <th style="width: 100px;" class="text-center" title="Kemudahan Akses Aplikasi HRIS">Fasilitas</th>
+                                @endif
                                 <th style="width: 110px;" class="text-center">Rata-rata</th>
                                 <th>Kritik, Masukan & Saran</th>
                             </tr>
@@ -182,7 +207,25 @@
                         <tbody>
                             @forelse($responses as $idx => $r)
                                 @php
-                                    $avgIndividu = ($r->skor_responsiveness + $r->skor_keramahan + $r->skor_kecepatan + $r->skor_fasilitas) / 4;
+                                    $detailScores = [];
+                                    if (!empty($r->jawaban_detail) && is_array($r->jawaban_detail)) {
+                                        foreach ($r->jawaban_detail as $jd) {
+                                            if (!empty($jd['aspek_id'])) $detailScores[$jd['aspek_id']] = (float)$jd['skor'];
+                                            if (!empty($jd['kode'])) $detailScores[$jd['kode']] = (float)$jd['skor'];
+                                        }
+                                    }
+                                    if (isset($aspekList) && $aspekList->count() > 0) {
+                                        $rowSum = 0;
+                                        $rowCount = 0;
+                                        foreach ($aspekList as $asp) {
+                                            $v = $detailScores[$asp->id] ?? ($detailScores[$asp->kode] ?? ($r->{'skor_' . $asp->kode} ?? 5));
+                                            $rowSum += $v;
+                                            $rowCount++;
+                                        }
+                                        $avgIndividu = $rowCount > 0 ? $rowSum / $rowCount : 0;
+                                    } else {
+                                        $avgIndividu = ($r->skor_responsiveness + $r->skor_keramahan + $r->skor_kecepatan + $r->skor_fasilitas) / 4;
+                                    }
                                 @endphp
                                 <tr>
                                     <td class="text-center align-middle font-weight-bold text-muted">
@@ -200,26 +243,39 @@
                                     <td class="text-center align-middle small text-muted">
                                         {{ $r->created_at ? $r->created_at->translatedFormat('d M Y, H:i') : '-' }}
                                     </td>
-                                    <td class="text-center align-middle">
-                                        <span class="badge badge-{{ $r->skor_responsiveness >= 4 ? 'success' : ($r->skor_responsiveness >= 3 ? 'warning' : 'danger') }} px-2 py-1">
-                                            {{ $r->skor_responsiveness }} / 5
-                                        </span>
-                                    </td>
-                                    <td class="text-center align-middle">
-                                        <span class="badge badge-{{ $r->skor_keramahan >= 4 ? 'success' : ($r->skor_keramahan >= 3 ? 'warning' : 'danger') }} px-2 py-1">
-                                            {{ $r->skor_keramahan }} / 5
-                                        </span>
-                                    </td>
-                                    <td class="text-center align-middle">
-                                        <span class="badge badge-{{ $r->skor_kecepatan >= 4 ? 'success' : ($r->skor_kecepatan >= 3 ? 'warning' : 'danger') }} px-2 py-1">
-                                            {{ $r->skor_kecepatan }} / 5
-                                        </span>
-                                    </td>
-                                    <td class="text-center align-middle">
-                                        <span class="badge badge-{{ $r->skor_fasilitas >= 4 ? 'success' : ($r->skor_fasilitas >= 3 ? 'warning' : 'danger') }} px-2 py-1">
-                                            {{ $r->skor_fasilitas }} / 5
-                                        </span>
-                                    </td>
+                                    @if(isset($aspekList) && $aspekList->count() > 0)
+                                        @foreach($aspekList as $asp)
+                                            @php
+                                                $v = $detailScores[$asp->id] ?? ($detailScores[$asp->kode] ?? ($r->{'skor_' . $asp->kode} ?? 5));
+                                            @endphp
+                                            <td class="text-center align-middle">
+                                                <span class="badge badge-{{ $v >= 4 ? 'success' : ($v >= 3 ? 'warning' : 'danger') }} px-2 py-1">
+                                                    {{ number_format($v, 0) }} / 5
+                                                </span>
+                                            </td>
+                                        @endforeach
+                                    @else
+                                        <td class="text-center align-middle">
+                                            <span class="badge badge-{{ $r->skor_responsiveness >= 4 ? 'success' : ($r->skor_responsiveness >= 3 ? 'warning' : 'danger') }} px-2 py-1">
+                                                {{ $r->skor_responsiveness }} / 5
+                                            </span>
+                                        </td>
+                                        <td class="text-center align-middle">
+                                            <span class="badge badge-{{ $r->skor_keramahan >= 4 ? 'success' : ($r->skor_keramahan >= 3 ? 'warning' : 'danger') }} px-2 py-1">
+                                                {{ $r->skor_keramahan }} / 5
+                                            </span>
+                                        </td>
+                                        <td class="text-center align-middle">
+                                            <span class="badge badge-{{ $r->skor_kecepatan >= 4 ? 'success' : ($r->skor_kecepatan >= 3 ? 'warning' : 'danger') }} px-2 py-1">
+                                                {{ $r->skor_kecepatan }} / 5
+                                            </span>
+                                        </td>
+                                        <td class="text-center align-middle">
+                                            <span class="badge badge-{{ $r->skor_fasilitas >= 4 ? 'success' : ($r->skor_fasilitas >= 3 ? 'warning' : 'danger') }} px-2 py-1">
+                                                {{ $r->skor_fasilitas }} / 5
+                                            </span>
+                                        </td>
+                                    @endif
                                     <td class="text-center align-middle">
                                         <div class="font-weight-bold text-dark">{{ number_format($avgIndividu, 1) }}</div>
                                         <div class="small text-warning">

@@ -8,6 +8,16 @@
         :breadcrumb="true"
     >
         <x-slot name="actions">
+            @php $pendingPerubahanCount = \App\Models\RiwayatPerubahanData::where('status', 'menunggu')->count(); @endphp
+            <a href="{{ route('admin.approval-perubahan-data.index') }}"
+                class="btn btn-warning btn-sm font-weight-bold shadow-sm mr-2 text-dark"
+                title="Persetujuan Perubahan Data Pegawai Mandiri">
+                <i class="fas fa-user-check mr-1"></i> Approval Perubahan Data
+                @if($pendingPerubahanCount > 0)
+                    <span class="badge badge-danger ml-1 shadow-sm">{{ $pendingPerubahanCount }}</span>
+                @endif
+            </a>
+
             @can('admin:data-karyawan:create')
             <button type="button"
                 class="btn tsu-btn-create btn-sm btn-modal"
@@ -31,7 +41,7 @@
                             <th width="20%">Nama Lengkap & Kontak</th>
                             <th width="15%">Identitas</th>
                             <th width="20%">Homebase & Posisi</th>
-                            <th width="20%">Jabatan Struktural/Fungsional</th>
+                            <th width="20%">Jabatan & Pangkat/Golongan</th>
                             <th width="10%">Status</th>
                             <th width="10%" class="text-center">Aksi</th>
                         </tr>

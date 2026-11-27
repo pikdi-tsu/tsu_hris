@@ -9,6 +9,7 @@ use App\Models\HonorariumDosen;
 use App\Models\MasterTarifHonorarium;
 use App\Models\PayrollPeriodApproval;
 use App\Models\DataDosenTendik;
+use App\Models\MasterTandaTangan;
 use App\Models\User;
 use App\Services\HonorariumCalculationService;
 use App\Services\TsuErrorHandlerService;
@@ -179,28 +180,43 @@ class HonorariumController extends MiddlewareController
 
     public function create()
     {
-        $dosenTendiks = DataDosenTendik::where('is_active', 1)->orderBy('nama', 'asc')->get();
-        return view('admin::honorarium.create_modal', compact('dosenTendiks'));
+        $dosenTendiks = DataDosenTendik::where('is_active', 1)
+            ->with('unit')
+            ->orderBy('nama', 'asc')
+            ->get(['id', 'nama', 'gelar_depan', 'gelar_belakang', 'nik', 'nip', 'posisi', 'unit_id', 'tipe_karyawan']);
+
+        $masterTtdList = MasterTandaTangan::where('is_active', 1)->get()->keyBy('karyawan_id');
+
+        $ttdDefault = MasterTandaTangan::where('is_active', 1)
+            ->whereIn('peruntukan', ['semua', 'slip_honorarium', 'surat_sdm'])
+            ->first();
+
+        return view('admin::honorarium.create_modal', compact('dosenTendiks', 'masterTtdList', 'ttdDefault'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'nama_periode'     => 'required|string|max:150',
-            'tahun_akademik'   => 'required|string|max:20',
-            'semester'         => 'required|in:Ganjil,Genap',
-            'bulan_honor'      => 'nullable|string|max:20',
-            'jumlah_pertemuan' => 'nullable|numeric|min:1',
-            'start_date_cutoff'=> 'required|date',
-            'end_date_cutoff'  => 'required|date|after_or_equal:start_date_cutoff',
-            'validator_1_id'   => 'required|exists:data_dosen_tendiks,id',
-            'validator_2_id'   => 'required|exists:data_dosen_tendiks,id',
-            'approval_id'      => 'required|exists:data_dosen_tendiks,id',
+            'nama_periode'          => 'required|string|max:150',
+            'tahun_akademik'        => 'required|string|max:20',
+            'semester'              => 'required|in:Ganjil,Genap',
+            'bulan_honor'           => 'nullable|string|max:20',
+            'jumlah_pertemuan'      => 'nullable|numeric|min:1',
+            'start_date_cutoff'     => 'required|date',
+            'end_date_cutoff'       => 'required|date|after_or_equal:start_date_cutoff',
+            'validator_1_id'        => 'required|exists:data_dosen_tendiks,id',
+            'validator_2_id'        => 'required|exists:data_dosen_tendiks,id',
+            'approval_id'           => 'required|exists:data_dosen_tendiks,id',
+            'karyawan_ttd_id'       => 'nullable|string',
+            'penandatangan_nama'    => 'required|string|max:150',
+            'penandatangan_jabatan' => 'required|string|max:150',
         ], [
-            'nama_periode.required'   => 'Nama periode honorarium wajib diisi.',
-            'validator_1_id.required' => 'Validator 1 wajib dipilih.',
-            'validator_2_id.required' => 'Validator 2 wajib dipilih.',
-            'approval_id.required'    => 'Pimpinan Approval Final wajib dipilih.',
+            'nama_periode.required'          => 'Nama periode honorarium wajib diisi.',
+            'validator_1_id.required'        => 'Validator 1 wajib dipilih.',
+            'validator_2_id.required'        => 'Validator 2 wajib dipilih.',
+            'approval_id.required'           => 'Pimpinan Approval Final wajib dipilih.',
+            'penandatangan_nama.required'    => 'Nama pejabat penandatangan wajib diisi.',
+            'penandatangan_jabatan.required' => 'Jabatan penandatangan wajib diisi.',
         ]);
 
         DB::beginTransaction();
@@ -210,28 +226,31 @@ class HonorariumController extends MiddlewareController
             $kodePeriode = sprintf('HON-%s%s-%04d', $year, $month, rand(100, 999));
 
             $period = PayrollPeriod::create([
-                'id'                => (string) Str::uuid(),
-                'kode_periode'      => $kodePeriode,
-                'nama_periode'      => $request->nama_periode,
-                'bulan'             => (int)$month,
-                'tahun'             => (int)$year,
-                'start_date_cutoff' => $request->start_date_cutoff,
-                'end_date_cutoff'   => $request->end_date_cutoff,
-                'tipe'              => 'honorarium',
-                'kategori_honor'    => 'terpadu',
-                'tahun_akademik'    => $request->tahun_akademik,
-                'semester'          => $request->semester,
-                'bulan_honor'       => $request->bulan_honor,
-                'jumlah_pertemuan'  => $request->jumlah_pertemuan ?: 3,
-                'status'            => 'draft',
-                'validator_1_id'    => $request->validator_1_id,
-                'validator_2_id'    => $request->validator_2_id,
-                'approval_id'       => $request->approval_id,
-                'created_by'        => Auth::id(),
-                'total_pegawai'     => 0,
-                'total_gaji_kotor'  => 0,
-                'total_potongan'    => 0,
-                'total_gaji_bersih' => 0,
+                'id'                    => (string) Str::uuid(),
+                'kode_periode'          => $kodePeriode,
+                'nama_periode'          => $request->nama_periode,
+                'bulan'                 => (int)$month,
+                'tahun'                 => (int)$year,
+                'start_date_cutoff'     => $request->start_date_cutoff,
+                'end_date_cutoff'       => $request->end_date_cutoff,
+                'tipe'                  => 'honorarium',
+                'kategori_honor'        => 'terpadu',
+                'tahun_akademik'        => $request->tahun_akademik,
+                'semester'              => $request->semester,
+                'bulan_honor'           => $request->bulan_honor,
+                'jumlah_pertemuan'      => $request->jumlah_pertemuan ?: 3,
+                'status'                => 'draft',
+                'validator_1_id'        => $request->validator_1_id,
+                'validator_2_id'        => $request->validator_2_id,
+                'approval_id'           => $request->approval_id,
+                'karyawan_ttd_id'       => $request->karyawan_ttd_id,
+                'penandatangan_nama'    => $request->penandatangan_nama,
+                'penandatangan_jabatan' => $request->penandatangan_jabatan,
+                'created_by'            => Auth::id(),
+                'total_pegawai'         => 0,
+                'total_gaji_kotor'      => 0,
+                'total_potongan'        => 0,
+                'total_gaji_bersih'     => 0,
             ]);
 
             // Catat log approval awal
@@ -808,7 +827,11 @@ class HonorariumController extends MiddlewareController
     public function slipPdf($id)
     {
         $item = HonorariumDosen::with(['period', 'pegawai'])->findOrFail($id);
-        $pdf = Pdf::loadView('admin::honorarium.slip_pdf', compact('item'))
+        $period = $item->period;
+
+        $ttdMaster = $this->resolveTtdMaster($period);
+
+        $pdf = Pdf::loadView('admin::honorarium.slip_pdf', compact('item', 'period', 'ttdMaster'))
             ->setPaper('a4', 'portrait');
 
         $filename = 'Slip_Honorarium_' . Str::slug($item->nama_dosen) . '_' . Str::slug($item->period->nama_periode) . '.pdf';
@@ -892,13 +915,15 @@ class HonorariumController extends MiddlewareController
             return back()->with('error', 'Tidak ada data dosen penerima honor pada periode ini.');
         }
 
+        $ttdMaster = $this->resolveTtdMaster($period);
+
         $zipFileName = 'SLIP_HONORARIUM_ALL_' . Str::slug($period->nama_periode) . '.zip';
         $zipPath = storage_path('app/' . $zipFileName);
 
         $zip = new ZipArchive;
         if ($zip->open($zipPath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRUE) {
             foreach ($dosens as $item) {
-                $pdf = Pdf::loadView('admin::honorarium.slip_pdf', compact('item'))
+                $pdf = Pdf::loadView('admin::honorarium.slip_pdf', compact('item', 'period', 'ttdMaster'))
                     ->setPaper('a4', 'portrait');
 
                 $cleanName = preg_replace('/[^A-Za-z0-9_\-]/', '_', $item->nama_dosen);
@@ -912,5 +937,41 @@ class HonorariumController extends MiddlewareController
         }
 
         return back()->with('error', 'Gagal membuat file arsip ZIP.');
+    }
+
+    private function resolveTtdMaster($period)
+    {
+        // Tanda tangan & stempel HANYA muncul ketika approval final sudah ACC (periode terkunci/final)
+        $isFinalApproved = in_array($period->status, ['locked', 'approved', 'final']) || !empty($period->is_locked) || !empty($period->locked_at);
+        if (!$isFinalApproved) {
+            return null;
+        }
+
+        $ttdMaster = null;
+
+        // 1. Cari berdasarkan karyawan_ttd_id
+        if (!empty($period->karyawan_ttd_id)) {
+            $ttdMaster = MasterTandaTangan::where('karyawan_id', $period->karyawan_ttd_id)->first();
+        }
+
+        // 2. Jika belum ketemu, cari berdasarkan nama pejabat penandatangan
+        if (!$ttdMaster && !empty($period->penandatangan_nama)) {
+            $cleanName = trim(preg_replace('/^(dr\.|drg\.|drs\.|dra\.|prof\.|ir\.)\s*/i', '', $period->penandatangan_nama));
+            $cleanName = trim(explode(',', $cleanName)[0]);
+            if (strlen($cleanName) >= 3) {
+                $ttdMaster = MasterTandaTangan::where('nama_pejabat', 'like', '%' . $cleanName . '%')->first();
+            }
+        }
+
+        // 3. Verifikasi kesesuaian nama agar TIDAK SALAH TTD ORANG LAIN
+        if ($ttdMaster && !empty($period->penandatangan_nama)) {
+            $cleanTtd = trim(explode(',', preg_replace('/^(dr\.|drg\.|drs\.|dra\.|prof\.|ir\.)\s*/i', '', $ttdMaster->nama_pejabat))[0]);
+            $cleanPena = trim(explode(',', preg_replace('/^(dr\.|drg\.|drs\.|dra\.|prof\.|ir\.)\s*/i', '', $period->penandatangan_nama))[0]);
+            if (stripos($cleanTtd, $cleanPena) === false && stripos($cleanPena, $cleanTtd) === false && $ttdMaster->karyawan_id !== $period->karyawan_ttd_id) {
+                $ttdMaster = null;
+            }
+        }
+
+        return $ttdMaster;
     }
 }

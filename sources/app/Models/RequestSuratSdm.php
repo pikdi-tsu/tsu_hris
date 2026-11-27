@@ -11,6 +11,18 @@ class RequestSuratSdm extends Model
 
     protected $table = 'request_surat_sdms';
 
+    protected static function booted()
+    {
+        static::deleting(function ($req) {
+            if ($req->file_lampiran) {
+                \App\Services\FileUploadService::deleteFile($req->file_lampiran);
+            }
+            if ($req->file_surat_hasil) {
+                \App\Services\FileUploadService::deleteFile($req->file_surat_hasil);
+            }
+        });
+    }
+
     protected $fillable = [
         'nomor_tiket',
         'data_dosen_tendik_id',
@@ -77,9 +89,9 @@ class RequestSuratSdm extends Model
     public function getStatusHardfileBadgeAttribute(): string
     {
         return match($this->status_hardfile) {
-            'siap_diambil'      => '<span class="badge badge-warning px-2 py-1"><i class="fas fa-hand-holding mr-1"></i> Siap Diambil di Sekretariat</span>',
-            'telah_diterima_sdm'=> '<span class="badge badge-success px-2 py-1"><i class="fas fa-check-double mr-1"></i> Telah Diserahkan / Diterima SDM</span>',
-            default             => '<span class="badge badge-secondary px-2 py-1"><i class="fas fa-clock mr-1"></i> Belum Tersedia</span>',
+            'siap_diambil'      => '<span class="badge badge-warning px-2 py-1 text-nowrap" style="white-space: nowrap;"><i class="fas fa-hand-holding mr-1"></i> Siap Diambil di Sekretariat</span>',
+            'telah_diterima_sdm'=> '<span class="badge badge-success px-2 py-1 text-nowrap" style="white-space: nowrap;"><i class="fas fa-check-double mr-1"></i> Telah Diterima SDM</span>',
+            default             => '<span class="badge badge-secondary px-2 py-1 text-nowrap" style="white-space: nowrap;"><i class="fas fa-clock mr-1"></i> Belum Tersedia</span>',
         };
     }
 
@@ -105,15 +117,15 @@ class RequestSuratSdm extends Model
     {
         if ($this->status === 'diproses' && $this->diteruskan_ke) {
             $namaPenerima = $this->penerimaTerusan ? ($this->penerimaTerusan->name ?? $this->penerimaTerusan->username) : 'Sekretariat';
-            return '<span class="badge badge-info px-2 py-1"><i class="fas fa-share mr-1"></i> Diteruskan: ' . htmlspecialchars($namaPenerima) . '</span>';
+            return '<span class="badge badge-info px-2 py-1 text-nowrap" style="white-space: nowrap;"><i class="fas fa-share mr-1"></i> Diteruskan: ' . htmlspecialchars($namaPenerima) . '</span>';
         }
 
         return match($this->status) {
-            'menunggu' => '<span class="badge badge-warning px-2 py-1"><i class="fas fa-hourglass-start mr-1"></i> Menunggu Diproses</span>',
-            'diproses' => '<span class="badge badge-primary px-2 py-1"><i class="fas fa-cogs mr-1"></i> Sedang Diproses</span>',
-            'selesai'  => '<span class="badge badge-success px-2 py-1"><i class="fas fa-check-circle mr-1"></i> Selesai (Diterbitkan)</span>',
-            'ditolak'  => '<span class="badge badge-danger px-2 py-1"><i class="fas fa-times-circle mr-1"></i> Ditolak</span>',
-            default    => '<span class="badge badge-secondary px-2 py-1">' . ucfirst($this->status) . '</span>',
+            'menunggu' => '<span class="badge badge-warning px-2 py-1 text-nowrap" style="white-space: nowrap;"><i class="fas fa-hourglass-start mr-1"></i> Menunggu Diproses</span>',
+            'diproses' => '<span class="badge badge-primary px-2 py-1 text-nowrap" style="white-space: nowrap;"><i class="fas fa-cogs mr-1"></i> Sedang Diproses</span>',
+            'selesai'  => '<span class="badge badge-success px-2 py-1 text-nowrap" style="white-space: nowrap;"><i class="fas fa-check-circle mr-1"></i> Selesai (Diterbitkan)</span>',
+            'ditolak'  => '<span class="badge badge-danger px-2 py-1 text-nowrap" style="white-space: nowrap;"><i class="fas fa-times-circle mr-1"></i> Ditolak</span>',
+            default    => '<span class="badge badge-secondary px-2 py-1 text-nowrap" style="white-space: nowrap;">' . ucfirst($this->status) . '</span>',
         };
     }
 

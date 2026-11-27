@@ -12,6 +12,15 @@ class KaryawanDokumenBerkas extends Model
 
     protected $table = 'karyawan_dokumen_berkas';
 
+    protected static function booted()
+    {
+        static::deleting(function ($dokumen) {
+            if ($dokumen->file_path) {
+                \App\Services\FileUploadService::deleteFile($dokumen->file_path);
+            }
+        });
+    }
+
     protected $fillable = [
         'data_dosen_tendik_id',
         'master_jenis_dokumen_id',

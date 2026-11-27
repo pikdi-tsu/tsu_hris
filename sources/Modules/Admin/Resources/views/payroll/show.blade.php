@@ -448,37 +448,31 @@
 
         {{-- Summary Cards --}}
         <div class="row mb-3">
-            <div class="col-xl-2 col-md-4 col-6 mb-2">
+            <div class="col-xl col-md-4 col-6 mb-2">
                 <div class="card shadow-sm border-0 bg-white p-2">
                     <span class="text-xs text-muted text-uppercase font-weight-bold">Total Pegawai</span>
                     <h5 class="font-weight-bold mb-0 text-dark" id="sumPegawai">{{ $summary['total_pegawai'] }} Orang</h5>
                 </div>
             </div>
-            <div class="col-xl-2 col-md-4 col-6 mb-2">
+            <div class="col-xl col-md-4 col-6 mb-2">
                 <div class="card shadow-sm border-0 bg-white p-2">
                     <span class="text-xs text-muted text-uppercase font-weight-bold">Total Gaji Pokok</span>
                     <h5 class="font-weight-bold mb-0 text-secondary" id="sumGapok">Rp {{ number_format($summary['total_gapok'], 0, ',', '.') }}</h5>
                 </div>
             </div>
-            <div class="col-xl-2 col-md-4 col-6 mb-2">
+            <div class="col-xl col-md-4 col-6 mb-2">
                 <div class="card shadow-sm border-0 bg-white p-2">
                     <span class="text-xs text-muted text-uppercase font-weight-bold">Total Transport</span>
                     <h5 class="font-weight-bold mb-0 text-info" id="sumTransport">Rp {{ number_format($summary['total_transport'], 0, ',', '.') }}</h5>
                 </div>
             </div>
-            <div class="col-xl-2 col-md-4 col-6 mb-2">
-                <div class="card shadow-sm border-0 bg-white p-2">
-                    <span class="text-xs text-muted text-uppercase font-weight-bold">Total Lembur</span>
-                    <h5 class="font-weight-bold mb-0 text-primary" id="sumLembur">Rp {{ number_format($summary['total_lembur'], 0, ',', '.') }}</h5>
-                </div>
-            </div>
-            <div class="col-xl-2 col-md-4 col-6 mb-2">
+            <div class="col-xl col-md-4 col-6 mb-2">
                 <div class="card shadow-sm border-0 bg-white p-2">
                     <span class="text-xs text-muted text-uppercase font-weight-bold">Total Potongan</span>
                     <h5 class="font-weight-bold mb-0 text-danger" id="sumPotongan">Rp {{ number_format($summary['total_potongan'], 0, ',', '.') }}</h5>
                 </div>
             </div>
-            <div class="col-xl-2 col-md-4 col-6 mb-2">
+            <div class="col-xl col-md-4 col-6 mb-2">
                 <div class="card shadow-sm border-0 bg-white p-2" style="background-color: #ecfdf5 !important;">
                     <span class="text-xs text-success text-uppercase font-weight-bold">Take Home Pay</span>
                     <h5 class="font-weight-bold mb-0 text-success" id="sumBersih">Rp {{ number_format($summary['total_gaji_bersih'], 0, ',', '.') }}</h5>
@@ -508,16 +502,15 @@
                         <thead class="bg-light text-center">
                             <tr>
                                 <th width="3%">No</th>
-                                <th width="19%">Pegawai & Unit</th>
-                                <th width="14%">Pangkat & Jabatan</th>
-                                <th width="9%">Gaji Pokok</th>
-                                <th width="9%">Gaji Tetap</th>
-                                <th width="9%">Transport Presensi</th>
-                                <th width="7%">Lembur</th>
-                                <th width="8%">Potongan</th>
-                                <th width="10%">Gaji Bersih (THP)</th>
-                                <th width="10%">Keterangan</th>
-                                <th width="11%" class="text-center text-nowrap">Aksi</th>
+                                <th width="20%">Pegawai & Unit</th>
+                                <th width="15%">Pangkat & Jabatan</th>
+                                <th width="10%">Gaji Pokok</th>
+                                <th width="10%">Gaji Tetap</th>
+                                <th width="10%">Transport Presensi</th>
+                                <th width="9%">Potongan</th>
+                                <th width="11%">Gaji Bersih (THP)</th>
+                                <th width="12%">Keterangan</th>
+                                <th width="10%" class="text-center text-nowrap">Aksi</th>
                             </tr>
                         </thead>
                         <tbody></tbody>
@@ -833,18 +826,8 @@
                                 </div>
                             </div>
 
-                            <h6 class="font-weight-bold text-primary border-bottom pb-1 mb-2 mt-3">
-                                <i class="fas fa-business-time mr-1"></i> 3. Uang Lembur
-                            </h6>
-                            <div class="form-group row mb-2">
-                                <label class="col-sm-5 col-form-label small">Total Uang Lembur (Rp)</label>
-                                <div class="col-sm-7">
-                                    <input type="number" id="editTotalLembur" class="form-control form-control-sm calc-trigger" min="0" step="1000">
-                                </div>
-                            </div>
-
                             <h6 class="font-weight-bold text-danger border-bottom pb-1 mb-2 mt-3">
-                                <i class="fas fa-minus-circle mr-1"></i> 4. Komponen Potongan
+                                <i class="fas fa-minus-circle mr-1"></i> 3. Komponen Potongan
                             </h6>
                             <div class="form-group row mb-2">
                                 <label class="col-sm-5 col-form-label small">Hari Unpaid Leave</label>
@@ -986,22 +969,8 @@
                                 </tr>
                             </table>
 
-                            <h6 class="font-weight-bold text-primary border-bottom pb-2 mb-3 mt-3">
-                                <i class="fas fa-business-time mr-1"></i> 3. Uang Lembur
-                            </h6>
-                            <table class="table table-sm table-borderless mb-2">
-                                <tr>
-                                    <td class="text-muted" width="55%">Total Jam Lembur</td>
-                                    <td class="text-right font-weight-bold" id="detailTotalJamLembur">0 Jam</td>
-                                </tr>
-                                <tr>
-                                    <td class="font-weight-bold text-dark">Total Uang Lembur</td>
-                                    <td class="text-right font-weight-bold text-primary" id="detailTotalLembur">Rp 0</td>
-                                </tr>
-                            </table>
-
                             <h6 class="font-weight-bold text-danger border-bottom pb-2 mb-3 mt-3">
-                                <i class="fas fa-minus-circle mr-1"></i> 4. Komponen Potongan
+                                <i class="fas fa-minus-circle mr-1"></i> 3. Komponen Potongan
                             </h6>
                             <table class="table table-sm table-borderless mb-0">
                                 <tr>
@@ -1024,7 +993,7 @@
                         </div>
                     </div>
 
-                    {{-- 5. Catatan Koreksi / Penyesuaian Manual --}}
+                    {{-- 4. Catatan Koreksi / Penyesuaian Manual --}}
                     <div class="card border mt-3 shadow-sm" id="detailCatatanKoreksiCard">
                         <div class="card-header bg-light py-2 px-3 d-flex justify-content-between align-items-center">
                             <span class="font-weight-bold text-dark small">
@@ -1169,7 +1138,6 @@
                     { data: 'gapok_formatted', name: 'gaji_pokok', className: 'text-right' },
                     { data: 'gaji_tetap_formatted', name: 'gaji_tetap', className: 'text-right' },
                     { data: 'transport_info', name: 'total_transport' },
-                    { data: 'lembur_info', name: 'total_lembur' },
                     { data: 'potongan_info', name: 'total_potongan' },
                     { data: 'gaji_bersih_formatted', name: 'gaji_bersih' },
                     { data: 'keterangan', name: 'catatan_koreksi', className: 'align-middle' },
@@ -1197,7 +1165,7 @@
 
             // Recalculate Period Button
             $('#btnRecalculate').click(function() {
-                if (!confirm('Tarik dan hitung ulang seluruh data presensi, lembur, dan tunjangan untuk periode ini? Data koreksi manual dapat tertimpa.')) {
+                if (!confirm('Tarik dan hitung ulang seluruh data presensi dan tunjangan untuk periode ini? Data koreksi manual dapat tertimpa.')) {
                     return;
                 }
 
@@ -1252,9 +1220,6 @@
                             $('#detailTarifTransport').text('Rp ' + parseFloat(d.tarif_transport || 0).toLocaleString('id-ID'));
                             $('#detailTotalTransport').text('Rp ' + parseFloat(d.total_transport || 0).toLocaleString('id-ID'));
 
-                            $('#detailTotalJamLembur').text((d.total_jam_lembur || 0) + ' Jam');
-                            $('#detailTotalLembur').text('Rp ' + parseFloat(d.total_lembur || 0).toLocaleString('id-ID'));
-
                             $('#detailHariUnpaid').text((d.hari_unpaid_leave || 0) + ' Hari');
                             $('#detailPotonganBpjs').text('Rp ' + parseFloat(d.potongan_bpjs_kes || 0).toLocaleString('id-ID'));
                             $('#detailPotonganLainnya').text('Rp ' + parseFloat(d.potongan_lainnya || 0).toLocaleString('id-ID') + (d.keterangan_potongan ? ' (' + d.keterangan_potongan + ')' : ''));
@@ -1300,7 +1265,6 @@
                             $('#editTunjKesehatan').val(d.tunjangan_kesehatan);
                             $('#editHariHadir').val(d.hari_hadir_valid);
                             $('#editTarifTransport').val(d.tarif_transport);
-                            $('#editTotalLembur').val(d.total_lembur);
                             $('#editHariUnpaid').val(d.hari_unpaid_leave);
                             $('#editPotonganBpjs').val(d.potongan_bpjs_kes);
                             $('#editPotonganLainnya').val(d.potongan_lainnya);
@@ -1332,8 +1296,6 @@
                 var transport = hadir * tarif;
                 $('#previewTotalTransport').val('Rp ' + transport.toLocaleString('id-ID'));
 
-                var lembur = parseFloat($('#editTotalLembur').val()) || 0;
-
                 var hariUnpaid = parseFloat($('#editHariUnpaid').val()) || 0;
                 var rateUnpaid = gapok > 0 ? (gapok / 25) : 0;
                 var potUnpaid = hariUnpaid * rateUnpaid;
@@ -1343,7 +1305,7 @@
                 var totalPotongan = potUnpaid + potBpjs + potLain;
                 $('#previewTotalPotongan').val('Rp ' + totalPotongan.toLocaleString('id-ID'));
 
-                var gKotor = gTetap + transport + lembur;
+                var gKotor = gTetap + transport;
                 var gBersih = Math.max(0, gKotor - totalPotongan);
 
                 $('#previewGajiKotor').text('Rp ' + gKotor.toLocaleString('id-ID'));
@@ -1370,7 +1332,6 @@
                     tunjangan_kesehatan: $('#editTunjKesehatan').val(),
                     hari_hadir_valid: $('#editHariHadir').val(),
                     tarif_transport: $('#editTarifTransport').val(),
-                    total_lembur: $('#editTotalLembur').val(),
                     hari_unpaid_leave: $('#editHariUnpaid').val(),
                     potongan_bpjs_kes: $('#editPotonganBpjs').val(),
                     potongan_lainnya: $('#editPotonganLainnya').val(),

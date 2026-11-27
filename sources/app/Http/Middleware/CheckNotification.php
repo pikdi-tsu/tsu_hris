@@ -100,6 +100,16 @@ class CheckNotification
                     ? route('admin.honorarium.show', $firstHonorarium->id)
                     : route('admin.honorarium.index');
 
+                // 3. Notifikasi Khusus Perubahan Data Mandiri Pegawai (SDM)
+                $user = Auth::user();
+                $isAdminSdm = $user->can('admin:data-karyawan')
+                    || $user->can('admin:data-karyawan:view')
+                    || $user->hasRole(['super admin', 'super admin hris', 'admin', 'admin hris', 'admin sdm']);
+
+                $notifperubahandata = $isAdminSdm
+                    ? \App\Models\RiwayatPerubahanData::where('status', 'menunggu')->count()
+                    : 0;
+
                 session([
                     'notifcutiatasan'    => $notifcutiatasan,
                     'notifcutihrd'       => $notifcutihrd,
@@ -111,8 +121,15 @@ class CheckNotification
                     'notifpayroll_url'   => $notifpayroll_url,
                     'notifhonorarium'    => $notifhonorarium,
                     'notifhonorarium_url'=> $notifhonorarium_url,
+                    'notifperubahandata' => $notifperubahandata,
                 ]);
             } else {
+                $user = Auth::user();
+                $isAdminSdm = $user ? ($user->can('admin:data-karyawan') || $user->hasRole(['super admin', 'super admin hris', 'admin', 'admin sdm'])) : false;
+                $notifperubahandata = $isAdminSdm
+                    ? \App\Models\RiwayatPerubahanData::where('status', 'menunggu')->count()
+                    : 0;
+
                 session([
                     'notifcutiatasan'    => 0,
                     'notifcutihrd'       => 0,
@@ -124,6 +141,7 @@ class CheckNotification
                     'notifpayroll_url'   => route('admin.payroll.index'),
                     'notifhonorarium'    => 0,
                     'notifhonorarium_url'=> route('admin.honorarium.index'),
+                    'notifperubahandata' => $notifperubahandata,
                 ]);
             }
         }

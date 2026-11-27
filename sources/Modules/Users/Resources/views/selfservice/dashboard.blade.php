@@ -361,8 +361,8 @@
                                                 <th style="width: 120px;">No. Tiket</th>
                                                 <th>Jenis Surat</th>
                                                 <th style="width: 105px;">Tgl Ajukan</th>
-                                                <th style="width: 105px;" class="text-center">Status</th>
-                                                <th style="width: 75px;" class="text-center">Aksi</th>
+                                                <th style="width: 115px;" class="text-center text-nowrap">Status</th>
+                                                <th style="width: 75px;" class="text-center text-nowrap">Aksi</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -374,7 +374,7 @@
                                                         <small class="text-muted" style="font-size: 0.75rem;">{{ \Illuminate\Support\Str::limit($s->keperluan, 30) }}</small>
                                                     </td>
                                                     <td class="align-middle text-muted" style="font-size: 0.78rem;">{{ $s->created_at->format('d/m/Y') }}</td>
-                                                    <td class="text-center align-middle" style="font-size: 0.78rem;">{!! $s->status_badge !!}</td>
+                                                    <td class="text-center align-middle text-nowrap" style="font-size: 0.78rem;">{!! $s->status_badge !!}</td>
                                                     <td class="text-center align-middle">
                                                         @if($s->status === 'selesai' && $s->file_hasil_url)
                                                             <a href="{{ $s->file_hasil_url }}" target="_blank" download class="btn btn-xs btn-success rounded-pill px-2" title="Unduh PDF Resmi">
@@ -504,6 +504,93 @@
                         </div>
                     </div>
 
+                    <!-- 4. Permohonan Akun Email Saya (Di Bawah Informasi Cuti & Izin) -->
+                    <div class="card card-outline shadow-sm mb-4 dashboard-grid-card" style="border-top: 3px solid #094b54;">
+                        <div class="card-header border-0 pb-2 d-flex flex-wrap align-items-center justify-content-between">
+                            <div class="d-flex align-items-center">
+                                <span class="d-inline-flex align-items-center justify-content-center rounded-circle mr-2" style="width: 32px; height: 32px; background: rgba(9, 75, 84, 0.1); color: #094b54;">
+                                    <i class="fas fa-paper-plane" style="font-size: 0.85rem;"></i>
+                                </span>
+                                <div>
+                                    <h6 class="font-weight-bold mb-0 text-dark" style="font-size: 0.95rem;">Permohonan Akun Email Saya</h6>
+                                    <small class="text-muted" style="font-size: 0.78rem;">Pantau status penerbitan akun resmi (@tsu.ac.id)</small>
+                                </div>
+                            </div>
+                            <div class="mt-2 mt-sm-0">
+                                <a href="{{ route('users.request-email.index') }}" class="btn btn-xs btn-outline-primary rounded-pill px-3 py-1 font-weight-bold" style="font-size: 0.78rem; border-color: #094b54; color: #094b54;">
+                                    <i class="fas fa-list mr-1"></i> Buka Layanan Email
+                                </a>
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            @if(isset($myRecentEmail) && $myRecentEmail->count() > 0)
+                                <div class="table-responsive dashboard-table-scroll">
+                                    <table class="table table-hover table-striped align-middle mb-0 text-sm">
+                                        <thead class="thead-light">
+                                            <tr>
+                                                <th style="width: 120px;">No. Tiket</th>
+                                                <th>Usulan / Akun Final</th>
+                                                <th style="width: 105px;">Tgl Ajukan</th>
+                                                <th style="width: 125px;" class="text-center text-nowrap">Status</th>
+                                                <th style="width: 75px;" class="text-center text-nowrap">Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($myRecentEmail as $em)
+                                                <tr>
+                                                    <td class="font-weight-bold text-dark align-middle" style="font-size: 0.8rem;">
+                                                        {{ $em->nomor_tiket }}
+                                                    </td>
+                                                    <td class="align-middle">
+                                                        @if($em->status === 'Selesai' && $em->email_final_dibuat)
+                                                            <div class="font-weight-bold text-success" style="font-size: 0.82rem;">
+                                                                <i class="fas fa-check-circle mr-1"></i>{{ $em->email_final_dibuat }}
+                                                            </div>
+                                                            <small class="text-muted" style="font-size: 0.73rem;">Akun Google Workspace Aktif</small>
+                                                        @elseif($em->email_rekomendasi_sdm)
+                                                            <div class="font-weight-500 text-primary" style="font-size: 0.82rem;">
+                                                                {{ $em->email_rekomendasi_sdm }}
+                                                            </div>
+                                                            <small class="text-muted" style="font-size: 0.73rem;">Divalidasi SDM</small>
+                                                        @else
+                                                            <div class="font-weight-500 text-dark" style="font-size: 0.82rem;">
+                                                                {{ $em->email_usulan }}
+                                                            </div>
+                                                            <small class="text-muted" style="font-size: 0.73rem;">{{ \Illuminate\Support\Str::limit($em->keperluan, 25) }}</small>
+                                                        @endif
+                                                    </td>
+                                                    <td class="align-middle text-muted" style="font-size: 0.78rem;">
+                                                        {{ $em->created_at->format('d/m/Y') }}
+                                                    </td>
+                                                    <td class="text-center align-middle text-nowrap" style="font-size: 0.78rem;">
+                                                        {!! $em->status_badge !!}
+                                                    </td>
+                                                    <td class="text-center align-middle">
+                                                        <a href="{{ route('users.request-email.index') }}" class="btn btn-xs btn-outline-info rounded-pill px-2" title="Lihat Status Detail">
+                                                            <i class="fas fa-eye"></i>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            @else
+                                <div class="p-4 text-center text-muted small" style="font-size: 0.82rem;">
+                                    <div class="mb-2">
+                                        <i class="fas fa-envelope-open-text fa-2x text-muted" style="opacity: 0.4;"></i>
+                                    </div>
+                                    <span>Anda belum memiliki riwayat pengajuan akun email resmi (@tsu.ac.id).</span>
+                                    <div class="mt-2">
+                                        <a href="{{ route('users.request-email.index') }}" class="btn btn-sm btn-outline-primary rounded-pill px-3 py-1 font-weight-bold" style="font-size: 0.78rem; border-color: #094b54; color: #094b54;">
+                                            <i class="fas fa-plus mr-1"></i> Ajukan Akun Email Sekarang
+                                        </a>
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
+                    </div>
+
                 </div>
 
             </div>
@@ -540,77 +627,109 @@
                                 </div>
                             </div>
 
-                            <!-- Pertanyaan 1 -->
-                            <div class="form-group mb-4">
-                                <label class="font-weight-bold text-dark mb-1">
-                                    1. Ketanggapan & Responsivitas Layanan SDM <span class="text-danger">*</span>
-                                </label>
-                                <p class="text-muted small mb-2">Kecepatan petugas SDM dalam merespon permohonan, pertanyaan, dan konsultasi pegawai.</p>
-                                <div class="d-flex flex-wrap" style="gap: 12px;">
-                                    @for($s = 1; $s <= 5; $s++)
-                                        <div class="custom-control custom-radio custom-control-inline">
-                                            <input type="radio" id="layanan_resp_{{ $s }}" name="skor_responsiveness" value="{{ $s }}" class="custom-control-input" {{ $s == 5 ? 'checked' : '' }} required>
-                                            <label class="custom-control-label" for="layanan_resp_{{ $s }}">
-                                                <strong>{{ $s }}</strong> <small class="text-muted">({{ $s == 1 ? 'Sangat Buruk' : ($s == 5 ? 'Sangat Baik' : $s) }})</small>
-                                            </label>
-                                        </div>
-                                    @endfor
-                                </div>
-                            </div>
+                            @php
+                                $layananItems = (isset($aspekLayananList) && $aspekLayananList->count() > 0)
+                                    ? $aspekLayananList
+                                    : \App\Models\MasterAspekSurvey::layananSdm()->active()->ordered()->get();
+                            @endphp
 
-                            <!-- Pertanyaan 2 -->
-                            <div class="form-group mb-4">
-                                <label class="font-weight-bold text-dark mb-1">
-                                    2. Keramahan & Kesopanan Staf SDM <span class="text-danger">*</span>
-                                </label>
-                                <p class="text-muted small mb-2">Sikap santun, komunikatif, dan solutif dalam melayani civitas akademika.</p>
-                                <div class="d-flex flex-wrap" style="gap: 12px;">
-                                    @for($s = 1; $s <= 5; $s++)
-                                        <div class="custom-control custom-radio custom-control-inline">
-                                            <input type="radio" id="layanan_ramah_{{ $s }}" name="skor_keramahan" value="{{ $s }}" class="custom-control-input" {{ $s == 5 ? 'checked' : '' }} required>
-                                            <label class="custom-control-label" for="layanan_ramah_{{ $s }}">
-                                                <strong>{{ $s }}</strong> <small class="text-muted">({{ $s == 1 ? 'Sangat Buruk' : ($s == 5 ? 'Sangat Baik' : $s) }})</small>
-                                            </label>
+                            @if($layananItems->count() > 0)
+                                @foreach($layananItems as $idx => $asp)
+                                    <div class="form-group mb-4">
+                                        <label class="font-weight-bold text-dark mb-1">
+                                            {{ $idx + 1 }}. {{ $asp->nama_aspek }} <span class="text-danger">*</span>
+                                        </label>
+                                        @if($asp->deskripsi)
+                                            <p class="text-muted small mb-2">{{ $asp->deskripsi }}</p>
+                                        @endif
+                                        <div class="d-flex flex-wrap" style="gap: 12px;">
+                                            @for($s = 1; $s <= 5; $s++)
+                                                <div class="custom-control custom-radio custom-control-inline">
+                                                    <input type="radio" id="layanan_asp_{{ $asp->id }}_{{ $s }}" name="aspek_{{ $asp->id }}" value="{{ $s }}" class="custom-control-input" {{ $s == 5 ? 'checked' : '' }} required>
+                                                    @if(in_array($asp->kode, ['responsiveness', 'keramahan', 'kecepatan', 'fasilitas']))
+                                                        <input type="radio" class="d-none" name="skor_{{ $asp->kode }}" value="{{ $s }}" {{ $s == 5 ? 'checked' : '' }}>
+                                                    @endif
+                                                    <label class="custom-control-label" for="layanan_asp_{{ $asp->id }}_{{ $s }}">
+                                                        <strong>{{ $s }}</strong> <small class="text-muted">({{ $s == 1 ? 'Sangat Buruk' : ($s == 5 ? 'Sangat Baik' : $s) }})</small>
+                                                    </label>
+                                                </div>
+                                            @endfor
                                         </div>
-                                    @endfor
+                                    </div>
+                                @endforeach
+                            @else
+                                <!-- Pertanyaan 1 -->
+                                <div class="form-group mb-4">
+                                    <label class="font-weight-bold text-dark mb-1">
+                                        1. Ketanggapan & Responsivitas Layanan SDM <span class="text-danger">*</span>
+                                    </label>
+                                    <p class="text-muted small mb-2">Kecepatan petugas SDM dalam merespon permohonan, pertanyaan, dan konsultasi pegawai.</p>
+                                    <div class="d-flex flex-wrap" style="gap: 12px;">
+                                        @for($s = 1; $s <= 5; $s++)
+                                            <div class="custom-control custom-radio custom-control-inline">
+                                                <input type="radio" id="layanan_resp_{{ $s }}" name="skor_responsiveness" value="{{ $s }}" class="custom-control-input" {{ $s == 5 ? 'checked' : '' }} required>
+                                                <label class="custom-control-label" for="layanan_resp_{{ $s }}">
+                                                    <strong>{{ $s }}</strong> <small class="text-muted">({{ $s == 1 ? 'Sangat Buruk' : ($s == 5 ? 'Sangat Baik' : $s) }})</small>
+                                                </label>
+                                            </div>
+                                        @endfor
+                                    </div>
                                 </div>
-                            </div>
 
-                            <!-- Pertanyaan 3 -->
-                            <div class="form-group mb-4">
-                                <label class="font-weight-bold text-dark mb-1">
-                                    3. Kecepatan & Ketepatan Proses Layanan (Surat, Cuti, Izin, Lembur) <span class="text-danger">*</span>
-                                </label>
-                                <p class="text-muted small mb-2">Dokumen dan permohonan diproses tepat waktu sesuai standar operasional layanan.</p>
-                                <div class="d-flex flex-wrap" style="gap: 12px;">
-                                    @for($s = 1; $s <= 5; $s++)
-                                        <div class="custom-control custom-radio custom-control-inline">
-                                            <input type="radio" id="layanan_cepat_{{ $s }}" name="skor_kecepatan" value="{{ $s }}" class="custom-control-input" {{ $s == 5 ? 'checked' : '' }} required>
-                                            <label class="custom-control-label" for="layanan_cepat_{{ $s }}">
-                                                <strong>{{ $s }}</strong> <small class="text-muted">({{ $s == 1 ? 'Sangat Lambat' : ($s == 5 ? 'Sangat Cepat' : $s) }})</small>
-                                            </label>
-                                        </div>
-                                    @endfor
+                                <!-- Pertanyaan 2 -->
+                                <div class="form-group mb-4">
+                                    <label class="font-weight-bold text-dark mb-1">
+                                        2. Keramahan & Kesopanan Staf SDM <span class="text-danger">*</span>
+                                    </label>
+                                    <p class="text-muted small mb-2">Sikap santun, komunikatif, dan solutif dalam melayani civitas akademika.</p>
+                                    <div class="d-flex flex-wrap" style="gap: 12px;">
+                                        @for($s = 1; $s <= 5; $s++)
+                                            <div class="custom-control custom-radio custom-control-inline">
+                                                <input type="radio" id="layanan_ramah_{{ $s }}" name="skor_keramahan" value="{{ $s }}" class="custom-control-input" {{ $s == 5 ? 'checked' : '' }} required>
+                                                <label class="custom-control-label" for="layanan_ramah_{{ $s }}">
+                                                    <strong>{{ $s }}</strong> <small class="text-muted">({{ $s == 1 ? 'Sangat Buruk' : ($s == 5 ? 'Sangat Baik' : $s) }})</small>
+                                                </label>
+                                            </div>
+                                        @endfor
+                                    </div>
                                 </div>
-                            </div>
 
-                            <!-- Pertanyaan 4 -->
-                            <div class="form-group mb-4">
-                                <label class="font-weight-bold text-dark mb-1">
-                                    4. Kemudahan Akses & Fasilitas Sistem HRIS TSU <span class="text-danger">*</span>
-                                </label>
-                                <p class="text-muted small mb-2">Aplikasi HRIS mudah digunakan, transparan, dan membantu kelancaran urusan kepegawaian.</p>
-                                <div class="d-flex flex-wrap" style="gap: 12px;">
-                                    @for($s = 1; $s <= 5; $s++)
-                                        <div class="custom-control custom-radio custom-control-inline">
-                                            <input type="radio" id="layanan_fas_{{ $s }}" name="skor_fasilitas" value="{{ $s }}" class="custom-control-input" {{ $s == 5 ? 'checked' : '' }} required>
-                                            <label class="custom-control-label" for="layanan_fas_{{ $s }}">
-                                                <strong>{{ $s }}</strong> <small class="text-muted">({{ $s == 1 ? 'Sangat Buruk' : ($s == 5 ? 'Sangat Baik' : $s) }})</small>
-                                            </label>
-                                        </div>
-                                    @endfor
+                                <!-- Pertanyaan 3 -->
+                                <div class="form-group mb-4">
+                                    <label class="font-weight-bold text-dark mb-1">
+                                        3. Kecepatan & Ketepatan Proses Layanan (Surat, Cuti, Izin, Lembur) <span class="text-danger">*</span>
+                                    </label>
+                                    <p class="text-muted small mb-2">Dokumen dan permohonan diproses tepat waktu sesuai standar operasional layanan.</p>
+                                    <div class="d-flex flex-wrap" style="gap: 12px;">
+                                        @for($s = 1; $s <= 5; $s++)
+                                            <div class="custom-control custom-radio custom-control-inline">
+                                                <input type="radio" id="layanan_cepat_{{ $s }}" name="skor_kecepatan" value="{{ $s }}" class="custom-control-input" {{ $s == 5 ? 'checked' : '' }} required>
+                                                <label class="custom-control-label" for="layanan_cepat_{{ $s }}">
+                                                    <strong>{{ $s }}</strong> <small class="text-muted">({{ $s == 1 ? 'Sangat Lambat' : ($s == 5 ? 'Sangat Cepat' : $s) }})</small>
+                                                </label>
+                                            </div>
+                                        @endfor
+                                    </div>
                                 </div>
-                            </div>
+
+                                <!-- Pertanyaan 4 -->
+                                <div class="form-group mb-4">
+                                    <label class="font-weight-bold text-dark mb-1">
+                                        4. Kemudahan Akses & Fasilitas Sistem HRIS TSU <span class="text-danger">*</span>
+                                    </label>
+                                    <p class="text-muted small mb-2">Aplikasi HRIS mudah digunakan, transparan, dan membantu kelancaran urusan kepegawaian.</p>
+                                    <div class="d-flex flex-wrap" style="gap: 12px;">
+                                        @for($s = 1; $s <= 5; $s++)
+                                            <div class="custom-control custom-radio custom-control-inline">
+                                                <input type="radio" id="layanan_fas_{{ $s }}" name="skor_fasilitas" value="{{ $s }}" class="custom-control-input" {{ $s == 5 ? 'checked' : '' }} required>
+                                                <label class="custom-control-label" for="layanan_fas_{{ $s }}">
+                                                    <strong>{{ $s }}</strong> <small class="text-muted">({{ $s == 1 ? 'Sangat Buruk' : ($s == 5 ? 'Sangat Baik' : $s) }})</small>
+                                                </label>
+                                            </div>
+                                        @endfor
+                                    </div>
+                                </div>
+                            @endif
 
                             <!-- Kritik & Saran -->
                             <div class="form-group mb-0">

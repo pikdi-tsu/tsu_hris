@@ -195,11 +195,18 @@ class LaporanKegiatanSdmController extends MiddlewareController
     public function store(Request $request)
     {
         $request->validate([
-            'nomor_laporan'   => 'required|unique:laporan_kegiatan_sdms,nomor_laporan',
-            'nama_kegiatan'   => 'required|string|max:255',
-            'tanggal_mulai'   => 'required|date',
-            'tanggal_selesai' => 'nullable|date|after_or_equal:tanggal_mulai',
-            'status'          => 'required|in:draft,submitted,approved',
+            'nomor_laporan'      => 'required|unique:laporan_kegiatan_sdms,nomor_laporan',
+            'nama_kegiatan'      => 'required|string|max:255',
+            'tanggal_mulai'      => 'required|date',
+            'tanggal_selesai'    => 'nullable|date|after_or_equal:tanggal_mulai',
+            'status'             => 'required|in:draft,submitted,approved',
+            'foto_dokumentasi.*' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:3072',
+            'berkas_lampiran.*'  => 'nullable|file|mimes:pdf|max:5120',
+        ], [
+            'foto_dokumentasi.*.max'   => 'Ukuran berkas foto maksimal 3 MB.',
+            'foto_dokumentasi.*.mimes' => 'Format foto harus berupa JPG, JPEG, PNG, atau WEBP.',
+            'berkas_lampiran.*.max'    => 'Ukuran berkas lampiran maksimal 5 MB.',
+            'berkas_lampiran.*.mimes'  => 'Format berkas lampiran harus berupa PDF.',
         ]);
 
         DB::beginTransaction();
@@ -315,37 +322,41 @@ class LaporanKegiatanSdmController extends MiddlewareController
                 }
             }
 
-            // Upload Foto Dokumentasi (Bab N)
+            // Upload Foto Dokumentasi (Bab N) - Otomatis dikompresi ke 200-300KB
             if ($request->hasFile('foto_dokumentasi')) {
                 $keteranganFoto = $request->keterangan_foto ?? [];
                 foreach ($request->file('foto_dokumentasi') as $idx => $file) {
                     if ($file->isValid()) {
-                        $filename = 'foto_' . time() . '_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
-                        $path = $file->storeAs('public/laporan_kegiatan_sdm/foto', $filename);
+                        $meta = \App\Services\FileUploadService::uploadAndCompressImage(
+                            $file,
+                            'public/laporan_kegiatan_sdm/foto'
+                        );
                         LaporanKegiatanSdmDokumen::create([
                             'laporan_kegiatan_sdm_id' => $laporan->id,
                             'kategori'                => 'foto_dokumentasi',
-                            'file_path'               => $path,
-                            'nama_file'               => $file->getClientOriginalName(),
+                            'file_path'               => $meta['file_path'],
+                            'nama_file'               => $meta['original_name'],
                             'keterangan'              => $keteranganFoto[$idx] ?? 'Dokumentasi Pelaksanaan Kegiatan',
                         ]);
                     }
                 }
             }
 
-            // Upload Berkas Lampiran Pendukung (Lampiran 1 s.d. 6)
+            // Upload Berkas Lampiran Pendukung (Lampiran 1 s.d. 6) - Maksimal 5MB PDF
             if ($request->hasFile('berkas_lampiran')) {
                 $kategoriLampiran = $request->kategori_lampiran ?? [];
                 $keteranganLampiran = $request->keterangan_lampiran ?? [];
                 foreach ($request->file('berkas_lampiran') as $idx => $file) {
                     if ($file->isValid()) {
-                        $filename = 'lampiran_' . time() . '_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
-                        $path = $file->storeAs('public/laporan_kegiatan_sdm/lampiran', $filename);
+                        $meta = \App\Services\FileUploadService::uploadDocument(
+                            $file,
+                            'public/laporan_kegiatan_sdm/lampiran'
+                        );
                         LaporanKegiatanSdmDokumen::create([
                             'laporan_kegiatan_sdm_id' => $laporan->id,
                             'kategori'                => $kategoriLampiran[$idx] ?? 'lampiran_lainnya',
-                            'file_path'               => $path,
-                            'nama_file'               => $file->getClientOriginalName(),
+                            'file_path'               => $meta['file_path'],
+                            'nama_file'               => $meta['original_name'],
                             'keterangan'              => $keteranganLampiran[$idx] ?? 'Lampiran Dokumen Kegiatan',
                         ]);
                     }
@@ -420,11 +431,18 @@ class LaporanKegiatanSdmController extends MiddlewareController
         $laporan = LaporanKegiatanSdm::findOrFail($id);
 
         $request->validate([
-            'nomor_laporan'   => 'required|unique:laporan_kegiatan_sdms,nomor_laporan,' . $id,
-            'nama_kegiatan'   => 'required|string|max:255',
-            'tanggal_mulai'   => 'required|date',
-            'tanggal_selesai' => 'nullable|date|after_or_equal:tanggal_mulai',
-            'status'          => 'required|in:draft,submitted,approved',
+            'nomor_laporan'      => 'required|unique:laporan_kegiatan_sdms,nomor_laporan,' . $id,
+            'nama_kegiatan'      => 'required|string|max:255',
+            'tanggal_mulai'      => 'required|date',
+            'tanggal_selesai'    => 'nullable|date|after_or_equal:tanggal_mulai',
+            'status'             => 'required|in:draft,submitted,approved',
+            'foto_dokumentasi.*' => 'nullable|image|mimes:jpg,jpeg,png,webp|max:3072',
+            'berkas_lampiran.*'  => 'nullable|file|mimes:pdf|max:5120',
+        ], [
+            'foto_dokumentasi.*.max'   => 'Ukuran berkas foto maksimal 3 MB.',
+            'foto_dokumentasi.*.mimes' => 'Format foto harus berupa JPG, JPEG, PNG, atau WEBP.',
+            'berkas_lampiran.*.max'    => 'Ukuran berkas lampiran maksimal 5 MB.',
+            'berkas_lampiran.*.mimes'  => 'Format berkas lampiran harus berupa PDF.',
         ]);
 
         DB::beginTransaction();
@@ -540,37 +558,41 @@ class LaporanKegiatanSdmController extends MiddlewareController
                 }
             }
 
-            // Upload Tambahan Foto Dokumentasi
+            // Upload Tambahan Foto Dokumentasi - Otomatis dikompresi ke 200-300KB
             if ($request->hasFile('foto_dokumentasi')) {
                 $keteranganFoto = $request->keterangan_foto ?? [];
                 foreach ($request->file('foto_dokumentasi') as $idx => $file) {
                     if ($file->isValid()) {
-                        $filename = 'foto_' . time() . '_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
-                        $path = $file->storeAs('public/laporan_kegiatan_sdm/foto', $filename);
+                        $meta = \App\Services\FileUploadService::uploadAndCompressImage(
+                            $file,
+                            'public/laporan_kegiatan_sdm/foto'
+                        );
                         LaporanKegiatanSdmDokumen::create([
                             'laporan_kegiatan_sdm_id' => $laporan->id,
                             'kategori'                => 'foto_dokumentasi',
-                            'file_path'               => $path,
-                            'nama_file'               => $file->getClientOriginalName(),
+                            'file_path'               => $meta['file_path'],
+                            'nama_file'               => $meta['original_name'],
                             'keterangan'              => $keteranganFoto[$idx] ?? 'Dokumentasi Pelaksanaan Kegiatan',
                         ]);
                     }
                 }
             }
 
-            // Upload Tambahan Berkas Lampiran
+            // Upload Tambahan Berkas Lampiran - Maksimal 5MB PDF
             if ($request->hasFile('berkas_lampiran')) {
                 $kategoriLampiran = $request->kategori_lampiran ?? [];
                 $keteranganLampiran = $request->keterangan_lampiran ?? [];
                 foreach ($request->file('berkas_lampiran') as $idx => $file) {
                     if ($file->isValid()) {
-                        $filename = 'lampiran_' . time() . '_' . Str::random(8) . '.' . $file->getClientOriginalExtension();
-                        $path = $file->storeAs('public/laporan_kegiatan_sdm/lampiran', $filename);
+                        $meta = \App\Services\FileUploadService::uploadDocument(
+                            $file,
+                            'public/laporan_kegiatan_sdm/lampiran'
+                        );
                         LaporanKegiatanSdmDokumen::create([
                             'laporan_kegiatan_sdm_id' => $laporan->id,
                             'kategori'                => $kategoriLampiran[$idx] ?? 'lampiran_lainnya',
-                            'file_path'               => $path,
-                            'nama_file'               => $file->getClientOriginalName(),
+                            'file_path'               => $meta['file_path'],
+                            'nama_file'               => $meta['original_name'],
                             'keterangan'              => $keteranganLampiran[$idx] ?? 'Lampiran Dokumen Kegiatan',
                         ]);
                     }

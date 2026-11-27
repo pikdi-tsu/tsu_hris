@@ -89,6 +89,10 @@
         .badge-libur {
             color: #616161;
         }
+        .badge-dl {
+            color: #0284c7;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>

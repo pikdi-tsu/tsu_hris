@@ -12,6 +12,7 @@ use Modules\Admin\Entities\MasterHariLibur;
 use Carbon\Carbon;
 use App\Models\CutiKaryawan;
 use App\Models\IzinKaryawan;
+use Illuminate\Support\Facades\Hash;
 
 class DashboardController extends Controller
 {
@@ -27,7 +28,6 @@ class DashboardController extends Controller
         if(Session::has('tmp')){
             Session::forget('tmp');
         }
-
         $tanggal = $request->get('tanggal', Carbon::today()->format('Y-m-d'));
         try {
             $parsedDate = Carbon::parse($tanggal);
@@ -106,6 +106,22 @@ class DashboardController extends Controller
             ->take(5)
             ->get();
 
+        // 3b. Ambil 5 riwayat permohonan akun email resmi (@tsu.ac.id) saya
+        $myRecentEmail = \App\Models\RequestEmail::where(function ($q) {
+                $user = auth()->user();
+                if ($user) {
+                    $q->where('email_alternatif', $user->email)
+                      ->orWhere('nama_pemohon', $user->name);
+                    $profile = \App\Models\DataDosenTendik::where('user_id', $user->id)->first();
+                    if ($profile) {
+                        $q->orWhere('pegawai_id', $profile->id);
+                    }
+                }
+            })
+            ->orderBy('id', 'desc')
+            ->take(5)
+            ->get();
+
         // 4. Pengecekan Survei Kepuasan Layanan SDM (Pop-up Wajib jika ada periode aktif)
         $activeSurveyPeriode = \App\Models\MasterPeriodeSurvey::activeNow()->first();
         $needsSurveyLayanan = false;
@@ -149,8 +165,10 @@ class DashboardController extends Controller
             'totalAbsen'             => $karyawanAbsen->count(),
             'karyawanAbsen'          => $karyawanAbsen,
             'myRecentSurat'          => $myRecentSurat,
+            'myRecentEmail'          => $myRecentEmail,
             'activeSurveyPeriode'    => $activeSurveyPeriode,
             'needsSurveyLayanan'     => $needsSurveyLayanan,
+            'aspekLayananList'       => \App\Models\MasterAspekSurvey::layananSdm()->active()->ordered()->get(),
             'pendingTrainingSurveys' => $pendingTrainingSurveys,
         );
 

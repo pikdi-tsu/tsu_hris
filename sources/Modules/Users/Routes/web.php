@@ -66,6 +66,7 @@ Route::prefix('users')->name('users.')->middleware(['auth'])->group(function () 
         Route::prefix('lembur')->name('lembur.')->group(function () {
             Route::get('/json', [LemburController::class, 'datatable'])->name('json');
             Route::get('/', [LemburController::class, 'index'])->name('index');
+            Route::post('/hitung-estimasi', [LemburController::class, 'hitungEstimasi'])->name('hitung-estimasi');
             Route::post('/', [LemburController::class, 'store'])->name('store');
             Route::post('/{id}/tarik', [LemburController::class, 'tarik'])->name('tarik');
             Route::get('/{id}/edit', [LemburController::class, 'edit'])->name('edit');
@@ -75,11 +76,19 @@ Route::prefix('users')->name('users.')->middleware(['auth'])->group(function () 
         });
     });
 
-    // Profile & Password
+    // Surat Tugas Saya (ESS)
+    Route::prefix('surat-tugas')->name('surat-tugas.')->group(function () {
+        Route::get('/', [\Modules\Users\Http\Controllers\SelfService\SuratTugasUserController::class, 'index'])->name('index');
+        Route::get('/json', [\Modules\Users\Http\Controllers\SelfService\SuratTugasUserController::class, 'datatable'])->name('json');
+        Route::get('/{id}/download-berkas', [\Modules\Users\Http\Controllers\SelfService\SuratTugasUserController::class, 'downloadBerkas'])->name('download-berkas');
+    });
+
+    // Profile & Password & ESS Data Pribadi
     Route::prefix('profile')->name('profile.')->group(function () {
         Route::get('/', [UserProfileController::class, 'index'])->name('index');
         Route::post('/profile/photo', [UserProfileController::class, 'updatePhoto'])->name('save.change-profile');
         Route::put('/profile/password', [UserProfileController::class, 'updatePassword'])->name('update-password');
+        Route::post('/ajukan-perubahan', [UserProfileController::class, 'ajukanPerubahanData'])->name('ajukan-perubahan');
     });
 
     // Approval Cuti
@@ -124,5 +133,12 @@ Route::prefix('users')->name('users.')->middleware(['auth'])->group(function () 
         Route::get('/', [\Modules\Users\Http\Controllers\SelfService\LaporanBkdUserController::class, 'index'])->name('index');
         Route::post('/store', [\Modules\Users\Http\Controllers\SelfService\LaporanBkdUserController::class, 'store'])->name('store');
         Route::get('/{id}/stream', [\Modules\Users\Http\Controllers\SelfService\LaporanBkdUserController::class, 'stream'])->name('stream');
+    });
+
+    // Layanan Mandiri Pengajuan Akun Email Resmi (@tsu.ac.id)
+    Route::prefix('request-email')->name('request-email.')->group(function () {
+        Route::get('/', [\Modules\Users\Http\Controllers\SelfService\RequestEmailUserController::class, 'index'])->name('index');
+        Route::post('/store', [\Modules\Users\Http\Controllers\SelfService\RequestEmailUserController::class, 'store'])->name('store');
+        Route::get('/{id}/detail', [\Modules\Users\Http\Controllers\SelfService\RequestEmailUserController::class, 'detail'])->name('detail');
     });
 });

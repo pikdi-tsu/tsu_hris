@@ -99,6 +99,16 @@ class DataDosenTendik extends Authenticatable
         return $this->hasMany(RiwayatJabatan::class, 'data_dosen_tendik_id');
     }
 
+    public function pangkatGolongan()
+    {
+        return $this->belongsTo(MasterPangkatGolongan::class, 'pangkat_golongan_id', 'id');
+    }
+
+    public function riwayatPerubahanDatas()
+    {
+        return $this->hasMany(RiwayatPerubahanData::class, 'data_dosen_tendik_id', 'id')->latest();
+    }
+
     public function saldosCuti()
     {
         return $this->hasMany(SaldoCutiKaryawan::class, 'id_user', 'id');
@@ -109,13 +119,29 @@ class DataDosenTendik extends Authenticatable
         return $this->hasMany(KaryawanDokumenBerkas::class, 'data_dosen_tendik_id', 'id')->with('masterJenis')->latest();
     }
 
+    protected function nama(): Attribute
+    {
+        return Attribute::make(
+            get: function (mixed $value) {
+                if (is_string($value) && $value === strtoupper($value) && strlen($value) > 3) {
+                    return mb_convert_case(mb_strtolower($value, 'UTF-8'), MB_CASE_TITLE, 'UTF-8');
+                }
+                return $value;
+            },
+        );
+    }
+
     protected function namaLengkap(): Attribute
     {
         return Attribute::make(
             get: function (mixed $value, array $attributes) {
+                $rawNama = trim($attributes['nama'] ?? '');
+                if ($rawNama === strtoupper($rawNama) && strlen($rawNama) > 3) {
+                    $rawNama = mb_convert_case(mb_strtolower($rawNama, 'UTF-8'), MB_CASE_TITLE, 'UTF-8');
+                }
                 $depan = !empty($attributes['gelar_depan']) ? trim($attributes['gelar_depan']) . ' ' : '';
                 $belakang = !empty($attributes['gelar_belakang']) ? ', ' . trim($attributes['gelar_belakang']) : '';
-                return $depan . $attributes['nama'] . $belakang;
+                return $depan . $rawNama . $belakang;
             },
         );
     }
@@ -174,6 +200,7 @@ class DataDosenTendik extends Authenticatable
 
                     ['name' => 'keilmuan_inti', 'label' => 'Keilmuan Inti', 'type' => 'text', 'col_size' => 6],
                     ['name' => 'status_karyawan_id', 'label' => 'Status Karyawan', 'type' => 'select', 'options' => \App\Models\MasterStatusKaryawan::pluck('nama_status', 'id')->toArray(), 'col_size' => 6],
+                    ['name' => 'pangkat_golongan_id', 'label' => 'Pangkat / Golongan', 'type' => 'select', 'options' => \App\Models\MasterPangkatGolongan::pluck('nama_pangkat_golongan', 'id')->toArray(), 'col_size' => 6],
                     ['name' => 'tgl_bergabung', 'label' => 'Tanggal Bergabung / TMT Masuk', 'type' => 'date', 'col_size' => 6, 'help_text' => 'Digunakan sebagai acuan perhitungan masa kerja dan hak cuti tahunan (minimal 2 tahun).'],
                     ['name' => 'pin_absensi', 'label' => 'PIN Absensi', 'type' => 'text', 'col_size' => 6],
                 ]

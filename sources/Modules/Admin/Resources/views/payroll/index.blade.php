@@ -646,6 +646,64 @@
                             </select>
                         </div>
 
+                        {{-- Section 3: Pejabat Penandatangan Dokumen / Slip --}}
+                        <h6 class="font-weight-bold border-bottom pb-2 mb-3 mt-4" style="color: var(--tsu-primary, #094b54);">
+                            <i class="fas fa-user-tie mr-1"></i> 3. Pejabat Penandatangan Slip
+                        </h6>
+                        <p class="text-muted small mb-3" style="font-size: 8.5pt;">
+                            Pilih karyawan pejabat yang berwenang menandatangani slip gaji. Nama dan jabatan otomatis terisi dan dapat disesuaikan.
+                        </p>
+
+                        <div class="form-group mb-3">
+                            <label class="font-weight-bold small text-dark">
+                                <i class="fas fa-user-tie text-primary mr-1"></i> Pilih Pegawai Penandatangan (Daftar Karyawan) <span class="text-danger">*</span>
+                            </label>
+                            <select name="karyawan_ttd_id" id="payroll_karyawan_ttd_id" class="form-control select2" style="width: 100%;">
+                                <option value="">-- Ketik Nama atau NIP/NIK untuk Mencari --</option>
+                                @foreach($allKaryawans as $k)
+                                    @php
+                                        $hasMaster = isset($masterTtdList[$k->id]);
+                                        $masterObj = $hasMaster ? $masterTtdList[$k->id] : null;
+
+                                        $namaFormatted = $masterObj ? $masterObj->nama_pejabat : trim(($k->gelar_depan ? $k->gelar_depan . ' ' : '') . $k->nama . ($k->gelar_belakang ? ', ' . $k->gelar_belakang : ''));
+                                        $jabatanFormatted = $masterObj ? $masterObj->jabatan : ($k->posisi ?: ($k->tipe_karyawan ?: 'Bagian SDM'));
+                                        $isSelected = ($ttdDefault && $ttdDefault->karyawan_id == $k->id) || ($k->nama == 'Afifah Raisya Putri Sanjaya');
+                                    @endphp
+                                    <option value="{{ $k->id }}"
+                                            data-nama="{{ $namaFormatted }}"
+                                            data-jabatan="{{ $jabatanFormatted }}"
+                                            data-has-master="{{ $hasMaster ? '1' : '0' }}"
+                                            {{ $isSelected ? 'selected' : '' }}>
+                                        {{ $namaFormatted }} ({{ $k->nip ?: ($k->nik ?: '-') }}) - {{ $jabatanFormatted }} {{ $hasMaster ? '★ [Master TTD & Stempel]' : '' }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <small class="text-muted d-block mt-1" style="font-size: 0.74rem;">
+                                Opsi bertanda ★ memiliki Tanda Tangan &amp; Stempel Digital di <strong>Master Data Tanda Tangan</strong> yang otomatis tercetak pada slip. Anda tetap dapat mengeditnya jika diperlukan.
+                            </small>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-7">
+                                <div class="form-group mb-3">
+                                    <label class="font-weight-bold text-dark small mb-1">
+                                        Nama Pejabat Penandatangan <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" name="penandatangan_nama" id="payroll_penandatangan_nama" class="form-control" 
+                                           value="{{ $ttdDefault->nama_pejabat ?? 'Afifah Raisya Putri Sanjaya, S.I.P.' }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-5">
+                                <div class="form-group mb-3">
+                                    <label class="font-weight-bold text-dark small mb-1">
+                                        Jabatan Penandatangan <span class="text-danger">*</span>
+                                    </label>
+                                    <input type="text" name="penandatangan_jabatan" id="payroll_penandatangan_jabatan" class="form-control" 
+                                           value="{{ $ttdDefault->jabatan ?? 'Sumber Daya Manusia' }}" required>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="form-group mb-0 mt-3">
                             <label class="font-weight-bold small text-dark">Catatan Pengajuan (Opsional)</label>
                             <textarea name="catatan" class="form-control" rows="2" placeholder="Catatan internal pengelola payroll..." style="border-radius: 6px;"></textarea>
@@ -687,6 +745,20 @@
                     dropdownParent: $('#modalCreatePeriod'),
                     width: '100%'
                 });
+            });
+
+            // Auto-fill Nama dan Jabatan saat memilih Pegawai Penandatangan
+            $('#payroll_karyawan_ttd_id').on('change', function() {
+                let selected = $(this).find(':selected');
+                let nama = selected.data('nama');
+                let jabatan = selected.data('jabatan');
+
+                if (nama) {
+                    $('#payroll_penandatangan_nama').val(nama);
+                }
+                if (jabatan) {
+                    $('#payroll_penandatangan_jabatan').val(jabatan);
+                }
             });
 
             $('#table-periods').DataTable({

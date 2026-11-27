@@ -776,12 +776,16 @@
                     $.ajax({
                         url: "{{ route('admin.absensi.uploadexcel') }}",
                         type: 'POST',
-                        data: {
+                        contentType: 'application/json',
+                        headers: {
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        },
+                        data: JSON.stringify({
                             _token: '{{ csrf_token() }}',
                             periodebulan: previewedPeriod.bulan,
                             periodetahun: previewedPeriod.tahun,
                             rows: previewedData
-                        },
+                        }),
                         success: function(res) {
                             if (res.success) {
                                 Swal.fire({

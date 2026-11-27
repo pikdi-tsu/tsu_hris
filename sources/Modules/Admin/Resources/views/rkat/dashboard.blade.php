@@ -33,6 +33,26 @@
 <section class="content">
     <div class="container-fluid">
 
+        {{-- Banner Catatan Penyesuaian SIMRKAT --}}
+        <div class="alert alert-info border-0 shadow-sm d-flex align-items-center mb-4" style="border-radius: 12px; background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%); color: #0369a1; border-left: 5px solid #0284c7 !important;">
+            <div class="mr-3 pl-2">
+                <i class="fas fa-info-circle fa-2x text-primary"></i>
+            </div>
+            <div class="flex-grow-1">
+                <h6 class="font-weight-bold mb-1" style="color: #0c4a6e;">
+                    <i class="fas fa-sync-alt fa-spin mr-1 text-info"></i> Catatan Integrasi SIMRKAT Universitas
+                </h6>
+                <p class="mb-0 small" style="color: #0369a1; line-height: 1.5;">
+                    Modul perencanaan dan penganggaran RKAT saat ini <strong>menunggu dan menyesuaikan dengan sistem SIMRKAT Universitas</strong>. Data pagu, usulan, dan realisasi yang ditampilkan disinkronkan secara berkala dengan standar format penganggaran institusi.
+                </p>
+            </div>
+            <div class="ml-2 pr-2 d-none d-md-block">
+                <span class="badge badge-primary px-3 py-2 font-weight-bold" style="border-radius: 8px; font-size: 0.8rem; background-color: #0284c7;">
+                    <i class="fas fa-university mr-1"></i> SIMRKAT Terpadu
+                </span>
+            </div>
+        </div>
+
         {{-- Executive KPI Metrics --}}
         <div class="row mb-4">
             <div class="col-xl-3 col-md-6 mb-3 mb-xl-0">

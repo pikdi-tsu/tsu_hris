@@ -19,6 +19,7 @@ trait ApiResponseTrait
     {
         return response()->json([
             'success' => $success,
+            'status'  => $success ? 'success' : 'error',
             'message' => $message,
             'data'    => $data,
             'errors'  => $errors,

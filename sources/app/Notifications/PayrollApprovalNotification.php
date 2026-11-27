@@ -20,11 +20,16 @@ class PayrollApprovalNotification extends TsuRealtimeNotification
         $this->period = $period;
         $this->step = $step;
 
-        $isHonor = ($period->tipe === 'honorarium');
-        $typeName = $isHonor ? 'Honorarium Dosen' : 'Payroll';
-        $targetRoute = $isHonor ? route('admin.honorarium.show', $period->id) : route('admin.payroll.show', $period->id);
+        $isHonor = (($period->tipe ?? '') === 'honorarium');
+        $isLembur = ($period instanceof \App\Models\PayrollLemburPeriod);
 
-        $icon = $isHonor ? 'fas fa-graduation-cap text-primary' : 'fas fa-file-invoice-dollar text-primary';
+        $typeName = $isLembur ? 'Payroll Lembur' : ($isHonor ? 'Honorarium Dosen' : 'Payroll');
+        $targetRoute = $isLembur 
+            ? route('admin.payroll.lembur.show', $period->id) 
+            : ($isHonor ? route('admin.honorarium.show', $period->id) : route('admin.payroll.show', $period->id));
+        $category = $isLembur ? 'payroll_lembur' : ($isHonor ? 'honorarium' : 'payroll');
+
+        $icon = $isLembur ? 'fas fa-business-time text-primary' : ($isHonor ? 'fas fa-graduation-cap text-primary' : 'fas fa-file-invoice-dollar text-primary');
         $title = "Pemberitahuan {$typeName}";
 
         if ($step === 'validator_1' || $step === 'submitted') {
@@ -49,7 +54,7 @@ class PayrollApprovalNotification extends TsuRealtimeNotification
 
         parent::__construct(
             $message,
-            $isHonor ? 'honorarium' : 'payroll',
+            $category,
             $targetRoute,
             $actionText,
             $title,
@@ -58,7 +63,7 @@ class PayrollApprovalNotification extends TsuRealtimeNotification
             [
                 'payroll_period_id' => $period->id,
                 'nama_periode'      => $period->nama_periode,
-                'tipe'              => $period->tipe,
+                'tipe'              => $isLembur ? 'lembur' : ($period->tipe ?? 'reguler'),
                 'step'              => $step,
             ]
         );

@@ -26,7 +26,6 @@ class DashboardController extends Controller
             'title' => 'Welcome to HRIS',
             'menu'  => 'dashboard',
         );
-//         dd(session()->all());
         return view('admin::dashboard.index', $data);
     }
 }

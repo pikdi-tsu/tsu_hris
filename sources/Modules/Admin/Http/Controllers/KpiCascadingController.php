@@ -28,16 +28,39 @@ class KpiCascadingController extends MiddlewareController
         $currentPeriode = KpiPeriode::find($selectedPeriodeId);
 
         $units = MasterUnit::orderBy('nama_unit', 'asc')->get();
-        $selectedUnitId = $request->input('unit_id', optional($units->first())->id);
-        $currentUnit = MasterUnit::find($selectedUnitId);
+        $selectedUnitId = $request->input('unit_id'); // null or 'all' or specific unit ID
+        $currentUnit = ($selectedUnitId && $selectedUnitId !== 'all') ? MasterUnit::find($selectedUnitId) : null;
 
-        // Calculate summary for selected unit & period
-        $unitIndikators = KpiUnitIndikator::where('periode_id', $selectedPeriodeId)
-            ->where('master_unit_id', $selectedUnitId)
-            ->get();
+        $selectedCascading = $request->input('jenis_cascading');
+        $search = $request->input('search');
 
-        $totalBobot = $unitIndikators->sum('bobot');
-        $totalIndikator = $unitIndikators->count();
+        // Query data KPI
+        $query = KpiUnitIndikator::with(['masterIndikator.perspektif', 'unit'])
+            ->where('periode_id', $selectedPeriodeId);
+
+        if ($selectedUnitId && $selectedUnitId !== 'all') {
+            $query->where('master_unit_id', $selectedUnitId);
+        }
+        if ($selectedCascading && $selectedCascading !== 'all') {
+            $query->where('jenis_cascading', $selectedCascading);
+        }
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->whereHas('masterIndikator', function($mq) use ($search) {
+                    $mq->where('nama_indikator', 'like', "%{$search}%")
+                       ->orWhere('kode_indikator', 'like', "%{$search}%");
+                })->orWhere('unit_terkait', 'like', "%{$search}%")
+                  ->orWhere('formula_pengukuran', 'like', "%{$search}%");
+            });
+        }
+
+        $kpiItems = $query->orderBy('urutan', 'asc')->orderBy('id', 'asc')->get();
+
+        // 4 Stat Cards
+        $totalIndikator = $kpiItems->count();
+        $avgCapaian = $totalIndikator > 0 ? round($kpiItems->whereNotNull('capaian_persen')->avg('capaian_persen') ?? 0, 1) : 0;
+        $avgSkor = $totalIndikator > 0 ? round($kpiItems->whereNotNull('skor')->avg('skor') ?? 0, 1) : 0;
+        $totalBobot = round($kpiItems->sum('bobot'), 1);
 
         // Master Indikators for modal selection
         $masterIndikators = KpiMasterIndikator::with(['perspektif', 'parent'])
@@ -46,14 +69,20 @@ class KpiCascadingController extends MiddlewareController
             ->get();
 
         return view('admin::kpi.cascading.index', [
-            'title'             => 'Cascading KPI & Balanced Scorecard Unit Kerja',
-            'menuIcon'          => 'fas fa-sitemap',
+            'title'             => 'Data KPI Unit Kerja',
+            'menuIcon'          => 'fas fa-chart-line',
             'periodes'          => $periodes,
             'currentPeriode'    => $currentPeriode,
             'units'             => $units,
             'currentUnit'       => $currentUnit,
-            'totalBobot'        => round($totalBobot, 2),
+            'selectedUnitId'    => $selectedUnitId,
+            'selectedCascading' => $selectedCascading,
+            'search'            => $search,
+            'kpiItems'          => $kpiItems,
+            'totalBobot'        => $totalBobot,
             'totalIndikator'    => $totalIndikator,
+            'avgCapaian'        => $avgCapaian,
+            'avgSkor'           => $avgSkor,
             'masterIndikators'  => $masterIndikators,
         ]);
     }
@@ -62,166 +91,142 @@ class KpiCascadingController extends MiddlewareController
     {
         $periodeId = $request->input('periode_id');
         $unitId = $request->input('master_unit_id');
+        $cascading = $request->input('jenis_cascading');
+        $search = $request->input('search');
 
         $query = KpiUnitIndikator::with([
             'masterIndikator.perspektif',
-            'masterIndikator.parent',
-            'parentUnitIndikator.unit',
-            'parentUnitIndikator.masterIndikator',
-            'childUnitIndikators.unit'
+            'unit'
         ])
-        ->where('periode_id', $periodeId)
-        ->where('master_unit_id', $unitId)
-        ->orderBy('urutan', 'asc')
-        ->orderBy('id', 'asc');
+        ->where('periode_id', $periodeId);
+
+        if ($unitId && $unitId !== 'all') {
+            $query->where('master_unit_id', $unitId);
+        }
+        if ($cascading && $cascading !== 'all') {
+            $query->where('jenis_cascading', $cascading);
+        }
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->whereHas('masterIndikator', function($mq) use ($search) {
+                    $mq->where('nama_indikator', 'like', "%{$search}%");
+                })->orWhere('unit_terkait', 'like', "%{$search}%")
+                  ->orWhere('formula_pengukuran', 'like', "%{$search}%");
+            });
+        }
+
+        $query->orderBy('urutan', 'asc')->orderBy('id', 'asc');
 
         return DataTables::of($query)
             ->addIndexColumn()
-            ->addColumn('perspektif_badge', function ($row) {
-                if (!$row->masterIndikator || !$row->masterIndikator->perspektif) {
-                    return '-';
-                }
-                $p = $row->masterIndikator->perspektif;
-                $kode = strtoupper($p->kode ?? '');
-                $style = match($kode) {
-                    'FIN' => 'background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25);',
-                    'CUS' => 'background: rgba(2, 132, 199, 0.1); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.25);',
-                    'INT' => 'background: rgba(139, 92, 246, 0.1); color: #7c3aed; border: 1px solid rgba(139, 92, 246, 0.25);',
-                    'LRN' => 'background: rgba(217, 119, 6, 0.1); color: #b45309; border: 1px solid rgba(217, 119, 6, 0.25);',
-                    default => 'background: rgba(9, 75, 84, 0.1); color: #094b54; border: 1px solid rgba(9, 75, 84, 0.25);',
-                };
-                return '<span class="badge badge-pill font-weight-bold px-2 py-1" style="' . $style . ' font-size: 0.78rem;">' . htmlspecialchars($p->nama_perspektif) . '</span>';
+            ->addColumn('jenis_cascading_badge', function ($row) {
+                $jenis = $row->jenis_cascading ?? 'Unit';
+                $badgeClass = ($jenis === 'Program') ? 'badge-success' : 'badge-primary';
+                return '<span class="badge ' . $badgeClass . ' px-2 py-1 font-weight-normal">' . htmlspecialchars($jenis) . '</span>';
             })
-            ->addColumn('indikator_info', function ($row) {
-                $mi = $row->masterIndikator;
-                if (!$mi) return '-';
-
-                $html = '<div class="font-weight-bold text-dark" style="font-size: 0.9rem;"><span style="color: #094b54; font-family: monospace; font-weight: 700;">[' . e($mi->kode_indikator) . ']</span> ' . e($mi->nama_indikator) . '</div>';
-                if ($mi->level === 'sub') {
-                    $html .= '<div class="mt-1"><span class="badge badge-pill px-2 py-0" style="background: rgba(2, 132, 199, 0.08); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.2); font-size: 0.72rem;"><i class="fas fa-level-down-alt mr-1"></i>Sub dari: ' . e(optional($mi->parent)->kode_indikator) . '</span></div>';
-                }
-                if ($row->keterkaitan_iku) {
-                    $html .= '<div class="small text-muted mt-1"><i class="fas fa-bookmark mr-1" style="color: #094b54; font-size: 0.75rem;"></i>IKU: <strong>' . e($row->keterkaitan_iku) . '</strong></div>';
-                }
-                return $html;
+            ->addColumn('unit_info', function ($row) {
+                return '<span class="font-weight-bold text-dark">' . htmlspecialchars($row->unit_terkait ?: optional($row->unit)->nama_unit ?: 'BAUK') . '</span>';
             })
-            ->addColumn('cascading_info', function ($row) {
-                $jenis = $row->jenis_cascading ?? 'Direct';
-                $badgeStyle = match($jenis) {
-                    'Direct'       => 'background: rgba(9, 75, 84, 0.1); color: #094b54; border: 1px solid rgba(9, 75, 84, 0.25);',
-                    'Contribution' => 'background: rgba(99, 102, 241, 0.1); color: #4f46e5; border: 1px solid rgba(99, 102, 241, 0.25);',
-                    'Enabler'      => 'background: rgba(100, 116, 139, 0.1); color: #475569; border: 1px solid rgba(100, 116, 139, 0.25);',
-                    default        => 'background: #f1f5f9; color: #475569;',
-                };
-                $html = '<div><span class="badge badge-pill font-weight-bold px-2 py-1" style="' . $badgeStyle . ' font-size: 0.78rem;">' . htmlspecialchars($jenis) . '</span></div>';
-                if ($row->parentUnitIndikator) {
-                    $pUnit = optional($row->parentUnitIndikator->unit)->nama_unit ?? 'Pimpinan';
-                    $pCode = optional($row->parentUnitIndikator->masterIndikator)->kode_indikator ?? '-';
-                    $html .= '<div class="small text-muted mt-1" title="Diturunkan dari: '.$pUnit.'"><i class="fas fa-arrow-up text-secondary mr-1"></i>Dari: <strong>' . e($pUnit) . '</strong> (' . e($pCode) . ')</div>';
-                }
-                if ($row->childUnitIndikators && $row->childUnitIndikators->count() > 0) {
-                    $html .= '<div class="small mt-1 font-weight-semibold" style="color: #059669;"><i class="fas fa-arrow-down mr-1"></i>Diturunkan ke ' . $row->childUnitIndikators->count() . ' unit</div>';
-                }
-                return $html;
+            ->addColumn('definisi_indikator', function ($row) {
+                return '<div class="font-weight-bold text-dark" style="font-size: 0.9rem;">' . e(optional($row->masterIndikator)->nama_indikator ?? '-') . '</div>';
             })
-            ->addColumn('target_satuan', function ($row) {
-                $targetVal = $row->target_angka !== null ? rtrim(rtrim(number_format($row->target_angka, 2, '.', ''), '0'), '.') : ($row->target_label ?? '-');
-                $satuan = $row->satuan ?? optional($row->masterIndikator)->satuan ?? '';
-                return '<strong class="text-dark" style="font-size: 0.95rem;">' . e($targetVal) . '</strong> <span class="text-muted small">' . e($satuan) . '</span>';
+            ->addColumn('formula_pengukuran_col', function ($row) {
+                return '<small class="text-muted font-italic">' . e($row->formula_pengukuran ?: '-') . '</small>';
             })
-            ->addColumn('roadmap_targets', function ($row) {
-                if (!$row->target_2026 && !$row->target_2027 && !$row->target_2028 && !$row->target_2029) {
-                    return '<span class="text-muted small font-italic">Tahunan</span>';
-                }
-                $html = '<div class="d-flex flex-wrap" style="gap: 4px; font-size: 0.75rem;">';
-                if ($row->target_2026) $html .= '<span class="badge badge-light border text-dark">\'26: <b>'.e($row->target_2026).'</b></span>';
-                if ($row->target_2027) $html .= '<span class="badge badge-light border text-dark">\'27: <b>'.e($row->target_2027).'</b></span>';
-                if ($row->target_2028) $html .= '<span class="badge badge-light border text-dark">\'28: <b>'.e($row->target_2028).'</b></span>';
-                if ($row->target_2029) $html .= '<span class="badge badge-light border text-dark">\'29: <b>'.e($row->target_2029).'</b></span>';
-                $html .= '</div>';
-                return $html;
+            ->addColumn('bukti_col', function ($row) {
+                $bukti = $row->file_bukti ?: 'Laporan / PDF';
+                return '<span class="badge badge-light border text-muted px-2 py-1"><i class="fas fa-file-alt mr-1"></i>' . e($bukti) . '</span>';
             })
-            ->addColumn('bobot_formatted', function ($row) {
-                return '<span class="badge badge-pill font-weight-bold px-2 py-1" style="background: rgba(9, 75, 84, 0.1); color: #094b54; border: 1px solid rgba(9, 75, 84, 0.25); font-size: 0.85rem;">' . number_format($row->bobot, 1) . '%</span>';
+            ->addColumn('target_col', function ($row) {
+                $val = $row->target_angka !== null ? rtrim(rtrim(number_format($row->target_angka, 2, '.', ''), '0'), '.') : ($row->target_label ?? '-');
+                $satuan = $row->satuan ?? '%';
+                return '<strong class="text-dark">' . e($val) . '</strong> <small class="text-muted">' . e($satuan) . '</small>';
             })
-            ->addColumn('pic_info', function ($row) {
-                $pic = $row->pic_data ?? '-';
-                $unitTerkait = $row->unit_terkait ?? '';
-                $html = '<div class="small"><strong>' . e($pic) . '</strong></div>';
-                if ($unitTerkait) {
-                    $html .= '<div class="small text-muted" style="font-size: 0.75rem;">' . e($unitTerkait) . '</div>';
-                }
-                return $html;
+            ->addColumn('bobot_col', function ($row) {
+                return '<span class="badge badge-light border font-weight-bold text-dark px-2 py-1">' . number_format($row->bobot, 0) . '%</span>';
+            })
+            ->addColumn('realisasi_col', function ($row) {
+                if ($row->realisasi_angka === null) return '<span class="text-muted small">-</span>';
+                $val = rtrim(rtrim(number_format($row->realisasi_angka, 2, '.', ''), '0'), '.');
+                $satuan = $row->satuan ?? '%';
+                return '<strong class="text-primary">' . e($val) . '</strong> <small class="text-muted">' . e($satuan) . '</small>';
+            })
+            ->addColumn('capaian_col', function ($row) {
+                if ($row->capaian_persen === null) return '<span class="text-muted small">-</span>';
+                $val = number_format($row->capaian_persen, 1);
+                $color = $row->capaian_persen >= 100 ? '#059669' : ($row->capaian_persen >= 80 ? '#0284c7' : '#d97706');
+                return '<strong style="color: '.$color.';">' . $val . '%</strong>';
+            })
+            ->addColumn('skor_col', function ($row) {
+                if ($row->skor === null) return '<span class="text-muted small">-</span>';
+                return '<span class="badge badge-pill font-weight-bold px-2 py-1" style="background: rgba(9, 75, 84, 0.1); color: #094b54; font-size: 0.85rem;">' . number_format($row->skor, 1) . '</span>';
             })
             ->addColumn('action', function ($row) {
-                $btn = '<div class="d-flex justify-content-center align-items-center" style="gap: 4px;">';
-                $btn .= '<button type="button" class="btn btn-sm btn-outline-info btn-cascade-down" data-id="'.$row->id.'" title="Turunkan ke Sub-Unit (Cascading)" style="border-radius: 6px; padding: 0.25rem 0.5rem;"><i class="fas fa-sitemap"></i></button>';
-                $btn .= '<button type="button" class="btn btn-sm btn-outline-primary btn-edit" data-id="'.$row->id.'" title="Edit Target & Bobot" style="border-radius: 6px; padding: 0.25rem 0.5rem;"><i class="fas fa-pencil-alt"></i></button>';
-                $btn .= '<button type="button" class="btn btn-sm btn-outline-danger btn-delete" data-id="'.$row->id.'" title="Hapus" style="border-radius: 6px; padding: 0.25rem 0.5rem;"><i class="fas fa-trash-alt"></i></button>';
+                $btn = '<div class="d-flex justify-content-center align-items-center" style="gap: 5px;">';
+                $btn .= '<button type="button" class="btn btn-xs btn-outline-success btn-realisasi" data-id="'.$row->id.'" data-target="'.$row->target_angka.'" data-bobot="'.$row->bobot.'" data-satuan="'.$row->satuan.'" data-nama="'.htmlspecialchars(optional($row->masterIndikator)->nama_indikator).'" title="Input Realisasi" style="border-radius: 6px; padding: 0.2rem 0.5rem;"><i class="fas fa-check-double"></i></button>';
+                $btn .= '<button type="button" class="btn btn-xs btn-outline-primary btn-edit" data-id="'.$row->id.'" title="Edit KPI" style="border-radius: 6px; padding: 0.2rem 0.5rem;"><i class="fas fa-pencil-alt"></i></button>';
+                $btn .= '<button type="button" class="btn btn-xs btn-outline-danger btn-delete" data-id="'.$row->id.'" title="Hapus" style="border-radius: 6px; padding: 0.2rem 0.5rem;"><i class="fas fa-trash-alt"></i></button>';
                 $btn .= '</div>';
                 return $btn;
             })
-            ->rawColumns(['perspektif_badge', 'indikator_info', 'cascading_info', 'target_satuan', 'roadmap_targets', 'bobot_formatted', 'pic_info', 'action'])
+            ->rawColumns(['jenis_cascading_badge', 'unit_info', 'definisi_indikator', 'formula_pengukuran_col', 'bukti_col', 'target_col', 'bobot_col', 'realisasi_col', 'capaian_col', 'skor_col', 'action'])
             ->make(true);
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'periode_id'                => 'required|exists:kpi_periodes,id',
-            'master_unit_id'            => 'required|exists:master_units,id',
-            'master_indikator_id'       => 'required|exists:kpi_master_indikators,id',
-            'parent_unit_indikator_id'  => 'nullable|exists:kpi_unit_indikators,id',
-            'jenis_cascading'           => 'required|in:Direct,Contribution,Enabler',
-            'target_angka'              => 'nullable|numeric',
-            'target_label'              => 'nullable|string',
-            'satuan'                    => 'nullable|string|max:50',
-            'bobot'                     => 'required|numeric|min:0|max:100',
-            'target_2026'               => 'nullable|string|max:50',
-            'target_2027'               => 'nullable|string|max:50',
-            'target_2028'               => 'nullable|string|max:50',
-            'target_2029'               => 'nullable|string|max:50',
-            'keterkaitan_iku'           => 'nullable|string|max:100',
-            'sumber_data'               => 'nullable|string',
-            'pic_data'                  => 'nullable|string|max:150',
-            'unit_terkait'              => 'nullable|string',
-            'keterangan'                => 'nullable|string',
+            'periode_id'         => 'required|exists:kpi_periodes,id',
+            'master_unit_id'     => 'nullable|exists:master_units,id',
+            'unit_terkait'       => 'nullable|string|max:100',
+            'master_indikator_id'=> 'nullable|exists:kpi_master_indikators,id',
+            'definisi_indikator' => 'nullable|string|max:255',
+            'formula_pengukuran' => 'nullable|string|max:255',
+            'file_bukti'         => 'nullable|string|max:255',
+            'jenis_cascading'    => 'required|string|max:50',
+            'target_angka'       => 'required|numeric',
+            'bobot'              => 'required|numeric|min:0|max:100',
+            'satuan'             => 'nullable|string|max:50',
         ]);
 
-        $mIndikator = KpiMasterIndikator::find($validated['master_indikator_id']);
-        $satuan = $validated['satuan'] ?: ($mIndikator ? $mIndikator->satuan : '');
+        // Cari atau buat master indikator jika diinput manual
+        $masterIndikatorId = $validated['master_indikator_id'] ?? null;
+        if (!$masterIndikatorId && !empty($validated['definisi_indikator'])) {
+            $perspektif = KpiMasterPerspektif::first();
+            $mIndikator = KpiMasterIndikator::create([
+                'nama_indikator' => $validated['definisi_indikator'],
+                'kode_indikator' => 'KPI-' . strtoupper(Str::random(6)),
+                'perspektif_id'  => $perspektif ? $perspektif->id : 1,
+                'satuan'         => $validated['satuan'] ?: '%',
+                'level'          => 'induk',
+                'is_active'      => true,
+            ]);
+            $masterIndikatorId = $mIndikator->id;
+        }
 
         $unitIndikator = KpiUnitIndikator::create([
-            'periode_id'                => $validated['periode_id'],
-            'master_unit_id'            => $validated['master_unit_id'],
-            'master_indikator_id'       => $validated['master_indikator_id'],
-            'parent_unit_indikator_id'  => $validated['parent_unit_indikator_id'] ?? null,
-            'jenis_cascading'           => $validated['jenis_cascading'],
-            'target_angka'              => $validated['target_angka'] !== null ? $validated['target_angka'] : null,
-            'target_label'              => $validated['target_label'] ?? null,
-            'satuan'                    => $satuan,
-            'bobot'                     => $validated['bobot'],
-            'target_2026'               => $validated['target_2026'] ?? null,
-            'target_2027'               => $validated['target_2027'] ?? null,
-            'target_2028'               => $validated['target_2028'] ?? null,
-            'target_2029'               => $validated['target_2029'] ?? null,
-            'keterkaitan_iku'           => $validated['keterkaitan_iku'] ?? null,
-            'sumber_data'               => $validated['sumber_data'] ?? null,
-            'pic_data'                  => $validated['pic_data'] ?? null,
-            'unit_terkait'              => $validated['unit_terkait'] ?? null,
-            'status_monev'              => 'Belum Mengisi',
-            'keterangan'                => $validated['keterangan'] ?? null,
+            'periode_id'         => $validated['periode_id'],
+            'master_unit_id'     => $validated['master_unit_id'] ?? optional(MasterUnit::first())->id,
+            'unit_terkait'       => $validated['unit_terkait'] ?: ($validated['master_unit_id'] ? optional(MasterUnit::find($validated['master_unit_id']))->nama_unit : 'BAUK'),
+            'master_indikator_id'=> $masterIndikatorId,
+            'jenis_cascading'    => $validated['jenis_cascading'],
+            'formula_pengukuran' => $validated['formula_pengukuran'] ?? null,
+            'file_bukti'         => $validated['file_bukti'] ?? 'Laporan / PDF',
+            'target_angka'       => $validated['target_angka'],
+            'target_label'       => (string)$validated['target_angka'],
+            'satuan'             => $validated['satuan'] ?: '%',
+            'bobot'              => $validated['bobot'],
+            'status_monev'       => 'Belum Mengisi',
         ]);
 
-        return $this->successResponse($unitIndikator, 'Indikator KPI Unit berhasil ditambahkan ke Scorecard');
+        return $this->successResponse($unitIndikator, 'Indikator KPI Unit berhasil ditambahkan');
     }
 
     public function show($id)
     {
         $unitIndikator = KpiUnitIndikator::with([
             'masterIndikator.perspektif',
-            'parentUnitIndikator.unit',
-            'parentUnitIndikator.masterIndikator'
+            'unit'
         ])->findOrFail($id);
 
         return response()->json([
@@ -235,53 +240,63 @@ class KpiCascadingController extends MiddlewareController
         $unitIndikator = KpiUnitIndikator::findOrFail($id);
 
         $validated = $request->validate([
-            'master_indikator_id'       => 'required|exists:kpi_master_indikators,id',
-            'parent_unit_indikator_id'  => 'nullable|exists:kpi_unit_indikators,id',
-            'jenis_cascading'           => 'required|in:Direct,Contribution,Enabler',
-            'target_angka'              => 'nullable|numeric',
-            'target_label'              => 'nullable|string',
-            'satuan'                    => 'nullable|string|max:50',
-            'bobot'                     => 'required|numeric|min:0|max:100',
-            'target_2026'               => 'nullable|string|max:50',
-            'target_2027'               => 'nullable|string|max:50',
-            'target_2028'               => 'nullable|string|max:50',
-            'target_2029'               => 'nullable|string|max:50',
-            'keterkaitan_iku'           => 'nullable|string|max:100',
-            'sumber_data'               => 'nullable|string',
-            'pic_data'                  => 'nullable|string|max:150',
-            'unit_terkait'              => 'nullable|string',
-            'keterangan'                => 'nullable|string',
+            'jenis_cascading'    => 'required|string|max:50',
+            'unit_terkait'       => 'nullable|string|max:100',
+            'formula_pengukuran' => 'nullable|string|max:255',
+            'file_bukti'         => 'nullable|string|max:255',
+            'target_angka'       => 'required|numeric',
+            'bobot'              => 'required|numeric|min:0|max:100',
+            'satuan'             => 'nullable|string|max:50',
         ]);
-
-        $mIndikator = KpiMasterIndikator::find($validated['master_indikator_id']);
-        $satuan = $validated['satuan'] ?: ($mIndikator ? $mIndikator->satuan : $unitIndikator->satuan);
 
         $unitIndikator->update([
-            'master_indikator_id'       => $validated['master_indikator_id'],
-            'parent_unit_indikator_id'  => $validated['parent_unit_indikator_id'] ?? null,
-            'jenis_cascading'           => $validated['jenis_cascading'],
-            'target_angka'              => $validated['target_angka'] !== null ? $validated['target_angka'] : null,
-            'target_label'              => $validated['target_label'] ?? null,
-            'satuan'                    => $satuan,
-            'bobot'                     => $validated['bobot'],
-            'target_2026'               => $validated['target_2026'] ?? null,
-            'target_2027'               => $validated['target_2027'] ?? null,
-            'target_2028'               => $validated['target_2028'] ?? null,
-            'target_2029'               => $validated['target_2029'] ?? null,
-            'keterkaitan_iku'           => $validated['keterkaitan_iku'] ?? null,
-            'sumber_data'               => $validated['sumber_data'] ?? null,
-            'pic_data'                  => $validated['pic_data'] ?? null,
-            'unit_terkait'              => $validated['unit_terkait'] ?? null,
-            'keterangan'                => $validated['keterangan'] ?? null,
+            'jenis_cascading'    => $validated['jenis_cascading'],
+            'unit_terkait'       => $validated['unit_terkait'] ?? $unitIndikator->unit_terkait,
+            'formula_pengukuran' => $validated['formula_pengukuran'] ?? $unitIndikator->formula_pengukuran,
+            'file_bukti'         => $validated['file_bukti'] ?? $unitIndikator->file_bukti,
+            'target_angka'       => $validated['target_angka'],
+            'target_label'       => (string)$validated['target_angka'],
+            'satuan'             => $validated['satuan'] ?: $unitIndikator->satuan,
+            'bobot'              => $validated['bobot'],
         ]);
 
-        // Recalculate if realisasi exists
         if ($unitIndikator->realisasi_angka !== null) {
             $unitIndikator->hitungCapaianDanSkor();
             $unitIndikator->save();
         }
 
         return $this->successResponse($unitIndikator, 'Indikator KPI Unit berhasil diperbarui');
+    }
+
+    /**
+     * Input Realisasi & Perhitungan Otomatis:
+     * Capaian (%) = (Realisasi / Target) * 100%
+     * Skor = (Capaian / 100) * Bobot
+     */
+    public function updateRealisasi(Request $request, $id)
+    {
+        $unitIndikator = KpiUnitIndikator::findOrFail($id);
+
+        $request->validate([
+            'realisasi_angka' => 'required|numeric',
+            'file_bukti'      => 'nullable|string',
+            'analisis_capaian'=> 'nullable|string',
+        ]);
+
+        $unitIndikator->realisasi_angka = $request->realisasi_angka;
+        $unitIndikator->realisasi_label = (string) $request->realisasi_angka;
+        if ($request->filled('file_bukti')) {
+            $unitIndikator->file_bukti = $request->file_bukti;
+        }
+        if ($request->filled('analisis_capaian')) {
+            $unitIndikator->analisis_capaian = $request->analisis_capaian;
+        }
+        $unitIndikator->status_monev = 'Tercapai';
+
+        $unitIndikator->hitungCapaianDanSkor();
+        $unitIndikator->save();
+
+        return $this->successResponse($unitIndikator, 'Realisasi KPI berhasil disimpan dan capaian dihitung otomatis');
     }
 
     public function destroy($id)

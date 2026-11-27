@@ -65,6 +65,11 @@ class PayrollPeriod extends Model
         return $this->belongsTo(DataDosenTendik::class, 'approval_id');
     }
 
+    public function penandatanganKaryawan()
+    {
+        return $this->belongsTo(DataDosenTendik::class, 'karyawan_ttd_id');
+    }
+
     public function approvals()
     {
         return $this->hasMany(PayrollPeriodApproval::class, 'payroll_period_id', 'id')->orderByDesc('created_at');

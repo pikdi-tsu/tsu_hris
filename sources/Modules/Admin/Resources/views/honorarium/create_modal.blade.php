@@ -118,6 +118,63 @@
                 <small class="text-muted d-block mt-1">Pimpinan tertinggi yang berwenang menyetujui &amp; mengunci berkas.</small>
             </div>
         </div>
+
+        {{-- Section 3: Pejabat Penandatangan Dokumen / Slip --}}
+        <h6 class="font-weight-bold border-bottom pb-2 mb-3 mt-4" style="color: var(--tsu-primary, #094b54);">
+            <i class="fas fa-user-tie mr-1"></i> 3. Pejabat Penandatangan Slip
+        </h6>
+        <p class="text-muted small mb-3" style="font-size: 8.5pt;">
+            Pilih pejabat yang berwenang menandatangani slip honorarium dosen. Nama dan jabatan otomatis terisi dan dapat disesuaikan.
+        </p>
+
+        <div class="form-group row mb-3">
+            <label class="col-sm-4 col-form-label small font-weight-bold text-dark">
+                Pilih Pegawai <span class="text-danger">*</span>
+            </label>
+            <div class="col-sm-8">
+                <select name="karyawan_ttd_id" id="honor_karyawan_ttd_id" class="form-control select2-modal" style="width: 100%;">
+                    <option value="">-- Ketik Nama atau NIP/NIK untuk Mencari --</option>
+                    @foreach($dosenTendiks as $d)
+                        @php
+                            $hasMaster = isset($masterTtdList[$d->id]);
+                            $masterObj = $hasMaster ? $masterTtdList[$d->id] : null;
+
+                            $namaFormatted = $masterObj ? $masterObj->nama_pejabat : trim(($d->gelar_depan ? $d->gelar_depan . ' ' : '') . $d->nama . ($d->gelar_belakang ? ', ' . $d->gelar_belakang : ''));
+                            $jabatanFormatted = $masterObj ? $masterObj->jabatan : ($d->posisi ?: ($d->tipe_karyawan ?: 'Bagian SDM'));
+                            $isSelected = ($ttdDefault && $ttdDefault->karyawan_id == $d->id) || ($d->nama == 'Afifah Raisya Putri Sanjaya');
+                        @endphp
+                        <option value="{{ $d->id }}"
+                                data-nama="{{ $namaFormatted }}"
+                                data-jabatan="{{ $jabatanFormatted }}"
+                                data-has-master="{{ $hasMaster ? '1' : '0' }}"
+                                {{ $isSelected ? 'selected' : '' }}>
+                            {{ $namaFormatted }} ({{ $d->nip ?: ($d->nik ?: '-') }}) - {{ $jabatanFormatted }} {{ $hasMaster ? '★ [Master TTD & Stempel]' : '' }}
+                        </option>
+                    @endforeach
+                </select>
+                <small class="text-muted d-block mt-1">Opsi bertanda ★ memiliki Tanda Tangan &amp; Stempel Digital di <strong>Master Data Tanda Tangan</strong> yang otomatis tercetak pada slip. Anda tetap dapat mengeditnya jika diperlukan.</small>
+            </div>
+        </div>
+
+        <div class="form-group row mb-3">
+            <label class="col-sm-4 col-form-label small font-weight-bold text-dark">
+                Nama Pejabat <span class="text-danger">*</span>
+            </label>
+            <div class="col-sm-8">
+                <input type="text" name="penandatangan_nama" id="honor_penandatangan_nama" class="form-control" 
+                       value="{{ $ttdDefault->nama_pejabat ?? 'Afifah Raisya Putri Sanjaya, S.I.P.' }}" required style="border-radius: 6px;">
+            </div>
+        </div>
+
+        <div class="form-group row mb-2">
+            <label class="col-sm-4 col-form-label small font-weight-bold text-dark">
+                Jabatan Penandatangan <span class="text-danger">*</span>
+            </label>
+            <div class="col-sm-8">
+                <input type="text" name="penandatangan_jabatan" id="honor_penandatangan_jabatan" class="form-control" 
+                       value="{{ $ttdDefault->jabatan ?? 'Sumber Daya Manusia' }}" required style="border-radius: 6px;">
+            </div>
+        </div>
     </div>
     <div class="modal-footer bg-light px-4 py-3 border-top">
         <button type="button" class="btn btn-secondary btn-sm px-3" data-dismiss="modal" style="border-radius: 6px;">Batal</button>
@@ -132,6 +189,20 @@
         $('.select2-modal').select2({
             dropdownParent: $('#form-create-honorarium').closest('.modal'),
             width: '100%'
+        });
+
+        // Auto-fill Nama dan Jabatan saat memilih Pegawai Penandatangan
+        $('#honor_karyawan_ttd_id').on('change', function() {
+            let selected = $(this).find(':selected');
+            let nama = selected.data('nama');
+            let jabatan = selected.data('jabatan');
+
+            if (nama) {
+                $('#honor_penandatangan_nama').val(nama);
+            }
+            if (jabatan) {
+                $('#honor_penandatangan_jabatan').val(jabatan);
+            }
         });
 
         function autoGeneratePeriodName() {

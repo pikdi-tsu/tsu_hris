@@ -21,14 +21,19 @@
     <div class="row">
         <div class="col-md-6">
             <div class="form-group">
-                <label class="text-muted small font-weight-bold mb-1">Jenis Lembur</label>
-                <input type="text" class="form-control form-control-sm bg-light" value="{{ $data->masterLembur->jenislembur ?? '-' }}" readonly>
+                <label class="text-muted small font-weight-bold mb-1">Jenis &amp; Kategori Lembur</label>
+                <input type="text" class="form-control form-control-sm bg-light" value="{{ ($data->masterLembur->jenislembur ?? '-') . ' — ' . $data->kategori_label }}" readonly>
             </div>
         </div>
         <div class="col-md-6">
             <div class="form-group">
                 <label class="text-muted small font-weight-bold mb-1">Jam Mulai - Selesai (Durasi)</label>
                 <input type="text" class="form-control form-control-sm bg-light" value="{{ $waktu }}" readonly>
+                @if($data->koefisien_pengali || $data->nominal_estimasi)
+                <small class="text-success font-weight-bold mt-1 d-block">
+                    <i class="fas fa-calculator mr-1"></i> Pengali: {{ $data->koefisien_pengali ?? '-' }}x &middot; Est. Upah: Rp {{ number_format($data->nominal_estimasi ?? 0, 0, ',', '.') }}
+                </small>
+                @endif
             </div>
         </div>
     </div>

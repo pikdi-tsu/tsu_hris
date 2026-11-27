@@ -1,32 +1,32 @@
 # <p align="center"> TSU HRIS <br> (Human Resource Information System) </p>
 
-## 📢 Description
+## 📄 Description
 
 Aplikasi TSU HRIS berbasis Laravel yang dibangun dengan pendekatan arsitektur *Modular Monolith*. Proyek ini dirancang untuk mengakomodasi kompleksitas sistem informasi sumber daya manusia (SDM) dengan memisahkan logika bisnis berdasarkan domain (Modul), bukan hanya berdasarkan lapisan teknis.
 
-## 📋 Project Overview
+## 📌 Project Overview
 
 Proyek ini menggunakan arsitektur yang memindahkan struktur standar Laravel (`app/`) ke dalam direktori kustom `sources/` untuk mendukung skalabilitas jangka panjang.
 Saat ini, aplikasi berjalan menggunakan **koneksi database langsung (Direct DB)** dengan autentikasi lokal berbasis sesi. Namun, arsitektur kode (Service Layer) telah disiapkan untuk transisi menuju implementasi berbasis API (*API-Driven*) di masa mendatang tanpa perlu merombak struktur utama.
 
-## 🏗️ Struktur Direktori & Arsitektur
+## 📂 Struktur Direktori & Arsitektur
 
 Perbedaan mendasar pada arsitektur ini adalah lokasi *core logic*. Direktori `sources/` berfungsi sebagai root namespace utama untuk menggantikan `app/` standar, dengan pembagian sebagai berikut:
 
 ```text
 root/
 ├── public/assets/      # Aset statis (AdminLTE, Plugins, Custom UI)
-├── sources/            # Direktori Utama Logika Aplikasi
-│   ├── app/            # Logika Global (Shared Controllers, Models, Helpers)
-│   └── Modules/        # Domain-Driven Modules
-│       ├── Admin/      # Modul operasional Administrator (Dashboard, Master Data)
-│       ├── System/     # Modul Core Engine (Auth, Spatie ACL, Dynamic Menus, Global Settings)
-│       └── Users/      # Modul entitas pengguna (Manajemen Akun & Profil Dosen/Tendik/Mahasiswa)
+└── sources/            # Direktori Utama Logika Aplikasi
+    ├── app/            # Logika Global (Shared Controllers, Models, Helpers)
+    └── Modules/        # Domain-Driven Modules
+        ├── Admin/      # Modul operasional Administrator (Dashboard, Master Data)
+        ├── System/     # Modul Core Engine (Auth, Spatie ACL, Dynamic Menus, Global Settings)
+        └── Users/      # Modul entitas pengguna (Manajemen Akun & Profil Dosen/Tendik/Mahasiswa)
 ```
 
 Implementasi ini menggunakan pola `nwidart/laravel-modules` untuk memastikan setiap domain bisnis terisolasi dengan baik.
 
-## 🛠️ Spesifikasi Teknis (Tech Stack)
+## ⚙️ Spesifikasi Teknis (Tech Stack)
 
 - **Framework Core**: Laravel
 - **Architecture Pattern**: Modular Monolith
@@ -40,7 +40,7 @@ Implementasi ini menggunakan pola `nwidart/laravel-modules` untuk memastikan set
   - AdminLTE Assets & Custom Components
   - Libraries: Select2, Summernote, SweetAlert2, Chart.js
 
-## 🛣️ Roadmap Pengembangan
+## 🚀 Roadmap Pengembangan
 
 Proyek ini dikembangkan dengan peta jalan (roadmap) teknis sebagai berikut:
 
@@ -50,7 +50,7 @@ Proyek ini dikembangkan dengan peta jalan (roadmap) teknis sebagai berikut:
 
 ---
 
-## ⚙️ Panduan Instalasi & Setup Standar (Untuk Tim Developer)
+## 🛠️ Panduan Instalasi & Setup Standar (Untuk Tim Developer)
 
 Ikuti langkah berikut untuk mengatur lingkungan pengembangan lokal Anda:
 
@@ -86,6 +86,12 @@ Ikuti langkah berikut untuk mengatur lingkungan pengembangan lokal Anda:
    - `TSU_SSO_CLIENT_ID` & `SECRET`: Kredensial SSO dari TSU Homebase.
    - `TSU_SSO_REDIRECT_URI`: Sesuaikan URL callback dengan URL lokal Anda (Contoh: "http://tsu_hris.test/login/sso/callback").
    - `HOMEBASE_CLIENT_ID` & `SECRET`: Kredensial untuk jalur komunikasi API antar layanan.
+
+   **🔹 API Sinkronisasi Karyawan (Single Source of Truth)**
+   - `HRIS_SYNC_SECRET`: Kunci rahasia master sinkronisasi (plaintext) di HRIS.
+   - `CLI Generator`: Jalankan `php artisan hris:hash-secret` untuk menghasilkan hash SHA-256 yang aman untuk `.env` proyek turunan.
+   - `Endpoint`: `GET /api/v1/karyawan/sync-list` (Header: `X-Sync-Secret: <hash_sha256>`).
+   - 📖 *Baca panduan lengkap di:* [Manual Book HRIS Sync API](docs/MANUAL_BOOK_HRIS_SYNC_API.md).
 
    **🔹 Keamanan & Hak Akses Khusus**
    - `PIKDI_EMERGENCY_SECRET` & `RESCUE_SECRET`: Kunci rahasia untuk otorisasi *bypass/login* darurat tim PIKDI.

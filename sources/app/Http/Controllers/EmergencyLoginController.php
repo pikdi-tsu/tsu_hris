@@ -18,15 +18,38 @@ class EmergencyLoginController extends Controller
     public function login(Request $request, UserSyncService $syncer)
     {
         $payloadBase64 = $request->query('payload');
-        $timestamp = $request->query('timestamp');
-        $token     = $request->query('signature');
+        $timestamp     = $request->query('timestamp');
+        $token         = $request->query('signature');
 
-        // Cek Kadaluarsa (Link valid 5 menit)
-        if (now()->timestamp - $timestamp > 300) {
+        // Jika diakses langsung tanpa parameter, arahkan ke form Rescue Mode
+        if (!$request->has('payload') && !$request->has('signature') && !$request->has('timestamp')) {
+            return redirect()->route('rescue');
+        }
+
+        if (empty($payloadBase64) || empty($timestamp) || empty($token)) {
             return response()->view('system::errors.index', [
-                'title' => 'Expired Link!',
-                'message' => 'Link Login Kadaluarsa. Silakan generate ulang dari Homebase.',
-                'code' => 403
+                'title'   => 'Parameter Tidak Lengkap',
+                'message' => 'Tautan Login Darurat tidak memiliki parameter yang valid (payload, timestamp, signature). Pastikan membuka link langsung dari TSU Homebase Vault.',
+                'code'    => 400
+            ], 400);
+        }
+
+        // Normalisasi jika timestamp dikirim dalam milidetik (13 digit)
+        $numericTimestamp = (int) $timestamp;
+        if (strlen((string) $timestamp) > 10) {
+            $numericTimestamp = (int) ($numericTimestamp / 1000);
+        }
+
+        // Cek Kadaluarsa (Toleransi 15 menit / 900 detik)
+        $maxAge = (int) config('app.pikdi.emergency_expiry', 900);
+        $age = now()->timestamp - $numericTimestamp;
+
+        if ($age > $maxAge) {
+            $ageMinutes = max(1, round($age / 60));
+            return response()->view('system::errors.index', [
+                'title'   => 'Expired Link!',
+                'message' => "Link Login Darurat Kadaluarsa ({$ageMinutes} menit yang lalu). Silakan generate ulang dari TSU Homebase Vault.",
+                'code'    => 403
             ], 403);
         }
 

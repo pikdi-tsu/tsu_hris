@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\KaryawanSyncApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -16,4 +17,9 @@ use Illuminate\Support\Facades\Route;
 
 Route::middleware('auth:api')->get('/user', function (Request $request) {
     return $request->user();
+});
+
+// --- API SINKRONISASI KARYAWAN UNTUK MODUL DOWNSTREAM (TSU ECOSYSTEM) ---
+Route::prefix('v1/karyawan')->group(function () {
+    Route::get('/sync-list', [KaryawanSyncApiController::class, 'index'])->name('api.karyawan.sync-list');
 });

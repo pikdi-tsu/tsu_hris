@@ -259,23 +259,36 @@ body.layout-navbar-fixed .tsu-page-header {
    4. TSU CARD (.tsu-card) — Main Content Card
    ============================================================ */
 .tsu-card,
-.card.card-primary.card-outline {
-    border: none !important;
-    border-radius: var(--tsu-radius-lg) !important;
-    box-shadow: var(--tsu-shadow) !important;
+.card.card-primary.card-outline,
+.card.card-outline.card-primary {
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    border-top: 3px solid var(--tsu-primary, #094b54) !important;
+    border-radius: var(--tsu-radius-lg, 12px) !important;
+    box-shadow: 0 4px 16px rgba(9, 75, 84, 0.06) !important;
+    margin-bottom: 1.5rem !important;
+    background: #ffffff;
     overflow: hidden;
 }
 
 .tsu-card .card-header,
-.card.card-primary.card-outline > .card-header {
+.card.card-primary.card-outline > .card-header,
+.card.card-outline.card-primary > .card-header {
     background: #ffffff !important;
-    border-bottom: 2px solid var(--tsu-primary-light) !important;
-    border-top: 3px solid var(--tsu-primary) !important;
-    padding: 0.85rem 1.25rem !important;
+    border-top: none !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08) !important;
+    padding: 1rem 1.25rem !important;
+}
+
+/* Fix float clearfix AdminLTE ::after/::before in card-header */
+.card-header::after,
+.card-header::before {
+    display: none !important;
+    content: none !important;
 }
 
 .tsu-card .card-header.p-0,
-.card.card-primary.card-outline > .card-header.p-0 {
+.card.card-primary.card-outline > .card-header.p-0,
+.card.card-outline.card-primary > .card-header.p-0 {
     padding: 0 !important;
 }
 
@@ -524,6 +537,19 @@ body.layout-navbar-fixed .tsu-page-header {
 /* ============================================================
    7. DATATABLE OVERRIDES
    ============================================================ */
+.table-responsive {
+    border-radius: var(--tsu-radius, 8px);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+table.dataTable {
+    width: 100% !important;
+    margin-bottom: 0 !important;
+    border-collapse: separate !important;
+    border-spacing: 0;
+}
+
 table.dataTable thead th,
 table.dataTable thead td {
     background-color: var(--tsu-primary-faint) !important;
@@ -536,12 +562,44 @@ table.dataTable thead td {
     white-space: nowrap;
 }
 
+table.dataTable tbody td {
+    vertical-align: middle !important;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+    line-height: 1.4;
+}
+
+/* Kolom aksi, badge, dan nomor indeks tetap rapi tanpa pecah baris */
+table.dataTable th.text-center,
+table.dataTable td.text-center,
+table.dataTable td .badge,
+table.dataTable td .btn {
+    white-space: nowrap;
+}
+
 table.dataTable tbody tr:hover td {
     background-color: var(--tsu-primary-faint) !important;
 }
 
 table.dataTable.table-striped tbody tr:nth-of-type(odd) > * {
     background-color: rgba(29, 122, 135, 0.04) !important;
+}
+
+/* Custom scrollbar untuk table-responsive */
+.table-responsive::-webkit-scrollbar {
+    height: 6px;
+}
+.table-responsive::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+.table-responsive::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+.table-responsive::-webkit-scrollbar-thumb:hover {
+    background: var(--tsu-primary, #094b54);
 }
 
 /* DataTable Controls */
@@ -1789,12 +1847,13 @@ label.form-label {
     box-shadow: 0 0 0 3px rgba(29, 122, 135, 0.3) !important;
 }
 
-.swal2-popup {
+/* SweetAlert2 Modal Custom Styling (Scoped to dialog modals, excluding toasts) */
+.swal2-popup:not(.swal2-toast) {
     border-radius: var(--tsu-radius-lg, 14px) !important;
     position: relative !important;
 }
 
-.swal2-popup .swal2-title {
+.swal2-popup:not(.swal2-toast) .swal2-title {
     position: relative !important;
     padding-top: 1.25rem !important;
     padding-bottom: 0.5rem !important;
@@ -1809,7 +1868,14 @@ label.form-label {
     word-break: break-word !important;
 }
 
-.swal2-popup .swal2-close {
+/* SweetAlert2 Close Button Guard: ALWAYS respect hidden state */
+.swal2-popup .swal2-close[style*="display: none"],
+.swal2-popup.swal2-toast .swal2-close[style*="display: none"] {
+    display: none !important;
+}
+
+/* Modal Close Button: Only displayed when explicitly enabled by SweetAlert */
+.swal2-popup:not(.swal2-toast) .swal2-close:not([style*="display: none"]) {
     position: absolute !important;
     top: 14px !important;
     right: 14px !important;
@@ -1833,31 +1899,107 @@ label.form-label {
     z-index: 10 !important;
 }
 
-.swal2-popup .swal2-close:hover {
+.swal2-popup:not(.swal2-toast) .swal2-close:not([style*="display: none"]):hover {
     background: #fee2e2 !important;
     color: #ef4444 !important;
     border-color: #fca5a5 !important;
     transform: scale(1.05) !important;
 }
 
-.swal2-popup .swal2-close:focus {
+.swal2-popup:not(.swal2-toast) .swal2-close:focus {
     box-shadow: none !important;
     outline: none !important;
 }
 
 @media (max-width: 576px) {
-    .swal2-popup .swal2-title {
+    .swal2-popup:not(.swal2-toast) .swal2-title {
         padding-left: 2.75rem !important;
         padding-right: 2.75rem !important;
         font-size: 1.1rem !important;
     }
-    .swal2-popup .swal2-close {
+    .swal2-popup:not(.swal2-toast) .swal2-close:not([style*="display: none"]) {
         top: 10px !important;
         right: 10px !important;
         width: 30px !important;
         height: 30px !important;
         font-size: 18px !important;
     }
+}
+
+/* ============================================================
+   TSU SWEETALERT2 TOAST GLOBAL STYLING
+   ============================================================ */
+.swal2-popup.swal2-toast {
+    padding: 0.75rem 1.15rem !important;
+    border-radius: var(--tsu-radius, 10px) !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.65rem !important;
+    max-width: 440px !important;
+    width: auto !important;
+    box-sizing: border-box !important;
+    overflow: visible !important;
+}
+
+.swal2-popup.swal2-toast .swal2-icon {
+    margin: 0 !important;
+    width: 2rem !important;
+    min-width: 2rem !important;
+    height: 2rem !important;
+    flex-shrink: 0 !important;
+}
+
+.swal2-popup.swal2-toast .swal2-title {
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 0.925rem !important;
+    font-weight: 600 !important;
+    line-height: 1.4 !important;
+    text-align: left !important;
+    color: inherit !important;
+    word-break: break-word !important;
+    flex: 1 1 auto !important;
+}
+
+.swal2-popup.swal2-toast .swal2-html-container {
+    margin: 0.2rem 0 0 0 !important;
+    padding: 0 !important;
+    font-size: 0.85rem !important;
+    text-align: left !important;
+    color: inherit !important;
+    line-height: 1.35 !important;
+    word-break: break-word !important;
+}
+
+/* Toast Close Button: Only when explicitly enabled (compact & nicely aligned) */
+.swal2-popup.swal2-toast .swal2-close:not([style*="display: none"]) {
+    position: relative !important;
+    top: auto !important;
+    right: auto !important;
+    margin: 0 0 0 0.5rem !important;
+    padding: 0 !important;
+    width: 22px !important;
+    height: 22px !important;
+    font-size: 16px !important;
+    line-height: 22px !important;
+    border-radius: 50% !important;
+    border: none !important;
+    background: rgba(0, 0, 0, 0.15) !important;
+    color: inherit !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    flex-shrink: 0 !important;
+    transition: background 0.15s ease, transform 0.15s ease !important;
+}
+
+.swal2-popup.swal2-toast .swal2-close:not([style*="display: none"]):hover {
+    background: rgba(0, 0, 0, 0.3) !important;
+    color: inherit !important;
+    transform: scale(1.1) !important;
 }
 
 /* Modal HTML Container & Badge Wrapping Rules */

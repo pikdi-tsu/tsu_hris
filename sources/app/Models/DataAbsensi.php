@@ -12,6 +12,7 @@ class DataAbsensi extends Authenticatable
 
     protected $table = 'data_absensi';
     protected $primaryKey = 'id';
+    public $timestamps = false;
     protected $guarded = [];
 
     protected $casts = [

@@ -6,7 +6,7 @@
         /* === TSU Stat Cards Grid === */
         .tsu-stat-grid-mpp {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 1rem;
             margin-bottom: 1.25rem;
         }
@@ -194,12 +194,30 @@
     <section class="content">
         <div class="container-fluid">
 
-            {{-- Stat Cards: Kuota & Karyawan Aktif --}}
+            {{-- Stat Cards: Kuota, Eksisting, Usulan Berjalan & Balance --}}
             <div class="tsu-stat-grid-mpp">
-                <!-- Card 1: Karyawan Aktif -->
+                <!-- Card 1: Target Kuota Unit -->
+                <div class="tsu-stat-card text-white" style="background: linear-gradient(135deg, #1e293b 0%, #334155 100%);">
+                    <div class="tsu-stat-card__top">
+                        <span class="tsu-stat-card__label">Target Kuota MPP</span>
+                        <div class="tsu-stat-card__icon-badge">
+                            <i class="fas fa-chart-pie"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="tsu-stat-card__value">
+                            {{ $kuota > 0 ? $kuota : '∞' }} <span class="tsu-stat-card__unit">{{ $kuota > 0 ? 'Orang' : 'Unlimited' }}</span>
+                        </div>
+                        <div class="tsu-stat-card__subtext">
+                            <i class="fas fa-info-circle mr-1"></i>{{ $kuota > 0 ? 'Plafon resmi formasi unit' : 'Batas kuota bebas' }}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: Karyawan Aktif Saat Ini -->
                 <div class="tsu-stat-card text-white" style="background: linear-gradient(135deg, #094b54 0%, #0c6170 100%);">
                     <div class="tsu-stat-card__top">
-                        <span class="tsu-stat-card__label">Karyawan Aktif Unit</span>
+                        <span class="tsu-stat-card__label">Pegawai Aktif Saat Ini</span>
                         <div class="tsu-stat-card__icon-badge">
                             <i class="fas fa-users"></i>
                         </div>
@@ -214,53 +232,49 @@
                     </div>
                 </div>
 
-                <!-- Card 2: Batas Kuota Unit -->
-                <div class="tsu-stat-card text-white" style="background: linear-gradient(135deg, #1e293b 0%, #334155 100%);">
+                <!-- Card 3: Sedang Diproses / Berjalan -->
+                <div class="tsu-stat-card text-white" style="background: linear-gradient(135deg, #475569 0%, #64748b 100%);">
                     <div class="tsu-stat-card__top">
-                        <span class="tsu-stat-card__label">Batas Kuota SDM</span>
+                        <span class="tsu-stat-card__label">Sedang Diproses</span>
                         <div class="tsu-stat-card__icon-badge">
-                            <i class="fas fa-chart-pie"></i>
+                            <i class="fas fa-clock"></i>
                         </div>
                     </div>
                     <div>
                         <div class="tsu-stat-card__value">
-                            {{ $kuota > 0 ? $kuota : '∞' }} <span class="tsu-stat-card__unit">{{ $kuota > 0 ? 'Orang' : 'Unlimited' }}</span>
+                            {{ $pendingCount }} <span class="tsu-stat-card__unit">Orang</span>
                         </div>
                         <div class="tsu-stat-card__subtext">
-                            <i class="fas fa-info-circle mr-1"></i>{{ $kuota > 0 ? 'Batas maksimal kuota unit' : 'Batas kuota belum ditentukan' }}
+                            <i class="fas fa-hourglass-half mr-1"></i>Usulan tahun {{ date('Y') }} berjalan
                         </div>
                     </div>
                 </div>
 
-                <!-- Card 3: Sisa Kuota Pengajuan -->
-                @php
-                    $sisaKuota = $kuota > 0 ? max(0, $kuota - $existingCount) : null;
-                    $isFull = ($kuota > 0 && $existingCount >= $kuota);
-                @endphp
+                <!-- Card 4: Balance Sisa Formasi -->
                 <div class="tsu-stat-card text-white" style="background: {{ $isFull ? 'linear-gradient(135deg, #b45309 0%, #d97706 100%)' : 'linear-gradient(135deg, #166534 0%, #22c55e 100%)' }};">
                     <div class="tsu-stat-card__top">
-                        <span class="tsu-stat-card__label">Sisa Kuota Pengajuan</span>
+                        <span class="tsu-stat-card__label">Balance Sisa Formasi</span>
                         <div class="tsu-stat-card__icon-badge">
-                            <i class="fas {{ $isFull ? 'fa-exclamation-triangle' : 'fa-user-plus' }}"></i>
+                            <i class="fas {{ $isFull ? 'fa-ban' : 'fa-balance-scale' }}"></i>
                         </div>
                     </div>
                     <div>
                         <div class="tsu-stat-card__value">
-                            {{ $kuota > 0 ? $sisaKuota : '∞' }} <span class="tsu-stat-card__unit">{{ $kuota > 0 ? 'Orang' : 'Bebas' }}</span>
+                            {{ $kuota > 0 ? $balance : '∞' }} <span class="tsu-stat-card__unit">{{ $kuota > 0 ? 'Formasi' : 'Bebas' }}</span>
                         </div>
                         <div class="tsu-stat-card__subtext">
-                            <i class="fas {{ $isFull ? 'fa-ban' : 'fa-check' }} mr-1"></i>{{ $isFull ? 'Kuota unit saat ini telah penuh' : 'Dapat diajukan saat ini' }}
+                            <i class="fas {{ $isFull ? 'fa-exclamation-circle' : 'fa-check-circle' }} mr-1"></i>{{ $isFull ? 'Kapasitas unit telah penuh' : 'Dapat diajukan saat ini' }}
                         </div>
                     </div>
                 </div>
             </div>
 
             {{-- Kuota Penuh Warning Alert --}}
-            @if($kuota > 0 && $existingCount >= $kuota)
+            @if($isFull)
                 <div class="tsu-callout tsu-callout--banner mb-3" style="background:#fffbeb;border:1.5px solid #f59e0b;border-radius:var(--tsu-radius,8px);padding:.85rem 1.15rem;display:flex;align-items:center;gap:.75rem;color:#92400e;">
                     <i class="fas fa-exclamation-triangle fa-lg" style="color:#f59e0b;flex-shrink:0;"></i>
                     <div style="font-size:.85rem;line-height:1.4;">
-                        <strong>Perhatian Kuota Unit:</strong> Kuota MPP untuk unit <strong>{{ $unit ? $unit->nama_unit : '-' }}</strong> telah mencapai batas maksimum ({{ $kuota }} orang). Silakan berkoordinasi dengan bagian SDM apabila unit Anda membutuhkan penyesuaian kuota.
+                        <strong>Batas Formasi Terpenuhi:</strong> Kuota formasi MPP unit <strong>{{ $unit ? $unit->nama_unit : '-' }}</strong> saat ini telah penuh (Target: {{ $kuota }}, Terisi Aktif: {{ $existingCount }}, Usulan Berjalan: {{ $pendingCount }} orang). Silakan berkoordinasi dengan bagian SDM / Pimpinan jika unit Anda membutuhkan penyesuaian kuota.
                     </div>
                 </div>
             @endif
@@ -273,8 +287,8 @@
                         Riwayat Pengajuan Manpower Planning Saya
                     </h5>
                     <div class="card-tools m-0">
-                        <button type="button" class="btn btn-sm tsu-btn-create" onclick="showModalAdd()" {{ ($kuota > 0 && $existingCount >= $kuota) ? 'disabled title="Kuota unit telah penuh"' : '' }}>
-                            <i class="fas fa-plus mr-1"></i> Tambah Pengajuan
+                        <button type="button" class="btn btn-sm tsu-btn-create" onclick="showModalAdd()" {{ $isFull ? 'disabled title="Batas kuota balance unit Anda telah terpenuhi"' : '' }}>
+                            <i class="fas fa-plus mr-1"></i> Ajukan Kebutuhan SDM
                         </button>
                     </div>
                 </div>

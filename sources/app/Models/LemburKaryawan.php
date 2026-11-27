@@ -38,8 +38,29 @@ class LemburKaryawan extends Model
         if (!$this->tanggalmulai || !$this->tanggalselesai) return 0;
         $start = Carbon::parse($this->tanggalmulai);
         $end = Carbon::parse($this->tanggalselesai);
-        // Hitung selisih dalam menit, lalu bagi 60 untuk dapat jam (dengan desimal 1 angka)
-        return round($start->diffInMinutes($end) / 60, 1);
+        return round($start->diffInMinutes($end) / 60, 2);
+    }
+
+    public function getDurasiDiakuiAttribute()
+    {
+        if ($this->durasi_efektif_jam !== null) {
+            return (float) $this->durasi_efektif_jam;
+        }
+        return $this->total_jam;
+    }
+
+    public function getKategoriLabelAttribute()
+    {
+        switch ($this->kategori_lembur) {
+            case 'satpam':
+                $shiftName = $this->jenis_shift ? ' (' . strtoupper(str_replace('_', ' ', $this->jenis_shift)) . ')' : '';
+                return 'Satpam' . $shiftName;
+            case 'kerumahtanggaan':
+                return 'Kerumahtanggaan';
+            case 'tendik':
+            default:
+                return 'Tendik Reguler';
+        }
     }
 
     public function getTanggalLemburAttribute()

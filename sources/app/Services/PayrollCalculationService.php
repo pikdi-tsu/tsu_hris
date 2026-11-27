@@ -31,6 +31,7 @@ class PayrollCalculationService
             ->with([
                 'unit',
                 'statusKaryawan',
+                'kontrakAktif',
                 'jabatanFungsionals' => function ($q) {
                     $q->where('is_active', 'Y')->with(['masterFungsional', 'pangkatGolongan']);
                 },
@@ -155,24 +156,31 @@ class PayrollCalculationService
             $jabatanStrukturalStr = $activeStruk->masterStruktural->nama_jabatan;
         }
 
-        // 3. Gaji Pokok (Berdasarkan Matriks Slide 3)
-        $cleanGol = strtoupper(trim(explode(' ', $golonganStr)[0] ?? ''));
-        $masterGapok = $gajiPokokMaster->get($cleanGol);
+        // 3. Gaji Pokok
         $persenGapok = $pegawai->persen_gaji_pokok ?: 100;
 
-        if ($masterGapok) {
-            $gapok = ($persenGapok == 80) ? floatval($masterGapok->gaji_pokok_80) : floatval($masterGapok->gaji_pokok_100);
+        // PRIORITAS 1: Jika pegawai memiliki Kontrak Kerja (PKWT) aktif dengan nominal gaji pokok disepakati
+        if ($pegawai->kontrakAktif && floatval($pegawai->kontrakAktif->gaji_pokok_disepakati) > 0) {
+            $gapok = floatval($pegawai->kontrakAktif->gaji_pokok_disepakati);
         } else {
-            // Default standar jika belum ada golongan tertentu:
-            if ($pegawai->tipe_karyawan === 'Dosen') {
-                $defaultGapokItem = $gajiPokokMaster->get('III/A');
-                $gapok = $defaultGapokItem ? floatval($defaultGapokItem->gaji_pokok_100) : 3037000;
+            // PRIORITAS 2 (Fallback): Berdasarkan Matriks Master Data Gaji Pokok & Golongan
+            $cleanGol = strtoupper(trim(explode(' ', $golonganStr)[0] ?? ''));
+            $masterGapok = $gajiPokokMaster->get($cleanGol);
+
+            if ($masterGapok) {
+                $gapok = ($persenGapok == 80) ? floatval($masterGapok->gaji_pokok_80) : floatval($masterGapok->gaji_pokok_100);
             } else {
-                $defaultGapokItem = $gajiPokokMaster->get('II/A');
-                $gapok = $defaultGapokItem ? floatval($defaultGapokItem->gaji_pokok_100) : 2184000;
-            }
-            if ($persenGapok == 80) {
-                $gapok = round($gapok * 0.8, 2);
+                // Default standar jika belum ada golongan tertentu:
+                if ($pegawai->tipe_karyawan === 'Dosen') {
+                    $defaultGapokItem = $gajiPokokMaster->get('III/A');
+                    $gapok = $defaultGapokItem ? floatval($defaultGapokItem->gaji_pokok_100) : 3037000;
+                } else {
+                    $defaultGapokItem = $gajiPokokMaster->get('II/A');
+                    $gapok = $defaultGapokItem ? floatval($defaultGapokItem->gaji_pokok_100) : 2184000;
+                }
+                if ($persenGapok == 80) {
+                    $gapok = round($gapok * 0.8, 2);
+                }
             }
         }
 
@@ -270,36 +278,12 @@ class PayrollCalculationService
         $appliedTarifTransport = $isDapatTransport ? $tarifTransport : 0;
         $totalTransport = round($hariHadirValid * $appliedTarifTransport, 2);
 
-        // 10. Uang Lembur (Sesuai PP 35/2021 & Aturan TSU: Upah per Jam = (Gaji Pokok + Tunjangan Tetap) / 173)
-        // Syarat Mutlak: HANYA lembur yang disetujui oleh Atasan Langsung DAN HRD (Approved Ganda)
+        // Gaji Tetap (Dasar perhitungan upah tetap bulanan & lembur sesuai PP 35/2021)
+        $gajiTetap = $gapok + $tunjFungsional + $tunjStruktural + $tunjKeluarga + $tunjAnak + $tunjKesehatan;
+
+        // 10. Uang Lembur: Dipisahkan ke modul mandiri "Payroll Lembur" (dibayarkan via transfer & slip terpisah)
         $totalJamLembur = 0;
         $totalLembur = 0;
-
-        $lemburQuery = LemburKaryawan::where('id_user', $pegawai->id)
-            ->where('statushrd', 'approved')
-            ->where('statusatasan', 'approved');
-
-        if ($period->start_date_cutoff && $period->end_date_cutoff) {
-            $lemburQuery->whereBetween('tanggalmulai', [
-                Carbon::parse($period->start_date_cutoff)->startOfDay(),
-                Carbon::parse($period->end_date_cutoff)->endOfDay()
-            ]);
-        } elseif ($period->bulan && $period->tahun) {
-            $lemburQuery->whereMonth('tanggalmulai', $period->bulan)
-                ->whereYear('tanggalmulai', $period->tahun);
-        }
-
-        $lemburRecords = $lemburQuery->get();
-        foreach ($lemburRecords as $lemb) {
-            $jam = floatval($lemb->total_jam ?? 0);
-            $totalJamLembur += $jam;
-
-            $tgl = Carbon::parse($lemb->tanggalmulai);
-            $isLibur = ($tgl->isSunday() || in_array($tgl->format('Y-m-d'), $holidayDates));
-
-            $nominalLembur = LemburKaryawan::hitungNominalLembur($gajiTetap, $jam, $isLibur);
-            $totalLembur += $nominalLembur;
-        }
 
         // 11. Potongan Unpaid Leave (Rate = Gapok / 25 hari)
         $rateUnpaidLeave = ($gapok > 0) ? round($gapok / 25, 2) : 0;

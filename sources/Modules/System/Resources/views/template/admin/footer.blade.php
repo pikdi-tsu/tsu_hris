@@ -162,7 +162,9 @@
 </script>
 @include('system::components.alert')
 @include('system::template/admin/quick-search')
+@include('system::components.modal-absensi-kegiatan')
 @yield('script')
+@yield('js')
 @stack('scripts')
 
 <script src="https://js.pusher.com/8.2.0/pusher.min.js"></script>

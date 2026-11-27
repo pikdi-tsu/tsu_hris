@@ -72,9 +72,11 @@ class PayrollKaryawan extends Model
         }
         $this->potongan_unpaid_leave = floatval($this->hari_unpaid_leave) * floatval($this->rate_unpaid_leave);
 
+        $this->total_lembur = 0;
+        $this->total_jam_lembur = 0;
+
         $this->gaji_kotor = floatval($this->gaji_tetap)
-            + floatval($this->total_transport)
-            + floatval($this->total_lembur);
+            + floatval($this->total_transport);
 
         $this->total_potongan = floatval($this->potongan_unpaid_leave)
             + floatval($this->potongan_bpjs_kes)

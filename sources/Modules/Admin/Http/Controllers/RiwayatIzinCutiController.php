@@ -30,11 +30,25 @@ class RiwayatIzinCutiController extends MiddlewareController
 
     public function index()
     {
+        $tab = request()->query('tab', 'cuti');
         $menuData = MenuSidebar::where('route', 'admin.riwayat-izincuti.index')->first();
         return view('admin::riwayat-izincuti.index', [
-            'title'    => 'Data Riwayat Izin & Cuti',
-            'menuIcon' => $menuData->icon ?? 'fas fa-history',
+            'title'     => $tab === 'izin' ? 'Data Riwayat Izin' : 'Data Riwayat Cuti',
+            'activeTab' => $tab,
+            'menuIcon'  => $menuData->icon ?? 'fas fa-history',
         ]);
+    }
+
+    public function cuti()
+    {
+        request()->merge(['tab' => 'cuti']);
+        return $this->index();
+    }
+
+    public function izin()
+    {
+        request()->merge(['tab' => 'izin']);
+        return $this->index();
     }
 
     /**

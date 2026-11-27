@@ -299,6 +299,9 @@
         :breadcrumb="true"
     >
         <x-slot name="actions">
+            <a href="{{ route('admin.pelaksanaan-onboarding-offboarding.index') }}#tab-offboarding" class="btn btn-sm btn-outline-warning mr-2" style="border-radius: 8px; font-weight: 600;">
+                <i class="fas fa-user-minus mr-1"></i> Buka Offboarding
+            </a>
             {{-- Tombol Kembali ke Dashboard --}}
             <a href="{{ route('admin.pengembangan-sdm.dashboard') }}" class="btn btn-sm tsu-btn-outline-back">
                 <i class="fas fa-arrow-left mr-1"></i> Kembali ke Dashboard

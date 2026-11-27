@@ -59,15 +59,25 @@ class MppController extends Controller
         
         $jabatans = MasterJabatanStruktural::orderBy('nama_jabatan', 'asc')->get();
         $unit = \App\Models\MasterUnit::find($profile->unit_id);
-        $kuota = $unit ? $unit->kuota_mpp : 0;
-        $existingCount = $unit ? \App\Models\DataDosenTendik::where('unit_id', $unit->id)->count() : 0;
+        $kuota = $unit ? (int)$unit->kuota_mpp : 0;
+        $existingCount = $unit ? \App\Models\DataDosenTendik::where('unit_id', $unit->id)->where('is_active', 1)->count() : 0;
         
+        $tahunSekarang = (int)date('Y');
+        // Usulan formasi berjalan tahun ini (status waiting atau approved)
+        $pendingCount = $unit ? (int)ManpowerPlanning::where('unit_id', $unit->id)
+            ->where('tahun', $tahunSekarang)
+            ->whereIn('status', ['waiting', 'approved'])
+            ->sum('jumlah_kebutuhan') : 0;
+
+        $balance = $kuota > 0 ? max(0, $kuota - $existingCount - $pendingCount) : '∞';
+        $isFull = ($kuota > 0 && is_numeric($balance) && $balance <= 0);
+
         $menuData = MenuSidebar::where('route', 'users.mpp.index')->first();
         $menuIcon = $menuData->icon ?? 'fas fa-users-cog';
         $title = $menuData->name ?? 'MPP Kebutuhan SDM';
         $menu = 'dashboard';
         
-        return view('users::mpp.index', compact('jabatans', 'profile', 'title', 'menu', 'unit', 'kuota', 'existingCount', 'menuIcon'));
+        return view('users::mpp.index', compact('jabatans', 'profile', 'title', 'menu', 'unit', 'kuota', 'existingCount', 'pendingCount', 'balance', 'isFull', 'menuIcon'));
     }
 
     public function datatables(Request $request)
@@ -121,12 +131,24 @@ class MppController extends Controller
                 throw new \Exception('Anda tidak memiliki unit kerja. Hubungi administrator.');
             }
 
-            // Validasi Kuota MPP
+            // Validasi Kuota & Balance MPP
             $unit = \App\Models\MasterUnit::find($profile->unit_id);
             if ($unit && $unit->kuota_mpp > 0) {
-                $existingCount = \App\Models\DataDosenTendik::where('unit_id', $unit->id)->count();
-                if (($existingCount + $request->jumlah_kebutuhan) > $unit->kuota_mpp) {
-                    throw new \Exception("Pengajuan ditolak. Kuota MPP unit Anda adalah {$unit->kuota_mpp} orang, saat ini sudah terisi {$existingCount} orang. Sisa kuota tidak mencukupi untuk penambahan {$request->jumlah_kebutuhan} orang.");
+                $kuota = (int)$unit->kuota_mpp;
+                $existingCount = \App\Models\DataDosenTendik::where('unit_id', $unit->id)->where('is_active', 1)->count();
+                $pendingCount = (int)ManpowerPlanning::where('unit_id', $unit->id)
+                    ->where('tahun', $request->tahun)
+                    ->whereIn('status', ['waiting', 'approved'])
+                    ->sum('jumlah_kebutuhan');
+
+                $balance = max(0, $kuota - $existingCount - $pendingCount);
+
+                if ($balance <= 0) {
+                    throw new \Exception("Pengajuan ditolak. Kuota formasi MPP unit Anda ({$kuota} orang) saat ini telah terpenuhi (Staf aktif: {$existingCount}, Usulan berjalan: {$pendingCount}). Tidak ada sisa Balance kuota yang tersedia.");
+                }
+
+                if ($request->jumlah_kebutuhan > $balance) {
+                    throw new \Exception("Pengajuan ditolak. Jumlah kebutuhan yang diajukan ({$request->jumlah_kebutuhan} orang) melebihi sisa Balance kuota yang tersedia ({$balance} orang). Silakan sesuaikan jumlah usulan Anda.");
                 }
             }
 

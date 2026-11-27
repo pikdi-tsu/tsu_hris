@@ -34,11 +34,13 @@ class PengembanganSdmController extends MiddlewareController
         $selectedPeriodeId = $request->get('periode_id', $periodeList->firstWhere('is_active', true)?->id ?? $periodeList->first()?->id);
 
         $dashboardData = PengembanganSdmService::getExecutiveDashboardData($selectedPeriodeId);
+        $jafungSummary = PengembanganSdmService::getJabatanFungsionalSummary();
 
         return view('admin::pengembangan-sdm.dashboard', array_merge($dashboardData, [
-            'title' => 'Dashboard & Rekapitulasi Pengembangan SDM',
+            'title' => 'Dashboard Development',
             'periodeList' => $periodeList,
             'selectedPeriodeId' => $selectedPeriodeId,
+            'jafungSummary' => $jafungSummary,
         ]));
     }
 
@@ -66,7 +68,7 @@ class PengembanganSdmController extends MiddlewareController
         $masterBidang = MasterBidangKeilmuan::where('kategori', 'dosen')->where('is_active', true)->get();
 
         return view('admin::pengembangan-sdm.dosen_prodi', array_merge($worksheetData, [
-            'title' => 'Road Map Studi Lanjut Dosen per Program Studi',
+            'title' => 'Roadmap Pengembangan Dosen',
             'periodeList' => $periodeList,
             'selectedPeriodeId' => $selectedPeriodeId,
             'prodiList' => $prodiList,
@@ -100,7 +102,7 @@ class PengembanganSdmController extends MiddlewareController
         $masterBidang = MasterBidangKeilmuan::where('kategori', 'tendik')->where('is_active', true)->get();
 
         return view('admin::pengembangan-sdm.tendik_unit', array_merge($worksheetData, [
-            'title' => 'Perencanaan Studi Lanjut & Sertifikasi Tenaga Kependidikan',
+            'title' => 'Roadmap Pengembangan Tendik',
             'periodeList' => $periodeList,
             'selectedPeriodeId' => $selectedPeriodeId,
             'unitList' => $unitList,

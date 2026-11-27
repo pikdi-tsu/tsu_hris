@@ -94,6 +94,7 @@
             font-size: 0.78rem !important;
             padding: 5px 10px !important;
             letter-spacing: 0.2px;
+            white-space: nowrap !important;
         }
 
         #table-admin-surat .badge-warning {
@@ -266,7 +267,7 @@
                                     <th width="22%">Pemohon & Unit</th>
                                     <th width="18%">Jenis Surat</th>
                                     <th width="12%">Tgl Pengajuan</th>
-                                    <th width="14%" class="text-center">Status</th>
+                                    <th width="14%" class="text-center text-nowrap">Status</th>
                                     <th width="16%" class="text-center">Aksi / Tindakan</th>
                                 </tr>
                             </thead>
@@ -307,7 +308,7 @@
                     { data: 'pemohon', name: 'pegawai.nama' },
                     { data: 'jenis_surat', name: 'jenis_surat' },
                     { data: 'tgl_pengajuan', name: 'created_at' },
-                    { data: 'status_badge', name: 'status', className: 'text-center' },
+                    { data: 'status_badge', name: 'status', className: 'text-center text-nowrap' },
                     { data: 'aksi', name: 'aksi', orderable: false, searchable: false, className: 'text-center' },
                 ]
             });

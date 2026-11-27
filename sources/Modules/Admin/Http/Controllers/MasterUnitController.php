@@ -49,9 +49,20 @@ class MasterUnitController extends MiddlewareController
             ->addIndexColumn()
             ->editColumn('nama_unit', function ($row) {
                 $html = '<div class="font-weight-bold text-dark" style="font-size: 0.88rem;">' . e($row->nama_unit) . '</div>';
-                if ($row->kuota_mpp > 0) {
-                    $html .= '<small class="text-muted d-block" style="font-size: 0.75rem;">Kuota MPP: ' . (int)$row->kuota_mpp . ' Pegawai</small>';
+                $html .= '<div class="d-flex align-items-center flex-wrap gap-1 mt-1">';
+                if ($row->tipe_unit === 'akademik') {
+                    $html .= '<span class="badge badge-success px-2 py-0 mr-1" style="font-size: 0.7rem;"><i class="fas fa-graduation-cap mr-1"></i>Akademik</span>';
+                    if ($row->jumlah_mahasiswa > 0) {
+                        $html .= '<span class="badge badge-light border text-dark px-1 py-0 mr-1" style="font-size: 0.7rem;">' . number_format($row->jumlah_mahasiswa) . ' Mhs</span>';
+                    }
+                } else {
+                    $html .= '<span class="badge badge-info px-2 py-0 mr-1" style="font-size: 0.7rem;"><i class="fas fa-briefcase mr-1"></i>Non-Akademik</span>';
+                    $html .= '<span class="badge badge-light border text-dark px-1 py-0 mr-1" style="font-size: 0.7rem;">Beban: ' . ucfirst($row->beban_kerja ?? 'sedang') . '</span>';
                 }
+                if ($row->kuota_mpp > 0) {
+                    $html .= '<span class="badge badge-dark px-2 py-0" style="font-size: 0.7rem;">Kuota: ' . (int)$row->kuota_mpp . ' Org</span>';
+                }
+                $html .= '</div>';
                 return $html;
             })
             ->editColumn('unit_induk', function ($row) {
@@ -129,6 +140,9 @@ class MasterUnitController extends MiddlewareController
 
         $request->validate([
             'nama_unit'         => 'required|string|max:255',
+            'tipe_unit'         => 'required|in:akademik,non_akademik',
+            'jumlah_mahasiswa'  => 'nullable|integer|min:0',
+            'beban_kerja'       => 'nullable|in:rendah,sedang,tinggi',
             'keterangan'        => 'nullable|string',
             'kepala_jabatan_id' => 'nullable|exists:master_jabatan_strukturals,id',
             'parent_unit_id'    => 'nullable|exists:master_units,id',
@@ -149,6 +163,9 @@ class MasterUnitController extends MiddlewareController
 
             MasterUnit::create([
                 'nama_unit'         => $request->nama_unit,
+                'tipe_unit'         => $request->tipe_unit ?? 'non_akademik',
+                'jumlah_mahasiswa'  => $request->tipe_unit === 'akademik' ? $request->jumlah_mahasiswa : null,
+                'beban_kerja'       => $request->beban_kerja ?? 'sedang',
                 'keterangan'        => $request->keterangan,
                 'kepala_jabatan_id' => $kepalaJabatanId,
                 'parent_unit_id'    => $request->parent_unit_id,
@@ -184,6 +201,9 @@ class MasterUnitController extends MiddlewareController
 
         $request->validate([
             'nama_unit'         => 'required|string|max:255',
+            'tipe_unit'         => 'required|in:akademik,non_akademik',
+            'jumlah_mahasiswa'  => 'nullable|integer|min:0',
+            'beban_kerja'       => 'nullable|in:rendah,sedang,tinggi',
             'keterangan'        => 'nullable|string',
             'kepala_jabatan_id' => 'nullable|exists:master_jabatan_strukturals,id',
             'parent_unit_id'    => 'nullable|exists:master_units,id',
@@ -194,6 +214,9 @@ class MasterUnitController extends MiddlewareController
         try {
             $unit->update([
                 'nama_unit'         => $request->nama_unit,
+                'tipe_unit'         => $request->tipe_unit ?? 'non_akademik',
+                'jumlah_mahasiswa'  => $request->tipe_unit === 'akademik' ? $request->jumlah_mahasiswa : null,
+                'beban_kerja'       => $request->beban_kerja ?? 'sedang',
                 'keterangan'        => $request->keterangan,
                 'kepala_jabatan_id' => $request->kepala_jabatan_id,
                 'parent_unit_id'    => $request->parent_unit_id,

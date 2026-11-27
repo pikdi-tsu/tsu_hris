@@ -1,4 +1,4 @@
-﻿<div class="modal-body p-0">
+<div class="modal-body p-0">
     <div class="p-4">
         <div class="row mb-3">
             <div class="col-md-6">
@@ -17,13 +17,28 @@
                     </span>
                 </div>
                 <div class="mb-3">
-                    <small class="d-block text-muted text-uppercase" style="font-size:.7rem;letter-spacing:.06em;font-weight:700;">Waktu Lembur</small>
+                    <small class="d-block text-muted text-uppercase" style="font-size:.7rem;letter-spacing:.06em;font-weight:700;">Waktu &amp; Durasi Lembur</small>
                     <span style="font-size:.88rem;font-weight:600;color:var(--tsu-primary-dark);">
                         <i class="fas fa-clock mr-1" style="color:var(--tsu-primary);"></i> {{ $waktu }}
                     </span><br>
-                    <span style="background:var(--tsu-primary-faint);color:var(--tsu-primary-dark);border:1px solid var(--tsu-primary-light);border-radius:20px;font-size:.78rem;font-weight:700;padding:.2em .6em;">
-                        <i class="fas fa-stopwatch mr-1"></i> {{ $durasi }} Jam
-                    </span>
+                    <div class="mt-1 d-flex flex-wrap align-items-center" style="gap:0.35rem;">
+                        <span style="background:var(--tsu-primary-faint);color:var(--tsu-primary-dark);border:1px solid var(--tsu-primary-light);border-radius:20px;font-size:.78rem;font-weight:700;padding:.2em .6em;">
+                            <i class="fas fa-stopwatch mr-1"></i> Diakui: {{ $data->durasi_diakui }} Jam
+                        </span>
+                        <span class="badge badge-light border text-muted" style="font-size:.75rem;">
+                            {{ $data->kategori_label }}
+                        </span>
+                        @if($data->koefisien_pengali)
+                        <span class="badge badge-info" style="font-size:.75rem;">
+                            Pengali: {{ $data->koefisien_pengali }}x
+                        </span>
+                        @endif
+                        @if($data->nominal_estimasi)
+                        <span class="badge badge-success" style="font-size:.75rem;">
+                            Est: Rp {{ number_format($data->nominal_estimasi, 0, ',', '.') }}
+                        </span>
+                        @endif
+                    </div>
                 </div>
             </div>
             <div class="col-md-6">

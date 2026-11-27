@@ -1,8 +1,8 @@
 @extends('system::template.admin.header')
 
+@section('title', 'Data KPI Unit Kerja')
+
 @section('link_href')
-    <link rel="stylesheet" href="{{ asset('assets/adminlte/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css') }}">
-    <link rel="stylesheet" href="{{ asset('assets/adminlte/plugins/datatables-responsive/css/responsive.bootstrap4.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/adminlte/plugins/select2/css/select2.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/adminlte/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css') }}">
     <link rel="stylesheet" href="{{ asset('assets/adminlte/plugins/sweetalert2/sweetalert2.min.css') }}">
@@ -15,761 +15,671 @@
             --tsu-surface: #ffffff;
             --tsu-bg-subtle: #f8fafc;
             --tsu-border: #e2e8f0;
-            --tsu-text-main: #0f172a;
-            --tsu-text-muted: #64748b;
         }
 
-        /* STAT CARDS */
-        .tsu-stat-grid-cascading {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1rem;
-            margin-bottom: 1.25rem;
-        }
-
-        @media (max-width: 991.98px) {
-            .tsu-stat-grid-cascading {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-
-        @media (max-width: 575.98px) {
-            .tsu-stat-grid-cascading {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .tsu-stat-card {
-            border-radius: 12px;
-            padding: 1.25rem 1.5rem;
-            color: #ffffff;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.06);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            min-height: 100px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }
-
-        .tsu-stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-        }
-
-        .tsu-stat-card--unit {
-            background: linear-gradient(135deg, #094b54 0%, #0c6170 100%);
-        }
-
-        .tsu-stat-card--periode {
-            background: linear-gradient(135deg, #0284c7 0%, #0ea5e9 100%);
-        }
-
-        .tsu-stat-card--bobot-valid {
-            background: linear-gradient(135deg, #047857 0%, #10b981 100%);
-        }
-
-        .tsu-stat-card--bobot-warn {
-            background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
-        }
-
-        .tsu-stat-card--indikator {
-            background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-        }
-
-        .tsu-stat-card__watermark {
-            position: absolute;
-            right: 1.25rem;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 3.2rem;
-            opacity: 0.15;
-            pointer-events: none;
-            color: #ffffff;
-        }
-
-        .tsu-stat-card__value {
-            font-size: 1.75rem;
-            font-weight: 700;
-            line-height: 1.2;
-            margin-bottom: 0.25rem;
-            color: #ffffff;
-        }
-
-        .tsu-stat-card__value--unit {
-            font-size: 1.2rem;
-            font-weight: 700;
-            line-height: 1.3;
-            margin-bottom: 0.25rem;
-            color: #ffffff;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .tsu-stat-card__label {
-            font-size: 0.85rem;
-            opacity: 0.9;
-            margin-bottom: 0;
-            font-weight: 500;
-            color: #ffffff;
-        }
-
-        /* CREATE BUTTON */
-        .tsu-btn-create {
-            background: linear-gradient(135deg, #094b54 0%, #0c6170 100%);
-            border: none;
-            color: #ffffff;
-            border-radius: 8px;
-            font-weight: 600;
-            padding: 0.45rem 1rem;
-            box-shadow: 0 2px 6px rgba(9, 75, 84, 0.25);
-            transition: all 0.2s ease;
-        }
-
-        .tsu-btn-create:hover {
-            background: linear-gradient(135deg, #063339 0%, #094b54 100%);
-            color: #ffffff;
-            box-shadow: 0 4px 12px rgba(9, 75, 84, 0.35);
-            transform: translateY(-1px);
-        }
-
-        .tsu-btn-outline-back {
-            border-radius: 8px;
-            font-weight: 600;
-            padding: 0.45rem 1rem;
-            border: 1px solid #cbd5e1;
-            color: #475569;
+        .kpi-stat-card {
             background: #ffffff;
-            transition: all 0.2s ease;
+            border-radius: 14px;
+            padding: 1.25rem 1.4rem;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+            display: flex;
+            align-items: center;
+            gap: 1.15rem;
+            height: 100%;
+            transition: transform 0.15s ease, box-shadow 0.15s ease;
+        }
+        .kpi-stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 14px rgba(0,0,0,0.06);
+        }
+        .kpi-stat-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.45rem;
+            flex-shrink: 0;
         }
 
-        .tsu-btn-outline-back:hover {
-            background: #f8fafc;
-            color: #0f172a;
-            border-color: #94a3b8;
-        }
-
-        /* TABLE STYLING */
-        .tsu-table-modern thead th {
+        .table-kpi th {
             background: #f8fafc;
             color: #334155;
-            font-weight: 700;
             font-size: 0.78rem;
             text-transform: uppercase;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.04em;
+            font-weight: 700;
             border-bottom: 2px solid #e2e8f0;
-            padding: 0.85rem 1rem;
             vertical-align: middle;
+            padding: 0.85rem 0.9rem;
         }
-
-        .tsu-table-modern tbody td {
-            padding: 0.85rem 1rem;
+        .table-kpi td {
             vertical-align: middle;
             font-size: 0.88rem;
+            padding: 0.85rem 0.9rem;
             border-bottom: 1px solid #f1f5f9;
         }
-
-        .tsu-table-modern tbody tr:hover {
+        .table-kpi tbody tr:hover {
             background-color: #f8fafc;
         }
 
-        .modal-header-tsu {
-            background: linear-gradient(135deg, #094b54 0%, #0c6170 100%);
+        .badge-unit {
+            background: rgba(14, 165, 233, 0.12);
+            color: #0284c7;
+            border: 1px solid rgba(14, 165, 233, 0.25);
+            font-weight: 600;
+            border-radius: 6px;
+            padding: 0.3rem 0.6rem;
+            font-size: 0.76rem;
+        }
+        .badge-program {
+            background: rgba(16, 185, 129, 0.12);
+            color: #059669;
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            font-weight: 600;
+            border-radius: 6px;
+            padding: 0.3rem 0.6rem;
+            font-size: 0.76rem;
+        }
+
+        .btn-tsu-primary {
+            background: #094b54;
             color: #ffffff;
-            border-bottom: none;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            padding: 0.45rem 1.1rem;
+            box-shadow: 0 2px 6px rgba(9, 75, 84, 0.2);
+            transition: all 0.2s ease;
         }
-
-        .modal-header-tsu .close {
+        .btn-tsu-primary:hover {
+            background: #063339;
             color: #ffffff;
-            opacity: 0.85;
-            text-shadow: none;
-        }
-
-        .modal-header-tsu .close:hover {
-            opacity: 1;
-        }
-
-        .select2-container--bootstrap4 .select2-selection--single {
-            height: calc(2.25rem + 2px) !important;
-            border: 1px solid #ced4da;
-            border-radius: 0.35rem;
+            transform: translateY(-1px);
         }
     </style>
 @endsection
 
 @section('content')
-    <x-tsu-page-header
-        title="Cascading KPI Unit Kerja"
-        subtitle="Matriks penurunan target kinerja pimpinan ke unit pelaksana kerja, pembobotan (Bobot %), dan peta jalan target multi-tahun"
-        :icon="$menuIcon ?? 'fas fa-sitemap'"
-        :breadcrumb="true"
-    >
-        <x-slot name="actions">
-            <a href="{{ route('admin.kpi.dashboard.index') }}" class="btn btn-sm tsu-btn-outline-back mr-2">
-                <i class="fas fa-arrow-left mr-1"></i> Kembali ke Dashboard
-            </a>
-            <button type="button" class="btn tsu-btn-create btn-sm" id="btn-add-kpi-unit">
-                <i class="fas fa-plus mr-1"></i> Tambah Indikator ke Unit
-            </button>
-        </x-slot>
-    </x-tsu-page-header>
+<div class="content-header">
+    <div class="container-fluid">
+        <div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
+            <div>
+                <nav aria-label="breadcrumb">
+                    <ol class="breadcrumb bg-transparent p-0 mb-1" style="font-size: 0.82rem;">
+                        <li class="breadcrumb-item"><a href="{{ route('admin.kpi.dashboard.index') }}" class="text-muted">KPI</a></li>
+                        <li class="breadcrumb-item active text-dark font-weight-bold" aria-current="page">Data KPI</li>
+                    </ol>
+                </nav>
+                <h1 class="m-0 text-dark font-weight-bold" style="font-size: 1.5rem;">
+                    <i class="fas fa-chart-line text-primary mr-2" style="color: #094b54 !important;"></i>Data KPI
+                </h1>
+                <p class="text-muted small mb-0">Kelola data indikator kinerja unit kerja, target, realisasi, dan kalkulasi otomatis capaian & skor.</p>
+            </div>
+            <div class="mt-2 mt-md-0 d-flex" style="gap: 8px;">
+                <button type="button" class="btn btn-outline-secondary btn-sm rounded-pill px-3 font-weight-bold" data-toggle="modal" data-target="#modalExport">
+                    <i class="fas fa-file-export mr-1"></i> Impor / Ekspor
+                </button>
+                <button type="button" class="btn btn-tsu-primary btn-sm rounded-pill px-4" data-toggle="modal" data-target="#modalTambahKpi">
+                    <i class="fas fa-plus mr-1"></i> Tambah KPI
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
-    <section class="content">
-        <div class="container-fluid">
+<section class="content">
+    <div class="container-fluid">
 
-            <!-- Ringkasan Statistik 4 Kartu Context-Aware -->
-            <div class="tsu-stat-grid-cascading">
-                <div class="tsu-stat-card tsu-stat-card--unit">
-                    <i class="fas fa-building tsu-stat-card__watermark"></i>
-                    <div class="tsu-stat-card__value--unit">{{ $currentUnit->nama_unit ?? 'Pilih Unit' }}</div>
-                    <div class="tsu-stat-card__label">Kode: {{ $currentUnit->kode_unit ?? '-' }} • Unit Terpilih</div>
-                </div>
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm mb-3" style="border-radius: 10px;" role="alert">
+                <i class="fas fa-check-circle mr-2"></i>{{ session('success') }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        @endif
 
-                <div class="tsu-stat-card tsu-stat-card--periode">
-                    <i class="fas fa-calendar-alt tsu-stat-card__watermark"></i>
-                    <div class="tsu-stat-card__value">Tahun {{ $currentPeriode->tahun ?? date('Y') }}</div>
-                    <div class="tsu-stat-card__label">{{ $currentPeriode->nama_periode ?? 'Periode Penilaian' }}</div>
-                </div>
-
-                <div class="tsu-stat-card {{ $totalBobot == 100 ? 'tsu-stat-card--bobot-valid' : 'tsu-stat-card--bobot-warn' }}">
-                    <i class="fas fa-percentage tsu-stat-card__watermark"></i>
-                    <div class="tsu-stat-card__value">{{ $totalBobot }}%</div>
-                    <div class="tsu-stat-card__label">
-                        {{ $totalBobot == 100 ? 'Akumulasi Bobot 100% (Valid Standar BSC)' : 'Total Bobot (Target: Tepat 100%)' }}
+        {{-- 4 Stat Cards Top Bar (Mockup Image 8) --}}
+        <div class="row mb-4">
+            <div class="col-xl-3 col-md-6 mb-3 mb-xl-0">
+                <div class="kpi-stat-card">
+                    <div class="kpi-stat-icon" style="background: rgba(16, 185, 129, 0.12); color: #059669;">
+                        <i class="fas fa-bullseye"></i>
                     </div>
-                </div>
-
-                <div class="tsu-stat-card tsu-stat-card--indikator">
-                    <i class="fas fa-tasks tsu-stat-card__watermark"></i>
-                    <div class="tsu-stat-card__value">{{ $totalIndikator }}</div>
-                    <div class="tsu-stat-card__label">Indikator KPI Scorecard Unit</div>
+                    <div>
+                        <small class="text-muted text-uppercase font-weight-bold" style="font-size: 0.72rem;">Total Indikator</small>
+                        <h4 class="font-weight-bold mb-0 text-dark">{{ $totalIndikator }}</h4>
+                        <small class="text-muted">indikator terdaftar</small>
+                    </div>
                 </div>
             </div>
 
-            <!-- Filter Bar: Unit Kerja & Periode Penilaian (Di bawah Panduan) -->
-            <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
-                <div class="card-body p-3">
-                    <form method="GET" action="{{ route('admin.kpi.cascading.index') }}" id="filter-form" class="row align-items-center">
-                        <div class="col-md-5 mb-2 mb-md-0">
-                            <label class="font-weight-bold text-dark small mb-1">
-                                <i class="fas fa-building mr-1" style="color: var(--tsu-primary);"></i> Pilih Unit Kerja:
-                            </label>
-                            <select name="unit_id" id="select-unit" class="form-control form-control-sm select2" onchange="this.form.submit()">
-                                @foreach($units as $u)
-                                    <option value="{{ $u->id }}" {{ $currentUnit && $currentUnit->id == $u->id ? 'selected' : '' }}>
-                                        {{ $u->nama_unit }} ({{ $u->kode_unit ?? '-' }})
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-5 mb-2 mb-md-0">
-                            <label class="font-weight-bold text-dark small mb-1">
-                                <i class="fas fa-calendar-alt mr-1" style="color: var(--tsu-teal-accent);"></i> Periode Penilaian:
-                            </label>
-                            <select name="periode_id" id="select-periode" class="form-control form-control-sm select2" onchange="this.form.submit()">
-                                @foreach($periodes as $p)
-                                    <option value="{{ $p->id }}" {{ $currentPeriode && $currentPeriode->id == $p->id ? 'selected' : '' }}>
-                                        Tahun {{ $p->tahun }} - {{ $p->nama_periode }} {{ $p->is_active ? '(Aktif)' : '' }}
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="col-md-2 text-md-right mt-3 mt-md-0 d-flex align-items-end justify-content-md-end">
-                            <button type="button" class="btn tsu-btn-create btn-sm w-100" id="btn-add-kpi-unit-filter" style="margin-top: 22px;">
-                                <i class="fas fa-plus mr-1"></i> Tambah KPI
-                            </button>
-                        </div>
-                    </form>
+            <div class="col-xl-3 col-md-6 mb-3 mb-xl-0">
+                <div class="kpi-stat-card">
+                    <div class="kpi-stat-icon" style="background: rgba(14, 165, 233, 0.12); color: #0284c7;">
+                        <i class="fas fa-tachometer-alt"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted text-uppercase font-weight-bold" style="font-size: 0.72rem;">Rata-rata Capaian</small>
+                        <h4 class="font-weight-bold mb-0 text-primary" style="color: #0284c7 !important;">{{ $avgCapaian }}%</h4>
+                        <small class="text-muted">dari target akumulatif</small>
+                    </div>
                 </div>
             </div>
 
-            <!-- Main Card Container: Table of Unit KPI Cascading -->
-            <div class="card border-0 shadow-sm" style="border-radius: 12px; overflow: hidden;">
-                <div class="card-header bg-white py-3" style="border-bottom: 1px solid var(--tsu-border);">
-                    <div class="row align-items-center">
-                        <div class="col-md-7">
-                            <h5 class="font-weight-bold text-dark mb-0" style="font-size: 1rem; display: flex; align-items: center; gap: 8px;">
-                                <i class="fas fa-table" style="color: var(--tsu-primary);"></i> Matriks Cascading & Target Kinerja Unit
-                            </h5>
-                            <small class="text-muted">
-                                Scorecard: <strong>{{ $currentUnit->nama_unit ?? '-' }}</strong> • Periode {{ $currentPeriode->nama_periode ?? '-' }}
-                            </small>
-                        </div>
-                        <div class="col-md-5 text-md-right mt-2 mt-md-0">
-                            @if($totalBobot == 100)
-                                <span class="badge badge-pill font-weight-bold px-3 py-2" style="background: rgba(16, 185, 129, 0.1); color: #059669; border: 1px solid rgba(16, 185, 129, 0.25); font-size: 0.82rem;">
-                                    <i class="fas fa-check-circle mr-1"></i> Total Bobot: 100% (Valid)
-                                </span>
-                            @else
-                                <span class="badge badge-pill font-weight-bold px-3 py-2" style="background: rgba(217, 119, 6, 0.1); color: #b45309; border: 1px solid rgba(217, 119, 6, 0.25); font-size: 0.82rem;" title="Standar total bobot scorecard BSC adalah 100%">
-                                    <i class="fas fa-exclamation-triangle mr-1"></i> Total Bobot: {{ $totalBobot }}% (Belum 100%)
-                                </span>
-                            @endif
-                        </div>
+            <div class="col-xl-3 col-md-6 mb-3 mb-xl-0">
+                <div class="kpi-stat-card">
+                    <div class="kpi-stat-icon" style="background: rgba(139, 92, 246, 0.12); color: #7c3aed;">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted text-uppercase font-weight-bold" style="font-size: 0.72rem;">Rata-rata Skor</small>
+                        <h4 class="font-weight-bold mb-0" style="color: #7c3aed;">{{ $avgSkor }}</h4>
+                        <small class="text-muted">dari skala 100</small>
                     </div>
                 </div>
-                <div class="card-body p-3">
-                    <div class="table-responsive">
-                        <table id="table-kpi-cascading" class="table table-hover tsu-table-modern w-100 align-middle">
-                            <thead>
+            </div>
+
+            <div class="col-xl-3 col-md-6 mb-3 mb-xl-0">
+                <div class="kpi-stat-card">
+                    <div class="kpi-stat-icon" style="background: rgba(245, 158, 11, 0.12); color: #d97706;">
+                        <i class="fas fa-file-invoice"></i>
+                    </div>
+                    <div>
+                        <small class="text-muted text-uppercase font-weight-bold" style="font-size: 0.72rem;">Total Bobot</small>
+                        <h4 class="font-weight-bold mb-0 text-dark">{{ $totalBobot }}%</h4>
+                        <small class="{{ $totalBobot == 100 ? 'text-success font-weight-bold' : 'text-muted' }}">
+                            {{ $totalBobot == 100 ? '100% terpenuhi' : 'akumulasi bobot' }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Filter Bar (Mockup Image 8) --}}
+        <div class="card border-0 shadow-sm mb-4" style="border-radius: 14px;">
+            <div class="card-body p-3">
+                <form action="{{ route('admin.kpi.cascading.index') }}" method="GET" class="row align-items-center" id="filterKpiForm">
+                    <div class="col-lg-3 col-md-6 mb-2 mb-lg-0">
+                        <label class="font-weight-bold text-dark small mb-1">Unit Kerja</label>
+                        <select name="unit_id" class="form-control form-control-sm select2" onchange="this.form.submit()">
+                            <option value="all" {{ !$selectedUnitId || $selectedUnitId === 'all' ? 'selected' : '' }}>Semua Unit</option>
+                            @foreach($units as $u)
+                                <option value="{{ $u->id }}" {{ $selectedUnitId == $u->id ? 'selected' : '' }}>{{ $u->nama_unit }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="col-lg-3 col-md-6 mb-2 mb-lg-0">
+                        <label class="font-weight-bold text-dark small mb-1">Jenis Cascading</label>
+                        <select name="jenis_cascading" class="form-control form-control-sm" onchange="this.form.submit()">
+                            <option value="all" {{ !$selectedCascading || $selectedCascading === 'all' ? 'selected' : '' }}>Semua Jenis</option>
+                            <option value="Unit" {{ $selectedCascading === 'Unit' ? 'selected' : '' }}>Unit</option>
+                            <option value="Program" {{ $selectedCascading === 'Program' ? 'selected' : '' }}>Program</option>
+                        </select>
+                    </div>
+
+                    <div class="col-lg-4 col-md-8 mb-2 mb-lg-0">
+                        <label class="font-weight-bold text-dark small mb-1">Pencarian</label>
+                        <div class="input-group input-group-sm">
+                            <input type="text" name="search" value="{{ $search }}" class="form-control" placeholder="Cari indikator kinerja...">
+                            <div class="input-group-append">
+                                <button type="submit" class="btn btn-primary" style="background: #094b54; border-color: #094b54;">
+                                    <i class="fas fa-search"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-2 col-md-4 text-lg-right mt-3 mt-lg-0">
+                        <a href="{{ route('admin.kpi.cascading.index') }}" class="btn btn-sm btn-outline-secondary rounded-pill px-3 w-100" style="margin-top: 24px;">
+                            <i class="fas fa-undo mr-1"></i> Reset Filter
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {{-- Table Container: Daftar KPI Unit Kerja (Mockup Image 8) --}}
+        <div class="card border-0 shadow-sm" style="border-radius: 14px; overflow: hidden;">
+            <div class="card-header bg-white py-3 border-bottom d-flex align-items-center justify-content-between">
+                <h6 class="font-weight-bold mb-0 text-dark">
+                    <i class="fas fa-table mr-2" style="color: #094b54;"></i> Daftar KPI Unit Kerja
+                </h6>
+                <span class="badge badge-light border text-muted">Menampilkan {{ $kpiItems->count() }} Data KPI</span>
+            </div>
+
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover table-kpi mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;" class="text-center">No.</th>
+                                <th style="width: 110px;" class="text-center">Jenis Cascading</th>
+                                <th style="width: 110px;">Unit Terkait</th>
+                                <th style="min-width: 220px;">Definisi Indikator Kinerja</th>
+                                <th style="min-width: 200px;">Formula Pengukuran</th>
+                                <th style="width: 140px;">Bukti (Doc/PDF)</th>
+                                <th style="width: 80px;" class="text-center">Target</th>
+                                <th style="width: 80px;" class="text-center">Bobot (%)</th>
+                                <th style="width: 80px;" class="text-center">Realisasi</th>
+                                <th style="width: 90px;" class="text-center">Capaian (%)</th>
+                                <th style="width: 70px;" class="text-center">Skor</th>
+                                <th style="width: 130px;" class="text-center text-nowrap">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($kpiItems as $idx => $kpi)
+                                @php
+                                    $isProgram = strtolower($kpi->jenis_cascading) === 'program';
+                                    $capaianVal = $kpi->capaian_persen;
+                                    $capaianColor = $capaianVal >= 100 ? '#059669' : ($capaianVal >= 80 ? '#0284c7' : '#d97706');
+                                @endphp
                                 <tr>
-                                    <th width="4%" class="text-center">No</th>
-                                    <th width="10%" class="text-center">Perspektif</th>
-                                    <th width="24%">Indikator Kinerja</th>
-                                    <th width="15%">Alur Cascading</th>
-                                    <th width="12%">Target Berjalan</th>
-                                    <th width="13%">Roadmap Multi-Tahun</th>
-                                    <th width="8%" class="text-center">Bobot</th>
-                                    <th width="8%">PIC / Terkait</th>
-                                    <th width="6%" class="text-center">Aksi</th>
+                                    <td class="text-center font-weight-bold text-muted">{{ $idx + 1 }}</td>
+                                    <td class="text-center">
+                                        <span class="{{ $isProgram ? 'badge-program' : 'badge-unit' }}">
+                                            {{ $kpi->jenis_cascading ?: 'Unit' }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="font-weight-bold text-dark">{{ $kpi->unit_terkait ?: optional($kpi->unit)->nama_unit ?: 'BAUK' }}</span>
+                                    </td>
+                                    <td>
+                                        <div class="font-weight-bold text-dark" style="font-size: 0.9rem;">
+                                            {{ optional($kpi->masterIndikator)->nama_indikator ?? $kpi->definisi_indikator ?? '-' }}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <small class="text-muted font-italic">{{ $kpi->formula_pengukuran ?: '-' }}</small>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-light border text-muted px-2 py-1">
+                                            <i class="fas fa-file-alt mr-1"></i>{{ $kpi->file_bukti ?: 'Laporan / PDF' }}
+                                        </span>
+                                    </td>
+                                    <td class="text-center">
+                                        <strong class="text-dark">{{ $kpi->target_angka !== null ? (float)$kpi->target_angka : ($kpi->target_label ?? '-') }}</strong>
+                                        <small class="text-muted">{{ $kpi->satuan }}</small>
+                                    </td>
+                                    <td class="text-center font-weight-bold text-dark">
+                                        {{ (float)$kpi->bobot }}
+                                    </td>
+                                    <td class="text-center">
+                                        @if($kpi->realisasi_angka !== null)
+                                            <strong class="text-primary">{{ (float)$kpi->realisasi_angka }}</strong>
+                                            <small class="text-muted">{{ $kpi->satuan }}</small>
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-center">
+                                        @if($kpi->capaian_persen !== null)
+                                            <strong style="color: {{ $capaianColor }};">{{ number_format($kpi->capaian_persen, 1) }}%</strong>
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-center font-weight-bold text-dark">
+                                        @if($kpi->skor !== null)
+                                            <span class="badge badge-pill px-2 py-1" style="background: rgba(9, 75, 84, 0.1); color: #094b54; font-size: 0.85rem;">
+                                                {{ number_format($kpi->skor, 1) }}
+                                            </span>
+                                        @else
+                                            <span class="text-muted">-</span>
+                                        @endif
+                                    </td>
+                                    <td class="text-center text-nowrap">
+                                        <div class="d-inline-flex align-items-center" style="gap: 4px;">
+                                            {{-- Input Realisasi Button --}}
+                                            <button type="button" class="btn btn-xs btn-outline-success rounded-pill px-2 py-1"
+                                                    onclick="openModalRealisasi('{{ $kpi->id }}', '{{ addslashes(optional($kpi->masterIndikator)->nama_indikator) }}', '{{ (float)$kpi->target_angka }}', '{{ (float)$kpi->bobot }}', '{{ $kpi->realisasi_angka }}', '{{ $kpi->satuan }}')"
+                                                    title="Input Realisasi Capaian">
+                                                <i class="fas fa-check-double mr-1"></i> Realisasi
+                                            </button>
+
+                                            {{-- Edit Button --}}
+                                            <button type="button" class="btn btn-xs btn-outline-primary rounded-circle" style="width: 28px; height: 28px;"
+                                                    onclick="openModalEdit('{{ $kpi->id }}', '{{ $kpi->jenis_cascading }}', '{{ $kpi->unit_terkait }}', '{{ addslashes(optional($kpi->masterIndikator)->nama_indikator) }}', '{{ addslashes($kpi->formula_pengukuran) }}', '{{ (float)$kpi->target_angka }}', '{{ (float)$kpi->bobot }}', '{{ $kpi->file_bukti }}')"
+                                                    title="Edit KPI">
+                                                <i class="fas fa-pencil-alt" style="font-size: 0.75rem;"></i>
+                                            </button>
+
+                                            {{-- Delete Form --}}
+                                            <form action="{{ route('admin.kpi.cascading.destroy', $kpi->id) }}" method="POST" class="d-inline mb-0" onsubmit="return confirm('Apakah Anda yakin ingin menghapus indikator KPI ini?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-xs btn-outline-danger rounded-circle" style="width: 28px; height: 28px;" title="Hapus KPI">
+                                                    <i class="fas fa-trash-alt" style="font-size: 0.75rem;"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody></tbody>
-                        </table>
+                            @empty
+                                <tr>
+                                    <td colspan="12" class="text-center py-5 text-muted">
+                                        <i class="fas fa-chart-pie fa-3x mb-3 text-muted" style="opacity: 0.3;"></i>
+                                        <h6 class="font-weight-bold text-dark">Belum Ada Data KPI</h6>
+                                        <p class="small mb-0">Klik tombol "+ Tambah KPI" untuk menambahkan indikator kinerja baru.</p>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+
+                {{-- Banner Perhitungan Otomatis (Mockup Image 8 item 4) --}}
+                <div class="p-3 bg-light border-top d-flex align-items-center justify-content-between">
+                    <div class="small text-muted">
+                        <i class="fas fa-info-circle text-primary mr-1"></i>
+                        <strong>Perhitungan Otomatis:</strong> Skor dihitung secara otomatis berdasarkan formula: <code>Skor = (Capaian / 100) x Bobot</code> & <code>Capaian (%) = (Realisasi / Target) x 100%</code>.
                     </div>
                 </div>
             </div>
         </div>
-    </section>
 
-    <!-- Modal Form Tambah / Edit KPI Unit -->
-    <div class="modal fade" id="modal-kpi-unit" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
-            <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
-                <form id="form-kpi-unit">
-                    @csrf
-                    <input type="hidden" id="unit-indikator-id" name="id">
-                    <input type="hidden" id="unit-indikator-method" name="_method" value="POST">
-                    <input type="hidden" id="modal-periode-id" name="periode_id" value="{{ $currentPeriode->id ?? '' }}">
-                    <input type="hidden" id="modal-unit-id" name="master_unit_id" value="{{ $currentUnit->id ?? '' }}">
+    </div>
+</section>
 
-                    <div class="modal-header modal-header-tsu">
-                        <h5 class="modal-title font-weight-bold" id="modal-kpi-unit-title">
-                            <i class="fas fa-plus-circle mr-2"></i> Tambah Indikator ke Scorecard Unit
-                        </h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body p-4">
-                        <div class="alert mb-3" style="background: rgba(9, 75, 84, 0.05); border: 1px solid rgba(9, 75, 84, 0.15); border-radius: 8px;">
-                            <div class="d-flex align-items-center text-dark">
-                                <i class="fas fa-building fa-lg mr-2" style="color: var(--tsu-primary);"></i>
-                                <div>
-                                    Unit Kerja: <strong>{{ $currentUnit->nama_unit ?? '-' }}</strong> &nbsp;|&nbsp; 
-                                    Periode: <strong>{{ $currentPeriode->nama_periode ?? '-' }} (Tahun {{ $currentPeriode->tahun ?? '-' }})</strong>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="font-weight-bold text-dark">Pilih Master Indikator Kinerja <span class="text-danger">*</span></label>
-                            <select class="form-control select2" id="master_indikator_id" name="master_indikator_id" required style="width: 100%;">
-                                <option value="">-- Pilih Indikator dari Kamus Master --</option>
-                                @foreach($masterIndikators as $mi)
-                                    <option value="{{ $mi->id }}" data-satuan="{{ $mi->satuan }}" data-polaritas="{{ $mi->polaritas }}">
-                                        [{{ $mi->kode_indikator }}] ({{ optional($mi->perspektif)->kode }}) {{ $mi->nama_indikator }} (Satuan: {{ $mi->satuan }})
-                                    </option>
-                                @endforeach
+{{-- 1. Modal Form Tambah KPI (Mockup Image 8 item 1) --}}
+<div class="modal fade" id="modalTambahKpi" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow" style="border-radius: 14px;">
+            <div class="modal-header bg-white border-bottom py-3">
+                <h5 class="modal-title font-weight-bold text-dark">
+                    <i class="fas fa-plus-circle text-primary mr-2" style="color: #094b54 !important;"></i>Tambah KPI
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form action="{{ route('admin.kpi.cascading.store') }}" method="POST">
+                @csrf
+                <input type="hidden" name="periode_id" value="{{ $currentPeriode->id ?? 1 }}">
+                <div class="modal-body p-4">
+                    <div class="row">
+                        <div class="col-6 form-group mb-3">
+                            <label class="font-weight-bold small text-dark">Jenis Cascading <span class="text-danger">*</span></label>
+                            <select name="jenis_cascading" class="form-control form-control-sm" required>
+                                <option value="Unit">Unit</option>
+                                <option value="Program">Program</option>
                             </select>
                         </div>
+                        <div class="col-6 form-group mb-3">
+                            <label class="font-weight-bold small text-dark">Unit Terkait <span class="text-danger">*</span></label>
+                            <select name="unit_terkait" class="form-control form-control-sm" required>
+                                <option value="BAUK">BAUK</option>
+                                <option value="SDM">SDM</option>
+                                <option value="LPPM">LPPM</option>
+                                <option value="Fakultas Ekonomi">Fakultas Ekonomi</option>
+                                <option value="Fakultas Teknik">Fakultas Teknik</option>
+                                <option value="Sekretariat">Sekretariat</option>
+                                <option value="SPI">SPI</option>
+                            </select>
+                        </div>
+                    </div>
 
-                        <div class="row">
-                            <div class="col-md-7 form-group">
-                                <label class="font-weight-bold" style="color: #0284c7;">
-                                    <i class="fas fa-arrow-up mr-1"></i> Diturunkan Dari Indikator Pimpinan (Opsional)
-                                </label>
-                                <select class="form-control select2" id="parent_unit_indikator_id" name="parent_unit_indikator_id" style="width: 100%;">
-                                    <option value="">-- Berdiri Sendiri / Induk Top-Level --</option>
-                                </select>
-                                <small class="text-muted">Pilih jika indikator ini merupakan turunan dari Rektorat / WR / Pimpinan Unit.</small>
-                            </div>
-                            <div class="col-md-5 form-group">
-                                <label class="font-weight-bold text-dark">Jenis Cascading <span class="text-danger">*</span></label>
-                                <select class="form-control" id="jenis_cascading" name="jenis_cascading" required>
-                                    <option value="Direct">Direct (Tanggung Jawab Langsung)</option>
-                                    <option value="Contribution">Contribution (Kontribusi Parsial)</option>
-                                    <option value="Enabler">Enabler (Dukungan / Prasyarat)</option>
-                                </select>
+                    <div class="form-group mb-3">
+                        <label class="font-weight-bold small text-dark">Definisi Indikator Kinerja <span class="text-danger">*</span></label>
+                        <textarea name="definisi_indikator" class="form-control form-control-sm" rows="2" placeholder="Masukkan definisi indikator kinerja..." required></textarea>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="font-weight-bold small text-dark">Formula Pengukuran</label>
+                        <input type="text" name="formula_pengukuran" class="form-control form-control-sm" placeholder="Contoh: (Jumlah dokumen tepat waktu / Total dokumen) x 100%">
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="font-weight-bold small text-dark">Bukti (Format Doc/PDF)</label>
+                        <input type="text" name="file_bukti" class="form-control form-control-sm" value="Laporan / PDF" placeholder="Contoh: Laporan / PDF, Hasil survei / PDF">
+                    </div>
+
+                    <div class="row">
+                        <div class="col-6 form-group mb-0">
+                            <label class="font-weight-bold small text-dark">Target <span class="text-danger">*</span></label>
+                            <input type="number" step="any" name="target_angka" class="form-control form-control-sm" placeholder="Masukkan target (e.g. 100)" required>
+                        </div>
+                        <div class="col-6 form-group mb-0">
+                            <label class="font-weight-bold small text-dark">Bobot (%) <span class="text-danger">*</span></label>
+                            <input type="number" step="any" name="bobot" class="form-control form-control-sm" placeholder="Masukkan bobot (e.g. 10)" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light py-2">
+                    <button type="button" class="btn btn-sm btn-secondary rounded-pill px-3" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-sm btn-tsu-primary rounded-pill px-4">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{-- 2. Modal Input Realisasi (Auto-Calculation Realtime) --}}
+<div class="modal fade" id="modalInputRealisasi" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow" style="border-radius: 14px;">
+            <div class="modal-header bg-white border-bottom py-3">
+                <h5 class="modal-title font-weight-bold text-dark">
+                    <i class="fas fa-check-double text-success mr-2"></i>Input Realisasi Capaian KPI
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="formRealisasiKpi" method="POST">
+                @csrf
+                <div class="modal-body p-4">
+                    <div class="p-3 mb-3 rounded bg-light border">
+                        <h6 class="font-weight-bold text-dark mb-1" id="realisasiIndikatorNama">-</h6>
+                        <div class="small text-muted">
+                            Target: <strong class="text-dark" id="realisasiTargetLabel">0</strong> &nbsp;|&nbsp;
+                            Bobot: <strong class="text-dark" id="realisasiBobotLabel">0%</strong>
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="font-weight-bold small text-dark">Realisasi Angka <span class="text-danger">*</span></label>
+                        <input type="number" step="any" name="realisasi_angka" id="inputRealisasiAngka" class="form-control" placeholder="Masukkan realisasi riil..." required oninput="calcLiveKpi()">
+                    </div>
+
+                    {{-- Live Calculation Display Box --}}
+                    <div class="row mb-3">
+                        <div class="col-6">
+                            <div class="p-2 rounded border bg-light text-center">
+                                <small class="text-muted font-weight-bold">Capaian Otomatis (%)</small>
+                                <h4 class="font-weight-bold text-primary mb-0 mt-1" id="liveCapaianPersen">0%</h4>
                             </div>
                         </div>
-
-                        <div class="row">
-                            <div class="col-md-4 form-group">
-                                <label class="font-weight-bold text-dark">Target Nilai / Angka <span class="text-danger">*</span></label>
-                                <input type="number" step="any" class="form-control" id="target_angka" name="target_angka" placeholder="Contoh: 85, 100, 2">
-                            </div>
-                            <div class="col-md-4 form-group">
-                                <label class="font-weight-bold text-dark">Satuan</label>
-                                <input type="text" class="form-control" id="satuan" name="satuan" placeholder="%, Orang, Dokumen, dll.">
-                            </div>
-                            <div class="col-md-4 form-group">
-                                <label class="font-weight-bold" style="color: var(--tsu-primary);">Bobot Scorecard (%) <span class="text-danger">*</span></label>
-                                <div class="input-group">
-                                    <input type="number" step="0.1" min="0" max="100" class="form-control font-weight-bold" style="color: var(--tsu-primary);" id="bobot" name="bobot" required placeholder="Contoh: 15">
-                                    <div class="input-group-append">
-                                        <span class="input-group-text font-weight-bold bg-light">%</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Accordion Target Multi-Tahun / Roadmap -->
-                        <div class="card border mb-3" style="border-radius: 8px; overflow: hidden;">
-                            <div class="card-header bg-light py-2" style="cursor: pointer;" data-toggle="collapse" data-target="#collapseRoadmap">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <span class="font-weight-bold small text-dark"><i class="fas fa-road mr-1" style="color: var(--tsu-primary);"></i> Target Multi-Tahun / Roadmap Jangka Menengah (2026 - 2029)</span>
-                                    <i class="fas fa-chevron-down text-muted"></i>
-                                </div>
-                            </div>
-                            <div id="collapseRoadmap" class="collapse show">
-                                <div class="card-body py-2">
-                                    <div class="row">
-                                        <div class="col-md-3 form-group mb-2">
-                                            <label class="small text-muted mb-1">Target 2026:</label>
-                                            <input type="text" class="form-control form-control-sm" id="target_2026" name="target_2026" placeholder="Contoh: 80%">
-                                        </div>
-                                        <div class="col-md-3 form-group mb-2">
-                                            <label class="small text-muted mb-1">Target 2027:</label>
-                                            <input type="text" class="form-control form-control-sm" id="target_2027" name="target_2027" placeholder="Contoh: 85%">
-                                        </div>
-                                        <div class="col-md-3 form-group mb-2">
-                                            <label class="small text-muted mb-1">Target 2028:</label>
-                                            <input type="text" class="form-control form-control-sm" id="target_2028" name="target_2028" placeholder="Contoh: 90%">
-                                        </div>
-                                        <div class="col-md-3 form-group mb-2">
-                                            <label class="small text-muted mb-1">Target 2029:</label>
-                                            <input type="text" class="form-control form-control-sm" id="target_2029" name="target_2029" placeholder="Contoh: 95%">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 form-group">
-                                <label class="font-weight-bold text-dark">Keterkaitan IKU</label>
-                                <input type="text" class="form-control" id="keterkaitan_iku" name="keterkaitan_iku" placeholder="Contoh: IKU 1, IKU 2, Standar SPMI">
-                            </div>
-                            <div class="col-md-6 form-group">
-                                <label class="font-weight-bold text-dark">PIC Data / Penanggung Jawab</label>
-                                <input type="text" class="form-control" id="pic_data" name="pic_data" placeholder="Contoh: Kepala Biro BAUK, Kasubag SDM">
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 form-group mb-0">
-                                <label class="font-weight-bold text-dark">Sumber Data</label>
-                                <input type="text" class="form-control" id="sumber_data" name="sumber_data" placeholder="Contoh: Data SIAKAD, Laporan Keuangan, Logbook IT">
-                            </div>
-                            <div class="col-md-6 form-group mb-0">
-                                <label class="font-weight-bold text-dark">Unit Terkait</label>
-                                <input type="text" class="form-control" id="unit_terkait" name="unit_terkait" placeholder="Contoh: Seluruh Prodi, Dosen, Tendik">
+                        <div class="col-6">
+                            <div class="p-2 rounded border bg-light text-center">
+                                <small class="text-muted font-weight-bold">Skor Otomatis</small>
+                                <h4 class="font-weight-bold text-success mb-0 mt-1" id="liveSkor">0</h4>
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer bg-light" style="border-top: 1px solid var(--tsu-border);">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn tsu-btn-create" id="btn-save-kpi-unit">
-                            <i class="fas fa-save mr-1"></i> Simpan ke Scorecard Unit
-                        </button>
+
+                    <div class="form-group mb-3">
+                        <label class="font-weight-bold small text-dark">Bukti Pendukung (Format Doc/PDF)</label>
+                        <input type="text" name="file_bukti" id="inputRealisasiBukti" class="form-control form-control-sm" placeholder="Contoh: Laporan / PDF, Surat Tugas / PDF">
                     </div>
-                </form>
+
+                    <div class="form-group mb-0">
+                        <label class="font-weight-bold small text-dark">Analisis Capaian / Catatan</label>
+                        <textarea name="analisis_capaian" class="form-control form-control-sm" rows="2" placeholder="Catatan kendala atau analisis keberhasilan..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light py-2">
+                    <button type="button" class="btn btn-sm btn-secondary rounded-pill px-3" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-sm btn-success rounded-pill px-4 font-weight-bold">
+                        <i class="fas fa-save mr-1"></i> Simpan Realisasi
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{-- 3. Modal Edit KPI --}}
+<div class="modal fade" id="modalEditKpi" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow" style="border-radius: 14px;">
+            <div class="modal-header bg-white border-bottom py-3">
+                <h5 class="modal-title font-weight-bold text-dark">
+                    <i class="fas fa-edit text-primary mr-2" style="color: #094b54 !important;"></i>Edit Indikator KPI
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <form id="formEditKpi" method="POST">
+                @csrf
+                @method('PUT')
+                <div class="modal-body p-4">
+                    <div class="row">
+                        <div class="col-6 form-group mb-3">
+                            <label class="font-weight-bold small text-dark">Jenis Cascading <span class="text-danger">*</span></label>
+                            <select name="jenis_cascading" id="editJenisCascading" class="form-control form-control-sm" required>
+                                <option value="Unit">Unit</option>
+                                <option value="Program">Program</option>
+                            </select>
+                        </div>
+                        <div class="col-6 form-group mb-3">
+                            <label class="font-weight-bold small text-dark">Unit Terkait</label>
+                            <input type="text" name="unit_terkait" id="editUnitTerkait" class="form-control form-control-sm">
+                        </div>
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="font-weight-bold small text-dark">Definisi Indikator Kinerja</label>
+                        <input type="text" id="editDefinisi" class="form-control form-control-sm" readonly style="background: #f1f5f9;">
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="font-weight-bold small text-dark">Formula Pengukuran</label>
+                        <input type="text" name="formula_pengukuran" id="editFormula" class="form-control form-control-sm">
+                    </div>
+
+                    <div class="form-group mb-3">
+                        <label class="font-weight-bold small text-dark">Bukti (Format Doc/PDF)</label>
+                        <input type="text" name="file_bukti" id="editBukti" class="form-control form-control-sm">
+                    </div>
+
+                    <div class="row">
+                        <div class="col-6 form-group mb-0">
+                            <label class="font-weight-bold small text-dark">Target <span class="text-danger">*</span></label>
+                            <input type="number" step="any" name="target_angka" id="editTarget" class="form-control form-control-sm" required>
+                        </div>
+                        <div class="col-6 form-group mb-0">
+                            <label class="font-weight-bold small text-dark">Bobot (%) <span class="text-danger">*</span></label>
+                            <input type="number" step="any" name="bobot" id="editBobot" class="form-control form-control-sm" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer bg-light py-2">
+                    <button type="button" class="btn btn-sm btn-secondary rounded-pill px-3" data-dismiss="modal">Batal</button>
+                    <button type="submit" class="btn btn-sm btn-tsu-primary rounded-pill px-4">Simpan Perubahan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+{{-- 4. Modal Impor / Ekspor (Mockup Image 8 item 3) --}}
+<div class="modal fade" id="modalExport" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-md modal-dialog-centered" role="document">
+        <div class="modal-content border-0 shadow" style="border-radius: 14px;">
+            <div class="modal-header bg-white border-bottom py-3">
+                <h5 class="modal-title font-weight-bold text-dark">
+                    <i class="fas fa-file-export text-primary mr-2" style="color: #094b54 !important;"></i>Impor & Ekspor Data KPI
+                </h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body p-4">
+                <h6 class="font-weight-bold text-dark mb-2">Ekspor Data KPI</h6>
+                <p class="small text-muted mb-3">Unduh berkas matriks KPI unit kerja dalam format Excel spreadsheet atau dokumen cetak PDF.</p>
+                <div class="d-flex" style="gap: 10px;">
+                    <button type="button" class="btn btn-success btn-sm rounded-pill px-4 font-weight-bold" onclick="alert('Mengunduh Berkas Matriks KPI (Excel)...')">
+                        <i class="fas fa-file-excel mr-1"></i> Ekspor Excel
+                    </button>
+                    <button type="button" class="btn btn-danger btn-sm rounded-pill px-4 font-weight-bold" onclick="alert('Menghasilkan Dokumen Matriks KPI (PDF)...')">
+                        <i class="fas fa-file-pdf mr-1"></i> Ekspor PDF
+                    </button>
+                </div>
+
+                <hr class="my-4">
+
+                <h6 class="font-weight-bold text-dark mb-2">Impor Data KPI</h6>
+                <p class="small text-muted mb-2">Unggah file Excel sesuai template standar universitas.</p>
+                <div class="p-3 border rounded text-center bg-light" style="border-style: dashed !important;">
+                    <i class="fas fa-cloud-upload-alt fa-2x text-muted mb-2"></i>
+                    <div class="small font-weight-bold text-dark">Pilih file atau drag & drop</div>
+                    <small class="text-muted">Format: .xlsx, .xls (maks 5MB)</small>
+                </div>
+            </div>
+            <div class="modal-footer bg-light py-2">
+                <button type="button" class="btn btn-sm btn-secondary rounded-pill px-3" data-dismiss="modal">Tutup</button>
             </div>
         </div>
     </div>
-
-    <!-- Modal Turunkan ke Sub-Unit (Cascade Down) -->
-    <div class="modal fade" id="modal-cascade-down" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content border-0 shadow-lg" style="border-radius: 12px; overflow: hidden;">
-                <form id="form-cascade-down">
-                    @csrf
-                    <input type="hidden" id="cascade-parent-unit-indikator-id" name="parent_unit_indikator_id">
-
-                    <div class="modal-header modal-header-tsu">
-                        <h5 class="modal-title font-weight-bold">
-                            <i class="fas fa-sitemap mr-2"></i> Turunkan Indikator (Cascading Down)
-                        </h5>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body p-4">
-                        <div class="p-3 mb-3" style="background: rgba(9, 75, 84, 0.05); border: 1px solid rgba(9, 75, 84, 0.15); border-radius: 8px;">
-                            <div class="small text-muted">Indikator Pimpinan Asal:</div>
-                            <div class="font-weight-bold text-dark" id="cascade-parent-indikator-name">-</div>
-                            <div class="small mt-1 font-weight-semibold" style="color: var(--tsu-primary);" id="cascade-parent-target-info">-</div>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="font-weight-bold text-dark">Pilih Unit Kerja Tujuan <span class="text-danger">*</span></label>
-                            <select class="form-control select2" id="cascade-target-unit-id" name="target_unit_id" required style="width: 100%;">
-                                <option value="">-- Pilih Unit / Sub-Unit Bawahan --</option>
-                                @foreach($units as $u)
-                                    @if(!$currentUnit || $u->id != $currentUnit->id)
-                                        <option value="{{ $u->id }}">{{ $u->nama_unit }}</option>
-                                    @endif
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label class="font-weight-bold text-dark">Jenis Cascading <span class="text-danger">*</span></label>
-                            <select class="form-control" id="cascade-jenis" name="jenis_cascading" required>
-                                <option value="Direct">Direct (Tanggung Jawab Penuh)</option>
-                                <option value="Contribution">Contribution (Kontribusi Bagian)</option>
-                                <option value="Enabler">Enabler (Fasilitator / Prasyarat)</option>
-                            </select>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 form-group">
-                                <label class="font-weight-bold text-dark">Target Unit Sub</label>
-                                <input type="number" step="any" class="form-control" id="cascade-target-angka" name="target_angka" placeholder="Target angka...">
-                            </div>
-                            <div class="col-md-6 form-group">
-                                <label class="font-weight-bold" style="color: var(--tsu-primary);">Bobot di Sub-Unit (%) <span class="text-danger">*</span></label>
-                                <input type="number" step="0.1" min="0" max="100" class="form-control font-weight-bold" id="cascade-bobot" name="bobot" required placeholder="Contoh: 20">
-                            </div>
-                        </div>
-
-                        <div class="form-group mb-0">
-                            <label class="font-weight-bold text-dark">PIC Pelaksana Sub-Unit</label>
-                            <input type="text" class="form-control" id="cascade-pic" name="pic_data" placeholder="Contoh: Staf SDM / Bendahara">
-                        </div>
-                    </div>
-                    <div class="modal-footer bg-light" style="border-top: 1px solid var(--tsu-border);">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn tsu-btn-create" id="btn-submit-cascade">
-                            <i class="fas fa-check mr-1"></i> Turunkan ke Unit
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+</div>
 @endsection
 
-@section('script')
+@section('scripts')
 <script>
-$(document).ready(function() {
-    $('.select2').select2({ theme: 'bootstrap4' });
+    var currentTarget = 0;
+    var currentBobot = 0;
 
-    var currentPeriodeId = "{{ $currentPeriode->id ?? '' }}";
-    var currentUnitId = "{{ $currentUnit->id ?? '' }}";
+    function openModalRealisasi(id, nama, target, bobot, realisasi, satuan) {
+        currentTarget = parseFloat(target) || 0;
+        currentBobot = parseFloat(bobot) || 0;
 
-    var table = $('#table-kpi-cascading').DataTable({
-        processing: true,
-        serverSide: true,
-        language: {
-            emptyTable: "Belum ada indikator KPI yang ditugaskan pada unit dan periode ini",
-            processing: '<i class="fas fa-spinner fa-spin mr-2"></i>Memuat data...'
-        },
-        ajax: {
-            url: "{{ route('admin.kpi.cascading.json') }}",
-            data: function(d) {
-                d.periode_id = currentPeriodeId;
-                d.master_unit_id = currentUnitId;
-            }
-        },
-        columns: [
-            { data: 'DT_RowIndex', name: 'DT_RowIndex', className: 'text-center', orderable: false, searchable: false },
-            { data: 'perspektif_badge', name: 'perspektif_badge', className: 'text-center' },
-            { data: 'indikator_info', name: 'indikator_info' },
-            { data: 'cascading_info', name: 'cascading_info' },
-            { data: 'target_satuan', name: 'target_satuan' },
-            { data: 'roadmap_targets', name: 'roadmap_targets' },
-            { data: 'bobot_formatted', name: 'bobot', className: 'text-center' },
-            { data: 'pic_info', name: 'pic_info' },
-            { data: 'action', name: 'action', className: 'text-center', orderable: false, searchable: false }
-        ]
-    });
+        document.getElementById('realisasiIndikatorNama').textContent = nama;
+        document.getElementById('realisasiTargetLabel').textContent = currentTarget + ' ' + (satuan || '');
+        document.getElementById('realisasiBobotLabel').textContent = currentBobot + '%';
 
-    // Auto-fill satuan on master indikator change
-    $('#master_indikator_id').change(function() {
-        var selected = $(this).find('option:selected');
-        var satuan = selected.data('satuan');
-        if (satuan) {
-            $('#satuan').val(satuan);
-        }
-    });
+        var input = document.getElementById('inputRealisasiAngka');
+        input.value = realisasi !== '' && realisasi !== null ? realisasi : '';
 
-    // Load available parent unit indicators for linking
-    function loadParentUnitOptions(selectedParentId = null) {
-        $.get("{{ route('admin.kpi.cascading.parent-unit-options') }}", {
-            periode_id: currentPeriodeId,
-            unit_id: currentUnitId
-        }, function(res) {
-            var options = '<option value="">-- Berdiri Sendiri / Induk Top-Level --</option>';
-            if (res.status === 'success' && res.data) {
-                $.each(res.data, function(idx, item) {
-                    var selected = (selectedParentId && selectedParentId == item.id) ? 'selected' : '';
-                    options += '<option value="' + item.id + '" ' + selected + '>[' + item.unit_name + '] ' + item.kode + ' - ' + item.nama + ' (Target: ' + item.target + ')</option>';
-                });
-            }
-            $('#parent_unit_indikator_id').html(options).trigger('change');
-        });
+        var form = document.getElementById('formRealisasiKpi');
+        form.action = '{{ url("admin/kpi/cascading") }}/' + id + '/realisasi';
+
+        calcLiveKpi();
+        $('#modalInputRealisasi').modal('show');
     }
 
-    // Tambah Indikator ke Unit (Header & Filter Buttons)
-    $('#btn-add-kpi-unit, #btn-add-kpi-unit-filter').click(function() {
-        $('#form-kpi-unit')[0].reset();
-        $('#unit-indikator-id').val('');
-        $('#unit-indikator-method').val('POST');
-        $('#master_indikator_id').val('').trigger('change');
-        $('#jenis_cascading').val('Direct');
-        loadParentUnitOptions();
-        $('#modal-kpi-unit-title').html('<i class="fas fa-plus-circle mr-2"></i> Tambah Indikator ke Scorecard Unit');
-        $('#modal-kpi-unit').modal('show');
-    });
+    function calcLiveKpi() {
+        var inputVal = parseFloat(document.getElementById('inputRealisasiAngka').value) || 0;
+        var capaian = 0;
+        var skor = 0;
 
-    // Edit Indikator Unit
-    $(document).on('click', '.btn-edit', function() {
-        var id = $(this).data('id');
-        $.get("{{ url('admin/kpi/cascading') }}/" + id, function(res) {
-            if (res.status === 'success') {
-                var d = res.data;
-                $('#unit-indikator-id').val(d.id);
-                $('#unit-indikator-method').val('PUT');
-                $('#master_indikator_id').val(d.master_indikator_id).trigger('change');
-                $('#jenis_cascading').val(d.jenis_cascading);
-                $('#target_angka').val(d.target_angka);
-                $('#satuan').val(d.satuan);
-                $('#bobot').val(d.bobot);
-                $('#target_2026').val(d.target_2026);
-                $('#target_2027').val(d.target_2027);
-                $('#target_2028').val(d.target_2028);
-                $('#target_2029').val(d.target_2029);
-                $('#keterkaitan_iku').val(d.keterkaitan_iku);
-                $('#sumber_data').val(d.sumber_data);
-                $('#pic_data').val(d.pic_data);
-                $('#unit_terkait').val(d.unit_terkait);
+        if (currentTarget > 0) {
+            capaian = (inputVal / currentTarget) * 100.0;
+            skor = (capaian / 100.0) * currentBobot;
+        }
 
-                loadParentUnitOptions(d.parent_unit_indikator_id);
+        document.getElementById('liveCapaianPersen').textContent = capaian.toFixed(1) + '%';
+        document.getElementById('liveSkor').textContent = skor.toFixed(1);
+    }
 
-                $('#modal-kpi-unit-title').html('<i class="fas fa-edit mr-2"></i> Edit Indikator Scorecard Unit');
-                $('#modal-kpi-unit').modal('show');
-            }
-        });
-    });
+    function openModalEdit(id, jenis, unit, definisi, formula, target, bobot, bukti) {
+        document.getElementById('editJenisCascading').value = jenis;
+        document.getElementById('editUnitTerkait').value = unit;
+        document.getElementById('editDefinisi').value = definisi;
+        document.getElementById('editFormula').value = formula;
+        document.getElementById('editTarget').value = target;
+        document.getElementById('editBobot').value = bobot;
+        document.getElementById('editBukti').value = bukti;
 
-    // Submit Form Tambah/Edit
-    $('#form-kpi-unit').submit(function(e) {
-        e.preventDefault();
-        var id = $('#unit-indikator-id').val();
-        var isEdit = id ? true : false;
-        var url = isEdit ? "{{ url('admin/kpi/cascading') }}/" + id : "{{ route('admin.kpi.cascading.store') }}";
-        var btn = $('#btn-save-kpi-unit');
+        var form = document.getElementById('formEditKpi');
+        form.action = '{{ url("admin/kpi/cascading") }}/' + id;
 
-        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Menyimpan...');
-
-        $.ajax({
-            url: url,
-            type: 'POST',
-            data: $(this).serialize(),
-            success: function(res) {
-                btn.prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Simpan ke Scorecard Unit');
-                $('#modal-kpi-unit').modal('hide');
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Berhasil!',
-                    text: res.message || 'Data indikator unit berhasil disimpan',
-                    timer: 1800,
-                    showConfirmButton: false
-                });
-                table.ajax.reload(null, false);
-                setTimeout(function() { window.location.reload(); }, 1200);
-            },
-            error: function(xhr) {
-                btn.prop('disabled', false).html('<i class="fas fa-save mr-1"></i> Simpan ke Scorecard Unit');
-                var msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Terjadi kesalahan pengisian form.';
-                Swal.fire({ icon: 'error', title: 'Gagal', text: msg });
-            }
-        });
-    });
-
-    // Delete Indikator Unit
-    $(document).on('click', '.btn-delete', function() {
-        var id = $(this).data('id');
-        Swal.fire({
-            title: 'Hapus Indikator Ini dari Unit?',
-            text: 'Data indikator unit beserta evaluasi monev-nya akan terhapus!',
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#dc2626',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: '<i class="fas fa-trash-alt mr-1"></i> Ya, Hapus',
-            cancelButtonText: 'Batal'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                $.ajax({
-                    url: "{{ url('admin/kpi/cascading') }}/" + id,
-                    type: 'DELETE',
-                    data: { _token: '{{ csrf_token() }}' },
-                    success: function(res) {
-                        Swal.fire({ icon: 'success', title: 'Terhapus!', text: res.message, timer: 1500, showConfirmButton: false });
-                        table.ajax.reload(null, false);
-                        setTimeout(function() { window.location.reload(); }, 1000);
-                    },
-                    error: function(xhr) {
-                        var msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Gagal menghapus indikator unit.';
-                        Swal.fire({ icon: 'error', title: 'Gagal', text: msg });
-                    }
-                });
-            }
-        });
-    });
-
-    // Quick Cascade-Down Action
-    $(document).on('click', '.btn-cascade-down', function() {
-        var id = $(this).data('id');
-        $.get("{{ url('admin/kpi/cascading') }}/" + id, function(res) {
-            if (res.status === 'success') {
-                var d = res.data;
-                $('#cascade-parent-unit-indikator-id').val(d.id);
-                $('#cascade-parent-indikator-name').text('[' + (d.master_indikator ? d.master_indikator.kode_indikator : '') + '] ' + (d.master_indikator ? d.master_indikator.nama_indikator : ''));
-                $('#cascade-parent-target-info').text('Target Induk: ' + (d.target_angka || d.target_label || '-') + ' ' + (d.satuan || ''));
-                $('#cascade-target-angka').val(d.target_angka);
-                $('#cascade-target-unit-id').val('').trigger('change');
-                $('#cascade-bobot').val('');
-                $('#modal-cascade-down').modal('show');
-            }
-        });
-    });
-
-    // Submit Cascade-Down Form
-    $('#form-cascade-down').submit(function(e) {
-        e.preventDefault();
-        var btn = $('#btn-submit-cascade');
-        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-1"></i> Menurunkan...');
-
-        $.ajax({
-            url: "{{ route('admin.kpi.cascading.cascade-down') }}",
-            type: 'POST',
-            data: $(this).serialize(),
-            success: function(res) {
-                btn.prop('disabled', false).html('<i class="fas fa-check mr-1"></i> Turunkan ke Unit');
-                $('#modal-cascade-down').modal('hide');
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Berhasil Diturunkan!',
-                    text: res.message,
-                    timer: 1800,
-                    showConfirmButton: false
-                });
-                table.ajax.reload(null, false);
-            },
-            error: function(xhr) {
-                btn.prop('disabled', false).html('<i class="fas fa-check mr-1"></i> Turunkan ke Unit');
-                var msg = xhr.responseJSON && xhr.responseJSON.message ? xhr.responseJSON.message : 'Gagal menurunkan indikator.';
-                Swal.fire({ icon: 'error', title: 'Gagal', text: msg });
-            }
-        });
-    });
-});
+        $('#modalEditKpi').modal('show');
+    }
 </script>
 @endsection
